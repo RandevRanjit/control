@@ -40,6 +40,7 @@ import {
 } from "@control/client-runtime/markdown-images";
 import { inlineCodeFilePathCandidate } from "@control/client-runtime/markdown-links";
 import { mediaFileReference, mediaUrlReference } from "@control/client-runtime/media-reference";
+import { MISSING_FILE_ACCESS_MESSAGE } from "@control/client-runtime/state/assets";
 import { mediaKindFromPath, mediaMimeTypeFromExtension } from "@control/shared/filePreview";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
@@ -1579,12 +1580,14 @@ function expandableMarkdownImageProps(
 function ChatMarkdownMediaUnavailableLabel(props: {
   readonly alt: string;
   readonly kind?: "image" | "video" | undefined;
+  /** Why the media is unavailable, when the cause is known. */
+  readonly detail?: string | undefined;
 }) {
   const label = props.kind === "video" ? "Video unavailable" : "Image unavailable";
   return (
     <span className="inline-flex items-center gap-1.5">
       <TriangleAlertIcon aria-hidden className="size-3.5 shrink-0" />
-      {props.alt.length > 0 ? `${label} · ${props.alt}` : label}
+      {[label, props.alt, props.detail].filter(Boolean).join(" · ")}
     </span>
   );
 }
@@ -1595,6 +1598,7 @@ function ChatMarkdownImageFallback(props: {
   readonly copyMarkdown?: string | undefined;
   readonly kind?: "image" | "video";
   readonly actionsSource?: MediaActionSource | undefined;
+  readonly detail?: string | undefined;
 }) {
   const content = (
     <span
@@ -1604,7 +1608,7 @@ function ChatMarkdownImageFallback(props: {
         "rounded-md border border-border/40 bg-muted/40 px-2 py-1 text-xs text-muted-foreground",
       )}
     >
-      <ChatMarkdownMediaUnavailableLabel alt={props.alt} kind={props.kind} />
+      <ChatMarkdownMediaUnavailableLabel alt={props.alt} kind={props.kind} detail={props.detail} />
     </span>
   );
   return props.actionsSource ? (
@@ -1637,6 +1641,8 @@ function ChatMarkdownImage(props: {
   /** Null while the URL is being resolved; the last decoded image stays up. */
   readonly src: string | null;
   readonly sourceFailed?: boolean | undefined;
+  /** Why the source failed, when the cause is known. */
+  readonly unavailableDetail?: string | undefined;
   readonly alt: string;
   readonly copyMarkdown: string | undefined;
   readonly standalone: boolean;
@@ -1710,6 +1716,7 @@ function ChatMarkdownImage(props: {
         alt={props.alt}
         copyMarkdown={props.copyMarkdown}
         actionsSource={props.actionsSource}
+        detail={props.unavailableDetail}
       />
     ) : (
       <span
@@ -1738,7 +1745,7 @@ function ChatMarkdownImage(props: {
       >
         {failed ? (
           <span className="flex size-full items-center justify-center p-2 text-center text-xs text-muted-foreground">
-            <ChatMarkdownMediaUnavailableLabel alt={props.alt} />
+            <ChatMarkdownMediaUnavailableLabel alt={props.alt} detail={props.unavailableDetail} />
           </span>
         ) : src !== null ? (
           <img
@@ -1905,6 +1912,13 @@ export const ChatMarkdownAssetImage = memo(function ChatMarkdownAssetImage(props
       key={JSON.stringify([props.environmentId, props.resource, props.srcFragment])}
       src={src}
       sourceFailed={assetUrl._tag === "Failure" && fallbackSrc === undefined}
+      unavailableDetail={
+        assetUrl._tag === "Failure" &&
+        assetUrl.reason === "missing-file-access" &&
+        fallbackSrc === undefined
+          ? MISSING_FILE_ACCESS_MESSAGE
+          : undefined
+      }
       alt={props.alt}
       copyMarkdown={props.copyMarkdown}
       standalone={props.standalone ?? true}

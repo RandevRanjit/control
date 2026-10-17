@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 
 // Settings and Usage replace the sidebar utility row with a Back button.
 // Everything else is the main app. Legacy `/projects/<key>` links redirect
@@ -31,5 +31,5 @@ export function MainAppLocationTracker() {
 // the app was opened directly on a utility page.
 export function useNavigateToMainApp() {
   const navigate = useNavigate();
-  return useCallback(() => navigate({ href: mainAppHref ?? "/" }), [navigate]);
+  return () => navigate({ href: mainAppHref ?? "/" });
 }

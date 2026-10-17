@@ -1,6 +1,6 @@
 import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
 import type { UsageProviderKind } from "@control/contracts";
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import type { DailyTotals, HourlyTotals } from "@control/shared/usageMerge";
 import {
@@ -240,6 +240,21 @@ function buildChart(
   return { columns, scale, stepX, paths: paths.toSorted((a, b) => b.total - a.total) };
 }
 
+// Rebuilding the chart walks every period and provider; keep it cached across hover renders.
+function useChart(
+  periods: readonly string[],
+  totals: readonly DailyTotals[] | readonly HourlyTotals[],
+  metric: UsageChartMetric,
+  providers: readonly UsageProviderKind[],
+  loadingProviders: ReadonlySet<UsageProviderKind>,
+) {
+  "use memo";
+  const byPeriod = new Map<string, DailyTotals | HourlyTotals>(
+    totals.map((entry) => ["hourStart" in entry ? entry.hourStart : entry.day, entry]),
+  );
+  return buildChart(periods, byPeriod, metric, providers, loadingProviders);
+}
+
 export function UsageProviderChart({
   providers,
   loadingProviders = NONE_LOADING,
@@ -253,22 +268,18 @@ export function UsageProviderChart({
   timeZone,
 }: UsageProviderChartProps) {
   const periods = resolution === "hour" ? hours : days;
-  const byPeriod = useMemo(
-    () =>
-      resolution === "hour"
-        ? new Map(hourly.map((entry) => [entry.hourStart, entry]))
-        : new Map(daily.map((entry) => [entry.day, entry])),
-    [daily, hourly, resolution],
+  const { columns, scale, paths, stepX } = useChart(
+    periods,
+    resolution === "hour" ? hourly : daily,
+    metric,
+    providers,
+    loadingProviders,
   );
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const plotRef = useRef<HTMLDivElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const hoverPositionRef = useRef<{ x: number; y: number } | null>(null);
 
-  const { columns, scale, paths, stepX } = useMemo(
-    () => buildChart(periods, byPeriod, metric, providers, loadingProviders),
-    [byPeriod, loadingProviders, metric, periods, providers],
-  );
   const toY = (value: number) => valueToY(value, scale.max);
   // The delay keeps a quick answer from flashing, as with the page's figures.
   const seriesClassName = (loading: boolean) =>
@@ -276,7 +287,7 @@ export function UsageProviderChart({
 
   const format = metric === "tokens" ? formatTokens : formatUsd;
 
-  const positionTooltip = useCallback(() => {
+  const positionTooltip = () => {
     const plot = plotRef.current;
     const tooltip = tooltipRef.current;
     const hoverPosition = hoverPositionRef.current;
@@ -299,7 +310,7 @@ export function UsageProviderChart({
     const top = Math.min(Math.max(0, preferredTop), Math.max(0, plotHeight - tooltipHeight));
     plot.style.setProperty("--usage-tooltip-left", `${left}px`);
     plot.style.setProperty("--usage-tooltip-top", `${top}px`);
-  }, []);
+  };
 
   useLayoutEffect(() => {
     if (hoverIndex === null) return;
@@ -315,22 +326,19 @@ export function UsageProviderChart({
     return () => observer.disconnect();
   }, [hoverIndex, positionTooltip]);
 
-  const handleMove = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
-      const plot = plotRef.current;
-      if (plot === null || periods.length === 0) return;
-      const bounds = plot.getBoundingClientRect();
-      if (bounds.width === 0) return;
-      const localX = Math.min(bounds.width, Math.max(0, event.clientX - bounds.left));
-      const localY = Math.min(bounds.height, Math.max(0, event.clientY - bounds.top));
-      const fraction = localX / bounds.width;
-      const index = Math.round(fraction * (periods.length - 1));
-      hoverPositionRef.current = { x: localX, y: localY };
-      positionTooltip();
-      setHoverIndex(Math.min(periods.length - 1, Math.max(0, index)));
-    },
-    [periods.length, positionTooltip],
-  );
+  const handleMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    const plot = plotRef.current;
+    if (plot === null || periods.length === 0) return;
+    const bounds = plot.getBoundingClientRect();
+    if (bounds.width === 0) return;
+    const localX = Math.min(bounds.width, Math.max(0, event.clientX - bounds.left));
+    const localY = Math.min(bounds.height, Math.max(0, event.clientY - bounds.top));
+    const fraction = localX / bounds.width;
+    const index = Math.round(fraction * (periods.length - 1));
+    hoverPositionRef.current = { x: localX, y: localY };
+    positionTooltip();
+    setHoverIndex(Math.min(periods.length - 1, Math.max(0, index)));
+  };
 
   const hoveredPeriod = hoverIndex === null ? undefined : periods[hoverIndex];
   const hoveredColumn = hoverIndex === null ? undefined : columns[hoverIndex];

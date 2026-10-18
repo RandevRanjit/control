@@ -373,6 +373,7 @@ it.effect("retains automation and sender attribution while a message waits in th
         command: "command:automation:queue",
         thread: "thread:automation:queue",
         message: "First message",
+        workspace: { type: "worktree", baseRef: "main" },
       }),
     );
     const scheduledTaskId = ScheduledTaskId.make("scheduled-task:queued");
@@ -490,6 +491,7 @@ it.effect("provisions independent launches concurrently instead of behind a glob
               command: "command:launch:concurrent-a",
               thread: "thread:launch:concurrent-a",
               message: "First",
+              workspace: { type: "worktree", baseRef: "main" },
             }),
           ),
           launches.launch(
@@ -497,6 +499,7 @@ it.effect("provisions independent launches concurrently instead of behind a glob
               command: "command:launch:concurrent-b",
               thread: "thread:launch:concurrent-b",
               message: "Second",
+              workspace: { type: "worktree", baseRef: "main" },
             }),
           ),
         ],
@@ -1109,6 +1112,37 @@ it.effect("runs a Scratch thread launched at the root in its own folder", () =>
   }),
 );
 
+it.effect("starts a thread in the main checkout without running the setup action", () =>
+  Effect.gen(function* () {
+    const harness = makeHarness();
+    yield* Effect.gen(function* () {
+      const launches = yield* ThreadLaunch.ThreadLaunchService;
+      const threads = yield* ThreadManagement.ThreadManagementService;
+      const input = launchInput({
+        command: "command:launch:main-checkout",
+        thread: "thread:launch:main-checkout",
+        message: "Work in the main checkout",
+      });
+      const launched = yield* launches.launch(input);
+      assert.isNull(launched.projection.thread.worktreePath);
+      const events = yield* threads.streamStoredEventsFrom({ threadId: launched.threadId }).pipe(
+        Stream.takeUntil(
+          (stored) =>
+            stored.commandId === CommandId.make(`${input.commandId}:release`) &&
+            stored.event.type === "run.updated",
+        ),
+        Stream.runCollect,
+      );
+      assert.isFalse(
+        events.some(
+          (stored) => stored.commandId === CommandId.make(`${input.commandId}:progress:setup`),
+        ),
+      );
+      assert.equal(harness.runSetup.mock.calls.length, 0);
+    }).pipe(Effect.provide(harness.layer));
+  }),
+);
+
 it.effect("names the worktree itself when the client provides no branch", () =>
   Effect.gen(function* () {
     const harness = makeHarness();
@@ -1641,6 +1675,7 @@ it.effect("replays a server-allocated launch", () =>
         command: "command:launch:allocated-retry",
         thread: "unused",
         message: "Only once",
+        workspace: { type: "worktree", baseRef: "main" },
       });
       const first = yield* launches.launch(rest);
       yield* Deferred.await(setupEntered);
@@ -1803,6 +1838,7 @@ it.effect("bounds concurrent first launches to one thread per command", () =>
         command: "command:launch:concurrent-allocated",
         thread: "unused",
         message: "Race me",
+        workspace: { type: "worktree", baseRef: "main" },
       });
       // The command receipt is reserved atomically with the winning create, so
       // a loser either replays the winner's stored events or surfaces a
@@ -1859,6 +1895,7 @@ it.effect("deduplicates retried launch side effects in-process", () =>
         command: "command:launch:retry",
         thread: "thread:launch:retry",
         message: "Only once",
+        workspace: { type: "worktree", baseRef: "main" },
       });
       const [first, retry] = yield* Effect.all([launches.launch(input), launches.launch(input)], {
         concurrency: "unbounded",
@@ -1895,6 +1932,7 @@ it.effect("does not let a failing same-command caller strand a concurrent durabl
                 command,
                 thread: "thread:launch:failed-owner-race",
                 message: "This invalid reuse fails",
+                workspace: { type: "worktree", baseRef: "main" },
               }),
               reuseExistingThread: true,
             })
@@ -1904,6 +1942,7 @@ it.effect("does not let a failing same-command caller strand a concurrent durabl
               command,
               thread: "thread:launch:successful-peer",
               message: "This peer persists",
+              workspace: { type: "worktree", baseRef: "main" },
             }),
           ),
         ],
@@ -1939,6 +1978,7 @@ it.effect("schedules an accepted preparing message exactly once across concurren
         command: "command:launch:accepted-before-fork",
         thread: "thread:launch:accepted-before-fork",
         message: "Resume preparation",
+        workspace: { type: "worktree", baseRef: "main" },
       });
       const messageId = MessageId.make("message:launch:accepted-before-fork");
 

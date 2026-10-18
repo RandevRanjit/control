@@ -132,7 +132,7 @@ export function ThreadMarkdownImageView(props: {
                 style={frameStyle}
               >
                 <ThreadMarkdownImageRequest
-                  key={props.uri}
+                  key={props.sourceKey}
                   uri={props.uri}
                   onLoad={setDecodedSize}
                   onError={() => setFailedUri(props.uri)}

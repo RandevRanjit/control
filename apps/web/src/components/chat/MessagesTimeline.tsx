@@ -1455,7 +1455,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
               onManualNavigation();
               void listRef.current?.scrollToIndex({
                 index: item.rowIndex,
-                animated: true,
+                animated: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
                 viewOffset: 24,
               });
             }}

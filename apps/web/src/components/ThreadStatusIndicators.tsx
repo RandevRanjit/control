@@ -886,7 +886,7 @@ export function ThreadStatusLabel({
         >
           <span
             className={`size-[9px] rounded-full ${status.dotClass} ${
-              status.pulse ? "animate-status-pulse" : ""
+              status.pulse ? "motion-safe:animate-status-pulse" : ""
             }`}
           />
         </TooltipTrigger>
@@ -908,7 +908,7 @@ export function ThreadStatusLabel({
       >
         <span
           className={`h-1.5 w-1.5 rounded-full ${status.dotClass} ${
-            status.pulse ? "animate-status-pulse" : ""
+            status.pulse ? "motion-safe:animate-status-pulse" : ""
           }`}
         />
         <span className="hidden md:inline">{status.label}</span>

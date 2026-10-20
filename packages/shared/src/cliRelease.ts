@@ -6,6 +6,7 @@
  */
 
 const CLI_RELEASE_REPOSITORY = "RandevRanjit/control";
+export const CLI_RELEASES_PAGE_URL = `https://github.com/${CLI_RELEASE_REPOSITORY}/releases`;
 export const CLI_RELEASE_CHECKSUMS_FILE = "SHA256SUMS";
 /** Overrides the download origin for mirrors and air-gapped installs. */
 export const CLI_RELEASE_BASE_URL_ENV = "CONTROL_RELEASE_BASE_URL";

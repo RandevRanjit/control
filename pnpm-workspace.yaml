@@ -1,5 +1,7 @@
 packages:
   - apps/*
+  # The website builds on its own with npm (apps/site/package-lock.json).
+  - "!apps/site"
   - oxlint-plugin-control
   - packages/*
   - scripts

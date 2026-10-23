@@ -1,74 +1,19 @@
 # Install CONTROL
 
-CONTROL runs coding agents on your computer and lets you control them from its
-desktop, web, or mobile app. Set up the machine where the agents will work first.
+CONTROL runs Claude Code chats on your Mac and lets you control them from its
+desktop, web, or mobile app.
 
 ## Requirements
 
-You need an installed, authenticated provider before starting a thread. You can
-launch CONTROL and configure providers afterwards.
-
-## Command line
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/RandevRanjit/control/main/scripts/install.sh | sh
-```
-
-This puts `ctrl` in `~/.local/bin`. If your shell reports `command not found`
-afterwards, that directory is not on your `PATH` yet; the installer prints the
-line to add. Set `CONTROL_CHANNEL=nightly` to install the nightly train, or
-`CONTROL_VERSION` to pin an exact version.
-
-| Task                                             | Command                                                     |
-| ------------------------------------------------ | ----------------------------------------------------------- |
-| Start the server and open the web app            | `ctrl`                                                      |
-| Start the server without a browser               | `ctrl serve`                                                |
-| Keep it running in the background (macOS, Linux) | `ctrl service install` ([details](./background-service.md)) |
-| Move to the newest release                       | `ctrl update`                                               |
-| Remove it again                                  | `ctrl uninstall`                                            |
-
-Run `ctrl help` or `ctrl --help` for the full reference. To start in a new working
-directory, use an explicit path such as `ctrl ./my-project`. A bare directory name
-is accepted only if it already exists.
-
-If `ctrl` or `ctrl start` reports an already running server, connect to that server
-instead. Stop it before starting a replacement, or use a different `--base-dir`
-for an independent server.
-
-To try CONTROL once without installing it, run `npx c0ntr0l@latest` instead (needs
-Node.js for `npx`).
-
-### Intel Macs
-
-There is no `ctrl` executable for Intel Macs (the desktop app is available). To
-run a server there, build it from source with Node.js 24 and `vp`
-([Install vp](https://github.com/RandevRanjit/control#requirements)):
-
-```bash
-git clone https://github.com/RandevRanjit/control
-cd control && vp i && vp run build:desktop
-node apps/server/dist/bin.mjs
-```
-
-`ctrl update` and the background service do not apply to a server run this way;
-update it with `git pull` and a rebuild.
+- macOS on Apple silicon.
+- [Claude Code](https://claude.com/product/claude-code), installed and signed in with
+  `claude auth login`. You can launch CONTROL first and set Claude up afterwards.
 
 ## Desktop app
 
-Download a release from [GitHub Releases](https://github.com/RandevRanjit/control/releases),
-or use a package manager:
-
-| Platform           | Install                            |
-| ------------------ | ---------------------------------- |
-| Windows            | `winget install T3Tools.T3Code`    |
-| macOS              | `brew install --cask t3-code`      |
-| Debian, Ubuntu     | `sudo apt install ./Control-*.deb` |
-| Arch Linux         | `yay -S t3code-bin`                |
-| Arch Linux nightly | `yay -S t3code-nightly-bin`        |
-
-The `.deb` updates itself like the other desktop builds. It asks for your
-password to install each update. If your desktop has no password prompt, the
-update fails. Download the new `.deb` and install it the same way.
+Download the latest DMG from [GitHub Releases](https://github.com/RandevRanjit/control/releases/latest),
+open it and drag CONTROL to Applications. Releases are signed and notarised, and the
+app updates itself from the same page.
 
 ### The `ctrl` command
 
@@ -78,13 +23,6 @@ terminal, open **Settings → General → About** and choose **Install** next to
 `PATH`; on Windows it adds the app's command folder to your `PATH`. Open a new
 terminal afterwards. **Remove** takes it off again. If you already have `ctrl`
 from npm, it stays as it is.
-
-### Windows Subsystem for Linux
-
-Choose a WSL distro in **Settings → Connections** to run agents and projects
-there. Install the provider CLIs inside that distro. CONTROL installs its own
-server runtime there automatically; the first launch after an app update can
-take longer.
 
 ### Open a project from a terminal
 
@@ -99,12 +37,23 @@ Pass a path, such as `ctrl app ../my-project`, to open another directory. It req
 the desktop app, so a standalone server or an SSH session is not enough. If the
 command cannot reach the app, start or update the desktop app and try again.
 
+## From source
+
+For an Intel Mac, or to work on CONTROL, build it with Node.js 24 and `vp`
+([Install vp](https://github.com/RandevRanjit/control#build-from-source)):
+
+```bash
+git clone https://github.com/RandevRanjit/control
+cd control && vp i && vp run build:desktop
+node apps/server/dist/bin.mjs
+```
+
+A server run this way doesn't update itself; update it with `git pull` and a rebuild.
+
 ## Mobile app
 
-Install CONTROL from the
-[App Store](https://apps.apple.com/us/app/t3-code-remote-claude-more/id6787819824) or
-[Google Play](https://play.google.com/store/apps/details?id=com.t3tools.t3code).
-The phone connects to a server on another machine. Follow
+The iPhone app isn't on the App Store. Build `apps/mobile` in Xcode with your own
+Apple developer account. The phone connects to a server on another machine; follow
 [remote access](./remote-access.md) to link it with a pairing URL.
 
 If the app crashes during launch, open Settings → Diagnostics on the next launch

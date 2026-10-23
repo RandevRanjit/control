@@ -4,15 +4,18 @@ Control is a desktop and mobile control surface for Claude Code sessions on this
 installed `claude` through the Agent SDK, keeps every chat alive, and groups chats from any folder.
 
 Control v2 is a hard fork of [T3 Code](https://github.com/pingdotgg/t3code) (MIT); see
-[NOTICE](./NOTICE). It is a personal build: there are no published installers.
+[NOTICE](./NOTICE). Website: [randevranjit.github.io/control](https://randevranjit.github.io/control/).
 
-## Requirements
+## Install
 
-- macOS on Apple silicon.
-- [Claude Code](https://claude.com/product/claude-code), installed and signed in (`claude auth login`).
-- Node 24 and the Vite+ `vp` command-line tool (`curl -fsSL https://vite.plus | bash`).
+Download the DMG from [the latest release](https://github.com/RandevRanjit/control/releases/latest)
+and drag Control to Applications. It needs macOS on Apple silicon and
+[Claude Code](https://claude.com/product/claude-code), installed and signed in (`claude auth login`).
+The phone app isn't on the App Store; build `apps/mobile` in Xcode.
 
 ## Build from source
+
+Needs Node 24 and the Vite+ `vp` command-line tool (`curl -fsSL https://vite.plus | bash`).
 
 ```bash
 vp i

@@ -1,0 +1,2150 @@
+<style data-part="around">
+  .s-around-root {
+    --s-around-gap: 24px;
+  }
+  .s-around-root .s-around-mono {
+    font-family: var(--f-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- A1 menu-bar icon ---------- */
+  .s-around-icons {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 28px 12px;
+  }
+  @media (max-width: 1000px) {
+    .s-around-icons {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 560px) {
+    .s-around-icons {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .s-around-ic {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .s-around-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    height: 64px;
+    border-radius: var(--r-l);
+    background: var(--raised);
+    color: var(--ink-1);
+    box-shadow: inset 0 1px 0 var(--lip);
+  }
+  .s-around-bar svg {
+    width: 60px;
+    height: 36px;
+    flex: none;
+    overflow: visible;
+  }
+  .s-around-cnt {
+    font: 500 16px/1 var(--f-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .s-around-rev {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding-right: 9px;
+    border-radius: var(--r-s);
+    background: var(--ink-1);
+    color: var(--raised);
+  }
+  .s-around-bar svg.s-around-dim {
+    opacity: 0.45;
+  }
+  .s-around-icn {
+    margin-top: 6px;
+    font: var(--w-med) 13px/1.3 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-around-icr {
+    font: var(--w-reg) 12px/1.4 var(--f-chrome);
+    color: var(--text-caption);
+  }
+
+  /* ---------- A2 menu-bar panel ---------- */
+  .s-around-panels {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 360px));
+    justify-content: center;
+    gap: 32px;
+    align-items: start;
+  }
+  @media (max-width: 1220px) {
+    .s-around-panels {
+      grid-template-columns: repeat(2, minmax(0, 360px));
+    }
+  }
+  @media (max-width: 800px) {
+    .s-around-panels {
+      grid-template-columns: minmax(0, 360px);
+    }
+  }
+  .s-around-ptag {
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-caption);
+    margin: 0 0 12px 4px;
+  }
+  .s-around-mb.panel {
+    padding: 0;
+    overflow: hidden;
+  }
+  .s-around-mbh {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    padding: 0 16px;
+  }
+  .s-around-mbh svg {
+    color: var(--ink-1);
+    flex: none;
+  }
+  .s-around-wm {
+    font: 600 12px/1 var(--f-mono);
+    letter-spacing: 0.26em;
+    color: var(--ink-1);
+  }
+  .s-around-ver {
+    font: 400 11px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-around-tally {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    padding: 2px 16px 8px;
+  }
+  .s-around-tl {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 26px;
+  }
+  .s-around-tl .s-around-tw {
+    font: var(--w-reg) 11.5px/1 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-around-psec {
+    padding: 10px 0 2px;
+  }
+  .s-around-psec > .s-around-sech {
+    padding: 0 16px;
+  }
+  .s-around-mb .session-row {
+    --sr-frac: 4;
+  } /* the menu-bar panel: the bead bar is a quarter of the panel, the lamp its end cap */
+  .s-around-go {
+    grid-area: 3 / 1 / 4 / 7;
+    justify-self: end;
+    margin-top: 3px;
+  } /* the needs-you row's own action, a third line under its meta */
+  .s-around-sech {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 22px;
+    padding: 0 10px;
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-around-sech .n {
+    font: 400 11px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-around-use {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) 34px auto;
+    align-items: center;
+    gap: 10px 10px;
+    padding: 6px 16px 2px;
+  }
+  .s-around-use .k {
+    font: 500 11px/1 var(--f-mono);
+    color: var(--text-label);
+  }
+  .s-around-use .v {
+    font: 400 11px/1 var(--f-mono);
+    color: var(--text-strong);
+    text-align: right;
+  }
+  .s-around-use .r {
+    font: var(--w-reg) 11.5px/1 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-around-timers {
+    display: flex;
+    gap: 16px;
+    padding: 8px 16px 0;
+    font: 400 11px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-around-timers span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .s-around-upd {
+    margin: 12px 6px 0;
+    padding: 10px 10px 10px 12px;
+    border-radius: var(--r-m);
+    background: var(--raised);
+  }
+  .s-around-upd .l1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font: var(--w-med) 12.5px/1.2 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-around-upd .l2 {
+    margin-top: 5px;
+    font: var(--w-reg) 11.5px/1.4 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-around-mbf {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    margin-top: 12px;
+    padding: 0 8px 0 16px;
+    background: var(--raised);
+  }
+  .s-around-mbf .v {
+    font: 400 11px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-around-ib {
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--r-pill);
+    color: var(--text-secondary);
+  }
+  .s-around-ib .gi {
+    width: 14px;
+    height: 14px;
+  }
+  .s-around-mb .toast,
+  .s-around-reg.fl .toast {
+    background: var(--raised);
+    box-shadow: none;
+  }
+  .s-around-offer {
+    margin: 2px 8px 0;
+    flex-wrap: wrap;
+    padding: 12px 12px 10px 14px;
+    gap: 10px;
+  }
+  .s-around-offer .l {
+    flex: 1 1 100%;
+  }
+  .s-around-offer .l2 {
+    display: block;
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--text-caption);
+  }
+  .s-around-dg {
+    margin: 2px 8px 0;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px 8px 8px 14px;
+    gap: 6px;
+  }
+  .s-around-dgh {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .s-around-dgh .t-num {
+    font-size: 11.5px;
+  }
+  .s-around-dgr {
+    display: grid;
+    grid-template-columns: 8px 38px minmax(0, auto) minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 8px;
+    padding: 3px 4px 3px 0;
+  }
+  .s-around-dgr > .pearl,
+  .s-around-dgr > .s-around-nop {
+    align-self: center;
+  }
+  .s-around-dgr .tm {
+    font: 400 10.5px/1.3 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-around-dgr .nm {
+    font: 500 11.5px/1.3 var(--f-mono);
+    color: var(--text-body);
+    white-space: nowrap;
+  }
+  .s-around-dgr .wh {
+    font: var(--w-reg) 11.5px/1.3 var(--f-chrome);
+    color: var(--text-caption);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-around-dgr .oc {
+    font: 500 9.5px/1 var(--f-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  /* ---------- A3 lock ---------- */
+  .s-around-lockgrid {
+    display: grid;
+    grid-template-columns: minmax(0, 8fr) minmax(0, 5fr);
+    grid-template-areas: "plate bt" "k17 k18";
+    gap: 24px;
+    align-items: stretch;
+  }
+  @media (max-width: 1000px) {
+    .s-around-lockgrid {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "plate" "k17" "bt" "k18";
+    }
+  }
+  .s-around-lockgrid .window {
+    width: auto;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .s-around-plate.window {
+    grid-area: plate;
+    aspect-ratio: 1512 / 945;
+    background: var(--field);
+    container-type: inline-size;
+  }
+  .s-around-plate .window-band {
+    flex: none;
+    height: 42px;
+  }
+  .s-around-pbody {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2cqi 24px 5.5cqi;
+    gap: clamp(18px, 3.6cqi, 44px);
+    min-height: 0;
+  }
+  .s-around-stage {
+    position: relative;
+    width: 100%;
+    height: clamp(120px, 27cqi, 360px);
+    flex: none;
+  }
+  .s-around-stage .bead {
+    position: absolute;
+  }
+  .s-around-stage .s-around-lb {
+    --rp: var(--T2);
+  }
+  html[data-motion="full"] .s-around-stage .s-around-lb:not(.still) {
+    animation: s-around-breathe var(--T2) var(--e-sine) infinite;
+    animation-delay: calc(var(--k) * var(--T2) * -1);
+  }
+  @keyframes s-around-breathe {
+    0%,
+    100% {
+      scale: 1;
+    }
+    50% {
+      scale: 0.94;
+    }
+  }
+  .s-around-ltext {
+    text-align: center;
+  }
+  .s-around-locked {
+    font: var(--w-strong) clamp(36px, 8.4cqi, 88px)/1 var(--f-chrome);
+    letter-spacing: -0.015em;
+    color: var(--text-strong);
+  }
+  .s-around-until {
+    margin-top: clamp(4px, 1cqi, 10px);
+    font: var(--w-reg) clamp(17px, 2.7cqi, 28px)/1.2 var(--f-chrome);
+    color: var(--text-body);
+  }
+  .s-around-until .t-num {
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .s-around-lcount {
+    margin-top: clamp(12px, 2.2cqi, 24px);
+    font: var(--w-med) 13px/1.4 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-around-lcount .t-num {
+    font-size: 12.5px;
+  }
+  .s-around-promise {
+    margin: 6px auto 0;
+    max-width: 36ch;
+    font: var(--w-reg) 13px/1.5 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-around-bt.window {
+    grid-area: bt;
+    min-height: 340px;
+  }
+  .s-around-bt .window-band {
+    flex: none;
+    height: 42px;
+    gap: 8px;
+  }
+  .s-around-btbar {
+    flex: none;
+    padding: 0 14px 10px;
+  }
+  .s-around-btnote {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: var(--r-pill);
+    background: var(--overlay);
+    box-shadow: inset 0 1px 0 var(--lip);
+    font: var(--w-reg) 11.5px/1 var(--f-chrome);
+    color: var(--text-body);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .s-around-btnote .t-num {
+    font-size: 11px;
+    color: var(--text-strong);
+  }
+  .s-around-mark {
+    position: relative;
+    flex: none;
+    width: 57px;
+    height: 33px;
+    margin-right: 2px;
+  }
+  .s-around-mark .bead {
+    position: absolute;
+  }
+  .s-around-mark .s-around-lb {
+    --rp: var(--T2);
+  }
+  .s-around-btbody {
+    flex: 1;
+    display: flex;
+    padding: 0 6px 6px;
+    min-height: 0;
+  }
+  .s-around-term.pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 16px 18px 18px;
+    font: 400 12px/17px var(--f-mono);
+    color: var(--text-body);
+  }
+  .s-around-term p {
+    white-space: pre-wrap;
+  }
+  .s-around-term .dim {
+    color: var(--text-caption);
+  }
+  .s-around-term .ok {
+    color: var(--diff-add-mark);
+  }
+  .s-around-term .q {
+    margin-top: 17px;
+    color: var(--text-strong);
+    font-weight: 500;
+  }
+  .s-around-term .opt {
+    color: var(--text-secondary);
+  }
+  .s-around-term .opt.on {
+    color: var(--text-strong);
+  }
+  .s-around-term .ft {
+    margin-top: 17px;
+    color: var(--text-caption);
+  }
+  .s-around-ls.panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 28px 20px;
+    text-align: center;
+  }
+  .s-around-ls pre {
+    margin: 0;
+    font: 400 14px/1.15 var(--f-mono);
+    color: var(--text-strong);
+  }
+  .s-around-ls p {
+    font: 400 12px/1.5 var(--f-mono);
+    color: var(--text-body);
+  }
+  .s-around-ls p + p {
+    margin-top: -10px;
+    color: var(--text-caption);
+  }
+  .s-around-ls .k {
+    font: 500 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-around-k17 {
+    grid-area: k17;
+  }
+  @media (max-width: 640px) {
+    .s-around-plate.window {
+      aspect-ratio: auto;
+    }
+    .s-around-pbody {
+      padding: 28px 20px 40px;
+    }
+    .s-around-stage {
+      height: 46cqi;
+    }
+    .s-around-bt .window-band,
+    .s-around-reg .s-around-band {
+      flex-wrap: wrap;
+      height: auto;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      row-gap: 10px;
+    }
+    .s-around-bt .s-around-btnote,
+    .s-around-band .s-around-btnote {
+      order: 5;
+      flex: 1 1 100%;
+      justify-content: center;
+    }
+    .s-around-rl {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .s-around-k18 {
+    grid-area: k18;
+  }
+
+  /* ---------- A4 app icon ---------- */
+  .s-around-icos {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 40px 48px;
+  }
+  .s-around-ico {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .s-around-ico .t-mono-s {
+    white-space: nowrap;
+  }
+  .s-around-can {
+    position: relative;
+    flex: none;
+  }
+  .s-around-sq {
+    position: absolute;
+    border-radius: 22.5%;
+    box-shadow: var(--float);
+  }
+  .s-around-night {
+    position: absolute;
+    inset: 0;
+  }
+  .s-around-sqin {
+    position: absolute;
+    border-radius: 22.5%;
+    background: radial-gradient(120% 90% at 50% 8%, var(--lift), transparent 58%), var(--field);
+    box-shadow:
+      inset 0 1px 0 var(--lip),
+      inset 0 calc(var(--sz) * -0.05) calc(var(--sz) * 0.1) var(--occl);
+  }
+  .s-around-night .bead {
+    position: absolute;
+  }
+  .s-around-fav {
+    border-radius: 8px;
+    box-shadow: var(--float);
+  }
+
+  /* ---------- A5 sheets ---------- */
+  .s-around-sheets {
+    columns: 3 320px;
+    column-gap: 28px;
+  }
+  .s-around-sheet.panel {
+    break-inside: avoid;
+    display: block;
+    margin: 0 0 28px;
+    padding: 18px 20px 18px;
+    border-radius: var(--r-xl);
+  }
+  .s-around-shh {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-around-shh .r {
+    font: 400 11px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-around-q {
+    font: var(--w-strong) 16px/1.3 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-around-qs {
+    margin-top: 4px;
+    font: var(--w-reg) 13px/1.45 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-around-form {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 10px 12px;
+    align-items: center;
+    margin-top: 4px;
+  }
+  .s-around-form > .lb {
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-label);
+    align-self: start;
+    padding-top: 8px;
+  }
+  .s-around-form .rw {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .s-around-form .rw > .input {
+    flex: 1;
+    min-width: 0;
+  }
+  .s-around-sheet .input {
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .s-around-sheet .input .gi {
+    width: 13px;
+    height: 13px;
+    color: var(--text-caption);
+  }
+  .s-around-hint {
+    margin-top: 6px;
+    font: var(--w-reg) 11.5px/1.4 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-around-pre {
+    margin-top: 16px;
+    padding: 9px 12px;
+    border-radius: var(--r-m);
+    background: var(--raised);
+    font: var(--w-reg) 12px/1.5 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-around-pre code {
+    background: var(--sunken);
+  }
+  .s-around-shf {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .s-around-blk {
+    margin-top: 16px;
+  }
+  .s-around-blk > .lb {
+    display: block;
+    margin-bottom: 8px;
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-around-chkl {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .s-around-chk {
+    --s-around-bar: calc((100% + 22px) / 3);
+    display: grid;
+    grid-template-columns: 16px minmax(0, auto) minmax(0, 1fr) var(--s-around-bar) 15px;
+    grid-template-columns: 16px minmax(0, auto) minmax(0, 1fr) round(
+        down,
+        var(--s-around-bar),
+        8px
+      ) 15px;
+    column-gap: 10px;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 12px 0 10px;
+    border-radius: var(--r-m);
+    background: color-mix(in srgb, var(--raised) 55%, transparent);
+  }
+  .s-around-chk > .sbar {
+    grid-area: 1 / 4;
+  }
+  .s-around-chk > .lamp,
+  .s-around-rl > span > .lamp {
+    --d: 15px;
+    grid-area: 1 / 5;
+    justify-self: center;
+  }
+  .s-around-chk:nth-child(even) {
+    background: transparent;
+  }
+  .s-around-chk .nm {
+    font: 500 12px/1 var(--f-mono);
+    color: var(--text-strong);
+  }
+  .s-around-chk .mt {
+    font: var(--w-reg) 11.5px/1 var(--f-chrome);
+    color: var(--text-caption);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-around-box {
+    display: inline-grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    flex: none;
+    border-radius: 5px;
+    background: var(--sunken);
+    box-shadow: var(--well);
+    color: var(--field);
+  }
+  .s-around-box[data-on] {
+    background: var(--ink-1);
+    box-shadow: inset 0 -2px 4px var(--occl-light);
+  }
+  .s-around-box svg {
+    width: 12px;
+    height: 12px;
+  }
+  .s-around-num.seg > button {
+    font-family: var(--f-mono);
+    font-size: 11px;
+  }
+  .s-around-promise2 {
+    margin-top: 14px;
+    font: var(--w-med) 12.5px/1.5 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-around-rl {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  } /* one column: every name reads whole beside its bar */
+  .s-around-rl > span {
+    --s-around-bar: calc((100% + 16px) / 3);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--s-around-bar) 15px;
+    grid-template-columns: minmax(0, 1fr) round(down, var(--s-around-bar), 8px) 15px;
+    column-gap: 8px;
+    align-items: center;
+    min-height: 26px;
+    padding: 0 8px;
+    font: 500 11.5px/16px var(--f-mono);
+    color: var(--text-body);
+    white-space: nowrap;
+  }
+  .s-around-rl > span > b {
+    grid-area: 1 / 1;
+    font-weight: 500;
+    color: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-around-rl > span > .sbar {
+    grid-area: 1 / 2;
+  }
+  .s-around-rl > span > .lamp {
+    grid-area: 1 / 3;
+  }
+  .s-around-radios {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .s-around-radio {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: var(--r-m);
+    font: 400 11.5px/1.3 var(--f-mono);
+    color: var(--text-secondary);
+  }
+  .s-around-radio[aria-checked="true"] {
+    background: var(--selection);
+    color: var(--text-strong);
+  }
+  .s-around-radio > i {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--sunken);
+    box-shadow: var(--well);
+  }
+  .s-around-radio[aria-checked="true"] > i::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: var(--ink-1);
+  }
+  .s-around-radio.more {
+    color: var(--text-caption);
+    font-family: var(--f-chrome);
+    font-size: 12px;
+  }
+  .s-around-expl {
+    margin-top: 12px;
+    font: var(--w-reg) 12px/1.5 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-around-fin .input {
+    height: 36px;
+    font-size: 14px;
+  }
+  .s-around-caret {
+    display: inline-block;
+    width: 2px;
+    height: 17px;
+    margin-left: 1px;
+    border-radius: 1px;
+    background: var(--ink-1);
+    vertical-align: middle;
+  }
+  .s-around-fg {
+    margin-top: 12px;
+  }
+  .s-around-fg > .lb {
+    display: block;
+    padding: 0 10px 4px;
+    font: var(--w-med) 11.5px/1 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-around-fr {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: var(--r-m);
+    min-width: 0;
+  }
+  .s-around-fr[aria-selected="true"] {
+    background: var(--selection);
+  }
+  .s-around-fr .gi {
+    width: 13px;
+    height: 13px;
+    color: var(--text-caption);
+  }
+  .s-around-fr .nm {
+    font: 500 12px/1 var(--f-mono);
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .s-around-fr .mt {
+    font: var(--w-reg) 11.5px/1 var(--f-chrome);
+    color: var(--text-caption);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .s-around-fr u {
+    text-decoration: underline 2px var(--ink-4);
+    text-underline-offset: 3px;
+  }
+  .s-around-fr .kbd {
+    margin-left: auto;
+  }
+  .s-around-fr .sbar.tip {
+    margin-left: auto;
+    flex: none;
+  }
+  .s-around-fr .sbar.tip + .kbd {
+    margin-left: 0;
+  }
+  .s-around-ffoot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin-top: 14px;
+    padding: 0 2px;
+    font: var(--w-reg) 11.5px/1 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-around-ffoot span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .s-around-set {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .s-around-sr {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 40px;
+    padding: 6px 10px;
+    border-radius: var(--r-m);
+    background: color-mix(in srgb, var(--raised) 55%, transparent);
+  }
+  .s-around-sr.alt {
+    background: transparent;
+  }
+  .s-around-sr.sub {
+    margin-left: 22px;
+    min-height: 32px;
+  }
+  .s-around-sr .tx {
+    flex: 1;
+    min-width: 0;
+  }
+  .s-around-sr .tx > b {
+    display: block;
+    font: var(--w-med) 13px/1.3 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-around-sr .tx > span {
+    display: block;
+    margin-top: 2px;
+    font: var(--w-reg) 11.5px/1.4 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-around-sr .tx code {
+    font-size: 10.5px;
+  }
+  .s-around-log {
+    margin: 2px 0 4px 22px;
+    padding: 9px 12px;
+    border-radius: var(--r-m);
+    background: var(--sunken);
+    box-shadow: var(--well);
+    font: 400 10.5px/1.6 var(--f-mono);
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
+  }
+  .s-around-ask .s-around-q {
+    font-size: 18px;
+  }
+
+  /* ---------- A6 notes ---------- */
+  .s-around-rule {
+    max-width: 34ch;
+    font: var(--w-strong) clamp(22px, 2.4vw, 32px)/1.25 var(--f-chrome);
+    letter-spacing: -0.01em;
+    color: var(--text-strong);
+    text-wrap: balance;
+  }
+  .s-around-nhead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px 32px;
+    margin-bottom: 32px;
+  }
+  .s-around-notes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 32px 24px;
+  }
+  @media (max-width: 1100px) {
+    .s-around-notes {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 700px) {
+    .s-around-notes {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .s-around-nc {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+  .s-around-nc > .s-around-reg {
+    flex: 1;
+  }
+  .s-around-nl {
+    font: var(--w-med) 13px/1.3 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-around-nl span {
+    display: block;
+    font-weight: var(--w-reg);
+    font-size: 12px;
+    color: var(--text-caption);
+    margin-top: 2px;
+  }
+  .s-around-reg {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 10px 0;
+    border-radius: var(--r-l);
+    background: var(--raised);
+  }
+  .s-around-reg.fl {
+    background: var(--overlay);
+    box-shadow:
+      var(--float),
+      inset 0 1px 0 var(--lip);
+    justify-content: flex-start;
+    padding-top: 0;
+  }
+  .s-around-reg.pn {
+    background: var(--deep);
+    box-shadow: inset 0 0 0 6px var(--raised);
+    padding: 14px 14px;
+    justify-content: flex-start;
+  }
+  .s-around-reg.bd {
+    justify-content: flex-start;
+    padding: 0;
+    min-height: 0;
+  }
+  .s-around-reg .toast {
+    margin: 0 8px;
+  }
+  .s-around-reg .session-row.multi {
+    background: var(--overlay);
+  }
+  .s-around-reg .session-row {
+    margin: 0 8px;
+  }
+  .s-around-reg .s-around-mbh {
+    height: 40px;
+  }
+  .s-around-band {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 42px;
+    padding: 0 12px 0 14px;
+    min-width: 0;
+  }
+  .s-around-band .name {
+    font: 600 13px/1 var(--f-mono);
+    letter-spacing: 0.04em;
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .s-around-band .path {
+    font: 400 11px/1 var(--f-mono);
+    color: var(--text-caption);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .s-around-band .lights {
+    margin-right: 4px;
+  }
+  .s-around-down {
+    font: 600 11px/1 var(--f-mono);
+    letter-spacing: 0.06em;
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .s-around-bdpane {
+    flex: 1;
+    min-height: 96px;
+    margin: 0 6px 6px;
+    border-radius: var(--r-l);
+    background: var(--deep);
+  }
+  .s-around-glh {
+    font: var(--w-med) 11.5px/1 var(--f-chrome);
+    color: var(--text-caption);
+    margin: 2px 0 6px;
+  }
+  .s-around-gl {
+    display: flex;
+    gap: 10px;
+    font: 400 11px/1.75 var(--f-mono);
+    color: var(--text-body);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .s-around-gl .h {
+    color: var(--text-caption);
+  }
+  .s-around-gl .m {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .s-around-peer.toast {
+    margin: 12px 0 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 10px 14px;
+    background: var(--raised);
+    box-shadow: none;
+  }
+  .s-around-peer .w {
+    font: 500 9.5px/1 var(--f-mono);
+    letter-spacing: 0.06em;
+    color: var(--text-caption);
+  }
+  .s-around-peer .l1 {
+    font: var(--w-reg) 12.5px/1.4 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-around-peer .l2 {
+    font: var(--w-reg) 12px/1.4 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-around-peer code {
+    font-size: 11px;
+    background: var(--sunken);
+  }
+
+  /* ---------- A7 empty states ---------- */
+  .s-around-empties {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    padding: 6px;
+    border-radius: var(--r-win);
+    background: var(--raised);
+  }
+  @media (max-width: 1100px) {
+    .s-around-empties {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 560px) {
+    .s-around-empties {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .s-around-em.pane {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 300px;
+    padding: 28px 20px;
+    text-align: center;
+  }
+  .s-around-em svg.s-around-emk {
+    color: var(--seam);
+  }
+  .s-around-em h4 {
+    font: var(--w-strong) 15px/1.3 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-around-em p {
+    max-width: 30ch;
+    font: var(--w-reg) 12px/1.5 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-around-keys {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 14px;
+    font: var(--w-reg) 11.5px/1 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-around-keys span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .s-around-root .s-around-gap {
+    height: var(--s-6);
+  }
+</style>
+<section id="around" class="bl-sec s-around-root">
+  <header class="bl-sh">
+    <div class="no">07 <span class="bl-steps"></span></div>
+    <h2>Around the window</h2>
+    <p class="meta">
+      Menu bar, lock, icon, sheets and notes, with pearls and state bars inside them.
+    </p>
+  </header>
+  <p class="bl-lead">
+    The menu-bar icon stays a still template image: state by shape. The panel under it gets pearls
+    and bead bars: one pearl per session in its header, and on every row a short bar of beads with
+    the colour flowing through them, just before the lamp. The lock screen is the one CONTROL screen
+    where nothing needs you, so it is the one place the whole ramp is allowed to move.
+  </p>
+
+  <!-- A1 -->
+  <h3 class="bl-sub"><span class="id">A1</span>Menu-bar icon</h3>
+  <div class="bl-prose">
+    <p>
+      macOS draws a template image in one ink and recolours it for each bar, so the icon carries no
+      colour, and it carries no motion either. The stair holds every state by shape alone: the apex
+      step fills for working, a check in the right shoulder marks done, and the whole canvas
+      reverses for needs you. Bloom changes two things. Strokes take round caps and round joins,
+      like the mark. And done's filled corner square becomes a check, because Bloom 2 drops every
+      corner mark for done: a square or dot in a corner was the half-moon's grammar.
+    </p>
+  </div>
+  <div class="s-around-gap"></div>
+  <figure class="fig" data-fig="icon-states">
+    <div class="s-around-icons"></div>
+    <figcaption class="cap">
+      <span class="id">A1</span><b>The L3 stair at 18 pt, on a dark bar and a light bar.</b>
+      <span
+        >t 6, r 6, a 7, f 3, stroke 3; tick 2, and the check drawn like it. Priority: needs you,
+        then done, then working, then idle, and the count belongs to the winner. It changes only
+        after a 2 s settle on leaving working; needs you lands on the next 1 Hz tick.</span
+      >
+    </figcaption>
+  </figure>
+
+  <!-- A2 -->
+  <h3 class="bl-sub"><span class="id">A2</span>The menu-bar panel</h3>
+  <div class="bl-prose">
+    <p>
+      The panel is 360 wide and floats, so it takes the overlay tone, the navy float shadow and a
+      lip of light on its top edge. Its header line is three pearl tallies, one pearl per session in
+      that session's own state colour, each with its count beside it: the mix reads at a glance, and
+      the number is there without a hover. Every row is the sidebar's row at the panel's width: the
+      name on the first line, then a bead bar a quarter of the panel wide, then the lamp at the far
+      right as its end cap, 15 px. The second line holds Claude's spark and the state words, then
+      the context line, the tokens the chat has spent and the age. The session that needs you keeps
+      its tint and takes a third line for Go to tab. Lamps and bars run on the window's clock, so
+      the needs-you beads here flow in step with the ones in the sidebar.
+    </p>
+  </div>
+  <div class="s-around-gap"></div>
+  <figure class="fig" data-fig="panel">
+    <div class="s-around-panels">
+      <div>
+        <p class="s-around-ptag">Normal</p>
+        <div class="panel float s-around-mb" data-region>
+          <div class="s-around-mbh">
+            <span data-stair></span><span class="s-around-wm">CONTROL</span><span class="sp"></span
+            ><span class="s-around-ver">Claude 2.1.287</span>
+          </div>
+          <div class="s-around-tally" data-tally="needs failed|working working working|done"></div>
+          <div class="s-around-psec">
+            <div class="s-around-sech">Needs you <span class="n">2</span></div>
+            <div data-row="needs|STATISTICS|needs you · login|2m" data-go></div>
+            <div data-row="failed|CV-BUILD|failed · exit 1|2h"></div>
+          </div>
+          <div class="s-around-psec">
+            <div class="s-around-sech">Working <span class="n">3</span></div>
+            <div data-row="working|ORBIT-WEBSITE|working|12m"></div>
+            <div data-row="working|CONTROL|working|1m"></div>
+            <div data-row="working|PORTFOLIO-WEBSITE|working · job|6m"></div>
+          </div>
+          <div class="s-around-psec">
+            <div class="s-around-sech">Housekeeping <span class="n">1</span></div>
+            <div data-row="house|RELAY MAIN|dreaming|9m"></div>
+          </div>
+          <div class="s-around-psec">
+            <div class="s-around-sech">
+              Done <span class="n">1</span><span class="sp"></span
+              ><button class="pill ghost sm">Clear</button>
+            </div>
+            <div data-row="done|LINEAR_ALGEBRA|done · main|14m"></div>
+          </div>
+          <div class="s-around-psec" data-usage></div>
+          <div class="s-around-upd">
+            <div class="l1">
+              Claude <span class="s-around-mono">2.1.288</span> out<span class="sp"></span
+              ><button class="pill primary sm">Restart</button>
+            </div>
+            <div class="l2">3 can restart now · 1 waits for housekeeping · 1 held</div>
+          </div>
+          <div data-foot></div>
+        </div>
+      </div>
+      <div>
+        <p class="s-around-ptag">Lock offer</p>
+        <div class="panel float s-around-mb" data-region>
+          <div class="s-around-mbh">
+            <span data-stair></span><span class="s-around-wm">CONTROL</span><span class="sp"></span
+            ><span class="s-around-ver">Claude 2.1.287</span>
+          </div>
+          <div class="s-around-tally" data-tally="working working working working|done"></div>
+          <div class="toast s-around-offer s-around-note">
+            <span class="l"
+              ><b>Nothing needs you. Lock for 2h?</b
+              ><span class="l2"
+                >Quiet since <span class="s-around-mono">15:50</span> · 4 working · 1 done</span
+              ></span
+            ><button class="pill sm">Group</button><button class="pill sm">Full</button
+            ><span class="sp"></span><button class="pill ghost sm">Later</button>
+          </div>
+          <div class="s-around-psec" data-usage></div>
+          <div data-foot></div>
+        </div>
+      </div>
+      <div>
+        <p class="s-around-ptag">While locked, at 18:00</p>
+        <div class="panel float s-around-mb" data-region>
+          <div class="s-around-mbh">
+            <span data-stair></span><span class="s-around-wm">CONTROL</span><span class="sp"></span
+            ><span class="s-around-ver">Claude 2.1.287</span>
+          </div>
+          <div class="toast s-around-dg s-around-note">
+            <div class="s-around-dgh">
+              <b>While locked</b><span class="t-num">16:00–18:00</span><span data-count="6"></span
+              ><span class="sp"></span><button class="pill ghost sm">Clear</button>
+            </div>
+            <div data-digest></div>
+          </div>
+          <div class="s-around-psec" data-usage></div>
+          <div data-foot></div>
+        </div>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">A2</span><b>Normal, lock offer, while locked.</b>
+      <span
+        >Needs you holds a failed session too, so its tally is one arm pearl and one amber pearl.
+        Each row reads right to left: lamp, then beads; the bars line up in one column, and so do
+        the lamps. 5H and 7D are thin lines in plain ink; past 80 % only the leading end breathes.
+        The offer and the digest are notes at the top of the panel, never banners. The digest says
+        what happened behind the lock, and whether each thing waited or came through; each row's
+        pearl is the state it records. Context, tokens and ages are sample data.</span
+      >
+    </figcaption>
+  </figure>
+
+  <!-- A3 -->
+  <h3 class="bl-sub"><span class="id">A3</span>The lock screen</h3>
+  <div class="bl-prose">
+    <p>
+      A full lock is a commitment: no early unlock. It is also the one CONTROL screen where nothing
+      needs you, so it is the one place the whole ramp may move. The shut stair is 30 beads with the
+      full ramp laid once around it. It turns once every 14 s, the slowest loop in the app, and each
+      bead breathes on the same 14 s as the colour passes through it. Nothing else moves.
+    </p>
+    <p>
+      When a session needs you, only that session opens. The window comes to the front without key
+      focus, its band carries the lamp, the note and the session's full state bar, and the lock mark
+      drops to the safe ramp, so the needs-you bar is the only arm in view.
+    </p>
+  </div>
+  <div class="s-around-gap"></div>
+  <figure class="fig" data-fig="lock">
+    <div class="s-around-lockgrid">
+      <div
+        class="window s-around-plate"
+        data-region
+        role="img"
+        aria-label="Full-lock window: Locked until 18:00"
+      >
+        <div class="window-band">
+          <span class="lights"><i></i><i></i><i></i></span>
+        </div>
+        <div class="s-around-pbody">
+          <div class="s-around-stage" aria-hidden="true"></div>
+          <div class="s-around-ltext">
+            <p class="s-around-locked">Locked</p>
+            <p class="s-around-until">until <span class="t-num">18:00</span></p>
+            <p class="s-around-lcount">
+              <span class="t-num">4</span> working · <span class="t-num">1</span> done
+            </p>
+            <p class="s-around-promise">
+              No early unlock. This window opens by itself if a session needs you.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="window s-around-bt" data-region>
+        <div class="window-band">
+          <span class="lights"><i></i><i></i><i></i></span><span data-lamp="needs"></span
+          ><span class="name">RELAY MAIN</span
+          ><span class="s-around-btnote"
+            >Locked until&nbsp;<span class="t-num">18:00</span>&nbsp;· re-locks when answered</span
+          ><span class="sp"></span><span class="s-around-mark" aria-hidden="true"></span>
+        </div>
+        <div class="s-around-btbar"><span data-bar="needs"></span></div>
+        <div class="s-around-btbody">
+          <div class="pane s-around-term">
+            <p><span class="ok">⏺</span> Bash(xcodebuild test -scheme TX2)</p>
+            <p class="dim">⎿ Executed 16 tests, with 0 failures</p>
+            <p class="q">Which threshold should the rep detector use for curls?</p>
+            <p class="opt on">❯ 0.8 g</p>
+            <p class="opt">0.6 g</p>
+            <p class="opt">Adaptive</p>
+            <p class="opt">Type something.</p>
+            <p class="ft">Enter to select · ↑/↓ to navigate · Esc to cancel</p>
+          </div>
+        </div>
+      </div>
+      <div class="panel well s-around-ls s-around-k17">
+        <span class="k">ctrl lockscreen · K17</span>
+        <pre aria-label="The shut stair in box drawing">
+    ┏━┓
+  ┏━┛ ┗━┓
+┏━┛     ┗━┓
+┗━━━━━━━━━┛</pre>
+        <p>LOCKED until 18:00 · 4 working · 1 done</p>
+      </div>
+      <div class="panel well s-around-ls s-around-k18">
+        <span class="k">ctrl lockscreen · K18</span>
+        <pre aria-label="The shut stair in box drawing">
+    ┏━┓
+  ┏━┛ ┗━┓
+┏━┛     ┗━┓
+┗━━━━━━━━━┛</pre>
+        <p>LOCKED until 18:00 · 2 working · 2 done · 1 needs you</p>
+        <p>RELAY MAIN is open in the CONTROL window.</p>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">A3</span><b>Full lock and break-through.</b>
+      <span
+        >The plate (K14): field, the shut stair, the time, the count and one sentence; no sidebar,
+        terminal or tab bar. RELAY MAIN through the lock (K16), its needs-you bar under the band and
+        Claude's own question in its well. Under each, the same moment in
+        <code>ctrl lockscreen</code>: plain text in any tmux client, redrawn each minute, input
+        ignored.</span
+      >
+    </figcaption>
+  </figure>
+
+  <!-- A4 -->
+  <h3 class="bl-sub"><span class="id">A4</span>App icon</h3>
+  <div class="bl-prose">
+    <p>
+      The icon is the only other place the full ramp appears, and it does not move. The bead stair
+      rides 3 % of the body above centre on Night's grey field, <span class="t-num">#2F2E2E</span>,
+      where the plateaus read cleanly against no hue at all; at 64 and 32 px the beads close up into
+      one coloured stair.
+    </p>
+  </div>
+  <div class="s-around-gap"></div>
+  <figure class="fig" data-fig="app-icon">
+    <div class="s-around-icos"></div>
+    <figcaption class="cap">
+      <span class="id">A4</span><b>256, 128, 64 and 32 px, and the favicon.</b>
+      <span
+        >A still frame of the hero ramp with red, green and blue rests all in view. The favicon
+        keeps the stroked stair in ink.</span
+      >
+    </figcaption>
+  </figure>
+
+  <!-- A5 -->
+  <h3 class="bl-sub"><span class="id">A5</span>Sheets and the ⌘K finder</h3>
+  <div class="bl-prose">
+    <p>
+      Sheets float at radius 20 with the navy float shadow. Fields and wells sink, buttons are
+      pills, and the selected segment slides. One primary per sheet, in ink. Danger text appears
+      once, on Archive anyway?, because archiving ends a session mid-turn. The lock sheet's
+      no-early-unlock sentence is a promise, not a danger, so it stays in ink.
+    </p>
+  </div>
+  <div class="s-around-gap"></div>
+  <figure class="fig" data-fig="sheets">
+    <div class="s-around-sheets">
+      <!-- D1 -->
+      <div class="panel float s-around-sheet">
+        <div class="s-around-shh">
+          New session<span class="sp"></span><span class="kbd">⌘T</span>
+        </div>
+        <div class="s-around-form">
+          <span class="lb">Name</span>
+          <div>
+            <span class="input"><span class="ph">inherits the first chat's name</span></span>
+            <p class="s-around-hint">
+              Leave blank to follow Claude's chat name. Typing one pins it.
+            </p>
+          </div>
+          <span class="lb">Group</span>
+          <span class="input">TU_DELFT<span class="sp"></span><span data-gi="chev-d"></span></span>
+          <span class="lb">Folder</span>
+          <div class="rw">
+            <span class="input">~/Uni/statistics</span><button class="pill sm">Choose</button>
+          </div>
+          <span class="lb">Worktree</span>
+          <div class="rw">
+            <div class="seg sm" role="group" aria-label="Worktree">
+              <button aria-pressed="true">On</button><button aria-pressed="false">Off</button>
+            </div>
+            <span class="input">week-5-lab</span>
+          </div>
+        </div>
+        <p class="s-around-pre">
+          Pre-types <code>claude -w week-5-lab</code> · not run · Enter is yours
+        </p>
+        <div class="s-around-shf">
+          <span class="sp"></span><button class="pill ghost">Cancel</button
+          ><button class="pill primary">Create <span class="kbd">↩</span></button>
+        </div>
+      </div>
+      <!-- D3 -->
+      <div class="panel float s-around-sheet">
+        <div class="s-around-shh">
+          Restore at login<span class="sp"></span><span class="r">20 snapshots kept</span>
+        </div>
+        <p class="s-around-q">Restore these 7 sessions?</p>
+        <p class="s-around-qs">From the snapshot saved 23:40 yesterday. 14 tabs, 19 panes.</p>
+        <div class="s-around-blk"><div class="s-around-rl" data-restore></div></div>
+        <div class="s-around-blk">
+          <span class="lb">Snapshot</span>
+          <div class="s-around-radios" role="radiogroup" aria-label="Snapshot">
+            <div class="s-around-radio" role="radio" aria-checked="true">
+              <i></i>23:40 yesterday · 7 sessions · 14 tabs
+            </div>
+            <div class="s-around-radio" role="radio" aria-checked="false">
+              <i></i>22:51 yesterday · 6 sessions · 11 tabs
+            </div>
+            <div class="s-around-radio more" role="radio" aria-checked="false"><i></i>17 older</div>
+          </div>
+        </div>
+        <p class="s-around-expl">
+          Each Claude pane gets <code>claude --resume &lt;id&gt;</code> typed at its prompt, and
+          CONTROL never presses Enter.
+        </p>
+        <div class="s-around-shf">
+          <button class="pill ghost">Skip</button><span class="sp"></span
+          ><button class="pill">Dry-run</button><button class="pill primary">Restore</button>
+        </div>
+      </div>
+      <!-- D5 -->
+      <div class="panel float s-around-sheet s-around-fin">
+        <span class="input"
+          ><span data-gi="find"></span>arm<span class="s-around-caret"></span
+          ><span class="sp"></span><span class="kbd">⌘K</span></span
+        >
+        <div class="s-around-fg">
+          <span class="lb">Sessions</span>
+          <div class="s-around-fr" aria-selected="true">
+            <span data-gi="sess"></span><span class="nm"><u>ARM</u>ED-1-MARKET</span
+            ><span class="mt">working · master</span><span data-tip="working"></span
+            ><span class="kbd">⌘4</span>
+          </div>
+        </div>
+        <div class="s-around-fg">
+          <span class="lb">Worktrees</span>
+          <div class="s-around-fr">
+            <span data-gi="wt"></span><span class="nm">launch-pipeline</span
+            ><span class="mt">in <u>ARM</u>ED-1-MARKET · +38 −12</span>
+          </div>
+          <div class="s-around-fr">
+            <span data-gi="wt"></span><span class="nm">fig01</span
+            ><span class="mt">in <u>ARM</u>ED-1-MARKET · clean</span>
+          </div>
+        </div>
+        <div class="s-around-fg">
+          <span class="lb">Tabs</span>
+          <div class="s-around-fr">
+            <span data-gi="sess"></span><span class="nm">bun</span
+            ><span class="mt">in <u>ARM</u>ED-1-MARKET · tab 2</span>
+          </div>
+        </div>
+        <div class="s-around-fg">
+          <span class="lb">Actions</span>
+          <div class="s-around-fr">
+            <span data-gi="chev-r"></span
+            ><span class="mt">Send <u>ARM</u>ED-1-MARKET to background</span
+            ><span class="kbd">⌘W</span>
+          </div>
+          <div class="s-around-fr">
+            <span data-gi="chev-r"></span><span class="mt">Rename <u>ARM</u>ED-1-MARKET</span
+            ><span class="kbd">R</span>
+          </div>
+        </div>
+        <div class="s-around-ffoot">
+          <span><span class="kbd">↑↓</span>Move</span><span><span class="kbd">↩</span>Open</span
+          ><span><span class="kbd">Esc</span>Close</span>
+        </div>
+      </div>
+      <!-- K4 -->
+      <div class="panel float s-around-sheet">
+        <div class="s-around-shh">Lock<span class="sp"></span><span class="kbd">⌘L</span></div>
+        <p class="s-around-q">Lock ORBIT and CONTROL until 18:00?</p>
+        <p class="s-around-qs">
+          2 sessions, both working. TU_DELFT, RELAY MAIN and the rest stay open.
+        </p>
+        <div class="s-around-blk">
+          <span class="lb">Mode</span>
+          <div class="seg sm" role="group" aria-label="Lock mode">
+            <button aria-pressed="true">Group</button><button aria-pressed="false">Full</button>
+          </div>
+        </div>
+        <div class="s-around-blk">
+          <span class="lb">Groups</span>
+          <div class="s-around-chkl">
+            <div class="s-around-chk">
+              <span class="s-around-box" data-on></span><span data-lamp="working"></span
+              ><span class="nm">ORBIT</span><span class="mt">1 · working</span
+              ><span data-bar="working"></span>
+            </div>
+            <div class="s-around-chk">
+              <span class="s-around-box" data-on></span><span data-lamp="working"></span
+              ><span class="nm">CONTROL</span><span class="mt">1 · working</span
+              ><span data-bar="working"></span>
+            </div>
+            <div class="s-around-chk">
+              <span class="s-around-box"></span><span data-lamp="idle"></span
+              ><span class="nm">TU_DELFT</span><span class="mt">3 · idle</span
+              ><span data-bar="idle"></span>
+            </div>
+          </div>
+        </div>
+        <div class="s-around-blk">
+          <span class="lb">For</span>
+          <div class="s-around-form">
+            <div class="rw" style="grid-column: 1/-1">
+              <div class="seg sm s-around-num" role="group" aria-label="Lock for">
+                <button aria-pressed="false">30m</button><button aria-pressed="false">1h</button
+                ><button aria-pressed="false">2h</button><button aria-pressed="true">Until</button>
+              </div>
+              <span class="input" style="flex: 0 0 80px">18:00</span>
+            </div>
+          </div>
+        </div>
+        <p class="s-around-promise2">
+          No early unlock. Until 18:00 nothing lifts it: not quitting CONTROL, not restarting the
+          daemon, not rebooting.
+        </p>
+        <div class="s-around-shf">
+          <span class="sp"></span><button class="pill ghost">Cancel</button
+          ><button class="pill primary">Lock <span class="kbd">↩</span></button>
+        </div>
+      </div>
+      <!-- D6 -->
+      <div class="panel float s-around-sheet">
+        <div class="s-around-shh">Settings<span class="sp"></span><span class="kbd">⌘,</span></div>
+        <div class="s-around-set">
+          <div class="s-around-sr">
+            <span class="tx"><b>Updates</b></span>
+            <div class="seg sm" role="group" aria-label="Updates">
+              <button aria-pressed="true">Ask</button><button aria-pressed="false">Auto</button>
+            </div>
+          </div>
+          <div class="s-around-sr alt">
+            <span class="tx"
+              ><b>Theme</b
+              ><span
+                >Claude Code theme <code>custom:control</code>. 4 older sessions need
+                <code>/theme</code> once.</span
+              ></span
+            ><button class="toggle" role="switch" aria-checked="true" aria-label="Theme">
+              <i></i>
+            </button>
+          </div>
+          <div class="s-around-sr">
+            <span class="tx"><b>Banners</b></span
+            ><button class="toggle" role="switch" aria-checked="false" aria-label="Banners">
+              <i></i>
+            </button>
+          </div>
+          <div class="s-around-sr alt">
+            <span class="tx"><b>Sound</b></span
+            ><button class="toggle" role="switch" aria-checked="true" aria-label="Sound">
+              <i></i>
+            </button>
+          </div>
+          <div class="s-around-sr">
+            <span class="tx"><b>Login item</b></span
+            ><button class="toggle" role="switch" aria-checked="true" aria-label="Login item">
+              <i></i>
+            </button>
+          </div>
+          <div class="s-around-sr alt">
+            <span class="tx"
+              ><b>Quiet profile</b
+              ><span>Config fixes, PreToolUse guard warn only, focus-steal watchdog</span></span
+            ><button class="toggle" role="switch" aria-checked="true" aria-label="Quiet profile">
+              <i></i>
+            </button>
+          </div>
+          <div class="s-around-sr sub">
+            <span class="tx"><b>cua-driver</b></span
+            ><button class="toggle" role="switch" aria-checked="true" aria-label="cua-driver">
+              <i></i>
+            </button>
+          </div>
+          <div class="s-around-sr sub alt">
+            <span class="tx"><b>Watchdog</b></span
+            ><span class="chip">1 steal</span>
+          </div>
+          <div class="s-around-log">
+            23:12:04 focus osascript → Finder ORBIT-1-MARKET · claude warned<br />22:47:31 ok 42
+            guarded calls since login
+          </div>
+          <div class="s-around-sr">
+            <span class="tx"
+              ><b>Full Disk Access</b
+              ><span
+                >To CONTROL's signed tmux, <code>io.github.randevranjit.ctrl</code>. Checked
+                23:40.</span
+              ></span
+            ><span class="chip">Granted</span>
+          </div>
+        </div>
+      </div>
+      <!-- Archive anyway -->
+      <div class="panel float s-around-sheet s-around-ask">
+        <div class="s-around-shh">Archive<span class="sp"></span><span class="kbd">X</span></div>
+        <p class="s-around-q">Archive anyway?</p>
+        <p class="s-around-qs">
+          A selected session is mid-turn. Archiving ends its Claude and its tmux session; the row
+          stays in ARCHIVE.
+        </p>
+        <div class="s-around-shf">
+          <span class="sp"></span><button class="pill ghost">Cancel</button
+          ><button class="pill danger">Archive</button>
+        </div>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">A5</span
+      ><b
+        >D1 New session, D3 Restore at login, D5 the finder, K4 Lock, D6 Settings and the archive
+        ask.</b
+      >
+      <span
+        >Real content from the app. Session lists carry their bead bars on the right, a sixth of the
+        row, with the 15 px lamp after them: in the lock checklist and in the restore list. The
+        finder's one-line rows take a tip of three beads. The finder underlines the matched letters;
+        the pre-types strip says what will be typed and that Enter is yours.</span
+      >
+    </figcaption>
+  </figure>
+
+  <!-- A6 -->
+  <h3 class="bl-sub"><span class="id">A6</span>Notes, not toasts</h3>
+  <div class="s-around-gap"></div>
+  <figure class="fig" data-fig="notes">
+    <div class="s-around-nhead">
+      <p class="s-around-rule">
+        CONTROL posts no banners, no toasts and no pop-ups. A note lives inside its own region and
+        never takes focus.
+      </p>
+      <button class="pill s-around-replay" type="button">
+        <span data-gi="reload"></span>Replay
+      </button>
+    </div>
+    <div class="s-around-notes">
+      <div class="s-around-nc">
+        <p class="s-around-nl">Selection bar<span>Sidebar foot, after a multi-select</span></p>
+        <div class="s-around-reg" data-notes-sel>
+          <div class="toast s-around-note">
+            <b>3 selected</b><span class="sp"></span><button class="pill sm">Archive</button
+            ><button class="pill ghost sm">Esc</button>
+          </div>
+        </div>
+      </div>
+      <div class="s-around-nc">
+        <p class="s-around-nl">
+          Lock offer<span>Top of the menu-bar panel, when nothing needs you</span>
+        </p>
+        <div class="s-around-reg fl">
+          <div class="s-around-mbh">
+            <span data-stair></span><span class="s-around-wm">CONTROL</span>
+          </div>
+          <div class="s-around-tally" data-tally="working working working working|done"></div>
+          <div class="toast s-around-offer s-around-note">
+            <span class="l"
+              ><b>Nothing needs you. Lock for 2h?</b
+              ><span class="l2"
+                >Quiet since <span class="s-around-mono">15:50</span> · 4 working · 1 done</span
+              ></span
+            ><button class="pill sm">Group</button><button class="pill sm">Full</button
+            ><span class="sp"></span><button class="pill ghost sm">Later</button>
+          </div>
+        </div>
+      </div>
+      <div class="s-around-nc">
+        <p class="s-around-nl">
+          Unlock digest<span>Top of the menu-bar panel, when the lock ends</span>
+        </p>
+        <div class="s-around-reg fl">
+          <div class="s-around-mbh">
+            <span data-stair></span><span class="s-around-wm">CONTROL</span>
+          </div>
+          <div class="toast s-around-dg s-around-note">
+            <div class="s-around-dgh">
+              <b>While locked</b><span class="t-num">16:00–18:00</span><span data-count="6"></span
+              ><span class="sp"></span><button class="pill ghost sm">Clear</button>
+            </div>
+            <div data-digest="3"></div>
+          </div>
+        </div>
+      </div>
+      <div class="s-around-nc">
+        <p class="s-around-nl">
+          PEER note<span>Inside the GIT viewer, under the worktree it concerns</span>
+        </p>
+        <div class="s-around-reg pn">
+          <p class="s-around-glh">SITE-V2</p>
+          <div class="s-around-gl">
+            <span class="h">a41f2c0</span><span class="m">Hero spacing on the 8 pt grid</span>
+          </div>
+          <div class="s-around-gl">
+            <span class="h">9be03d1</span><span class="m">Download page: spec table</span>
+          </div>
+          <div class="toast s-around-peer s-around-note">
+            <span class="w">PEER</span
+            ><span class="l1">ORBIT-APP changed <code>lib/release.ts</code> 4m ago</span
+            ><span class="l2">in its worktree app-0.2.4, not yet on main</span>
+          </div>
+        </div>
+      </div>
+      <div class="s-around-nc">
+        <p class="s-around-nl">Break-through<span>Window band, while a group lock holds</span></p>
+        <div class="s-around-reg bd">
+          <div class="s-around-band">
+            <span class="lights"><i></i><i></i><i></i></span><span data-lamp="needs"></span
+            ><span class="name">RELAY MAIN</span
+            ><span class="s-around-btnote s-around-note"
+              >Through the lock · re-locks when answered</span
+            >
+          </div>
+          <div class="s-around-bdpane"></div>
+        </div>
+      </div>
+      <div class="s-around-nc">
+        <p class="s-around-nl">
+          DAEMON DOWN<span>Window band, while the daemon is unreachable</span>
+        </p>
+        <div class="s-around-reg bd">
+          <div class="s-around-band">
+            <span class="lights"><i></i><i></i><i></i></span><span class="name">ORBIT-WEBSITE</span
+            ><span class="path">~/Projects/orbit-website</span><span class="sp"></span
+            ><span class="s-around-down s-around-note">DAEMON DOWN</span>
+          </div>
+          <div class="s-around-bdpane"></div>
+        </div>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">A6</span><b>Six notes, each in its own region.</b>
+      <span
+        >A note rises 12 px into place over 219 ms and leaves in 109 ms; under Reduce motion it
+        fades. Replay rises them again.</span
+      >
+    </figcaption>
+  </figure>
+
+  <!-- A7 -->
+  <h3 class="bl-sub"><span class="id">A7</span>Empty states</h3>
+  <div class="s-around-gap"></div>
+  <figure class="fig" data-fig="empty">
+    <div class="s-around-empties">
+      <div class="pane s-around-em">
+        <span data-ring></span>
+        <h4>Connecting</h4>
+        <p>Waiting for the daemon. Sessions live in tmux, so nothing is lost meanwhile.</p>
+      </div>
+      <div class="pane s-around-em">
+        <span data-mark></span>
+        <h4>Daemon down</h4>
+        <p>Sessions live on in tmux, and this window picks them up when it reconnects.</p>
+      </div>
+      <div class="pane s-around-em">
+        <span data-mark></span>
+        <h4>No sessions</h4>
+        <p>A session is a tmux session with Claude in it. Quitting CONTROL never ends one.</p>
+        <button class="pill sm">New</button>
+        <div class="s-around-keys">
+          <span><span class="kbd">⌘T</span>new</span><span><span class="kbd">⌘K</span>find</span>
+        </div>
+      </div>
+      <div class="pane s-around-em">
+        <span data-mark></span>
+        <h4>No session selected</h4>
+        <p>Pick one in the sidebar.</p>
+        <div class="s-around-keys">
+          <span><span class="kbd">⌘1–9</span>session</span
+          ><span><span class="kbd">⌘J</span>sidebar</span
+          ><span><span class="kbd">⌘K</span>find</span>
+        </div>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">A7</span><b>In the centre, in place of a session.</b>
+      <span
+        >Connecting, Daemon down, No sessions and No session selected. No lamps here: the wait ring
+        is the only thing that moves, and only while connecting.</span
+      >
+    </figcaption>
+  </figure>
+</section>
+<script data-part="around">
+  Bloom.section("around", {
+    init(el) {
+      const $ = (s) => el.querySelector(s),
+        $$ = (s) => el.querySelectorAll(s);
+      const swap = (node, html) => {
+        node.insertAdjacentHTML("afterend", html);
+        node.remove();
+      };
+
+      /* shared bits: lamps, glyphs, the small stair mark (t3 r3 a3 f2, stroke 2) */
+      $$("[data-lamp]").forEach((n) => swap(n, Bloom.lamp(n.dataset.lamp)));
+      $$("[data-gi]").forEach((n) => swap(n, Bloom.gi(n.dataset.gi)));
+      $$("[data-stair]").forEach((n) => swap(n, Bloom.stairSVG({ t: 3, r: 3, a: 3, f: 2 }, 2)));
+      $$("[data-mark]").forEach((n) =>
+        swap(n, Bloom.stairSVG({ t: 6, r: 6, a: 6, f: 3 }, 4, { cls: "s-around-emk" })),
+      );
+      $$("[data-ring]").forEach((n) => swap(n, Bloom.ring({ r: 24, b: 8 })));
+      /* header tallies: one pearl per session, each in its own session's state colour (ledger 1), so arm marks only needs-you */
+      const WORD = { needs: "need you", working: "working", done: "done" };
+      $$("[data-tally]").forEach((n) => {
+        n.innerHTML = n.dataset.tally
+          .split("|")
+          .map((g) => {
+            const sts = g.split(" "),
+              w = WORD[sts[0]];
+            return `<span class="s-around-tl">${Bloom.tally(sts, { label: sts.length + " " + w })}${Bloom.pearl({ n: sts.length })}<span class="s-around-tw">${w}</span></span>`;
+          })
+          .join("");
+      });
+      /* panel rows: the shared session row (lamp = motion and shape, bead bar = colour), its bar a quarter of the panel;
+       the needs-you row keeps its Go to tab on a third line */
+      $$("[data-row]").forEach((n) => {
+        const [st, name, sub, age] = n.dataset.row.split("|");
+        swap(
+          n,
+          Bloom.row({
+            st,
+            name,
+            sub,
+            age,
+            ind: 10,
+            extra:
+              "go" in n.dataset
+                ? '<span class="s-around-go"><button class="pill sm">Go to tab</button></span>'
+                : "",
+          }),
+        );
+      });
+      $$("[data-bar]").forEach((n) =>
+        swap(n, Bloom.bar(n.dataset.bar, n.closest(".s-around-chk") ? { form: "compact" } : {})),
+      );
+      $$("[data-tip]").forEach((n) => swap(n, Bloom.bar(n.dataset.tip, { form: "tip" })));
+      $$("[data-count]").forEach((n) => swap(n, Bloom.pearl({ n: +n.dataset.count, p: 16 })));
+
+      /* A1: the template glyph, 18 pt (t 6, r 6, a 7, f 3, stroke 3; tick 2; done is a check in the right shoulder, never a corner mark), canvas padded by the stroke */
+      const P = Bloom.stairPts(4.5, 4.5, { t: 6, r: 6, a: 7, f: 3 })
+        .map((p) => p.join(","))
+        .join(" ");
+      const line = (tag) =>
+        `<${tag} points="${P}" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+      const glyph = (st) =>
+        `<svg viewBox="0 0 40 24" aria-hidden="true"${st === "off" ? ' class="s-around-dim"' : ""}>${line(st === "lock" ? "polygon" : "polyline")}` +
+        (st === "working"
+          ? '<rect x="16.5" y="4.5" width="7" height="7.5" fill="currentColor"/>'
+          : "") +
+        (st === "done"
+          ? '<path d="M28.5 4.5 L31 7 L36.5 1.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+          : "") +
+        (st === "update"
+          ? '<path d="M1 8 V1 H8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+          : "") +
+        "</svg>";
+      const S = [
+        ["idle", "Idle", "The stair alone", ""],
+        ["working", "Working", "The apex step filled", "3"],
+        ["done", "Done, unseen", "A check in the right shoulder", "1"],
+        ["needs", "Needs you", "The whole canvas reversed", "2"],
+        ["update", "Update pending", "A corner tick, with any state", ""],
+        ["off", "Daemon off", "45 % alpha, ! for the count", "!"],
+        ["lock", "Full lock", "The shut stair, no count", ""],
+      ];
+      const item = ([st, , , n]) =>
+        st === "needs"
+          ? `<span class="s-around-rev">${glyph(st)}<span class="s-around-cnt">${n}</span></span>`
+          : glyph(st) + (n ? `<span class="s-around-cnt">${n}</span>` : "");
+      $(".s-around-icons").innerHTML = S.map(
+        (s) => `<div class="s-around-ic">
+      <div class="s-around-bar themed" data-theme="night" role="img" aria-label="${s[1]}, dark bar">${item(s)}</div>
+      <div class="s-around-bar themed" data-theme="field" role="img" aria-label="${s[1]}, light bar">${item(s)}</div>
+      <p class="s-around-icn">${s[1]}</p><p class="s-around-icr">${s[2]}</p></div>`,
+      ).join("");
+
+      /* A2: usage, footer, digest */
+      const usage = `<div class="s-around-sech">Usage</div><div class="s-around-use">
+      <span class="k">5H</span>${Bloom.usageLine(0.71, { kind: "5h", w: "100%", label: "5 hour usage 71 %" })}<span class="v">71%</span><span class="r">resets <span class="s-around-mono">01:10</span></span>
+      <span class="k">7D</span>${Bloom.usageLine(0.22, { kind: "7d", w: "100%", label: "7 day usage 22 %" })}<span class="v">22%</span><span class="r">resets Sun</span></div>
+      <div class="s-around-timers"><span>${Bloom.gi("hgf")}2h 14m active</span><span>${Bloom.gi("hge")}38m quiet</span></div>`;
+      $$("[data-usage]").forEach((n) => {
+        n.innerHTML = usage;
+      });
+      const foot = `<div class="s-around-mbf">${Bloom.lamp("idle")}<span class="v">CTRL 0.2.0</span><span class="sp"></span>
+      <button class="pill ghost sm">${Bloom.gi("lock")}Lock</button><button class="pill ghost sm">Open</button><span class="s-around-ib" role="img" aria-label="Settings">${Bloom.gi("set")}</span></div>`;
+      $$("[data-foot]").forEach((n) => swap(n, foot));
+      /* each row's pearl is the state the row records; the update row is not a session, so it has none */
+      const dig = [
+        ["", "16:40", "Claude 2.1.286", "out", "waited"],
+        ["done", "16:52", "CTRL-MULTIPLEXER-IMPL", "done", ""],
+        ["needs", "17:12", "RELAY MAIN", "asked · answered 17:13", "through"],
+        ["failed", "17:30", "DEPS-AUDIT", "failed · exit 1", "waited"],
+        ["done", "17:41", "ORBIT-WEBSITE", "done", ""],
+        ["done", "17:50", "RELAY MAIN", "done", ""],
+      ].map(
+        ([st, tm, nm, wh, oc]) =>
+          `<div class="s-around-dgr">${st ? Bloom.pearl({ st, cls: "xs", p: 8 }) : '<span class="s-around-nop"></span>'}<span class="tm">${tm}</span><span class="nm">${nm}</span><span class="wh">${wh}</span><span class="oc">${oc}</span></div>`,
+      );
+      $$("[data-digest]").forEach((n) => {
+        n.innerHTML = dig.slice(0, +n.dataset.digest || 6).join("");
+      });
+
+      /* A3: the shut stair as 30 inflated beads carrying the full ramp on the 14 s period */
+      const shut = Bloom.stairBeads({ t: 1, r: 1, a: 1, f: 0.5 }, 0.5, { shut: true });
+      const stage = $(".s-around-stage");
+      stage.innerHTML = shut.beads
+        .map(
+          (b) =>
+            `<span class="bead ramp-flow s-around-lb" style="--k:${b.s.toFixed(4)};--tile:1000%"></span>`,
+        )
+        .join("");
+      const lay = () => {
+        const W = stage.clientWidth,
+          H = stage.clientHeight;
+        if (!W || !H) return;
+        const U = Math.min((W * (W < 480 ? 0.8 : 0.6)) / (shut.w + 0.65), H / (shut.h + 0.65)),
+          d = 0.65 * U;
+        const ox = (W - shut.w * U) / 2,
+          oy = (H - shut.h * U) / 2;
+        [...stage.children].forEach((n, i) => {
+          const b = shut.beads[i];
+          n.style.cssText += `;--b:${d.toFixed(2)}px;left:${(ox + b.x * U - d / 2).toFixed(2)}px;top:${(oy + b.y * U - d / 2).toFixed(2)}px`;
+        });
+      };
+      new ResizeObserver(lay).observe(stage);
+      lay();
+      /* the break-through band's lock mark: same stair, pitch 1 (15 beads); pre-emption turns it to the safe ramp */
+      const mk = Bloom.stairBeads({ t: 1, r: 1, a: 1, f: 0.5 }, 0.5, { shut: true }),
+        Um = 10,
+        dm = 6.5;
+      $(".s-around-mark").innerHTML = mk.beads
+        .map(
+          (b) =>
+            `<span class="bead flat ramp-flow s-around-lb" style="--b:${dm}px;left:${(b.x * Um).toFixed(2)}px;top:${(b.y * Um + 1).toFixed(2)}px;--k:${b.s.toFixed(4)};--tile:1000%"></span>`,
+        )
+        .join("");
+
+      /* A4: app icon. Body = 824/1024 of the canvas; t = max(2, round(2uB)); stair 3 % of the body above centre. Still ramp. */
+      const open = Bloom.stairBeads({ t: 1, r: 1, a: 1, f: 0.5 }, 0.5),
+        PH = 0; // PH 0 = the hero's t = 0 still
+      const icon = (S, u) => {
+        const B = (S * 824) / 1024,
+          U = Math.max(2, Math.round(2 * u * B)) * 1.18,
+          d = 0.65 * U;
+        const ox = (S - open.w * U) / 2,
+          oy = (S - open.h * U) / 2 - 0.03 * B,
+          flat = d < 12 ? " flat" : "";
+        const beads = open.beads
+          .map(
+            (b) =>
+              `<span class="bead ramp-flow still${flat}" style="--b:${d.toFixed(2)}px;left:${(ox + b.x * U - d / 2).toFixed(2)}px;top:${(oy + b.y * U - d / 2).toFixed(2)}px;--k:${((b.s + PH) % 1).toFixed(4)};--tile:1000%"></span>`,
+          )
+          .join("");
+        const m = ((S - B) / 2).toFixed(1);
+        return `<div class="s-around-ico"><div class="s-around-can" style="width:${S}px;height:${S}px"><div class="s-around-sq" style="inset:${m}px"></div><div class="s-around-night" data-theme="night"><div class="s-around-sqin" style="inset:${m}px;--sz:${B.toFixed(1)}px"></div>${beads}</div></div><span class="t-mono-s">${S} px</span></div>`;
+      };
+      const fav = `<div class="s-around-ico"><div class="themed" data-theme="night" style="background:none"><svg class="s-around-fav" width="32" height="32" viewBox="0 0 32 32" role="img" aria-label="Favicon"><rect width="32" height="32" rx="8" style="fill:var(--field)"/><polyline points="4,23 4,19.5 9,19.5 9,14.5 14,14.5 14,9.5 18,9.5 18,14.5 23,14.5 23,19.5 28,19.5 28,23" fill="none" style="stroke:var(--ink-1)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="t-mono-s">favicon</span></div>`;
+      $(".s-around-icos").innerHTML =
+        icon(256, 0.055) + icon(128, 0.055) + icon(64, 0.058) + icon(32, 0.058) + fav;
+
+      /* A5: restore list, segs, toggles */
+      $("[data-restore]").innerHTML = [
+        "ORBIT-WEBSITE",
+        "CONTROL",
+        "PORTFOLIO-WEBSITE",
+        "STATISTICS",
+        "LINEAR_ALGEBRA",
+        "SIGNALS_101",
+        "RELAY MAIN",
+      ]
+        .map(
+          (n) =>
+            `<span><b>${n}</b>${Bloom.bar("gone", { form: "compact" })}${Bloom.lamp("gone", { label: "not running" })}</span>`,
+        )
+        .join("");
+      $$(".s-around-box[data-on]").forEach((n) => {
+        n.innerHTML =
+          '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.3 L5 8.6 L9.5 3.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      });
+      $$(".seg").forEach((s) => Bloom.seg(s));
+      $$(".toggle").forEach((t) =>
+        t.addEventListener("click", () =>
+          t.setAttribute("aria-checked", String(t.getAttribute("aria-checked") !== "true")),
+        ),
+      );
+      $$(".s-around-radio").forEach((r) =>
+        r.addEventListener("click", () =>
+          $$(".s-around-radio").forEach((x) => x.setAttribute("aria-checked", String(x === r))),
+        ),
+      );
+
+      /* A6: the selection bar's region holds three multi-selected rows; Replay re-rises every note */
+      $("[data-notes-sel]").insertAdjacentHTML(
+        "afterbegin",
+        [
+          ["idle", "SIGNALS_101", "idle · main", "3h"],
+          ["done", "LINEAR_ALGEBRA", "done · main", "14m"],
+          ["idle", "INTERNSHIPS", "idle · main", "1h"],
+        ]
+          .map(([st, name, sub, age]) => Bloom.row({ st, name, sub, age, cls: "multi" }))
+          .join(""),
+      );
+      $(".s-around-replay").addEventListener("click", () => {
+        [...$$('[data-fig="notes"] .s-around-note')].forEach((n, i) => {
+          n.style.opacity = "0";
+          Bloom.after(Bloom.D.tap * (i + 1), () => {
+            n.style.opacity = "";
+            Bloom.rise(n);
+          });
+        });
+      });
+    },
+  });
+</script>

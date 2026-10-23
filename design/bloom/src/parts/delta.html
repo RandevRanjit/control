@@ -1,0 +1,1252 @@
+<style data-part="delta">
+  .s-delta-root {
+    --s-delta-cols: 64px minmax(0, 1fr) 124px minmax(0, 1.3fr) minmax(0, 0.95fr) 116px;
+    --s-delta-qcols: 64px minmax(0, 0.8fr) minmax(0, 1.25fr) minmax(0, 0.95fr) 272px;
+  }
+  .s-delta-root .bl-lead {
+    margin-bottom: var(--s-5);
+  }
+
+  /* ---------- H13, verbatim ---------- */
+  .s-delta-quote {
+    max-width: 1040px;
+    margin-bottom: var(--s-3);
+    padding: var(--s-6) 40px;
+  }
+  .s-delta-quote blockquote {
+    margin: 0;
+    font: var(--w-reg) 19px/1.75 var(--f-chrome);
+    color: var(--text-body);
+  }
+  .s-delta-cl {
+    color: inherit;
+    text-decoration: none;
+    border-radius: var(--r-s);
+    padding: 2px 3px;
+    margin: 0 -3px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    transition: background-color var(--d-tap) var(--e-settle);
+  }
+  .s-delta-cl:hover,
+  .s-delta-cl.s-delta-hot {
+    background: var(--selection);
+    color: var(--text-strong);
+  }
+  .s-delta-tag {
+    display: inline-block;
+    font: 500 10px/1 var(--f-mono);
+    color: var(--text-caption);
+    background: var(--raised);
+    padding: 3px 6px;
+    border-radius: var(--r-pill);
+    vertical-align: 3px;
+    margin-left: 4px;
+    letter-spacing: 0.02em;
+  }
+  .s-delta-cl:hover .s-delta-tag,
+  .s-delta-cl.s-delta-hot .s-delta-tag {
+    color: var(--text-strong);
+    background: var(--overlay);
+  }
+  .s-delta-tok {
+    font-family: var(--f-mono);
+    font-size: 0.86em;
+    color: var(--text-strong);
+  }
+  .s-delta-n {
+    font-family: var(--f-mono);
+    font-size: 0.92em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .s-delta-src {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    max-width: 1040px;
+    margin-bottom: var(--s-8);
+    padding: 0 40px;
+    font: var(--w-reg) 12px/1.45 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-delta-src .s-delta-tok {
+    color: var(--text-secondary);
+  }
+
+  /* ---------- the delta table ---------- */
+  .s-delta-key {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 22px;
+    margin-bottom: var(--s-6);
+    font: var(--w-reg) 13px/1.4 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-delta-key > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .s-delta-tbl {
+    display: grid;
+    gap: 2px;
+  }
+  .s-delta-grp {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 14px;
+    padding: 0 12px;
+    margin: var(--s-6) 0 var(--s-2);
+  }
+  .s-delta-grp:first-child,
+  .s-delta-hd + .s-delta-grp {
+    margin-top: 0;
+  }
+  .s-delta-grp b {
+    font: var(--w-strong) 16px/1.3 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-delta-grp span {
+    font: var(--w-reg) 13px/1.4 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-delta-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--s-delta-cols);
+    border-radius: var(--r-m);
+    scroll-margin-top: 140px;
+    transition: background-color var(--d-tap) var(--e-settle);
+  }
+  .s-delta-row > * {
+    min-width: 0;
+    padding: 14px 12px;
+  }
+  .s-delta-row.s-delta-odd {
+    background: color-mix(in srgb, var(--raised) 55%, transparent);
+  }
+  .s-delta-row:hover,
+  .s-delta-row.s-delta-hot {
+    background: var(--raised);
+  }
+  .s-delta-hd {
+    font: var(--w-med) 12px/1.3 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-delta-hd > * {
+    padding-top: 4px;
+    padding-bottom: 6px;
+  }
+  .s-delta-row:not(.s-delta-hd)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r-m);
+    background: var(--selection);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .s-delta-id {
+    align-self: start;
+    justify-self: start;
+    font: 500 12px/1 var(--f-mono);
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 6px 9px;
+    margin: 9px 0 0 6px;
+    border-radius: var(--r-pill);
+    background: var(--raised);
+  }
+  .s-delta-row.s-delta-odd .s-delta-id {
+    background: var(--overlay);
+  }
+  .s-delta-id:hover {
+    color: var(--text-strong);
+  }
+  .s-delta-today {
+    font: var(--w-reg) 13px/1.55 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-delta-today q {
+    quotes: "\201C" "\201D";
+  }
+  .s-delta-code {
+    display: block;
+    font: 400 11.5px/1.5 var(--f-mono);
+    color: var(--text-strong);
+    overflow-wrap: anywhere;
+  }
+  .s-delta-today .s-delta-new {
+    font: 400 12px/1.5 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-delta-from {
+    display: block;
+    margin: 4px 0 10px;
+    font: 400 10.5px/1.4 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-delta-from:last-child {
+    margin-bottom: 0;
+  }
+  .s-delta-words {
+    font: var(--w-reg) 13.5px/1.55 var(--f-chrome);
+    color: var(--text-body);
+  }
+  .s-delta-words em {
+    font-style: normal;
+    font-weight: var(--w-strong);
+    color: var(--text-strong);
+  }
+  .s-delta-words.s-delta-wide {
+    grid-column: span 2;
+  }
+  .s-delta-why {
+    font: var(--w-reg) 12.5px/1.55 var(--f-chrome);
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  } /* commentary: numbers stay in the chrome face, as in the sheet's prose */
+  .s-delta-see a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font: var(--w-med) 12.5px/1.3 var(--f-chrome);
+    color: var(--link);
+    text-decoration: none;
+  }
+  .s-delta-see a:hover {
+    color: var(--text-strong);
+  }
+  .s-delta-see .s-delta-n {
+    font-size: 11.5px;
+  }
+
+  /* the verdict badge: shape first (ring, ring + core, dot), then hue. Never arm. */
+  .s-delta-v {
+    display: grid;
+    justify-items: start;
+    align-content: start;
+    gap: 6px;
+  }
+  .s-delta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 24px;
+    padding: 0 11px 0 9px;
+    border-radius: var(--r-pill);
+    background: var(--raised);
+    box-shadow:
+      inset 0 -3px 6px var(--occl),
+      inset 0 1px 0 var(--lip);
+    font: var(--w-med) 12.5px/1 var(--f-chrome);
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .s-delta-row.s-delta-odd .s-delta-badge[data-v="keep"],
+  .s-delta-row.s-delta-odd .s-delta-badge[data-v="extend"] {
+    background: var(--overlay);
+  }
+  .s-delta-badge[data-v="amend"] {
+    background: var(--blue-wash);
+  }
+  .s-delta-badge[data-v="add"] {
+    background: var(--green-wash);
+  }
+  .s-delta-badge::before {
+    content: "";
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px var(--ink-3);
+  }
+  .s-delta-badge[data-v="extend"]::before {
+    background: radial-gradient(circle, var(--ink-3) 1.5px, transparent 2px);
+  }
+  .s-delta-badge[data-v="amend"]::before {
+    box-shadow: none;
+    background: var(--blue-base);
+  }
+  .s-delta-badge[data-v="add"]::before {
+    box-shadow: none;
+    background: var(--green-base);
+  }
+  .s-delta-row > .s-delta-vb {
+    justify-self: start;
+    align-self: start;
+    margin: 14px 12px 0;
+    padding: 0 11px 0 9px;
+  } /* a badge with no sub-note is its own cell */
+  .s-delta-v small {
+    font: var(--w-reg) 11.5px/1.3 var(--f-chrome);
+    color: var(--text-caption);
+    padding-left: 4px;
+  }
+
+  /* ---------- open calls ---------- */
+  .s-delta-q .s-delta-row {
+    grid-template-columns: var(--s-delta-qcols);
+  }
+  .s-delta-q .s-delta-call {
+    font: var(--w-med) 13.5px/1.5 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-delta-q .s-delta-call > span {
+    display: block;
+    font-weight: var(--w-reg);
+    font-size: 12.5px;
+    color: var(--text-caption);
+  }
+  .s-delta-rec {
+    font: var(--w-reg) 13.5px/1.55 var(--f-chrome);
+    color: var(--text-body);
+  }
+  .s-delta-alt {
+    font: var(--w-reg) 13px/1.55 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-delta-pick {
+    padding-top: 10px;
+  }
+  .s-delta-pick .seg button {
+    font-family: var(--f-mono);
+    font-weight: 500;
+    font-size: 11.5px;
+  }
+
+  /* ---------- found on the way ---------- */
+  .s-delta-found {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 12px;
+    max-width: 86ch;
+  }
+  .s-delta-found li {
+    position: relative;
+    padding-left: 22px;
+    font: var(--w-reg) 14px/1.6 var(--f-chrome);
+    color: var(--text-body);
+  }
+  .s-delta-found li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 0.62em;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ink-4);
+  }
+
+  /* ---------- the reply ---------- */
+  .s-delta-reply {
+    max-width: 1040px;
+    padding: 40px;
+  }
+  .s-delta-ask {
+    font: var(--w-reg) 18px/1.6 var(--f-chrome);
+    color: var(--text-body);
+    max-width: 60ch;
+  }
+  .s-delta-eg {
+    margin-top: var(--s-2);
+    font: var(--w-reg) 14px/1.6 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-delta-eg .s-delta-tok {
+    font-size: 13.5px;
+    color: var(--text-strong);
+  }
+  .s-delta-lbl {
+    margin: var(--s-6) 0 var(--s-3);
+    font: var(--w-med) 12px/1.35 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-delta-chips {
+    display: grid;
+    gap: 8px;
+  }
+  .s-delta-chips > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .s-delta-b {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 52px;
+    height: 30px;
+    padding: 0 11px;
+    border: 0;
+    border-radius: var(--r-pill);
+    cursor: pointer;
+    background: var(--raised);
+    color: var(--text-secondary);
+    font: 500 12px/1 var(--f-mono);
+    box-shadow:
+      inset 0 -4px 8px var(--occl),
+      inset 0 1px 0 var(--lip);
+    transition:
+      transform var(--d-quick) var(--e-sine),
+      background-color var(--d-quick) var(--e-sine),
+      color var(--d-quick) var(--e-sine);
+  }
+  .s-delta-b::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px var(--ghost);
+    transition:
+      background-color var(--d-quick) var(--e-sine),
+      box-shadow var(--d-quick) var(--e-sine);
+  }
+  .s-delta-b:hover {
+    transform: translateY(-1px);
+    color: var(--text-strong);
+  }
+  .s-delta-b:active {
+    transform: scale(0.96);
+    transition-duration: var(--d-tap);
+  }
+  .s-delta-b[data-s="yes"] {
+    background: var(--green-wash);
+    color: var(--text-strong);
+  }
+  .s-delta-b[data-s="yes"]::before {
+    box-shadow: none;
+    background: var(--green-base);
+  }
+  .s-delta-b[data-s="later"] {
+    background: var(--overlay);
+    color: var(--text-strong);
+  }
+  .s-delta-b[data-s="later"]::before {
+    box-shadow: inset 0 0 0 1.5px var(--ink-2);
+  }
+  html[data-motion="reduce"] .s-delta-b:hover,
+  html[data-motion="reduce"] .s-delta-b:active {
+    transform: none;
+  }
+  .s-delta-outbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-top: var(--s-5);
+    padding: 16px 16px 16px 20px;
+    border-radius: var(--r-l);
+    background: var(--raised);
+    box-shadow: inset 0 1px 0 var(--lip);
+  }
+  .s-delta-out {
+    flex: 1;
+    min-width: 0;
+    font: 400 13.5px/1.6 var(--f-mono);
+    color: var(--text-strong);
+    overflow-wrap: anywhere;
+    padding-top: 2px;
+  }
+  .s-delta-outbox .pill {
+    flex: none;
+  }
+
+  /* ---------- narrow: each row becomes a stacked card ---------- */
+  @media (max-width: 960px) {
+    .s-delta-quote {
+      padding: var(--s-5);
+    }
+    .s-delta-quote blockquote {
+      font-size: 17px;
+      line-height: 1.7;
+    }
+    .s-delta-src {
+      padding: 0 var(--s-5);
+    }
+    .s-delta-hd {
+      display: none;
+    }
+    .s-delta-row,
+    .s-delta-q .s-delta-row {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-areas: "id v see" "today today today" "words words words" "why why why";
+      padding: 6px 4px 10px;
+    }
+    .s-delta-row > * {
+      padding: 6px 12px;
+    }
+    .s-delta-id {
+      grid-area: id;
+      margin: 6px 0 0 10px;
+    }
+    .s-delta-v {
+      grid-area: v;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px 8px;
+      padding-top: 12px;
+    }
+    .s-delta-row > .s-delta-vb {
+      grid-area: v;
+      margin: 12px 12px 0;
+    }
+    .s-delta-see {
+      grid-area: see;
+      padding-top: 14px;
+    }
+    .s-delta-today {
+      grid-area: today;
+      padding-top: 12px;
+    }
+    .s-delta-words,
+    .s-delta-words.s-delta-wide {
+      grid-area: words;
+    }
+    .s-delta-why {
+      grid-area: why;
+    }
+    .s-delta-why:empty {
+      display: none;
+    }
+    .s-delta-today::before,
+    .s-delta-words::before,
+    .s-delta-why::before,
+    .s-delta-q .s-delta-rec::before,
+    .s-delta-q .s-delta-alt::before {
+      display: block;
+      content: attr(data-l);
+      margin-bottom: 3px;
+      font: var(--w-med) 11.5px/1.3 var(--f-chrome);
+      color: var(--text-caption);
+    }
+    .s-delta-q .s-delta-row {
+      grid-template-areas: "id call call" "rec rec rec" "alt alt alt" "pick pick pick";
+    }
+    .s-delta-q .s-delta-call {
+      grid-area: call;
+      padding-top: 12px;
+    }
+    .s-delta-q .s-delta-rec {
+      grid-area: rec;
+    }
+    .s-delta-q .s-delta-alt {
+      grid-area: alt;
+    }
+    .s-delta-q .s-delta-pick {
+      grid-area: pick;
+      padding-top: 6px;
+    }
+    .s-delta-reply {
+      padding: var(--s-5);
+    }
+    .s-delta-ask {
+      font-size: 16px;
+    }
+    .s-delta-outbox {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .s-delta-outbox .pill {
+      align-self: flex-start;
+    }
+  }
+  @media (max-width: 520px) {
+    .s-delta-quote {
+      padding: 20px;
+    }
+    .s-delta-quote blockquote {
+      font-size: 16px;
+    }
+    .s-delta-src {
+      padding: 0 4px;
+    }
+    .s-delta-reply {
+      padding: 20px;
+    }
+    .s-delta-b {
+      min-width: 48px;
+    }
+  }
+</style>
+<section id="delta" class="bl-sec s-delta-root">
+  <header class="bl-sh">
+    <div class="no">08 <span class="bl-steps"></span></div>
+    <h2>What Bloom changes in H13</h2>
+    <p class="meta">Spec unedited. Reply with B and Q numbers.</p>
+  </header>
+  <p class="bl-lead">
+    H13 today, verbatim. Each clause carries the B number it gets in the table below; hover or tap
+    one to find its row. Bloom 2 amends ten rows and adds B19–B25: state bars, colourless lamps,
+    amber for failed, Night on grey, pearls in chrome, and a centre without a terminal. This round
+    makes every state bar a bead bar at the right of its row, blends each bar inside its own family,
+    draws usage as a plain ink line and takes the last blue-black out of Night's surfaces. The spec
+    stays as written until you reply.
+  </p>
+  <div class="card sunk s-delta-quote" data-fig="h13"><blockquote data-quote></blockquote></div>
+  <p class="s-delta-src">
+    <span
+      >H13, <span class="s-delta-tok">docs/specs/2026-09-30-control-design.md</span> line
+      <span class="s-delta-n">50</span></span
+    ><span>Enforced by: Snapshot review.</span>
+  </p>
+
+  <figure class="fig" data-fig="delta">
+    <div class="s-delta-key" data-key></div>
+    <div class="s-delta-tbl" data-rows></div>
+    <figcaption class="cap">
+      <span class="id">B1–B25</span><b>What Bloom would amend, keep, extend and add.</b
+      ><span
+        >Every "today" cell quotes its file as written; the spec,
+        <span class="s-delta-tok">tokens.toml</span> and direction D are not edited. Every number is
+        from the colour and motion proofs on this sheet. Badges carry no red.</span
+      >
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">Q1–Q12</span>Open calls</h3>
+  <div class="bl-prose">
+    <p>
+      Yours to decide. The recommendation comes first; pick the other side and the reply below
+      follows.
+    </p>
+  </div>
+  <figure class="fig s-delta-q" data-fig="calls" style="margin-top: var(--s-5)">
+    <div class="s-delta-tbl" data-calls></div>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">Ledger</span>Found on the way</h3>
+  <div class="bl-prose" style="margin-bottom: var(--s-5)">
+    <p>Not Bloom's to fix. One line each for <span class="s-delta-tok">docs/LEDGER.md</span>.</p>
+  </div>
+  <figure class="fig" data-fig="found"><ul class="s-delta-found" data-found></ul></figure>
+
+  <div class="card sunk s-delta-reply" data-fig="reply">
+    <p class="s-delta-ask">Reply with: B numbers you accept; Q answers.</p>
+    <p class="s-delta-eg">
+      For example: <span class="s-delta-tok">B1–B13 yes, B19–B23 yes, Q1 beat, Q12 flip.</span>
+    </p>
+    <p class="s-delta-lbl">
+      Or build it here. Tap a B number once to accept it, twice for later, a third time to clear it.
+    </p>
+    <div class="s-delta-chips" data-chips></div>
+    <div class="s-delta-outbox">
+      <output class="s-delta-out" data-out aria-live="polite"></output
+      ><button class="pill sm" type="button" data-copy>Copy</button>
+    </div>
+  </div>
+</section>
+<script data-part="delta">
+  (() => {
+    /* All content transcribed from BRIEF.md §6.7. "Today" quotes verified against the files named in `src`:
+   spec = docs/specs/2026-09-30-control-design.md (line 50 for H13; §6 lines 114, 117), tokens.toml = design/tokens.toml,
+   v2 = design/v2/index.html (direction D), mock = design/mock/index.html (reviews 01 and 02).
+   Markup in strings: `x` = Plex token, ‹x› = a number in Plex (a trailing " unit" stays in the chrome face), *x* = stressed. */
+    const SPEC = "spec";
+    const DATA = {
+      // spec line 50, split at its own punctuation; joined back with `glue` it is the H13 cell verbatim
+      clauses: [
+        ["B1", "ORBIT design laws in every surface", ": "],
+        ["B2", "mono type (Departure Mono, IBM Plex Mono; no Inter)", ", "],
+        ["B3", "zero radius", ", "],
+        ["B4", "1px hairlines", ", "],
+        [
+          "B5",
+          "the two-red law (`arm` = needs you, the one red a glance meets; working is cream; `danger` = destructive consequence; C-075)",
+          ", ",
+        ],
+        ["B6", "every lamp state has its own motion, idle included", ", "],
+        ["B7", "and motion says state and nothing else", "; "],
+        ["B8", "macOS Reduce motion stills them (C-073)", ", "],
+        ["B9", "the menu bar icon is a template image with state by shape", ". "],
+        ["B10", "Diffs: removed = `arm_dim`, added = brighter grey, never green", "."],
+      ],
+      // rows B11–B18: today = [[quote, source, label?], …]; B1–B10 take their quote from `clauses`
+      around: {
+        B11: [
+          [
+            "Zero chroma on the whole sheet apart from the two reds.",
+            "design/mock, call C8 (line 869)",
+          ],
+          ["two reds with one job each", "design/v2 (D), header, line 12"],
+        ],
+        B12: [["The menu bar is dark only.", "design/v2 (D), notes, line 1256"]],
+        B13: [
+          [
+            "no blur, no gradient, no shadow but the key-travel one",
+            "design/v2 (D), header, lines 14–15",
+          ],
+        ],
+        B14: [
+          ["`fast = 0.15            # row-level, easeInOut`", "design/tokens.toml, line 121"],
+          ["`panel = 0.2            # structural, easeInOut`", "design/tokens.toml, line 122"],
+          [
+            "Blink, 1 s on and off, stepped. The only red and the only hard step.",
+            "design/v2 (D), needs-you lamp, line 1206",
+          ],
+        ],
+        B15: [
+          [
+            "red is danger (1) and arm (9); green slots hold greys (never green). The cursor is the pane's one arm element (call C6): live, so arm.",
+            "design/tokens.toml [terminal], lines 150–151; ledger C-018",
+          ],
+        ],
+        B16: [
+          ["filled ink, reverse row", "spec §6, lamp column, line 114", "`NeedsYou{…}`"],
+          ["hollow grey, until viewed", "spec §6, lamp column, line 117", "`Done{seen: false}`"],
+        ],
+        B19: [
+          ["`arm`", "spec §6, lamp column, line 115", "`Working`"],
+          ["`arm`, with count", "spec §6, lamp column, line 116", "`Background{n}`"],
+        ],
+        B20: [["`danger` + a sentence", "spec §6, lamp column, line 120", "`Failed{err}`"]],
+        B22: [['`paper = "#100f0d"       # the field; never #000`', "design/tokens.toml, line 17"]],
+        B24: [
+          [
+            "Centre: a native tab bar mirroring the session's tmux windows, over one Ghostty surface running `ctrl attach <session>`",
+            "spec §7, Window, line 134",
+          ],
+        ],
+        B25: [
+          [
+            "Text reaches a pane only as pre-typed literal input (`send-keys -l`).",
+            "spec §2, H1, line 38",
+          ],
+        ],
+      },
+      rows: [
+        {
+          id: "B1",
+          v: "amend",
+          words:
+            'CONTROL\'s own laws in every surface. It keeps from ORBIT the wordmark (Plex ‹600›, ‹.26em›), the stair mark and "red means state".',
+          why: "Bloom needs radius, ramps, eased motion and navy shading: four things ORBIT bans",
+          see: ["Masthead", "", "masthead", "hero"],
+        },
+        {
+          id: "B2",
+          v: "amend",
+          words:
+            "Chrome in Neue Regrade (your pick; the rounded face retires). IBM Plex Mono for everything you could paste into a shell: terminal, diffs, code, paths, session and branch names, numbers, keys. No Inter. Departure Mono keeps one job: the menu-bar count.",
+          why: "Your call by eye on the window mocks: Regrade over Rounded. Content is never decorated",
+          see: ["Form", "F4", "form", "type"],
+        },
+        {
+          id: "B3",
+          v: "amend",
+          words: "Radii ‹4, 6, 10, 14, 16, 20› and pills, on continuous corners.",
+          why: '"Less hard and sharp lines"',
+          see: ["Form", "F1", "form", "radius"],
+        },
+        {
+          id: "B4",
+          v: "amend",
+          words:
+            "No hairlines. Regions separate by tone steps (Night ‹1.14–1.63:1› above its grey field, inputs ‹1.16:1› and wells ‹1.28:1› below it, all one neutral grey; Field ‹1.07–1.32:1›) and ‹6 pt› gutters; where tone cannot, a ‹2 pt› rounded seam.",
+          why: "`colour.md` §2",
+          see: ["Form", "F2", "form", "edges"],
+        },
+        {
+          id: "B5",
+          v: "amend",
+          sub: "meaning kept",
+          words:
+            "`arm` = needs you: the one *signal* red, the only colour past sRGB and the only bar at ‹1.75 s›. Working is blue, on its state bar (B19); lamps are ink. `danger` = destructive consequence. Bloom's own reds and failed's amber stay outside arm's ‹12°–55°› hue arc, and hero ramps give way while arm is lit.",
+          why: "Closest chrome token to arm ΔE ‹0.178› (Night) / ‹0.155› (Field); closest bar step ‹0.223› / ‹0.220›; safe ramp ‹0.263› / ‹0.302›; arm vs danger ‹0.165› / ‹0.121›",
+          see: ["Colour", "C9", "colour", "arm"],
+        },
+        {
+          id: "B6",
+          v: "amend",
+          words:
+            "Every state keeps its own motion, idle included, except done: its tick holds still, because finished needs no motion. Each state has its own shape, in ink: the lamp carries no hue, so shape and motion say the state for everyone and the state bar adds the colour. Done is a tick, failed a cross; nothing is a half-moon. In a row and in the menu-bar panel the lamp is ‹15 px›, the row's end cap at the far right.",
+          why: "",
+          see: ["Motion", "M3", "motion", "lamps"],
+        },
+        {
+          id: "B7",
+          v: "amend",
+          words:
+            "Ambient motion says state and nothing else. One-shot motion may also answer your hand (press, hover, focus, panels, rows, theme) and ends within ‹875 ms›.",
+          why: "",
+          see: ["Motion", "M7", "motion", "bars"],
+        },
+        {
+          id: "B8",
+          v: "extend",
+          words:
+            "Reduce motion stills every loop at its shape; one-shots become dissolves of ‹219 ms› or less; the wait ring holds as a still hue wheel; the theme switch dissolves.",
+          why: "",
+          see: ["Motion", "M3", "motion", "lamps"],
+        },
+        {
+          id: "B9",
+          v: "keep",
+          words:
+            "Unchanged: still, template, state by shape. Its strokes take round caps and joins like the mark, and done's corner square becomes a check in the same shoulder: Bloom 2 draws no corner mark for done.",
+          why: "",
+          see: ["Around", "A1", "around", "icon-states"],
+        },
+        {
+          id: "B10",
+          v: "amend",
+          words:
+            "Diffs live in wells, which are neutral grey (Night `#1B1A1A`, Field's own field). Removed = a rose wash below the well's tone; added = a sage wash above it; the +/− marks in the family colour. Arm's hue never appears in a diff.",
+          why: "In Night's well the washes sit ‹−0.049› and ‹+0.056› L either side of it. Removed vs added, Bloom vs H13: Night ‹0.132› vs ‹0.096› (deutan ‹0.106› vs ‹0.083›); Field ‹0.101› vs ‹0.069› (deutan ‹0.071› vs ‹0.056›); rose wash vs arm ‹0.528›",
+          see: ["Colour", "C10", "colour", "diffs"],
+        },
+        {
+          id: "B11",
+          v: "amend",
+          words:
+            "Saturation by area, not by count. At least ‹75 %› of any app view stays neutral and the chromatic area stays at ‹5 %› or less. Saturated colour lives only in state bars, pearls and the sheet's hero objects, at C ‹0.181› or less; arm alone reaches C ‹0.225›. Usage (5H, 7D) is plain ink, no hue. Tempo follows urgency.",
+          why: "A row's bar is ‹5 px› beads across a sixth of the row; the one continuous bar, ‹6 px›, is for the session in focus; pearls ‹20 px› or less; nothing chromatic is a surface, a panel fill or text",
+          see: ["Colour", "C8", "colour", "meanings"],
+        },
+        {
+          id: "B12",
+          v: "amend",
+          words:
+            "Two themes: Bloom Field on `#D6DEEE`, the default, and Bloom Night on `#2F2E2E` (B22). The switch passes through one bridge, so lightness only moves one way.",
+          why: "Night L ‹0.302› → cream ‹0.837› → Field ‹0.899›; Field → navy ‹0.312› → Night ‹0.302›",
+          see: ["Motion", "M9", "motion", "theme"],
+        },
+        {
+          id: "B13",
+          v: "amend",
+          words:
+            "Gradients only as multi-stop ramps (the hero ramp in ambient places, the safe ramp next to state, one smooth ramp per state, inside its own family, on the state bars) and bead and pearl shading. Depth by navy occlusion: inset on objects; a soft navy shadow only under things that float. Still no blur, glass, glow, parallax or grey shadow. The key-travel shadow retires: a press is a ‹.96› squash.",
+          why: "",
+          see: ["Form", "F3", "form", "material"],
+        },
+        {
+          id: "B14",
+          v: "amend",
+          words:
+            "One clock: T = ‹7 s›; one-shots ‹109›, ‹219›, ‹437.5›, ‹875 ms›; loops ‹1.75›, ‹3.5›, ‹7›, ‹14 s›, phase-locked to a ‹14 s› epoch; sine-family curves; nothing steps; no loop faster than ‹1.75 s›.",
+          why: "Needs-you at ‹0.57 Hz›, five times under WCAG ‹2.3.1›'s limit",
+          see: ["Motion", "M1–M2", "motion", "clock"],
+        },
+        {
+          id: "B15",
+          v: "amend",
+          words:
+            "Cursor cream (Night) / ink-1 (Field), not blinking. Green slots carry green. Slot ‹9› is a light clay.",
+          why: "Slot ‹9› vs arm ΔE ‹0.199› / ‹0.164›",
+          see: ["Colour", "C13", "colour", "ansi"],
+        },
+        {
+          id: "B16",
+          v: "amend",
+          words:
+            "A row reads right to left: the lamp at the far right, its bead bar, then the name; under them Claude's spark and the state words, then the context line and %, the chat's tokens and the age. A needs-you row gets a ‹6 %› arm tint, a semibold name and the arm bar; its ink lamp is the bullseye. Done: a still tick, and the green bar.",
+          why: "The colour sits in a row of ‹5 px› beads, never a fill; rows grow from ‹40› to ‹42 pt› and every lamp sits in one column down the list",
+          see: ["Window", "W4", "window", "rows"],
+        },
+        {
+          id: "B17",
+          v: "add",
+          words:
+            "Pre-emption: while a needs-you lamp or bar is lit in a window, every hero ramp in it turns to the safe ramp. State bars keep their colours: they are state, not ornament.",
+          why: "No other red on screen",
+          see: ["Colour", "C9", "colour", "arm"],
+        },
+        {
+          id: "B18",
+          v: "add",
+          words: "Linear means work, sine means waiting, still means nothing to do.",
+          why: "",
+          see: ["Motion", "M2", "motion", "easing"],
+        },
+        // Bloom 2 (6 Oct revision)
+        {
+          id: "B19",
+          v: "amend",
+          sub: "C-075's working is cream",
+          words:
+            "Working and Background share one blue bead bar, flowing at ‹7 s›; the lamp tells them apart: working is a disc crossed by a band that rises through it, Background a ring crossed by the same band. Working is never red (C-075 stands) and no longer cream.",
+          why: "The working bar stays ΔE ‹0.335› (Field) / ‹0.309› (Night) from arm at its closest point; blue already meant looking and focus",
+          see: ["Window", "W4", "window", "rows"],
+        },
+        {
+          id: "B20",
+          v: "amend",
+          words:
+            "Failed takes its own family, amber-yellow (h ‹81–96›), on its state bar at ‹3.5 s›. Its ink lamp is a cross that stumbles twice; the sentence stays, in ink. `danger` keeps one job: destructive consequence.",
+          why: "Clear of arm's moat by ‹25.8°› (Field) / ‹27.3°› (Night); base vs arm ΔE ‹0.296› / ‹0.291›; base vs danger ‹0.329› / ‹0.158›; never brown at its base step",
+          see: ["Colour", "", "colour", ""],
+        },
+        {
+          id: "B21",
+          v: "add",
+          words:
+            "Every session carries a bead bar: its state's colour as one smooth ramp inside the state's family, flowing left through a row of beads on the shared clock. Blue working and Background (one bar between them), arm needs you, amber failed, green done, lilac choose on return. In a row it takes a sixth of the width at the right, just before the lamp; in the menu-bar panel a quarter. The one session in focus gets the one continuous bar, ‹6 px›, at the top of the view. Never a divider, a rule or a progress bar.",
+          why: "No bridge inside a bar: its steepest step is ΔE ‹0.0125› (Field) / ‹0.0124› (Night) per ‹2 px› in a row, where the bridges made it ‹0.236› / ‹0.210›. State never depends on the bar: the lamp and the state word carry it. Every bar pair stays ‹0.065› or more apart in every colour-vision simulation",
+          see: ["Motion", "", "motion", "bars"],
+        },
+        {
+          id: "B22",
+          v: "amend",
+          words:
+            "Night is one neutral grey. The field is `#2F2E2E` (C ‹0.001›); the chrome steps up from it, and the wells `#1B1A1A` and inputs and tracks `#242323` step down from it, at C ‹0.002› or less. The one blue-black, occlusion `#060714`, is shading only: shadows and inset gradients, never a fill.",
+          why: "A navy field forced blue into every indicator, and blue-black wells read as tinted beside the grey. ink-1 ‹11.53:1› on the field, ‹14.79:1› in a well, ‹13.35:1› on an input; arm ‹3.96:1› on the field; the bead rim rises to ‹0.60› to keep ‹3:1›",
+          see: ["Form", "F2", "form", "edges"],
+        },
+        {
+          id: "B23",
+          v: "add",
+          words:
+            "Pearls: the bead material at ‹8–20 px› is allowed in chrome, for group identity, avatars, tallies and counts. Still, never text on a tint. A tally gives each session its own pearl in its own state's colour, so arm marks only a session that needs you. Usage is not beads: 5H and 7D are a thin line in plain ink, and past ‹80 %› only its leading end breathes; a row's context is the same line at ‹28 px›.",
+          why: "Identity pearls ‹6.05–6.58:1› on Night's field and ‹2.57–2.83:1› on Field's, decorative and redundant with the name. The usage line, ink-1 on its track: ‹13.35:1› Night, ‹9.21:1› Field",
+          see: ["Form", "F3", "form", "pearls"],
+        },
+        {
+          id: "B24",
+          v: "amend",
+          sub: "your pick",
+          words:
+            "Centre: the session as a conversation, drawn from the CONTROL mod's `session.append` and `turn.step` rows over the same Claude in the same tmux pane. The Ghostty surface moves to a `TERMINAL` tab beside `BROWSER` and `GIT`, and the centre flips to it for any dialog CONTROL can't draw yet. TRACE retires as a separate list: its rows are the conversation.",
+          why: "Today the centre repeats TRACE line for line. tmux still owns every PTY (H4); restore, update, H14 and H15 are unchanged. fakechat's channels carry only what Claude chooses to `reply`: no tool calls, diffs or dialogs",
+          see: ["Without a terminal", "", "chat", ""],
+        },
+        {
+          id: "B25",
+          v: "amend",
+          sub: "only with B24",
+          words:
+            "H1a: an Enter reaches a pane only from your own Send in CONTROL's composer, one per gesture, never queued, never scripted; restore, import, new-session and update flows still never press Enter.",
+          why: "The one hard rule B24 touches. `PreTyped` stays as it is; the Enter is a separate `TmuxCmd::Submit` that only Send can build",
+          see: ["Without a terminal", "", "chat", ""],
+        },
+      ],
+      verdict: {
+        keep: ["Keep", "as written"],
+        amend: ["Amend", "new wording"],
+        extend: ["Extend", "same law, more cases"],
+        add: ["Add", "a new law beside H13"],
+      },
+      // open calls; `a` = the short answers the reply builder prints, recommended first
+      calls: [
+        {
+          id: "Q1",
+          call: "Needs-you tempo",
+          rec: "‹1.75 s› beat + ripple (if not loud enough, raise the ripple's reach to ‹2.8×› before the tempo)",
+          alt: "‹3.5 s› breathe",
+          a: ["beat", "breathe"],
+        },
+        {
+          id: "Q3",
+          call: "Failed and choose-on-return",
+          rec: "Stumble and tide",
+          alt: "Still",
+          a: ["move", "still"],
+        },
+        {
+          id: "Q4",
+          call: "State-change length",
+          rec: "‹437.5 ms› (‹218.75› into needs-you)",
+          alt: "‹875 ms›",
+          a: ["437.5 ms", "875 ms"],
+        },
+        {
+          id: "Q5",
+          call: "Locked groups",
+          rec: "Their lamps still while locked; needs-you still breaks through",
+          alt: "Lamps keep moving",
+          a: ["yes", "no"],
+        },
+        {
+          id: "Q6",
+          call: "Terminal cursor",
+          rec: "No blink (it would be the window's last strobe)",
+          alt: "Blink",
+          a: ["no blink", "blink"],
+        },
+        {
+          id: "Q7",
+          call: "Live re-sort ping-pong",
+          sub: "`last_active` changes on every tool use",
+          rec: "Re-sort on turn start, or a minimum dwell",
+          alt: "Re-sort on every event",
+          a: ["turn start", "every event"],
+        },
+        {
+          id: "Q8",
+          call: "Field's terminal",
+          rec: "Light, on `#D6DEEE`",
+          alt: "A Night terminal inside Field chrome",
+          a: ["light", "night"],
+        },
+        {
+          id: "Q10",
+          call: "Session names",
+          rec: "Plex (identifiers)",
+          alt: "Chrome face",
+          a: ["Plex", "chrome"],
+        },
+        {
+          id: "Q12",
+          call: "Needs-you in the conversation",
+          sub: "First cut of the conversation centre",
+          rec: "A card that shows the ask, with Answer in terminal and an automatic flip to the TERMINAL tab",
+          alt: "Buttons that send the dialog's own keys, once a throwaway tmux test shows a bare digit picks and confirms",
+          a: ["flip", "buttons"],
+        },
+      ],
+      found: [
+        "`tokens.toml [terminal]` still uses arm for the cursor and ANSI slot ‹9› (predates C-075).",
+        "Spec §6's state table still lists working → arm and needs-you → reversed row.",
+        'v2\'s header comment still says "state never animates".',
+        "Re-sort ping-pong (Q7).",
+      ],
+    };
+
+    const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const fmt = (s, plain) =>
+      esc(s)
+        .replace(/`([^`]+)`/g, '<span class="s-delta-tok">$1</span>')
+        .replace(/‹([^›]+)›/g, (m, x) => {
+          if (plain) return x;
+          const u = x.match(/^(.*\d) (ms|s|Hz|pt|%)$/);
+          return u
+            ? `<span class="s-delta-n">${u[1]}</span> ${u[2]}`
+            : `<span class="s-delta-n">${x}</span>`;
+        })
+        .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    const badge = (v) => `<span class="s-delta-badge" data-v="${v}">${DATA.verdict[v][0]}</span>`;
+
+    function quoteHTML() {
+      return DATA.clauses
+        .map(
+          ([id, text, glue]) =>
+            `<a class="s-delta-cl" href="#${id}" data-to="${id}">${fmt(text)}${esc(glue.trim())}<span class="s-delta-tag" aria-hidden="true">${id}</span></a>${glue.endsWith(" ") ? " " : ""}`,
+        )
+        .join("");
+    }
+    function todayHTML(id) {
+      const c = DATA.clauses.find((x) => x[0] === id);
+      if (c) return `<q>${fmt(c[1])}</q>`;
+      const qs = DATA.around[id];
+      if (!qs) return '<span class="s-delta-new">(new)</span>';
+      return qs
+        .map(
+          ([q, src, label]) =>
+            (label ? fmt(label) + " " : "") +
+            (q.startsWith("`") && q.endsWith("`") && q.includes(" ")
+              ? `<span class="s-delta-code">${esc(q.slice(1, -1))}</span>`
+              : `<q>${fmt(q)}</q>`) +
+            `<span class="s-delta-from">${esc(src)}</span>`,
+        )
+        .join("");
+    }
+    function seeHTML([sec, fig, anchor, figId]) {
+      return `<a href="#${anchor}" data-sec="${anchor}" data-fig-to="${figId}">${sec}${fig ? " " + fig : ""}</a>`;
+    }
+    function rowHTML(r, k) {
+      const sub = r.sub ? `<small>${r.sub}</small>` : "";
+      const why = r.why ? `<div class="s-delta-why" data-l="Why">${fmt(r.why, true)}</div>` : "";
+      return (
+        `<div class="s-delta-row${k % 2 ? "" : " s-delta-odd"}" id="${r.id}" data-id="${r.id}">` +
+        `<a class="s-delta-id" href="#${r.id}">${r.id}</a>` +
+        `<div class="s-delta-today" data-l="Today">${todayHTML(r.id)}</div>` +
+        (r.sub
+          ? `<div class="s-delta-v">${badge(r.v)}${sub}</div>`
+          : badge(r.v).replace('class="s-delta-badge"', 'class="s-delta-badge s-delta-vb"')) +
+        `<div class="s-delta-words${r.why ? "" : " s-delta-wide"}" data-l="Bloom">${fmt(r.words)}</div>` +
+        why +
+        `<div class="s-delta-see">${seeHTML(r.see)}</div></div>`
+      );
+    }
+    const HEAD =
+      '<div class="s-delta-row s-delta-hd" aria-hidden="true"><span>Id</span><span>Today</span><span>Bloom</span><span>Proposed wording</span><span>Why, with numbers</span><span>See</span></div>';
+
+    function callHTML(q, k) {
+      return (
+        `<div class="s-delta-row${k % 2 ? "" : " s-delta-odd"}" id="${q.id}" data-id="${q.id}">` +
+        `<a class="s-delta-id" href="#${q.id}">${q.id}</a>` +
+        `<div class="s-delta-call">${esc(q.call)}${q.sub ? `<span>${fmt(q.sub)}</span>` : ""}</div>` +
+        `<div class="s-delta-rec" data-l="Recommended">${fmt(q.rec)}</div>` +
+        `<div class="s-delta-alt" data-l="Alternative">${fmt(q.alt)}</div>` +
+        `<div class="s-delta-pick"><div class="seg sm" role="group" aria-label="${esc(q.id + " " + q.call)}" data-q="${q.id}">` +
+        q.a
+          .map(
+            (a, i) =>
+              `<button type="button" aria-pressed="${i === 0}" data-i="${i}">${esc(a)}</button>`,
+          )
+          .join("") +
+        "</div></div></div>"
+      );
+    }
+    const QHEAD =
+      '<div class="s-delta-row s-delta-hd" aria-hidden="true"><span>Id</span><span>Call</span><span>Recommended</span><span>Alternative</span><span>Your answer</span></div>';
+
+    /* ---------- the reply builder ---------- */
+    const pick = {}; // B id -> 'yes' | 'later'
+    const answer = {}; // Q id -> 0 (recommended) | 1
+    function replyText() {
+      const parts = [];
+      let run = null;
+      const flush = () => {
+        if (run) parts.push((run.a === run.b ? `B${run.a}` : `B${run.a}–B${run.b}`) + " " + run.s);
+        run = null;
+      };
+      for (let n = 1; n <= DATA.rows.length; n++) {
+        const s = pick["B" + n];
+        if (run && s === run.s && n === run.b + 1) {
+          run.b = n;
+          continue;
+        }
+        flush();
+        if (s) run = { a: n, b: n, s };
+      }
+      flush();
+      if (!parts.length) parts.push("no B numbers yet");
+      for (const q of DATA.calls) parts.push(`${q.id} ${q.a[answer[q.id] || 0]}`);
+      return parts.join(", ") + ".";
+    }
+
+    let root = null;
+    function paintReply(animate) {
+      const out = root.querySelector("[data-out]");
+      out.textContent = replyText();
+      if (animate)
+        Bloom.animate(
+          out,
+          { opacity: [0.55, 1] },
+          { duration: Bloom.D.quick, easing: Bloom.E.sine },
+        );
+    }
+    function flash(id) {
+      const row = document.getElementById(id);
+      if (!row || !root.contains(row)) return;
+      row.scrollIntoView({ behavior: Bloom.reduced() ? "auto" : "smooth", block: "center" });
+      Bloom.animate(
+        row,
+        { opacity: [1, 0] },
+        {
+          pseudoElement: "::after",
+          duration: Bloom.reduced() ? Bloom.D.quick : Bloom.D.scene,
+          easing: Bloom.E.sine,
+          delay: Bloom.reduced() ? 0 : Bloom.D.state,
+        },
+      );
+    }
+    function hot(id, on) {
+      root
+        .querySelectorAll(`[data-to="${id}"], .s-delta-row[data-id="${id}"]`)
+        .forEach((n) => n.classList.toggle("s-delta-hot", on));
+    }
+
+    Bloom.section("delta", {
+      init(el) {
+        root = el;
+        el.querySelector("[data-quote]").innerHTML = quoteHTML();
+        el.querySelector("[data-key]").innerHTML = Object.keys(DATA.verdict)
+          .map((v) => `<span>${badge(v)}${DATA.verdict[v][1]}</span>`)
+          .join("");
+        const h13 = DATA.rows.slice(0, 10),
+          laws = DATA.rows.slice(10, 18),
+          b2 = DATA.rows.slice(18);
+        el.querySelector("[data-rows]").innerHTML =
+          HEAD +
+          `<div class="s-delta-grp"><b>H13's clauses</b><span>Spec line 50, clause by clause, in its own order</span></div>` +
+          h13.map(rowHTML).join("") +
+          `<div class="s-delta-grp"><b>Laws around H13</b><span>From <span class="s-delta-tok">tokens.toml</span>, direction D, the mocks and spec §6</span></div>` +
+          laws.map(rowHTML).join("") +
+          `<div class="s-delta-grp"><b>Bloom 2</b><span>The 6 Oct revision: spec §6 and §7, H1, and <span class="s-delta-tok">tokens.toml</span></span></div>` +
+          b2.map(rowHTML).join("");
+        el.querySelector("[data-calls]").innerHTML = QHEAD + DATA.calls.map(callHTML).join("");
+        el.querySelector("[data-found]").innerHTML = DATA.found
+          .map((f) => `<li>${fmt(f)}</li>`)
+          .join("");
+        const chip = (r) =>
+          `<button type="button" class="s-delta-b" data-b="${r.id}" aria-label="${r.id}: not answered">${r.id}</button>`;
+        el.querySelector("[data-chips]").innerHTML =
+          `<div>${h13.map(chip).join("")}</div><div>${laws.map(chip).join("")}</div><div>${b2.map(chip).join("")}</div>`;
+
+        el.querySelectorAll(".s-delta-pick .seg").forEach((s) =>
+          Bloom.seg(s, (v, b) => {
+            answer[s.dataset.q] = +b.dataset.i;
+            paintReply(true);
+          }),
+        );
+        el.querySelector("[data-chips]").addEventListener("click", (e) => {
+          const b = e.target.closest(".s-delta-b");
+          if (!b) return;
+          const next = { undefined: "yes", yes: "later", later: undefined }[pick[b.dataset.b]];
+          if (next) pick[b.dataset.b] = next;
+          else delete pick[b.dataset.b];
+          if (next) b.dataset.s = next;
+          else delete b.dataset.s;
+          b.setAttribute("aria-label", `${b.dataset.b}: ${next || "not answered"}`);
+          paintReply(true);
+        });
+        el.querySelector("[data-copy]").addEventListener("click", (e) => {
+          const btn = e.currentTarget,
+            text = replyText(),
+            done = () => {
+              btn.textContent = "Copied";
+              Bloom.after(Bloom.D.beat, () => {
+                btn.textContent = "Copy";
+              });
+            };
+          const pickText = () => {
+            const r = document.createRange();
+            r.selectNodeContents(el.querySelector("[data-out]"));
+            const s = getSelection();
+            s.removeAllRanges();
+            s.addRange(r);
+            btn.textContent = "Selected";
+            Bloom.after(Bloom.D.beat, () => {
+              btn.textContent = "Copy";
+            });
+          };
+          try {
+            navigator.clipboard.writeText(text).then(done, pickText);
+          } catch (err) {
+            pickText();
+          }
+        });
+
+        // clause <-> row: hover finds the pair, a click travels to the row and lights it once
+        el.addEventListener("mouseover", (e) => {
+          const n = e.target.closest("[data-to], .s-delta-row[data-id]");
+          if (n) hot(n.dataset.to || n.dataset.id, true);
+        });
+        el.addEventListener("mouseout", (e) => {
+          const n = e.target.closest("[data-to], .s-delta-row[data-id]");
+          if (n) hot(n.dataset.to || n.dataset.id, false);
+        });
+        el.addEventListener("click", (e) => {
+          const a = e.target.closest("a[data-to], a.s-delta-id");
+          if (a) {
+            e.preventDefault();
+            const id = a.getAttribute("href").slice(1);
+            history.replaceState(null, "", location.search + "#" + id);
+            flash(id);
+            return;
+          }
+          const s = e.target.closest("a[data-fig-to]");
+          if (!s) return;
+          const f = document.querySelector(
+            `[id="${s.dataset.sec}"] [data-fig="${s.dataset.figTo}"]`,
+          );
+          if (f) {
+            e.preventDefault();
+            f.scrollIntoView({ behavior: Bloom.reduced() ? "auto" : "smooth", block: "start" });
+          }
+        });
+        paintReply(false);
+        if (/^#[BQ]\d+$/.test(location.hash))
+          Bloom.after(Bloom.D.state, () => flash(location.hash.slice(1)));
+      },
+    });
+  })();
+</script>

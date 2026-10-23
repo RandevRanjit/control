@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--control-font-sans);
+  --font-mono: var(--control-font-mono);
+  --color-background: var(--control-background);
+  --color-foreground: var(--control-foreground);
+  --color-popover: var(--control-popover);
+  --color-popover-foreground: var(--control-popover-foreground);
+  --color-primary: var(--control-primary);
+  --color-primary-foreground: var(--control-primary-foreground);
+  --color-muted: var(--control-muted);
+  --color-muted-foreground: var(--control-muted-foreground);
+  --color-accent: var(--control-accent);
+  --color-accent-foreground: var(--control-accent-foreground);
+  --color-border: var(--control-border);
+  --color-input: var(--control-input);
+  --color-ring: var(--control-ring);
+  --radius-sm: calc(var(--control-radius) - 4px);
+  --radius-md: calc(var(--control-radius) - 2px);
+  --radius-lg: var(--control-radius);
+  --radius-xl: calc(var(--control-radius) + 4px);
+  --radius-2xl: calc(var(--control-radius) + 8px);
+}
+
+:host {
+  --control-font-sans:
+    "DM Sans Variable", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+    sans-serif;
+  --control-font-mono:
+    "SF Mono", "SFMono-Regular", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  --control-radius: 0.625rem;
+  --control-background: white;
+  --control-foreground: oklch(0.269 0 0);
+  --control-popover: white;
+  --control-popover-foreground: oklch(0.269 0 0);
+  --control-primary: oklch(0.488 0.217 264);
+  --control-primary-foreground: white;
+  --control-muted: rgb(0 0 0 / 4%);
+  --control-muted-foreground: oklch(0.556 0 0);
+  --control-accent: rgb(0 0 0 / 4%);
+  --control-accent-foreground: oklch(0.269 0 0);
+  --control-border: rgb(0 0 0 / 8%);
+  --control-input: rgb(0 0 0 / 10%);
+  --control-ring: oklch(0.488 0.217 264);
+  color: var(--control-foreground);
+  font-family: var(--control-font-sans);
+}
+
+* {
+  box-sizing: border-box;
+  border-color: var(--control-border);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--control-ring) 72%, transparent);
+  outline-offset: 1px;
+}

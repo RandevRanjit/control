@@ -1,0 +1,57 @@
+<style data-part="groups">
+/* three sidebars at 1:1 on one row; each is the window's sidebar column cut out with its chrome tone */
+.s-grp-root .s-grp-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); align-items: start; }
+@media (max-width: 1100px) { .s-grp-root .s-grp-row { grid-template-columns: minmax(0, 1fr); } }
+.s-grp-root .s-grp-col { min-width: 0; }
+.s-grp-root .s-grp-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: var(--s-3); }
+.s-grp-root .s-grp-h .id { font: 500 11px/1 var(--f-mono); color: var(--ink-2); background: var(--raised); padding: 5px 8px; border-radius: var(--r-pill); }
+.s-grp-root .s-grp-h b { font: var(--w-strong) 17px/1.2 var(--f-chrome); color: var(--text-strong); }
+.s-grp-root .s-grp-cut { width: 300px; height: 960px; display: flex; border-radius: var(--r-win); background: var(--raised); box-shadow: var(--float), inset 0 1px 0 var(--lip); overflow: hidden;
+  color: var(--text-body); font: var(--w-reg) 12px/17px var(--f-chrome); }
+.s-grp-root .s-grp-cut > .hy-side { flex: 1; min-width: 0; }
+.s-grp-root .s-grp-col .cap { max-width: 46ch; }
+.s-grp-root .s-grp-pro, .s-grp-root .s-grp-con { margin: var(--s-3) 0 0; padding-left: 18px; font: var(--w-reg) 13px/1.5 var(--f-chrome); color: var(--text-secondary); max-width: 46ch; }
+.s-grp-root .s-grp-pro li::marker { content: '+  '; color: var(--text-caption); }
+.s-grp-root .s-grp-con li::marker { content: '−  '; color: var(--text-caption); }
+.s-grp-root .s-grp-pro li + li, .s-grp-root .s-grp-con li + li { margin-top: 4px; }
+</style>
+<section id="groups" class="bl-sec s-grp-root">
+  <header class="bl-sh">
+    <div class="no">03 <span class="bl-steps"></span></div>
+    <h2>Groups in the sidebar</h2>
+    <p class="meta">v2 adds a Group above projects and chats. Three ways to draw the three tiers in one column.</p>
+  </header>
+  <p class="bl-lead">T3's sidebar is one list of chats, each card naming its folder; a legacy setting, off by default, draws the same chats as a folder tree. Its "project grouping" setting only merges one repository seen from two paths or machines; it is not a group you name. v2's Group is yours: a name, any chats from any folder, and an optional home folder that new chats in the group start in. So the sidebar has three tiers to place: group, folder, chat.</p>
+  <div class="bl-prose">
+    <p>All three use the same twelve chats. ORBIT holds PORTFOLIO-SCROLL from the portfolio folder on purpose, because a group that crosses folders is the case a folder list can't draw. Chats that belong to no group sit under Loose. Snoozed chats fold away with their wake time, and Archive keeps its count, so neither costs rows. Pinned is a pin on line 2, and the chat holds the top of its group.</p>
+  </div>
+
+  <div class="s-grp-row">
+    <div class="s-grp-col">
+      <div class="s-grp-h"><span class="id">G1</span><b>Groups › folders › chats · version 1</b></div>
+      <div class="bl-scale" data-w="300" data-h="960"><div class="s-grp-cut" data-region data-mode="tree"></div></div>
+      <ul class="s-grp-pro"><li>T3's legacy folder tree, kept whole inside each group, so per-folder actions (scripts, worktree base, open in editor) keep a home.</li><li>Reads like Finder: where the work lives is always visible.</li></ul>
+      <ul class="s-grp-con"><li>A fourth indent and a header per folder: ten rows of chrome for twelve chats, so less fits.</li><li>A group with one folder (THESIS, CONTROL) repeats itself.</li></ul>
+    </div>
+    <div class="s-grp-col">
+      <div class="s-grp-h"><span class="id">G2</span><b>Groups › chats, folder on line 2</b></div>
+      <div class="bl-scale" data-w="300" data-h="960"><div class="s-grp-cut" data-region data-mode="flat"></div></div>
+      <ul class="s-grp-pro"><li>Bloom's own sidebar, unchanged in shape: every row a chat, every lamp and bar in one column.</li><li>The folder is a bare label after the state words, so a cross-folder group reads at a glance.</li></ul>
+      <ul class="s-grp-con"><li>Line 2 gets one more word; on long state words the folder is what truncates first.</li><li>Folder actions move to the group's menu and the chat head.</li></ul>
+    </div>
+    <div class="s-grp-col">
+      <div class="s-grp-h"><span class="id">G3</span><b>One group at a time</b></div>
+      <div class="bl-scale" data-w="300" data-h="960"><div class="s-grp-cut" data-region data-mode="switch"></div></div>
+      <ul class="s-grp-pro"><li>Each group gets the whole column; its tally pearls still show every other group's states.</li><li>Fits lock well: a locked group is a pill that won't open.</li></ul>
+      <ul class="s-grp-con"><li>A needs-you in another group is one pearl, not a row: it can't break through the way a row does.</li><li>One more click between groups; All brings back the long list.</li></ul>
+    </div>
+  </div>
+  <p class="cap" style="margin-top:var(--s-5)"><span class="id">G1–G3</span><b>Same chats, three tiers.</b><span>ORBIT-WEBSITE is selected in G1 and G2, with its two worktrees as child rows. SIGNALS_101 shows the proposed interrupted state (section 04). Rows, lamps and bars are Bloom's, unchanged. Version 1 draws G1 with A's three-line cards (S6).</span></p>
+</section>
+<script data-part="groups">
+(() => {
+Bloom.section('groups', { init(el) {
+  el.querySelectorAll('.s-grp-cut').forEach(c => { c.innerHTML = Hy.bloomSide({ mode: c.dataset.mode, proj: c.dataset.mode === 'flat' }); });
+} });
+})();
+</script>

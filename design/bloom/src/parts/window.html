@@ -1,0 +1,2223 @@
+<style data-part="window">
+  /* ---------- section scope ---------- */
+  .s-win-root {
+    --s-win-cur: var(--ink-1);
+    --s-win-lift: var(--raised);
+  }
+  html[data-theme="night"] .s-win-root,
+  .s-win-root [data-theme="night"] {
+    --s-win-cur: var(--cream);
+    --s-win-lift: var(--sunken);
+  } /* in Night's neutral well, the sunken grey is the step up */
+  .s-win-root [data-theme="field"] {
+    --s-win-cur: var(--ink-1);
+    --s-win-lift: var(--raised);
+  }
+
+  /* a forced-theme figure is its own field; when it matches the page the stage simply disappears */
+  .s-win-root .bl-prose + .fig {
+    margin-top: var(--s-6);
+  }
+  .s-win-stage {
+    padding: 40px 40px 44px;
+    border-radius: var(--r-xl);
+    overflow: clip;
+  }
+  .s-win-stage > .cap {
+    margin-top: var(--s-5);
+  }
+  html[data-theme="night"] .s-win-stage[data-theme="night"],
+  html[data-theme="field"] .s-win-stage[data-theme="field"],
+  .s-win-stage:not([data-theme]) {
+    padding: 0;
+    overflow: visible;
+  }
+  html[data-theme="night"] .s-win-stage[data-theme="night"] > .cap,
+  html[data-theme="field"] .s-win-stage[data-theme="field"] > .cap,
+  .s-win-stage:not([data-theme]) > .cap {
+    margin-top: var(--s-4);
+  }
+  @media (max-width: 720px) {
+    .s-win-stage {
+      padding: 12px 12px 16px;
+      border-radius: var(--r-l);
+    }
+    .s-win-stage > .cap {
+      margin-top: var(--s-3);
+    }
+  }
+
+  /* ---------- the frame: a full-height sidebar holds the lights; the band belongs to the selected session ---------- */
+  .s-win-w.window {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: 272px minmax(0, 1fr);
+    column-gap: 6px;
+  }
+  .s-win-main {
+    display: grid;
+    grid-template-rows: 42px minmax(0, 1fr);
+    min-width: 0;
+    min-height: 0;
+  }
+  .s-win-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 440px;
+    gap: 6px;
+    padding: 0 6px 6px 0;
+    min-height: 0;
+  }
+
+  /* ---------- band: the session's header over the terminal, its tools over the panel ---------- */
+  .s-win-band {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 440px;
+    gap: 6px;
+    padding-right: 6px;
+    align-items: center;
+    min-width: 0;
+  }
+  .s-win-who {
+    display: grid;
+    grid-template-columns: 16px auto minmax(0, 1fr);
+    grid-template-rows: 16px 6px;
+    column-gap: 9px;
+    row-gap: 6px;
+    align-items: center;
+    padding: 0 12px 0 8px;
+    min-width: 0;
+  }
+  .s-win-who > .pearl {
+    grid-row: 1;
+    grid-column: 1;
+  }
+  .s-win-nm {
+    grid-row: 1;
+    grid-column: 2;
+    font: 600 13px/16px var(--f-mono);
+    letter-spacing: 0.04em;
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .s-win-pth {
+    grid-row: 1;
+    grid-column: 3;
+    font: 400 11px/16px var(--f-mono);
+    color: var(--text-caption);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-win-who > .sbar {
+    grid-row: 2;
+    grid-column: 2 / 4;
+  }
+  .s-win-ctl {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-width: 0;
+  }
+  .s-win-ctl .gi {
+    width: 13px;
+    height: 13px;
+    color: var(--text-caption);
+  }
+  .s-win-soft {
+    color: var(--text-caption);
+    font-weight: var(--w-reg);
+  }
+  .s-win-on.pill {
+    --pill-c: var(--field);
+    --pill-ink: var(--text-strong);
+    box-shadow: var(--well);
+  }
+  .s-win-on.pill .gi {
+    color: var(--text-secondary);
+  }
+  /* the band alone (sidebar hidden, ⌘B): lights and lamp come back into it */
+  .s-win-solo.s-win-band {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0;
+    padding: 0 12px 0 16px;
+    height: 42px;
+  }
+  .s-win-solo .lights {
+    margin-right: 14px;
+  }
+  .s-win-solo .s-win-who {
+    grid-template-columns: 10px 16px auto minmax(0, 1fr);
+    padding-left: 0;
+  }
+  .s-win-solo .s-win-who > .lamp {
+    grid-row: 1;
+    grid-column: 1;
+  }
+  .s-win-solo .s-win-who > .pearl {
+    grid-column: 2;
+  }
+  .s-win-solo .s-win-nm {
+    grid-column: 3;
+  }
+  .s-win-solo .s-win-pth {
+    grid-column: 4;
+  }
+  .s-win-solo .s-win-who > .sbar {
+    grid-column: 3 / 5;
+  }
+
+  /* ---------- sidebar: chrome, full height ---------- */
+  .s-win-side {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+  }
+  .s-win-top {
+    height: 42px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    padding: 0 12px 0 16px;
+  }
+  .s-win-sh {
+    height: 30px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 12px 0 20px;
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-win-ib {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--text-caption);
+  }
+  .s-win-ib .gi {
+    width: 14px;
+    height: 14px;
+  }
+  .s-win-list {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: 8px;
+  }
+  .s-win-list.s-win-clip {
+    -webkit-mask: linear-gradient(to bottom, var(--ink-1) calc(100% - 28px), transparent);
+    mask: linear-gradient(to bottom, var(--ink-1) calc(100% - 28px), transparent);
+  }
+  /* group header: its pearl and name over the rows it holds; every row's lamp sits in one column at the right */
+  .s-win-gr.group-row {
+    gap: 7px;
+    padding-left: 22px;
+    margin-top: 10px;
+  }
+  .s-win-list > .s-win-gr.group-row:first-child {
+    margin-top: 2px;
+  }
+  .s-win-gr.group-row > .gi {
+    margin-left: 2px;
+  }
+  .s-win-gr .s-win-gn {
+    white-space: nowrap;
+  }
+  .s-win-gr .lamp-strip {
+    margin-left: 4px;
+  }
+  .s-win-side .session-row[aria-selected="true"],
+  .s-win-strip .session-row[aria-selected="true"] {
+    box-shadow:
+      inset 0 1px 0 var(--lip),
+      inset 0 -8px 12px -8px var(--occl);
+  }
+  .s-win-side .session-row.multi,
+  .s-win-strip .session-row.multi {
+    background: var(--overlay);
+  }
+  .s-win-env {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-win-env .gi {
+    width: 12px;
+    height: 12px;
+  }
+  .s-win-gap {
+    height: 12px;
+  }
+  .s-win-arh {
+    height: 34px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px 0 20px;
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-win-arh .gi {
+    width: 10px;
+    height: 10px;
+    color: var(--text-caption);
+  }
+  .s-win-arh .pearl.count {
+    margin-left: auto;
+  }
+
+  /* usage: a thin line of plain ink on a quiet track, the width of the sidebar; no hue, no beads */
+  .s-win-use {
+    flex: none;
+    display: grid;
+    grid-template-columns: 22px auto minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 8px;
+    padding: 14px 18px 16px 20px;
+  }
+  .s-win-uk {
+    font: 500 10.5px/1 var(--f-mono);
+    color: var(--text-label);
+  }
+  .s-win-up {
+    font: 600 11px/1 var(--f-mono);
+    color: var(--text-strong);
+  }
+  .s-win-ur {
+    grid-column: 4;
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-win-ur b {
+    font: var(--w-reg) 11px/1 var(--f-chrome);
+    color: var(--text-caption);
+    margin-right: 4px;
+  }
+  .s-win-use .use-line {
+    grid-column: 1 / -1;
+    display: block;
+    margin: 9px 0 16px;
+  }
+  .s-win-tim {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font: var(--w-reg) 11px/1 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-win-tim .gi {
+    width: 12px;
+    height: 12px;
+  }
+  .s-win-tim .t-num {
+    font-size: 10.5px;
+    color: var(--text-secondary);
+  }
+  .s-win-tim .s-win-sp2 {
+    width: 14px;
+  }
+
+  /* ARCHIVE open (W3) */
+  .s-win-arch {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+  }
+  .s-win-srch.input {
+    margin: 0 12px;
+    height: 24px;
+  }
+  .s-win-srch .gi {
+    width: 13px;
+    height: 13px;
+    color: var(--text-caption);
+  }
+  .s-win-srch .kbd {
+    margin-left: auto;
+    height: 18px;
+    min-width: 0;
+    font-size: 10px;
+  }
+  .s-win-srch .ph {
+    color: var(--text-caption);
+  } /* ledger 3: a placeholder is still read */
+  .s-win-sort {
+    margin: 8px 12px 6px;
+    align-self: flex-start;
+  }
+  .s-win-ar {
+    display: grid;
+    grid-template-columns: 14px minmax(0, 1fr) auto;
+    grid-template-rows: 16px 14px;
+    column-gap: 8px;
+    row-gap: 1px;
+    align-items: center;
+    height: 38px;
+    margin: 0 6px;
+    padding: 3px 10px 3px 14px;
+    border-radius: var(--r-m);
+  }
+  .s-win-ar .gi {
+    width: 13px;
+    height: 13px;
+    color: var(--text-caption);
+  }
+  .s-win-ar .s-win-an {
+    font: 500 12px/16px var(--f-mono);
+    color: var(--text-body);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-win-ar.s-win-chat .s-win-an {
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+  .s-win-ar .s-win-aa {
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-win-ar .s-win-af {
+    grid-column: 2 / 4;
+    font: 400 10.5px/14px var(--f-mono);
+    color: var(--text-caption);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-win-sel.toast {
+    margin: 6px;
+    flex: none;
+    gap: 8px;
+    padding-left: 8px;
+  }
+  .s-win-sel .kbd {
+    height: 16px;
+    min-width: 16px;
+    font-size: 10px;
+  }
+
+  /* ---------- terminal column: soft tabs over a deep well ---------- */
+  .s-win-term {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+  .s-win-tabs {
+    height: 34px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 4px 0 0;
+  }
+  .s-win-track {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: var(--r-pill);
+    background: var(--sunken);
+    box-shadow: var(--well);
+  }
+  .s-win-tab {
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 9px 0 11px;
+    border-radius: var(--r-pill);
+    font: 400 11.5px/1 var(--f-mono);
+    color: var(--text-caption);
+    white-space: nowrap;
+  }
+  .s-win-tab .s-win-ix {
+    font-size: 10.5px;
+  }
+  .s-win-tab .gi {
+    width: 10px;
+    height: 10px;
+    margin-left: 2px;
+  }
+  .s-win-tab.s-win-act {
+    background: var(--puff);
+    color: var(--text-strong);
+    box-shadow:
+      inset 0 -3px 6px var(--occl),
+      inset 0 1px 0 var(--lip);
+  }
+  .s-win-tab.s-win-act .s-win-ix,
+  .s-win-tab.s-win-act .gi {
+    color: var(--text-caption);
+  }
+  .s-win-tabs .s-win-ib {
+    width: 26px;
+    height: 26px;
+  }
+  .s-win-hint.kbd {
+    gap: 2px;
+    color: var(--text-caption);
+  }
+  .s-win-hint .gi {
+    width: 11px;
+    height: 11px;
+  }
+  .s-win-tp.pane {
+    box-shadow: var(--well);
+  }
+  .s-win-tty {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 6px 10px 8px;
+    font: 400 12px/17px var(--f-mono);
+    color: var(--ink-1);
+  }
+  .s-win-lines {
+    height: calc(17px * 45);
+    flex: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    white-space: pre;
+  }
+  .s-win-lines > div {
+    min-height: 17px;
+    flex: none;
+  }
+  .s-win-lines b {
+    font-weight: 600;
+  }
+  .s-win-ch {
+    display: inline-block;
+    width: 1ch;
+    text-align: center;
+    font-style: normal;
+    color: var(--ink-1);
+  }
+  .s-win-ch.s-win-g {
+    color: var(--ink-4);
+  }
+  .s-win-lines .s-win-u {
+    background: var(--s-win-lift);
+  }
+  .s-win-lines .s-win-cx {
+    color: var(--ink-3);
+  }
+  .s-win-lines .s-win-rem {
+    background: var(--diff-rem-wash);
+    color: var(--ink-2);
+  }
+  .s-win-lines .s-win-add {
+    background: var(--diff-add-wash);
+  }
+  .s-win-lines .s-win-m-r {
+    color: var(--diff-rem-mark);
+  }
+  .s-win-lines .s-win-m-a {
+    color: var(--diff-add-mark);
+  }
+  .s-win-dim {
+    color: var(--ink-4);
+  }
+  .s-win-spin.gi {
+    width: 11px;
+    height: 11px;
+    color: var(--ink-2);
+    vertical-align: -1px;
+  }
+  .s-win-pbox {
+    height: 51px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    border-radius: var(--r-s);
+    box-shadow: inset 0 0 0 2px var(--seam);
+    white-space: pre;
+  }
+  .s-win-pbox .s-win-dr {
+    color: var(--ink-2);
+  }
+  .s-win-cur {
+    display: inline-block;
+    width: 7.2px;
+    height: 15px;
+    vertical-align: -3px;
+    background: var(--s-win-cur);
+  }
+  .s-win-mode {
+    height: 17px;
+    flex: none;
+    padding: 0 9px;
+    color: var(--ink-3);
+    white-space: pre;
+  }
+
+  /* word marks, shared by the terminal, the mini diffs and DIFF */
+  .s-win-wr {
+    background: var(--diff-rem-word);
+    border-radius: var(--r-xs);
+  }
+  .s-win-wa {
+    background: var(--diff-add-word);
+    border-radius: var(--r-xs);
+  }
+
+  /* ---------- right panel ---------- */
+  .s-win-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+  .s-win-ptabs {
+    height: 34px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .s-win-pt {
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    border-radius: var(--r-pill);
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-caption);
+    white-space: nowrap;
+  }
+  .s-win-pt.s-win-ico {
+    width: 30px;
+    padding: 0;
+    justify-content: center;
+  }
+  .s-win-pt.s-win-ico .gi {
+    width: 14px;
+    height: 14px;
+  }
+  .s-win-pt.s-win-open {
+    color: var(--text-secondary);
+    background: color-mix(in srgb, var(--puff) 45%, transparent);
+  }
+  .s-win-pt.s-win-focus {
+    background: var(--puff);
+    color: var(--text-strong);
+    box-shadow:
+      inset 0 -3px 6px var(--occl),
+      inset 0 1px 0 var(--lip);
+  }
+  .s-win-guest.chip {
+    height: 24px;
+    gap: 6px;
+    padding: 0 9px 0 8px;
+  }
+  .s-win-guest .gi {
+    width: 12px;
+    height: 12px;
+    color: var(--text-caption);
+  }
+  .s-win-gem {
+    width: 11px;
+    height: 13px;
+    flex: none;
+  }
+  .s-win-stack {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 488px minmax(0, 1fr);
+    gap: 6px;
+  }
+  .s-win-stack.s-win-one {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .s-win-vp.pane {
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--well);
+  }
+  .s-win-vh {
+    height: 34px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px 0 10px;
+    font: var(--w-reg) 11.5px/1 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-win-vh .pill {
+    margin-left: auto;
+  }
+
+  /* TRACE: a rail of pearls; the live turn's rail is the safe ramp, flowing */
+  .s-win-trace {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding-top: 2px;
+  }
+  .s-win-turn {
+    position: relative;
+    padding: 0 12px 8px 30px;
+  }
+  .s-win-rail {
+    position: absolute;
+    left: 12.5px;
+    top: 16px;
+    bottom: 6px;
+    width: 3px;
+    border-radius: 1.5px;
+    background: var(--seam);
+  }
+  .s-win-flow.ramp-flow {
+    position: absolute;
+    inset: 0;
+    border-radius: 1.5px;
+    --tile: 480px;
+  }
+  .s-win-th {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    padding-top: 6px;
+  }
+  .s-win-node.pearl {
+    position: absolute;
+    left: -21px;
+    top: 9px;
+    --p: 10px;
+    --c: var(--seam);
+  }
+  .s-win-node.pearl.xs {
+    left: -20px;
+    top: 10px;
+  }
+  .s-win-live .s-win-node.pearl {
+    --c: var(--trace-live);
+  }
+  .s-win-tn {
+    flex: none;
+    width: 3ch;
+    font: 500 11px/16px var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-win-tq {
+    min-width: 0;
+    font: 500 12px/16px var(--f-mono);
+    color: var(--text-strong);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-win-live .s-win-tq {
+    white-space: normal;
+  }
+  .s-win-fold .s-win-tq {
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+  .s-win-tm {
+    padding: 2px 0 5px 28px;
+    font: 400 10.5px/15px var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-win-tm b {
+    font-weight: 500;
+    color: var(--trace-live);
+  }
+  .s-win-ev {
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+  .s-win-evi {
+    min-height: 0;
+    overflow: hidden;
+    margin-left: -24px;
+    padding-left: 24px;
+  }
+  .s-win-ti {
+    position: relative;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    height: 21px;
+    font: 400 11.5px/1 var(--f-mono);
+    color: var(--text-secondary);
+  }
+  .s-win-tick.pearl {
+    position: absolute;
+    left: -20px;
+    top: 6.5px;
+    --c: var(--cream);
+  }
+  .s-win-ti > span:nth-child(3) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-win-k {
+    font: 500 10px/1 var(--f-mono);
+    letter-spacing: 0.06em;
+    color: var(--text-caption);
+  }
+  .s-win-ti[data-k="read"] .s-win-k {
+    color: var(--trace-read);
+  }
+  .s-win-ti[data-k="write"] .s-win-k {
+    color: var(--trace-write);
+  }
+  .s-win-ti[data-k="agent"] .s-win-k {
+    color: var(--trace-agent);
+  }
+  .s-win-ti[data-k="error"] .s-win-k {
+    color: var(--trace-error);
+  }
+  .s-win-ti[data-k="write"],
+  .s-win-ti[data-k="error"] {
+    color: var(--text-strong);
+  }
+  .s-win-tmeta {
+    font-size: 10.5px;
+    color: var(--text-caption);
+    white-space: nowrap;
+  }
+  .s-win-ti[data-k="run"] {
+    color: var(--text-caption);
+  }
+  .s-win-ti[data-k="run"] .s-win-k {
+    color: var(--trace-live);
+  }
+  .s-win-evs {
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+  .s-win-evl {
+    min-height: 0;
+    overflow: hidden;
+    margin-left: -24px;
+    padding-left: 24px;
+  }
+  .s-win-md {
+    margin: 1px 0 6px 52px;
+    border-radius: var(--r-s);
+    overflow: hidden;
+    font: 400 10.5px/15px var(--f-mono);
+  }
+  .s-win-dl {
+    display: grid;
+    grid-template-columns: 26px 14px minmax(0, 1fr);
+    white-space: pre;
+    color: var(--text-body);
+  }
+  .s-win-dl > .s-win-ln {
+    background: var(--sunken);
+    color: var(--text-caption);
+    text-align: right;
+    padding-right: 5px;
+  }
+  .s-win-dl > .s-win-sg {
+    text-align: center;
+  }
+  .s-win-dl.s-win-rem {
+    background: var(--diff-rem-wash);
+  }
+  .s-win-dl.s-win-add {
+    background: var(--diff-add-wash);
+    color: var(--text-strong);
+  }
+  .s-win-dl.s-win-rem > .s-win-sg {
+    color: var(--diff-rem-mark);
+  }
+  .s-win-dl.s-win-add > .s-win-sg {
+    color: var(--diff-add-mark);
+  }
+  .s-win-em {
+    margin: 1px 0 6px 52px;
+    padding: 5px 10px;
+    border-radius: var(--r-s);
+    background: var(--sunken);
+    box-shadow: var(--well);
+    font: 400 11px/16px var(--f-mono);
+    color: var(--text-body);
+  }
+  .s-win-tnote {
+    flex: none;
+    padding: 8px 14px 12px 30px;
+    font: var(--w-reg) 11.5px/1.45 var(--f-chrome);
+    color: var(--text-caption);
+  }
+
+  /* OUTPUTS */
+  .s-win-ol {
+    flex: none;
+    padding: 0 0 6px;
+  }
+  .s-win-or {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    height: 24px;
+    margin: 0 6px;
+    padding: 0 8px;
+    border-radius: 8px;
+    font: 400 11.5px/1 var(--f-mono);
+    color: var(--text-secondary);
+  }
+  .s-win-or > span:first-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-win-or .s-win-om {
+    font-size: 10.5px;
+    color: var(--text-caption);
+  }
+  .s-win-or[aria-selected="true"] {
+    background: var(--selection);
+    color: var(--text-strong);
+  }
+  .s-win-pv {
+    flex: 1;
+    min-height: 0;
+    margin: 0 6px 6px;
+    border-radius: var(--r-m);
+    background: var(--sunken);
+    box-shadow: var(--well);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 14px;
+    overflow: hidden;
+  }
+  .s-win-page {
+    width: 140px;
+    height: 181px;
+    flex: none;
+    padding: 13px 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border-radius: 2px;
+    box-shadow: 0 6px 14px -6px var(--occl);
+    overflow: hidden;
+  }
+  .s-win-page .s-win-ph {
+    font: 700 14px/1 var(--f-chrome);
+    letter-spacing: 0.04em;
+  }
+  .s-win-page .s-win-ps {
+    font: 500 5.5px/1.3 var(--f-chrome);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .s-win-page .s-win-pf {
+    height: 40px;
+    margin: 3px 0 2px;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    padding: 5px;
+    border-radius: 1px;
+  }
+  .s-win-page .s-win-pf i {
+    flex: 1;
+    border-radius: 1px;
+  }
+  .s-win-page .s-win-p2 {
+    font: 600 6px/1 var(--f-mono);
+    margin-top: 3px;
+  }
+  .s-win-page .s-win-pl {
+    height: 3px;
+    border-radius: 1.5px;
+  }
+  .s-win-page .s-win-pl.s-win-short {
+    width: 70%;
+  }
+  .s-win-pgn {
+    height: 34px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font: var(--w-reg) 11.5px/1 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-win-pgn .gi {
+    width: 11px;
+    height: 11px;
+  }
+  .s-win-pgn .t-num {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .s-win-pgn .kbd {
+    height: 18px;
+    font-size: 10px;
+  }
+
+  /* DIFF (W3) */
+  .s-win-dsum {
+    height: 28px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-win-dsum .t-num {
+    font-size: 11.5px;
+  }
+  .s-win-plus-n {
+    color: var(--diff-add-mark);
+  }
+  .s-win-minus-n {
+    color: var(--diff-rem-mark);
+  }
+  .s-win-dfs {
+    flex: none;
+    padding-bottom: 6px;
+  }
+  .s-win-df {
+    display: grid;
+    grid-template-columns: 16px 12px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    height: 24px;
+    margin: 0 6px;
+    padding: 0 10px 0 8px;
+    border-radius: 8px;
+    font: 400 11.5px/1 var(--f-mono);
+    color: var(--text-secondary);
+  }
+  .s-win-df[aria-selected="true"] {
+    background: var(--selection);
+    color: var(--text-strong);
+  }
+  .s-win-c {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font: 600 9px/1 var(--f-mono);
+    color: var(--text-strong);
+    background: var(--s-win-lift);
+    box-shadow:
+      inset 0 1px 0 var(--lip),
+      inset 0 -3px 5px var(--occl);
+  }
+  .s-win-st {
+    font-size: 10.5px;
+    color: var(--text-caption);
+    text-align: center;
+  }
+  .s-win-ds {
+    font-size: 10.5px;
+    white-space: nowrap;
+  }
+  .s-win-dcode {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: 4px;
+  }
+  .s-win-fh {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 26px;
+    margin: 6px 6px 3px;
+    padding: 0 10px;
+    border-radius: 8px;
+    background: var(--s-win-lift);
+    font: 500 11.5px/1 var(--f-mono);
+    color: var(--text-strong);
+  }
+  .s-win-fh .s-win-ds {
+    margin-left: auto;
+  }
+  .s-win-dl2 {
+    display: grid;
+    grid-template-columns: 30px 30px 16px minmax(0, 1fr);
+    font: 400 11.5px/17px var(--f-mono);
+    color: var(--text-body);
+    margin: 0 6px;
+  }
+  .s-win-dl2 > .s-win-ln {
+    background: var(--sunken);
+    color: var(--text-caption);
+    text-align: right;
+    padding-right: 6px;
+    font-size: 10.5px;
+  }
+  .s-win-dl2 > .s-win-sg {
+    text-align: center;
+  }
+  .s-win-dl2 > .s-win-code {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    padding-right: 10px;
+  }
+  .s-win-dl2.s-win-hk > .s-win-code {
+    color: var(--text-caption);
+    font-size: 10.5px;
+  }
+  .s-win-dl2.s-win-rem > .s-win-code,
+  .s-win-dl2.s-win-rem > .s-win-sg {
+    background: var(--diff-rem-wash);
+  }
+  .s-win-dl2.s-win-add > .s-win-code,
+  .s-win-dl2.s-win-add > .s-win-sg {
+    background: var(--diff-add-wash);
+    color: var(--text-strong);
+  }
+  .s-win-dl2.s-win-rem > .s-win-sg {
+    color: var(--diff-rem-mark);
+  }
+  .s-win-dl2.s-win-add > .s-win-sg {
+    color: var(--diff-add-mark);
+  }
+  .s-win-hunk {
+    border-radius: var(--r-s);
+    overflow: hidden;
+    margin: 0 6px;
+  }
+  .s-win-hunk > .s-win-dl2 {
+    margin: 0;
+  }
+  .s-win-dfoot {
+    height: 30px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 14px;
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+
+  /* ---------- W4: rows at 1:1 ---------- */
+  .s-win-r4 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-6) var(--s-5);
+    align-items: start;
+  }
+  @media (max-width: 1240px) {
+    .s-win-r4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 860px) {
+    .s-win-r4 {
+      grid-template-columns: repeat(auto-fill, minmax(284px, 1fr));
+      gap: var(--s-6) var(--s-4);
+    }
+  }
+  .s-win-colh {
+    margin: 0 0 var(--s-3) 116px;
+    font: var(--w-med) 12px/1.35 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-win-strip {
+    position: relative;
+    width: 284px;
+    margin-left: 116px;
+    padding: 6px 0;
+    border-radius: var(--r-l);
+    background: var(--raised);
+    box-shadow: inset 0 1px 0 var(--lip);
+  }
+  .s-win-it {
+    position: relative;
+  }
+  .s-win-it + .s-win-it {
+    margin-top: 6px;
+  }
+  .s-win-lab {
+    position: absolute;
+    right: calc(100% + 16px);
+    top: 13px;
+    width: 104px;
+    text-align: right;
+    font: var(--w-reg) 12px/1.3 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-win-it > .s-win-gr.group-row {
+    margin-top: 6px;
+  }
+  .s-win-hov.session-row {
+    background: color-mix(in srgb, var(--raised) 70%, var(--overlay));
+  }
+  .s-win-rel {
+    position: relative;
+  }
+  .s-win-ptr {
+    position: absolute;
+    width: 13px;
+    height: 19px;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .s-win-ptr.s-win-p1 {
+    left: 214px;
+    top: 6px;
+  }
+  .s-win-ptr.s-win-p2 {
+    left: 112px;
+    top: 100px;
+  }
+  .s-win-dragit {
+    position: relative;
+    padding-bottom: 52px;
+  }
+  .s-win-ren {
+    grid-area: 1 / 1 / 2 / 4;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    height: 20px;
+    margin-left: -6px;
+    padding: 0 6px;
+    gap: 0;
+    font: 500 12.5px/1 var(--f-mono);
+  }
+  .s-win-selt {
+    background: var(--selection);
+    color: var(--text-strong);
+    border-radius: 2px;
+  }
+  .s-win-caret {
+    display: inline-block;
+    width: 2px;
+    height: 14px;
+    margin-left: 1px;
+    border-radius: 1px;
+    background: var(--s-win-cur);
+  }
+  .s-win-drop.group-row {
+    background: var(--selection);
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--focus) 55%, transparent);
+    color: var(--text-strong);
+  }
+  .s-win-ins {
+    position: relative;
+    height: 2px;
+    margin: 2px 12px 2px 30px;
+    border-radius: 1px;
+    background: var(--focus);
+  }
+  .s-win-ins::before {
+    content: "";
+    position: absolute;
+    left: -7px;
+    top: -3px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--focus);
+  }
+  .s-win-drag.session-row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 92px;
+    background: var(--overlay);
+    box-shadow:
+      var(--float),
+      inset 0 1px 0 var(--lip);
+    transform: translateX(12px);
+    z-index: 2;
+  }
+  .s-win-lockrow .s-win-lu {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font: var(--w-reg) 11px/1 var(--f-chrome);
+    letter-spacing: 0;
+    color: var(--text-caption);
+  }
+  .s-win-lockrow .s-win-lu .gi {
+    width: 11px;
+    height: 11px;
+  }
+  .s-win-lockrow .t-num {
+    font-size: 10.5px;
+  }
+  .s-win-cap4.cap {
+    margin-top: var(--s-5);
+  }
+  @media (max-width: 860px) {
+    .s-win-colh {
+      margin-left: 0;
+    }
+    .s-win-strip {
+      margin-left: 0;
+      width: auto;
+      max-width: 284px;
+    }
+    .s-win-lab {
+      position: static;
+      display: block;
+      width: auto;
+      text-align: left;
+      padding: 8px 16px 2px;
+    }
+    .s-win-it + .s-win-it {
+      margin-top: 2px;
+    }
+  }
+
+  /* ---------- W5: the band alone, and a state you can change ---------- */
+  .s-win-demo {
+    display: grid;
+    grid-template-columns: 284px minmax(0, 1fr);
+    gap: var(--s-5) var(--s-6);
+    align-items: start;
+  }
+  .s-win-demo > :first-child {
+    grid-column: 1 / -1;
+    max-width: 900px;
+  }
+  @media (max-width: 860px) {
+    .s-win-demo {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .s-win-mini {
+    width: 900px;
+    height: 42px;
+    border-radius: var(--r-l);
+    background: var(--raised);
+    box-shadow:
+      inset 0 1px 0 var(--lip),
+      var(--float);
+  }
+  .s-win-demo .s-win-strip {
+    margin-left: 0;
+  }
+  .s-win-demo .s-win-colh {
+    margin-left: 0;
+  }
+  .s-win-pick > p {
+    margin: 0 0 var(--s-3);
+    font: var(--w-med) 12px/1.35 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-win-states {
+    display: inline-flex;
+    flex-wrap: wrap;
+    max-width: 100%;
+    gap: 2px;
+    padding: 3px;
+    border-radius: var(--r-l);
+    background: var(--sunken);
+    box-shadow: var(--well);
+  }
+  .s-win-states > button {
+    height: 26px;
+    padding: 0 11px;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: none;
+    cursor: pointer;
+    white-space: nowrap;
+    font: var(--w-med) 12.5px/1 var(--f-chrome);
+    color: var(--text-caption);
+    transition:
+      color var(--d-quick) var(--e-settle),
+      background-color var(--d-quick) var(--e-settle);
+  }
+  .s-win-states > button:hover {
+    color: var(--text-strong);
+  }
+  .s-win-states > button[aria-pressed="true"] {
+    background: var(--puff);
+    color: var(--text-strong);
+    box-shadow:
+      inset 0 -3px 6px var(--occl),
+      inset 0 1px 0 var(--lip);
+  }
+</style>
+
+<section id="window" class="bl-sec s-win-root">
+  <header class="bl-sh">
+    <div class="no">05 <span class="bl-steps"></span></div>
+    <h2>The window</h2>
+    <p class="meta">Main window in both themes, ARCHIVE and the diff, rows at 1:1.</p>
+  </header>
+  <p class="bl-lead">
+    A redraw, not a reskin. The sidebar now runs the full height of the window and holds the traffic
+    lights, so the band belongs to the session you selected: its group's pearl, its name, and under
+    the name the one full state bar in the window, flowing over the terminal. Every row ends in its
+    own bead bar and lamp, every group has its pearl, and usage is a plain line of ink. Lamps keep
+    their shapes and motions and lose their colour. The terminal is still the centre, in a deep
+    well; the next section, <a href="#chat">Without a terminal</a>, takes it out.
+  </p>
+
+  <h3 class="bl-sub"><span class="id">W1</span>Field</h3>
+  <div class="bl-prose">
+    <p>
+      Field is the default. The chrome is one tone step above the field (1.11:1) and the terminal
+      sits on the field itself, in a soft well, with navy ink at 9.84:1. Colour lives in the bars,
+      the pearls and the live turn's rail, and inside the wells in the kind labels and the diff;
+      everything else is the field, the chrome and ink. ORBIT-WEBSITE is selected, so its working
+      bar runs 6&nbsp;px tall and unbroken in the band, and as a row of 5&nbsp;px beads in its row,
+      both on the 7&nbsp;s working period. Each bar is one smooth blend inside its own family, so
+      its colour flows rather than steps. STATISTICS's bar is the only arm on screen and, with its
+      lamp, the fastest thing on it: one period every 1.75&nbsp;s.
+    </p>
+    <p>
+      TRACE streams T14 on the shared clock: seven events between 0.9&nbsp;s and 8.8&nbsp;s, the
+      turn marks done at 10&nbsp;s, and the stream starts again every 14&nbsp;s. Its turns hang on a
+      rail of pearls, and the live turn's rail is the safe ramp, so it can flow right beside state.
+    </p>
+  </div>
+  <figure
+    class="fig s-win-stage themed"
+    data-theme="field"
+    data-fig="main-field"
+    aria-label="The main window in Bloom Field"
+  >
+    <div class="bl-scale" data-w="1512" data-h="945" data-win="main"></div>
+    <figcaption class="cap">
+      <span class="id">W1</span><b>Bloom Field, 1512&nbsp;×&nbsp;945 drawn 1:1.</b> Sidebar 272 at
+      full height, panel 440, band 42, 6&nbsp;pt gutters. The band starts over the terminal, so the
+      session's name and its bar line up with the well they describe; the tools sit over the panel
+      they open.
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">W2</span>Night, on #2F2E2E</h3>
+  <div class="bl-prose">
+    <p>
+      Night's field is a plain near-black grey, #2F2E2E, with a chroma of 0.001. The chrome steps up
+      from it in the same grey (1.14:1) and everything sunk steps down in it: the terminal, TRACE
+      and OUTPUTS sit in #1B1A1A wells, 1.28:1 below the field, and the tabs' track, the usage track
+      and the diff gutters in #242323, 1.16:1 below. No surface carries a hue, so nothing pulls
+      against the blue, green and amber bars; the only blue-black left is the shading under raised
+      things. Ink-1 is 11.53:1 on the field and 14.79:1 in the well.
+    </p>
+    <p>
+      Every pearl carries a stronger cream rim in Night, mixed at 0.60: the smallest rim that gives
+      a pearl's silhouette 3:1 on the field (3.44–3.80) and on the chrome (3.01–3.33).
+    </p>
+  </div>
+  <figure
+    class="fig s-win-stage themed"
+    data-theme="night"
+    data-fig="main-night"
+    aria-label="The main window in Bloom Night"
+  >
+    <div class="bl-scale" data-w="1512" data-h="945" data-win="main"></div>
+    <figcaption class="cap">
+      <span class="id">W2</span><b>Bloom Night, the same template.</b> Both windows keep their theme
+      whatever the toggle says. The cursor is cream in Night and ink in Field, and it does not
+      blink. Usage is ink-1 on a #242323 track, 13.35:1 against it (Field 9.21:1): no hue, no beads.
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">W3</span>ARCHIVE open, with the diff</h3>
+  <div class="bl-prose">
+    <p>
+      ARCHIVE opens under the sessions: search, sort, and 412 finished sessions and chats, the count
+      in a pearl. Three rows are selected, so the selection note has risen at the sidebar's foot,
+      inside its own region. On the right, TRACE is in Diff mode: the same writes as one diff
+      against HEAD, in the well. Night's well is a neutral #1B1A1A and the two washes sit either
+      side of it: removed lines sink 0.049 below it in lightness and added lines rise 0.056 above
+      it. In Field they move −0.037 and +0.030. Long lines wrap under their code.
+    </p>
+  </div>
+  <figure
+    class="fig s-win-stage"
+    data-fig="archive"
+    aria-label="The window with ARCHIVE open and TRACE in Diff mode"
+  >
+    <div class="bl-scale" data-w="1512" data-h="945" data-win="archive"></div>
+    <figcaption class="cap">
+      <span class="id">W3</span><b>ARCHIVE and Diff, in the current theme.</b> Archive rows 38, the
+      search field 24, Recent | Name | Folder. The diff keeps arm's hue out entirely: the rose wash
+      sits 0.528 from arm.
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">W4</span>Rows at 1:1</h3>
+  <div class="bl-prose">
+    <p>
+      Every state and every interaction at its real size: rows 42, groups 28, worktree rows 22. Read
+      a row from the right. The lamp is the end cap, 15&nbsp;px, ink, and it only moves. Before it,
+      a bead bar a sixth of the row wide carries the colour, flowing through its beads. The name has
+      the rest of the first line. Needs you flows fastest, one period every 1.75&nbsp;s at
+      68.6&nbsp;px/s. Failed and done take 3.5&nbsp;s at 51.4&nbsp;px/s; working, background and
+      choose 7&nbsp;s at 34.3&nbsp;px/s; housekeeping 14&nbsp;s on the safe ramp. Outside, idle and
+      gone hold still.
+    </p>
+    <p>
+      The second line starts with Claude's spark and the state words, then any chip. Under the bar
+      sit the context line and its share, the tokens this chat has spent, and the age, so every
+      column lines up down the list. A needs-you row also takes a 6&nbsp;% arm tint and a semibold
+      name, and ink-1 on it is 9.89:1 in Field and 9.58:1 in Night. Working and background share one
+      bar; the lamp tells them apart, a disc for one job and a ring for several, and the wave after
+      the state words counts them. Outside's beads are open rings, like its lamp, and its row has no
+      spark: it is not Claude's. Idle and gone show only the track. A folded group swaps its rows
+      for a tally: one pearl per hidden session, each in its own session's colour. Field's amber bar
+      is only 1.62:1 on the chrome, so it reads by hue, while the lamp's stumble and the word failed
+      carry it for everyone.
+    </p>
+  </div>
+  <figure class="fig" data-fig="rows" data-region aria-label="Session rows in every state at 1:1">
+    <div class="s-win-r4"></div>
+    <figcaption class="cap s-win-cap4">
+      <span class="id">W4</span><b>Rows, in the current theme.</b> Name in Plex 12.5; the bead bar a
+      sixth of the row, 5&nbsp;px beads on an 8&nbsp;px pitch; the lamp 15; the state line in the
+      chrome face at 11, its figures in Plex at 10; the row is 42. Lamps, bars and figures each keep
+      one column down the list. Context, tokens and ages are sample data, the same for a session
+      wherever it appears; 138K is inventory's own figure. Line 2 keeps a branch and a worktree
+      apart: the branch glyph and a name is the branch a session sits on; the worktree glyph and a
+      count says it has worktrees, and the child rows under it name each one, with its diff. A
+      session never shows both.
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">W5</span>The band without the sidebar</h3>
+  <div class="bl-prose">
+    <p>
+      Hide the sidebar (⌘B) and the band takes over the session's identity: the traffic lights, the
+      lamp, the group's pearl, the name and the full bar. It is the one place a lamp sits in the
+      band. Pick a state: the lamp changes shape and motion, and both bars are wiped off by their
+      bridge while the new ramp already flows underneath, in 437.5&nbsp;ms, or 218.75&nbsp;ms into
+      needs you. A bar blends inside its own family; a change crosses families, so it bridges:
+      cream, except between a calm state and needs you, where it is navy and wine. With Still on,
+      the change dissolves in 218.75&nbsp;ms instead.
+    </p>
+  </div>
+  <figure
+    class="fig"
+    data-fig="band"
+    data-region
+    aria-label="The band with the sidebar hidden, and its session row"
+  >
+    <div class="s-win-demo">
+      <div>
+        <p class="s-win-colh">Band, sidebar hidden</p>
+        <div class="bl-scale" data-w="900" data-h="42"><div class="s-win-mini"></div></div>
+      </div>
+      <div>
+        <p class="s-win-colh">Its row, when the sidebar is back</p>
+        <div class="s-win-strip s-win-onerow"></div>
+      </div>
+      <div class="s-win-pick">
+        <p>Pick a state for ORBIT-WEBSITE</p>
+        <div class="s-win-states" role="group" aria-label="ORBIT-WEBSITE's state"></div>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">W5</span><b>One session, two forms of bar.</b> The band's bar is unbroken,
+      6&nbsp;px on a 360&nbsp;px tile; the row's is 5&nbsp;px beads on a 240&nbsp;px tile; same
+      state, same period, same phase.
+    </figcaption>
+  </figure>
+</section>
+
+<script data-part="window">
+  (() => {
+    const G = Bloom.gi,
+      L = Bloom.lamp,
+      BAR = Bloom.bar;
+
+    /* ---------- content: inventory.md §1.1 (52-65), §1.2 (85-96), §1.3 (117-122), §1.4 (127-132), §1.5 (147-172), §1.6 (180-244), §1.12 (K8);
+   transcript lines as design/v2 draws them; diff hunks from the U2 spike's fixture (app/CONTROL/App/Fixtures.swift 418-478).
+   Group tints follow the shell's own example (_test): THESIS mint, PROJECTS peri, ORBIT butter. ---------- */
+    const GROUPS = [
+      {
+        name: "THESIS",
+        tint: "mint",
+        rows: [
+          { n: "STATISTICS", st: "needs", chip: "LOGIN", age: "2m", l2: "needs you" },
+          { n: "LINEAR_ALGEBRA", st: "done", age: "14m", l2: "done · main", ms: true },
+          { n: "SIGNALS_101", st: "idle", age: "3h", l2: "idle · main", ms: true },
+        ],
+      },
+      {
+        name: "PROJECTS",
+        tint: "peri",
+        rows: [
+          {
+            n: "ORBIT-WEBSITE",
+            st: "working",
+            loose: 1,
+            age: "now",
+            l2: "working",
+            sel: true,
+            wts: [
+              { n: "site-v2", d: "+38 −12", sel: true },
+              { n: "download-size", d: "+4 −1" },
+            ],
+          },
+          {
+            n: "CONTROL",
+            st: "working",
+            age: "1m",
+            l2: "working",
+            wts: [{ n: "v2", d: "+212 −40" }],
+          },
+          { n: "PORTFOLIO-WEBSITE", st: "working", mark: "JOB", age: "6m", l2: "working" },
+        ],
+      },
+    ];
+    const LOOSE = [
+      { n: "RELAY MAIN", st: "house", age: "9m", l2: "dreaming" },
+      { n: "INTERNSHIPS", st: "idle", loose: 2, age: "1h", l2: "idle · main", ms: true },
+      { n: "CV-BUILD", st: "failed", chip: "EXIT 1", age: "2h", l2: "failed · main" },
+      {
+        n: "INTERNSHIP-SEARCH",
+        st: "outside",
+        mark: "OUTSIDE",
+        age: "4h",
+        l2: "vs code · read-only",
+      },
+    ];
+    const ARCH = [
+      ["s", "STATISTICS-W4", "~/Uni/statistics", "1d", 2],
+      ["c", "Clean up my calendar for next week", "~", "2d"],
+      ["s", "PORTFOLIO-SCROLL", "~/Projects/portfolio", "3d", 1],
+      ["c", "Scrape Brightspace for DC week 5 and make notes", "~/Uni/linear-algebra", "4d"],
+      ["c", "deps audit", "~/Projects/orbit", "5d"],
+      ["s", "LECTURE-NOTES-W5", "~/Uni/statistics", "6d", 1],
+      ["c", "Find internships and draft the emails", "~/Life", "1w"],
+      ["s", "GT-LAYER-RETIRE", "~/Projects/control", "1w", 3],
+      ["c", "Why is the Audio bridge dropping MIDI?", "~/Projects/orbit", "2w"],
+      ["c", "Clean up my projects folder", "~/Projects", "2w"],
+      ["s", "ORBIT-1-MARKET", "~/Projects/orbit", "3w", 2],
+      ["c", "Summarise the club onboarding pack", "~/Life/cv", "3w"],
+    ];
+    const DOT = '<i class="s-win-ch">⏺</i>',
+      HOOK = '<i class="s-win-ch s-win-g">⎿</i>';
+    const TTY = [
+      ["u", "&gt; the hero spacing is off on mobile, put it on the 8 pt grid"],
+      ["", ""],
+      ["", `${DOT} <b>Read</b>(app/page.tsx)`],
+      ["", `  ${HOOK}  Read <b>212</b> lines`],
+      ["", `${DOT} <b>Read</b>(app/globals.css)`],
+      ["", `  ${HOOK}  Read <b>148</b> lines`],
+      ["", `${DOT} <b>Update</b>(app/globals.css)`],
+      ["", `  ${HOOK}  Updated <b>globals.css</b> with <b>6</b> additions and <b>6</b> removals`],
+      ["", `${DOT} <b>Update</b>(app/page.tsx)`],
+      ["", `  ${HOOK}  Updated <b>page.tsx</b> with <b>2</b> additions and <b>2</b> removals`],
+      ["", ""],
+      ["", "  The hero sits on the 8 pt grid now; /download is next."],
+      ["", ""],
+      ["u", "&gt; /download says 11.2 MB but the DMG is 11.7"],
+      ["", ""],
+      ["", `${DOT} <b>Read</b>(app/download/page.tsx)`],
+      ["", `  ${HOOK}  Read <b>64</b> lines`],
+      ["", `${DOT} <b>Read</b>(app/admin/page.tsx)`],
+      ["", `  ${HOOK}  Read <b>118</b> lines`],
+      ["", ""],
+      ["", `${DOT} The DMG grew in 0.2.3 and the label is a hand-typed string in two places.`],
+      ["", "  Neither page reads the file."],
+      ["", ""],
+      ["u", "&gt; put the release size in one place so /download and /admin can't drift"],
+      ["", ""],
+      ["", `${DOT} <b>Read</b>(lib/format.ts)`],
+      ["", `  ${HOOK}  Read <b>22</b> lines`],
+      ["", `${DOT} <b>Task</b>(explore: every other place the size is typed)`],
+      ["", `  ${HOOK}  Done (3 reads · 6.1k tokens · 14s)`],
+      ["", `${DOT} <b>Update</b>(lib/release.ts)`],
+      ["", `  ${HOOK}  Updated <b>lib/release.ts</b> with <b>2</b> additions and <b>1</b> removal`],
+      ["cx", "      10   export const release = {"],
+      ["cx", '      11     version: "0.2.3",'],
+      [
+        "rem",
+        '      12 <i class="s-win-m-r">-</i>   size: <span class="s-win-wr">"11.2 MB"</span>,',
+      ],
+      [
+        "add",
+        '      12 <i class="s-win-m-a">+</i>   <span class="s-win-wa">bytes: 11_743_232</span>,',
+      ],
+      [
+        "add",
+        '      13 <i class="s-win-m-a">+</i>   size: <span class="s-win-wa">formatSize(11_743_232)</span>,',
+      ],
+      ["", `${DOT} <b>Update</b>(app/download/page.tsx)`],
+      ["", `  ${HOOK}  Updated <b>page.tsx</b> with <b>1</b> addition and <b>1</b> removal`],
+      [
+        "rem",
+        '      41 <i class="s-win-m-r">-</i>   &lt;dd&gt;<span class="s-win-wr">11.2 MB</span>&lt;/dd&gt;',
+      ],
+      [
+        "add",
+        '      41 <i class="s-win-m-a">+</i>   &lt;dd&gt;<span class="s-win-wa">{release.size}</span>&lt;/dd&gt;',
+      ],
+      ["", `${DOT} <b>Update</b>(app/admin/page.tsx)`],
+      ["", `  ${HOOK}  Error: String to replace not found in file.`],
+      ["", `${DOT} <b>Read</b>(app/admin/page.tsx)`],
+      ["", `  ${HOOK}  Read <b>118</b> lines`],
+      ["", `${DOT} <b>Update</b>(app/admin/page.tsx)`],
+      ["", `  ${HOOK}  Updated <b>page.tsx</b> with <b>3</b> additions and <b>1</b> removal`],
+      ["", `${DOT} <b>Bash</b>(bun run typecheck)`],
+      ["", `  ${HOOK}  <span class="s-win-dim">(no output)</span>`],
+      ["", ""],
+      [
+        "",
+        `${DOT} Both pages read release.size now. Checking /download on the dev server in tab 2.`,
+      ],
+      ["", ""],
+      [
+        "",
+        `<svg class="gi s-win-spin" aria-hidden="true"><use href="#g-spin"/></svg> Fetching… <span class="s-win-dim">(41s · ↓ 3.1k tokens · esc to interrupt)</span>`,
+      ],
+      ["", ""],
+    ];
+    /* TRACE T14 (inventory 193-207, timing §2.3 line 382) */
+    const MD = {
+      release: [
+        ["rem", 12, "−", 'size: <span class="s-win-wr">"11.2 MB"</span>,'],
+        ["add", 12, "+", '<span class="s-win-wa">bytes: 11_743_232</span>,'],
+        ["add", 13, "+", 'size: <span class="s-win-wa">formatSize(11_743_232)</span>,'],
+      ],
+      download: [
+        ["rem", 41, "−", '&lt;dd&gt;<span class="s-win-wr">11.2 MB</span>&lt;/dd&gt;'],
+        ["add", 41, "+", '&lt;dd&gt;<span class="s-win-wa">{release.size}</span>&lt;/dd&gt;'],
+      ],
+    };
+    const STREAM = [
+      { at: 900, k: "read", p: "lib/format.ts", m: "22 lines" },
+      { at: 2200, k: "agent", p: "explore · 3 reads, no writes", m: "▸" },
+      { at: 3600, k: "write", p: "lib/release.ts", m: "+2 −1", md: "release" },
+      { at: 5000, k: "write", p: "app/download/page.tsx", m: "+1 −1", md: "download" },
+      {
+        at: 6400,
+        k: "error",
+        p: "app/admin/page.tsx",
+        m: "Edit",
+        em: "String to replace not found in file.",
+      },
+      { at: 7600, k: "read", p: "app/admin/page.tsx", m: "118 lines" },
+      { at: 8800, k: "write", p: "app/admin/page.tsx", m: "+3 −1" },
+    ];
+    const LOOP = 14000,
+      DONE = 10000,
+      START_S = 31,
+      FADE = LOOP - Bloom.D.state;
+    const KIND = { read: "READ", write: "WRITE", agent: "AGENT", error: "ERROR", run: "…" };
+    /* DIFF (inventory 241-242) */
+    const FILES = [
+      ["C", "M", "lib/release.ts", "+2", "−1", true],
+      ["C", "M", "app/download/page.tsx", "+1", "−1"],
+      ["C", "A", "app/admin/page.tsx", "+31", ""],
+      ["", "M", "docs/DESIGN.md", "+4", "−10"],
+    ];
+    const HUNKS = [
+      [
+        "lib/release.ts",
+        "+2",
+        "−1",
+        "@@ -8,9 +8,10 @@",
+        [
+          ["", 8, 8, 'import { formatSize } from "./format"'],
+          ["", 9, 9, ""],
+          ["", 10, 10, "export const release = {"],
+          ["", 11, 11, '  version: "0.2.3",'],
+          ["rem", 12, "", '  size: <span class="s-win-wr">"11.2 MB"</span>,'],
+          ["add", "", 12, '  <span class="s-win-wa">bytes: 11_743_232</span>,'],
+          ["add", "", 13, '  size: <span class="s-win-wa">formatSize(11_743_232)</span>,'],
+          ["", 13, 14, "  signed: true,"],
+          ["", 14, 15, "  notarized: true,"],
+          ["", 15, 16, "}"],
+        ],
+      ],
+      [
+        "app/download/page.tsx",
+        "+1",
+        "−1",
+        "@@ -38,7 +38,7 @@",
+        [
+          ["", 39, 39, '&lt;dl className="spec"&gt;'],
+          ["", 40, 40, "  &lt;dt&gt;Size&lt;/dt&gt;"],
+          ["rem", 41, "", '  &lt;dd&gt;<span class="s-win-wr">11.2 MB</span>&lt;/dd&gt;'],
+          ["add", "", 41, '  &lt;dd&gt;<span class="s-win-wa">{release.size}</span>&lt;/dd&gt;'],
+          ["", 42, 42, "  &lt;dt&gt;macOS&lt;/dt&gt;"],
+        ],
+      ],
+      [
+        "app/admin/page.tsx",
+        "+31",
+        "",
+        "@@ -0,0 +1,31 @@",
+        [
+          'import { release } from "@/lib/release"',
+          'import { requireOwner } from "@/lib/auth"',
+          "",
+          "export default async function Admin() {",
+          "  await requireOwner()",
+          "  const stats = await release.stats()",
+          "  if (!stats) return &lt;p&gt;No stats yet.&lt;/p&gt;",
+          "  const updated = new Date(stats.at).toISOString()",
+          "",
+          "  return (",
+          '    &lt;main className="admin"&gt;',
+          "      &lt;h1&gt;ORBIT {release.version}&lt;/h1&gt;",
+          '      &lt;dl className="spec"&gt;',
+          "        &lt;dt&gt;Size&lt;/dt&gt;",
+          "        &lt;dd&gt;{release.size}&lt;/dd&gt;",
+          "        &lt;dt&gt;Signed&lt;/dt&gt;",
+          '        &lt;dd&gt;{release.signed ? "yes" : "no"}&lt;/dd&gt;',
+        ].map((c, i) => ["add", "", i + 1, c]),
+      ],
+    ];
+    const OUTS = [
+      ["press/orbit-press-kit.pdf", "4m", true],
+      ["public/og/download.png", "1200×630 · 6m"],
+      ["docs/release-0.2.3.md", "38 lines · 21m"],
+      ["docs/size-audit.md", "12 lines · 40m"],
+    ];
+    /* Not ours, so not tokens: Obsidian's own gem (inventory line 184) and the PDF's own page (PDFKit draws it; design/v2 outputsBody) */
+    const THEIRS = {
+      gem: ["#a88bfa", "#7c4dde", "#5b2fb5"],
+      page: "#f3f0e8",
+      ink: "#1a1815",
+      sub: "#6b665d",
+      fig: "#100f0d",
+      bar: "#3a342d",
+      line: "#cfc9bc",
+      bars: [30, 55, 40, 80, 62, 35],
+    };
+    /* the state line each state writes (W5); the spark before it stands for Claude */
+    const WORD = {
+      needs: "needs you",
+      failed: "failed",
+      done: "done",
+      working: "working",
+      bg: "background",
+      choose: "choose on return",
+      house: "dreaming",
+      outside: "outside · vs code · read-only",
+      idle: "idle",
+      gone: "gone · ended",
+    };
+    const PICK = [
+      ["needs", "Needs you"],
+      ["failed", "Failed"],
+      ["done", "Done"],
+      ["working", "Working"],
+      ["bg", "Background"],
+      ["choose", "Choose on return"],
+      ["house", "Housekeeping"],
+      ["outside", "Outside"],
+      ["idle", "Idle"],
+      ["gone", "Gone"],
+    ];
+
+    /* ---------- builders ---------- */
+    const pearl = (tint, p, cls = "") =>
+      `<span class="pearl${cls ? " " + cls : ""}" data-tint="${tint}" style="--p:${p}px" aria-hidden="true"></span>`; // decorative: the name says it
+    /* line 2's chips: after the state words; the age, context and tokens are Bloom.row's own (sample data, by session name) */
+    const right = (s) =>
+      (s.chip ? `<span class="chip${s.st === "needs" ? " on-needs" : ""}">${s.chip}</span>` : "") +
+      (s.mark ? `<span class="chip mark">${s.mark}</span>` : "") +
+      (s.extra || "") +
+      (s.loose ? `<span class="s-win-env">${G("mail")}${s.loose}</span>` : "");
+    const row = (s, ind, o = {}) =>
+      Bloom.row({
+        st: s.st,
+        name: s.n,
+        nameHTML: o.name,
+        sub: s.l2,
+        right: right(s),
+        age: s.age,
+        ind,
+        sel: !!(s.sel && !o.nosel),
+        cls: [o.multi && s.ms ? "multi" : "", o.cls || ""].filter(Boolean).join(" "),
+      });
+    const wt = (w, ind) =>
+      `<div class="wt-row" aria-selected="${!!w.sel}" style="--indent:${ind}px">${G("wt")}${w.n}<span class="st">${w.d}</span></div>`;
+    const group = (g, o = {}) =>
+      `<div class="group-row s-win-gr${o.cls ? " " + o.cls : ""}">${pearl(g.tint, 14)}<span class="s-win-gn">${g.name}</span>${o.mid || ""}${g.rows ? `<span class="n">${g.rows.length}</span>` : ""}${G(o.folded ? "chev-r" : "chev-d")}</div>`;
+
+    function sessionList(o) {
+      let h = "";
+      for (const g of GROUPS) {
+        h += group(g);
+        for (const s of g.rows) {
+          h += row(s, 24, o);
+          for (const w of s.wts || []) h += wt(w, 24);
+        }
+      }
+      h += '<div class="s-win-gap"></div>';
+      for (const s of LOOSE) h += row(s, 14, o);
+      return h;
+    }
+    /* usage: a plain ink line the width of the sidebar (past 80 % only its leading end breathes) */
+    const usage = () => `<div class="s-win-use">
+  <span class="s-win-uk">5H</span><span class="s-win-up">71%</span><span></span><span class="s-win-ur"><b>resets</b>01:10</span>${Bloom.usageLine(0.71, { kind: "5h", w: "100%", label: "5 hour usage 71 %" })}
+  <span class="s-win-uk">7D</span><span class="s-win-up">22%</span><span></span><span class="s-win-ur"><b>resets</b>Sun</span>${Bloom.usageLine(0.22, { kind: "7d", w: "100%", label: "7 day usage 22 %" })}
+  <span class="s-win-tim">${G("hgf")}<span class="t-num">2h 14m</span> active<span class="s-win-sp2"></span>${G("hge")}<span class="t-num">38m</span> quiet</span></div>`;
+    const archiveRows = () =>
+      ARCH.map(
+        ([k, n, f, a, t]) =>
+          `<div class="s-win-ar${k === "c" ? " s-win-chat" : ""}">${G(k === "s" ? "sess" : "chat")}<span class="s-win-an">${n}</span><span class="s-win-aa">${a}</span><span class="s-win-af">${f}${t ? ` · ${t} tab${t > 1 ? "s" : ""}` : ""}</span></div>`,
+      ).join("");
+
+    function sidebar(arch) {
+      const top =
+        `<div class="s-win-top"><span class="lights"><i></i><i></i><i></i></span><span class="sp"></span><span class="s-win-ib">${G("side")}</span></div>` +
+        `<div class="s-win-sh"><span>Sessions</span><span class="sp"></span><span class="s-win-ib">${G("plus")}</span></div>`;
+      const count = Bloom.pearl({ n: 412, p: 18, label: "412 in the archive" });
+      if (!arch)
+        return `<div class="s-win-side">${top}<div class="s-win-list">${sessionList({})}</div>
+    <div class="s-win-arh"><span>Archive</span>${count}${G("chev-r")}</div>${usage()}</div>`;
+      return `<div class="s-win-side">${top}<div class="s-win-list s-win-clip">${sessionList({ multi: true })}</div>
+    <div class="s-win-arch"><div class="s-win-arh"><span>Archive</span>${count}${G("chev-d")}</div>
+      <span class="input s-win-srch">${G("find")}<span class="ph">name, folder, prompt</span><span class="kbd">⌘F</span></span>
+      <div class="seg sm s-win-sort" role="group" aria-label="Sort"><button aria-pressed="true">Recent</button><button aria-pressed="false">Name</button><button aria-pressed="false">Folder</button></div>
+      ${archiveRows()}</div>
+    <div class="toast s-win-sel">${Bloom.pearl({ n: 3, p: 18, label: "3 selected" })}<b>selected</b><span class="sp"></span><button class="pill sm">Archive <span class="kbd">X</span></button><button class="pill ghost sm">Esc</button></div></div>`;
+    }
+
+    const tabs = () =>
+      `<div class="s-win-tabs"><span class="s-win-track">${[
+        ["1", "claude", 1],
+        ["2", "bun dev"],
+        ["3", "zsh"],
+      ]
+        .map(
+          ([i, n, on]) =>
+            `<span class="s-win-tab${on ? " s-win-act" : ""}"><span class="s-win-ix">${i}</span>${n}${G("x")}</span>`,
+        )
+        .join(
+          "",
+        )}</span><span class="s-win-ib">${G("plus")}</span><span class="sp"></span><span class="kbd s-win-hint">${G("ctrl")}Tab</span></div>`;
+    const terminal =
+      () => `<div class="s-win-term">${tabs()}<div class="pane s-win-tp"><div class="s-win-tty">
+  <div class="s-win-lines">${TTY.map(([c, t]) => `<div${c ? ` class="s-win-${c}"` : ""}>${t}</div>`).join("")}</div>
+  <div class="s-win-pbox">&gt; <span class="s-win-dr">see @/tmp/ctrl-shot-0412.png (button.cta on /download): still says 11.2 MB</span><i class="s-win-cur"></i></div>
+  <div class="s-win-mode"><i class="s-win-ch" style="width:2ch">⏵⏵</i> accept edits on (shift+tab to cycle)</div></div></div></div>`;
+
+    const gem = () => {
+      const [a, b, c] = THEIRS.gem;
+      return `<svg class="s-win-gem" viewBox="0 0 11 13" aria-hidden="true"><polygon points="5.5,0 10.5,4 9,11 5.5,13" fill="${a}"/><polygon points="5.5,0 1,5 2,10 5.5,13" fill="${b}"/><polygon points="2,10 5.5,13 9,11 5.5,8" fill="${c}"/></svg>`;
+    };
+    const ptabs = (open) =>
+      `<div class="s-win-ptabs"><span class="s-win-track">${[
+        ["Trace", "trace"],
+        ["Outputs", "out"],
+        ["Folder", "folder"],
+        ["Browser", "web"],
+        ["Git", "git"],
+      ]
+        .map(
+          ([n, g], i) =>
+            `<span class="s-win-pt s-win-ico${i === 0 ? " s-win-focus" : open.includes(i) ? " s-win-open" : ""}" role="img" aria-label="${n}" title="${n}">${G(g)}</span>`,
+        )
+        .join(
+          "",
+        )}</span><span class="sp"></span><span class="chip guest s-win-guest">${gem()}Obsidian · docked${G("undock")}</span></div>`;
+
+    const dl = ([k, n, s, c]) =>
+      `<div class="s-win-dl${k ? " s-win-" + k : ""}"><span class="s-win-ln">${n}</span><span class="s-win-sg">${s}</span><span>${c}</span></div>`;
+    const ti = (k, p, m) =>
+      `<div class="s-win-ti" data-k="${k}"><span class="pearl xs s-win-tick" aria-hidden="true"></span><span class="s-win-k">${KIND[k]}</span><span>${p}</span><span class="s-win-tmeta">${m}</span></div>`;
+    const evHTML = (e) =>
+      ti(e.k, e.p, e.m) +
+      (e.md ? `<div class="s-win-md">${MD[e.md].map(dl).join("")}</div>` : "") +
+      (e.em ? `<div class="s-win-em">${e.em}</div>` : "");
+    const evWrap = (e) => `<div class="s-win-ev"><div class="s-win-evi">${evHTML(e)}</div></div>`;
+    const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+    const node = (xs) =>
+      `<span class="pearl s-win-node${xs ? " xs" : ""}" aria-hidden="true"></span>`;
+
+    function traceBody() {
+      return `<div class="s-win-trace">
+    <div class="s-win-turn s-win-live"><span class="s-win-rail"><i class="ramp-flow safe s-win-flow"></i></span>
+      <div class="s-win-th">${node()}<span class="s-win-tn">T14</span><span class="s-win-tq">put the release size in one place so /download and /admin can't drift</span></div>
+      <div class="s-win-tm"><b class="s-win-ls">running</b> · 23:41 · <span class="s-win-lsec">${START_S}s</span> · <span class="s-win-lw">0 writes</span> · <span class="s-win-lx">0 errors</span></div>
+      <div class="s-win-evs"><div class="s-win-evl"></div></div><div class="s-win-ev s-win-runw"><div class="s-win-evi">${ti("run", "waiting for the next tool call", "")}</div></div></div>
+    <div class="s-win-turn"><span class="s-win-rail"></span>
+      <div class="s-win-th">${node()}<span class="s-win-tn">T13</span><span class="s-win-tq">/download says 11.2 MB but the DMG is 11.7</span></div>
+      <div class="s-win-tm">23:38 · 18s · reads only</div>${ti("read", "app/download/page.tsx", "64 lines")}${ti("read", "app/admin/page.tsx", "118 lines")}</div>
+    <div class="s-win-turn s-win-fold"><div class="s-win-th">${node(1)}<span class="s-win-tn">T12</span><span class="s-win-tq">tag v0.2.3 and attach the notarised DMG ▸</span></div><div class="s-win-tm">23:20 · 2m 10s · 4 reads · 1 write</div></div>
+    <div class="s-win-turn s-win-fold"><div class="s-win-th">${node(1)}<span class="s-win-tn">T11</span><span class="s-win-tq">hero spacing on the 8 pt grid ▸</span></div><div class="s-win-tm">22:58 · 6m · 6 reads · 3 writes · 1 agent</div></div>
+  </div><p class="s-win-tnote">Bash runs stay in the terminal. DIFF shows the same writes as one diff against HEAD.</p>`;
+    }
+    const seg = (label, items, on, cls = "") =>
+      `<div class="seg sm ${cls}" role="group" aria-label="${label}">${items.map((x, i) => `<button aria-pressed="${i === on}">${x}</button>`).join("")}</div>`;
+    function outputs() {
+      const T = THEIRS,
+        page = `<div class="s-win-page" style="background:${T.page};color:${T.ink}"><div class="s-win-ph">ORBIT</div><div class="s-win-ps" style="color:${T.sub}">Press kit · v0.2.3 · October 2026</div>
+    <div class="s-win-pf" style="background:${T.fig}">${T.bars.map((h) => `<i style="height:${h}%;background:${T.bar}"></i>`).join("")}</div>
+    <div class="s-win-p2">What it is</div>${["", "", " s-win-short"].map((c) => `<div class="s-win-pl${c}" style="background:${T.line}"></div>`).join("")}
+    <div class="s-win-p2">Numbers</div>${["", " s-win-short", ""].map((c) => `<div class="s-win-pl${c}" style="background:${T.line}"></div>`).join("")}</div>`;
+      return `<div class="pane s-win-vp"><div class="s-win-vh"><span>this chat · newest first</span><button class="pill ghost sm">Reveal</button></div>
+    <div class="s-win-ol">${OUTS.map(([p, m, sel]) => `<div class="s-win-or" aria-selected="${!!sel}"><span>${p}</span><span class="s-win-om">${m}</span></div>`).join("")}</div>
+    <div class="s-win-pv">${page}<div class="s-win-pgn">${G("chev-l")}<span class="t-num">1 / 2</span>${G("chev-r")}<span>·</span><span class="kbd">Space</span>Quick Look</div></div></div>`;
+    }
+    function diffPane() {
+      const stat = (a, r) =>
+        `<span class="s-win-ds t-num"><span class="s-win-plus-n">${a}</span>${r ? ` <span class="s-win-minus-n">${r}</span>` : ""}</span>`;
+      const files = FILES.map(
+        ([c, st, p, a, r, sel]) =>
+          `<div class="s-win-df" aria-selected="${!!sel}">${c ? `<span class="s-win-c">C</span>` : "<span></span>"}<span class="s-win-st">${st}</span><span>${p}</span>${stat(a, r)}</div>`,
+      ).join("");
+      const line = ([k, o, n, c]) =>
+        `<div class="s-win-dl2${k ? " s-win-" + k : ""}"><span class="s-win-ln">${o}</span><span class="s-win-ln">${n}</span><span class="s-win-sg">${k === "rem" ? "−" : k === "add" ? "+" : ""}</span><span class="s-win-code">${c}</span></div>`;
+      const hunks = HUNKS.map(
+        ([p, a, r, hk, lines]) =>
+          `<div class="s-win-fh">${p}${stat(a, r)}</div><div class="s-win-hunk">${line(["hk", "", "", hk])}${lines.map(line).join("")}</div>`,
+      ).join("");
+      return `<div class="pane s-win-vp"><div class="s-win-vh">${seg("Mode", ["Turns", "Diff"], 1)}</div>
+    <div class="s-win-dsum"><span><span class="t-num">4</span> files</span>${stat("+38", "−12")}</div>
+    <div class="s-win-dfs">${files}</div><div class="s-win-dcode">${hunks}</div>
+    <div class="s-win-dfoot">live · FSEvents · 23:41:07</div></div>`;
+    }
+    const controls =
+      () => `<span class="s-win-ctl"><button class="pill sm">${G("mail")}Loose ends <span class="s-win-soft">· <span class="t-num">1</span> unsent draft</span></button>
+  <button class="pill sm">${G("find")}Find <span class="kbd">⌘K</span></button><button class="pill sm s-win-on" aria-pressed="true">${G("panel")}Panel <span class="kbd">⌘⇧G</span></button></span>`;
+    /* the selected session's header: its group's pearl, its name over the one full bar in the window */
+    const who = (st, o = {}) =>
+      `<div class="s-win-who">${o.lamp ? L(st) : ""}${pearl("peri", 16)}<span class="s-win-nm">ORBIT-WEBSITE</span><span class="s-win-pth">~/Projects/orbit-website</span>${BAR(st)}</div>`;
+    const band = () => `<div class="s-win-band">${who("working")}${controls()}</div>`;
+    const soloBand = (st) =>
+      `<div class="s-win-band s-win-solo"><span class="lights"><i></i><i></i><i></i></span>${who(st, { lamp: true })}${controls()}</div>`;
+
+    function win(kind) {
+      const arch = kind === "archive";
+      const panel = arch
+        ? `<div class="s-win-panel">${ptabs([])}<div class="s-win-stack s-win-one">${diffPane()}</div></div>`
+        : `<div class="s-win-panel">${ptabs([1])}<div class="s-win-stack"><div class="pane s-win-vp"><div class="s-win-vh">${seg("Mode", ["Turns", "Diff"], 0)}${seg("Show", ["All", "Writes", "Errors"], 0)}</div>${traceBody()}</div>${outputs()}</div></div>`;
+      return `<div class="window s-win-w" data-region inert>${sidebar(arch)}<div class="s-win-main">${band()}<div class="s-win-body">${terminal()}${panel}</div></div></div>`;
+    }
+
+    /* ---------- W4: rows at 1:1 ---------- */
+    const byName = (n) => [...GROUPS.flatMap((g) => g.rows), ...LOOSE].find((s) => s.n === n);
+    const it = (label, html) =>
+      `<div class="s-win-it"><span class="s-win-lab">${label}</span>${html}</div>`;
+    const ptr = (cls) =>
+      `<svg class="s-win-ptr ${cls}" viewBox="0 0 13 19" aria-hidden="true"><path d="M1.5 1.5 V15.5 L5 12.2 L7.6 17.6 L10 16.5 L7.5 11.2 H12 Z" style="fill:var(--ink-1);stroke:var(--field)" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+    function rowsFig() {
+      const A = byName("ORBIT-WEBSITE"),
+        DC = byName("LINEAR_ALGEBRA"),
+        HF = byName("SIGNALS_101"),
+        IN = byName("INTERNSHIPS");
+      const PW = byName("PORTFOLIO-WEBSITE"),
+        TU = GROUPS[0],
+        PR = GROUPS[1];
+      const interaction = [
+        it("selected, with its worktree", row(A, 24) + wt(A.wts[0], 24)),
+        it(
+          "hovered",
+          `<div class="s-win-rel">${row(DC, 14, { cls: "s-win-hov" })}${ptr("s-win-p1")}</div>`,
+        ),
+        it("multi-selected", row(HF, 14, { multi: true }) + row(IN, 14, { multi: true })),
+        it(
+          "renaming",
+          row(PW, 14, {
+            name: `<span class="input s-win-ren"><span class="s-win-selt">PORTFOLIO-WEBSITE</span><i class="s-win-caret"></i></span>`,
+          }),
+        ),
+        it(
+          "drag target",
+          `<div class="s-win-dragit">${group(TU, { cls: "s-win-drop" })}${row(DC, 24, {})}<div class="s-win-ins"></div>${row(byName("CV-BUILD"), 14, { cls: "s-win-drag" })}${ptr("s-win-p2")}</div>`,
+        ),
+      ];
+      const busy = [
+        it("needs you", row(byName("STATISTICS"), 14)),
+        it("failed", row(byName("CV-BUILD"), 14)),
+        it("done", row(DC, 14)),
+        it("working", row(byName("CONTROL"), 14)),
+        it(
+          "background",
+          row({ n: "CONTROL", st: "bg", age: "1m", l2: "background", extra: Bloom.wave(3) }, 14),
+        ),
+        it(
+          "choose on return",
+          row(
+            {
+              n: "SIGNALS_101",
+              st: "choose",
+              chip: "138K",
+              age: "3h",
+              l2: "choose on return · main",
+            },
+            14,
+          ),
+        ),
+      ];
+      const quiet = [
+        it("idle", row(IN, 14)),
+        it("housekeeping", row(byName("RELAY MAIN"), 14)),
+        it("outside", row(byName("INTERNSHIP-SEARCH"), 14)),
+        it("gone", row({ n: "ORBIT-1-MARKET", st: "gone", age: "now", l2: "gone · ended" }, 14)),
+        it(
+          "folded",
+          group(PR, {
+            folded: true,
+            mid: `<span class="lamp-strip">${Bloom.tally(
+              PR.rows.map((r) => r.st),
+              { label: "working, working, working" },
+            )}</span>`,
+          }),
+        ),
+        it(
+          "locked, folded (K8)",
+          group(
+            { name: "ORBIT", tint: "butter" },
+            {
+              folded: true,
+              cls: "s-win-lockrow",
+              mid: `<span class="lamp-strip">${Bloom.tally(["working", "idle"], { label: "working, idle" })}</span><span class="s-win-lu">${G("lock")}locked until <span class="t-num">18:00</span></span>`,
+            },
+          ),
+        ),
+      ];
+      const col = (h, items) =>
+        `<div><p class="s-win-colh">${h}</p><div class="s-win-strip">${items.join("")}</div></div>`;
+      return (
+        col("Interaction", interaction) +
+        col("Asking, busy, done", busy) +
+        col("Quiet, and the rest", quiet)
+      );
+    }
+
+    /* ---------- TRACE stream: a pure function of t, so ?t= shots and Pause are exact ---------- */
+    function stream(tr, p, jump) {
+      const n = STREAM.findIndex((e) => e.at > p),
+        shown = n < 0 ? STREAM.length : n,
+        done = p >= DONE,
+        out = p >= FADE;
+      const R = Bloom.reduced(),
+        D = Bloom.D,
+        E = Bloom.E;
+      /* one-shot that ends where the inline style already is; under Reduce motion it is only a dissolve */
+      const play = (el, rows, op, d, ease) =>
+        Bloom.animate(el, R ? { opacity: op } : { gridTemplateRows: rows, opacity: op }, {
+          duration: R ? D.quick : d,
+          easing: R ? E.sine : ease,
+        });
+      if (shown !== tr.n) {
+        if (shown < tr.n || jump) tr.list.innerHTML = STREAM.slice(0, shown).map(evWrap).join("");
+        else
+          for (let i = tr.n; i < shown; i++) {
+            tr.list.insertAdjacentHTML("beforeend", evWrap(STREAM[i]));
+            play(tr.list.lastElementChild, ["0fr", "1fr"], [0, 1], D.quick, E.out);
+          }
+        const seen = STREAM.slice(0, shown);
+        tr.lw.textContent = plural(seen.filter((e) => e.k === "write").length, "write");
+        tr.lx.textContent = plural(seen.filter((e) => e.k === "error").length, "error");
+        tr.n = shown;
+      }
+      const s = START_S + Math.floor(Math.min(p, DONE) / 1000);
+      if (s !== tr.s) {
+        tr.lsec.textContent = s + "s";
+        tr.s = s;
+      }
+      if (done !== tr.done) {
+        /* the turn ends: its "waiting" row folds away and the rail stops flowing */
+        tr.ls.textContent = done ? "done" : "running";
+        tr.run.style.gridTemplateRows = done ? "0fr" : "1fr";
+        tr.run.style.opacity = tr.flow.style.opacity = done ? 0 : 1;
+        if (!jump) {
+          play(
+            tr.run,
+            done ? ["1fr", "0fr"] : ["0fr", "1fr"],
+            done ? [1, 0] : [0, 1],
+            D.quick,
+            done ? E.in : E.out,
+          );
+          Bloom.animate(
+            tr.flow,
+            { opacity: done ? [1, 0] : [0, 1] },
+            { duration: R ? D.quick : D.state, easing: E.sine },
+          );
+        }
+        tr.done = done;
+      }
+      if (out !== tr.out) {
+        /* the loop's last 437.5 ms: the list folds shut, so the 14 s wrap never jumps */
+        tr.evs.style.gridTemplateRows = out ? "0fr" : "1fr";
+        tr.evs.style.opacity = out ? 0 : 1;
+        if (!jump && out) play(tr.evs, ["1fr", "0fr"], [1, 0], D.state, E.sine);
+        tr.out = out;
+      }
+    }
+
+    /* ---------- W5: one session's state, changed by hand; lamp and both bars move together ---------- */
+    function wireDemo(fig) {
+      const mini = fig.querySelector(".s-win-mini"),
+        strip = fig.querySelector(".s-win-onerow"),
+        pick = fig.querySelector(".s-win-states");
+      mini.innerHTML = soloBand("working");
+      strip.innerHTML = row(byName("ORBIT-WEBSITE"), 14);
+      pick.innerHTML = PICK.map(
+        ([st, label]) =>
+          `<button data-to="${st}" aria-pressed="${st === "working"}">${label}</button>`,
+      ).join("");
+      const r = strip.querySelector(".session-row"),
+        b = mini.querySelector(".s-win-band"),
+        sub = r.querySelector(".sr-sub");
+      pick.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-to]");
+        if (!btn) return;
+        const st = btn.dataset.to;
+        pick
+          .querySelectorAll("[data-to]")
+          .forEach((x) => x.setAttribute("aria-pressed", String(x === btn)));
+        Bloom.setState(b, st);
+        Bloom.setState(r, st);
+        sub.textContent = WORD[st];
+      });
+    }
+
+    Bloom.section("window", {
+      init(el) {
+        el.querySelectorAll("[data-win]").forEach((h) => {
+          h.innerHTML = win(h.dataset.win);
+        });
+        el.querySelector(".s-win-r4").innerHTML = rowsFig();
+        wireDemo(el.querySelector('[data-fig="band"]'));
+        el.querySelectorAll(".window .seg").forEach((s) => Bloom.seg(s));
+        this.tr = [...el.querySelectorAll(".s-win-live")].map((turn) => ({
+          turn,
+          evs: turn.querySelector(".s-win-evs"),
+          list: turn.querySelector(".s-win-evl"),
+          run: turn.querySelector(".s-win-runw"),
+          flow: turn.querySelector(".s-win-flow"),
+          ls: turn.querySelector(".s-win-ls"),
+          lsec: turn.querySelector(".s-win-lsec"),
+          lw: turn.querySelector(".s-win-lw"),
+          lx: turn.querySelector(".s-win-lx"),
+          n: 0,
+          s: START_S,
+          done: false,
+          out: false,
+        }));
+        this.last = -1;
+      },
+      tick(t) {
+        const jump = Bloom.paused() || this.last < 0 || t < this.last || t - this.last > 500;
+        for (const tr of this.tr) stream(tr, t % LOOP, jump);
+        this.last = t;
+      },
+    });
+  })();
+</script>

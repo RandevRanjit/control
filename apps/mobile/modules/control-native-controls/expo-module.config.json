@@ -1,0 +1,12 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["ControlNativeControlsModule", "ControlKeyboardCommandsModule"]
+  },
+  "android": {
+    "modules": [
+      "expo.modules.controlnativecontrols.ControlNativeControlsModule",
+      "expo.modules.controlnativecontrols.ControlKeyboardCommandsModule"
+    ]
+  }
+}

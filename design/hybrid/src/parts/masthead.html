@@ -1,0 +1,40 @@
+<style data-part="masthead">
+.bl-sec.s-mast-root { padding-top: var(--s-8); }
+.s-mast-root .s-mast-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 32px; margin-bottom: var(--s-7); }
+.s-mast-root .s-mast-h1 { margin-bottom: var(--s-5); }
+.s-mast-root .s-mast-lead { margin-bottom: 0; }
+.s-mast-root .s-mast-lead2 { margin-top: var(--s-4); margin-bottom: 0; }
+.s-mast-root .s-mast-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-5); margin-top: var(--s-8); align-items: start; }
+@media (max-width: 900px) { .s-mast-root .s-mast-two { grid-template-columns: minmax(0, 1fr); } }
+.s-mast-root .s-mast-reply .t-label { display: block; margin-bottom: var(--s-3); }
+.s-mast-root .s-mast-reply p { font: var(--w-reg) 18px/1.6 var(--f-chrome); color: var(--text-body); }
+.s-mast-root .s-mast-reply p + p { margin-top: var(--s-4); font-size: 15px; }
+@media (max-width: 720px) { .s-mast-root .s-mast-reply.card { padding: var(--s-5); } }
+.s-mast-root .s-mast-cs h3 { font: var(--w-strong) 22px/1.25 var(--f-chrome); color: var(--text-strong); margin-bottom: var(--s-4); }
+.s-mast-root .s-mast-cs ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.s-mast-root .s-mast-cs li { max-width: 52ch; color: var(--text-body); }
+.s-mast-root .s-mast-cs .s-mast-later li { color: var(--text-secondary); }
+.s-mast-root .s-mast-cs .s-mast-later { margin-top: var(--s-6); }
+</style>
+<section id="masthead" class="bl-sec s-mast-root">
+  <div class="s-mast-meta t-cap"><span>Design review 05 · Hybrid · settled 8 Oct 2026</span><span>Version 1.1 is D · feeds step 7 of HANDOFF-v2 · Field by default, Night on the toggle</span></div>
+  <h1 class="t-display s-mast-h1">T3's engine, in Bloom.</h1>
+  <p class="bl-lead s-mast-lead">CONTROL v2 is a hard fork of T3 Code: its server, its threads, its chat view, its panels. Bloom is the look you confirmed four rounds ago: Field and Night, Neue Regrade and Plex, colourless lamps, state colour flowing through bead bars, and a centre that is the conversation rather than a terminal. This sheet asks where each side should win.</p>
+  <p class="bl-lead s-mast-lead2">Round one drew the frame three ways. You took A, pulled pieces in from B and C as D, and refined D over twelve passes from screenshots. D is version 1: section 02's S6 is the window and S7 its panel, tab by tab. Groups, states and decisions below are synced to it.</p>
+  <div class="s-mast-two">
+    <div class="card s-mast-reply">
+      <span class="t-label">Build from</span>
+      <p><code>design/hybrid/HANDOFF.md</code>, the design written down, and <code>design/hybrid/v1.2/</code> (1.1 stays in <code>v1.1/</code> and 1.0 in <code>v1/</code>), the CSS, markup, measurements and reference shots extracted from S6 and S7.</p>
+      <p>The build matches the page 1:1: same tokens, same type, same numbers. Where the doc and the page disagree, the page wins.</p>
+    </div>
+    <div class="s-mast-cs">
+      <h3>On this sheet</h3>
+      <ul><li>Shell: T3 as it is, A, B and C, then D, version 1, with its panel tab by tab.</li><li>Groups: three ways to place group, folder and chat; version 1 is G1.</li><li>States: every T3 thread state on version 1's lamp and bar, and interrupted.</li><li>Decisions: the nine answers.</li></ul>
+      <div class="s-mast-later"><h3>Later</h3>
+      <ul><li>Statistics and settings.</li><li>Lock, the update queue in motion, PDF and Markdown viewers beyond Outputs, quiet notes, mobile.</li></ul></div>
+    </div>
+  </div>
+</section>
+<script data-part="masthead">
+(() => { Bloom.section('masthead', {}); })();
+</script>

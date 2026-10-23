@@ -1,0 +1,209 @@
+<style data-part="loose">
+.s-le-root .bl-prose + .fig, .s-le-root .bl-sub + .bl-prose + .fig { margin-top: var(--s-6); }
+.s-le-root .s-le-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-6) var(--s-7); margin-top: var(--s-6); align-items: start; }
+@media (max-width: 1000px) { .s-le-root .s-le-two { grid-template-columns: minmax(0, 1fr); } }
+
+/* the icon in the panel's tab row: caption ink and no number when nothing is open; strong ink and the count when something is */
+.s-le-root .d-loose.s-le-has { display: inline-flex; align-items: center; justify-content: center; width: auto; gap: 4px; padding: 0 8px; color: var(--text-strong); }
+.s-le-root .s-le-ic b { font: 500 10.5px/1 var(--f-mono); }
+.s-le-root .d-loose[data-open] { background: color-mix(in srgb, var(--deep) 50%, var(--raised)); }
+
+/* the popover: a float panel hung from the icon, over the panel's view */
+.s-le-root .t3d-panel { position: relative; }
+.s-le-root .s-le-pop.panel { position: absolute; z-index: 4; top: 44px; right: 8px; width: 372px; padding: 6px; border-radius: var(--r-l); color: var(--text-body); }
+.s-le-root .s-le-ph { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 10px; font: var(--w-med) 12px/1 var(--f-chrome); color: var(--text-label); }
+.s-le-root .s-le-ph .s-le-pc { font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-caption); }
+.s-le-root .s-le-ph .t-num { font: 500 11px/1 var(--f-mono); }
+.s-le-root .s-le-list { display: flex; flex-direction: column; gap: 2px; }
+.s-le-root .s-le-it { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 4px 10px; align-items: start; padding: 9px 8px 9px 10px; border-radius: var(--r-m); }
+.s-le-root .s-le-it[data-hover] { background: var(--raised); }
+.s-le-root .s-le-box { display: inline-grid; place-items: center; width: 16px; height: 16px; margin-top: 1px; border-radius: 5px; background: var(--sunken); box-shadow: var(--well); color: var(--field); }
+.s-le-root .s-le-box[data-on] { background: var(--ink-1); box-shadow: inset 0 -2px 4px var(--occl-light); }
+.s-le-root .s-le-box svg { width: 12px; height: 12px; }
+.s-le-root .s-le-tx { min-width: 0; }
+.s-le-root .s-le-t { font: var(--w-med) 13px/18px var(--f-chrome); color: var(--text-strong); }
+.s-le-root .s-le-w { margin-top: 2px; font: var(--w-reg) 12px/17px var(--f-chrome); color: var(--text-secondary); }
+.s-le-root .s-le-w code { font: 400 11px/17px var(--f-mono); color: var(--text-strong); background: none; padding: 0; }
+.s-le-root .s-le-m { margin-top: 5px; font: 400 10.5px/1 var(--f-mono); color: var(--text-caption); }
+.s-le-root .s-le-acts { display: flex; align-items: center; gap: 2px; }
+.s-le-root .s-le-x { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: var(--r-pill); color: var(--text-caption); visibility: hidden; }
+.s-le-root .s-le-it[data-hover] .s-le-x { visibility: visible; }
+.s-le-root .s-le-x .gi { width: 12px; height: 12px; }
+/* the Done fold, at the foot: closed items, newest first, each with how it closed and Undo */
+.s-le-root .s-le-fold { display: flex; align-items: center; gap: 6px; height: 30px; margin-top: 4px; padding: 0 10px; border-top: 1px solid var(--seam); font: var(--w-med) 12px/1 var(--f-chrome); color: var(--text-secondary); }
+.s-le-root .s-le-fold .gi { width: 12px; height: 12px; }
+.s-le-root .s-le-fold .pearl.count { --p: 16px; }
+.s-le-root .s-le-it.s-le-done .s-le-t { font-weight: var(--w-reg); color: var(--text-caption); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--text-caption) 60%, transparent); }
+.s-le-root .s-le-empty { padding: 18px 10px 20px; font: var(--w-reg) 13px/1.45 var(--f-chrome); color: var(--text-caption); }
+.s-le-root .s-le-empty b { display: block; font-weight: var(--w-med); color: var(--text-secondary); }
+
+/* a card's mark: the mail glyph and the count, on line 2 before the tokens */
+.s-le-root .s-le-cm { display: inline-flex; align-items: center; gap: 3px; flex: none; color: var(--text-secondary); }
+.s-le-root .s-le-cm .gi { width: 12px; height: 12px; }
+.s-le-root .s-le-cm b { font: 500 10.5px/1 var(--f-mono); }
+
+/* the crops: a slice of the window at 1:1 */
+.s-le-root .t3w.s-le-cards { width: 256px; height: 344px; grid-template-columns: 256px; }
+.s-le-root .s-le-cards .t3-top, .s-le-root .s-le-cards .t3-srch, .s-le-root .s-le-cards .hy-upd, .s-le-root .s-le-cards .hy-folds,
+.s-le-root .s-le-cards .hy-use, .s-le-root .s-le-cards .t3-foot { display: none; }
+.s-le-root .s-le-cards .t3-list { padding-top: 8px; -webkit-mask: none; mask: none; }
+
+/* LE3 settling with loose ends open: the app's dialog over the window */
+.s-le-root .s-le-scrim { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding-bottom: 60px; border-radius: inherit;
+  background: color-mix(in srgb, var(--field) 60%, transparent); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.s-le-root .s-le-dlg.panel { width: 400px; padding: 18px 20px; border-radius: var(--r-xl); color: var(--text-body); }
+.s-le-root .s-le-q { font: var(--w-strong) 16px/1.3 var(--f-chrome); color: var(--text-strong); }
+.s-le-root .s-le-q code { font: 600 14.5px/1.3 var(--f-mono); background: none; padding: 0; color: inherit; }
+.s-le-root .s-le-qs { margin-top: 6px; font: var(--w-reg) 13px/1.45 var(--f-chrome); color: var(--text-secondary); }
+.s-le-root .s-le-ol { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; padding: 10px 12px; border-radius: var(--r-m); background: var(--sunken); box-shadow: var(--well); }
+.s-le-root .s-le-ol span { display: flex; align-items: baseline; gap: 8px; font: var(--w-med) 12.5px/1.35 var(--f-chrome); color: var(--text-strong); }
+.s-le-root .s-le-ol span::before { content: ""; flex: none; width: 5px; height: 5px; border-radius: 50%; background: var(--text-caption); transform: translateY(-2px); }
+.s-le-root .s-le-dlf { display: flex; align-items: center; gap: 8px; margin-top: 18px; }
+
+/* LE4 the phone: the chat, its header's mail item and the sheet it opens */
+.s-le-root .s-le-ph2 { display: flex; gap: var(--s-7); flex-wrap: wrap; align-items: flex-start; margin-top: var(--s-6); }
+.s-le-root .s-le-phone { position: relative; width: 390px; height: 844px; flex: none; overflow: hidden; border-radius: 54px; background: var(--field); box-shadow: var(--float), inset 0 0 0 1px var(--seam); color: var(--text-body); }
+.s-le-root .s-le-sb { display: flex; align-items: center; justify-content: space-between; height: 54px; padding: 0 34px 0 44px; font: 600 15px/1 var(--f-chrome); color: var(--text-strong); }
+.s-le-root .s-le-sb i { width: 26px; height: 12px; border-radius: 4px; box-shadow: inset 0 0 0 1.5px var(--text-strong); }
+.s-le-root .s-le-nav { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px; }
+.s-le-root .s-le-glass { display: inline-flex; align-items: center; gap: 2px; height: 44px; padding: 0 4px; border-radius: var(--r-pill); background: var(--overlay); box-shadow: var(--float), inset 0 1px 0 var(--lip); color: var(--text-strong); }
+.s-le-root .s-le-gb { position: relative; display: inline-grid; place-items: center; width: 36px; height: 36px; }
+.s-le-root .s-le-gb .gi { width: 20px; height: 20px; }
+.s-le-root .s-le-gb .pearl.count { --p: 17px; position: absolute; top: 1px; right: -2px; font-size: 10.5px; }
+.s-le-root .s-le-nt { flex: 1; min-width: 0; text-align: center; }
+.s-le-root .s-le-nt b { display: block; font: 600 15px/1.2 var(--f-mono); color: var(--text-strong); }
+.s-le-root .s-le-nt span { font: var(--w-reg) 12px/1.3 var(--f-chrome); color: var(--text-caption); }
+.s-le-root .s-le-body { padding: 14px 20px 0; }
+.s-le-root .s-le-band { margin: 0 -20px; padding: 10px 20px; background: var(--sunken); font: var(--w-med) 15px/22px var(--f-chrome); color: var(--text-strong); }
+.s-le-root .s-le-say { margin-top: 14px; font: var(--w-reg) 15px/23px var(--f-chrome); color: var(--text-strong); }
+.s-le-root .s-le-say code { font: 400 13px/23px var(--f-mono); background: var(--hy-card); padding: 1px 4px; border-radius: 4px; }
+.s-le-root .s-le-pscrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--field) 55%, transparent); }
+.s-le-root .s-le-sheet { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 12px 30px; border-radius: 30px 30px 0 0; background: var(--overlay); box-shadow: var(--float), inset 0 1px 0 var(--lip); }
+.s-le-root .s-le-grab { width: 36px; height: 5px; margin: 0 auto 10px; border-radius: 3px; background: var(--seam); }
+.s-le-root .s-le-sheet .s-le-ph { height: 34px; padding: 0 10px; font-size: 15px; font-weight: var(--w-strong); color: var(--text-strong); }
+.s-le-root .s-le-sheet .s-le-ph .s-le-pc { font-size: 13px; }
+.s-le-root .s-le-sheet .s-le-it { grid-template-columns: 22px minmax(0, 1fr) auto; padding: 12px 10px; }
+.s-le-root .s-le-sheet .s-le-box { width: 22px; height: 22px; border-radius: 50%; }
+.s-le-root .s-le-sheet .s-le-box svg { width: 14px; height: 14px; }
+.s-le-root .s-le-sheet .s-le-t { font-size: 15px; line-height: 21px; }
+.s-le-root .s-le-sheet .s-le-w { font-size: 13.5px; line-height: 19px; }
+.s-le-root .s-le-sheet .s-le-m { font-size: 11.5px; }
+.s-le-root .s-le-sheet .pill.sm { height: 30px; padding: 0 12px; font-size: 13.5px; }
+.s-le-root .s-le-sheet .s-le-fold { height: 40px; font-size: 14px; }
+</style>
+<section id="loose" class="bl-sec s-le-root">
+  <header class="bl-sh">
+    <div class="no">07 <span class="bl-steps"></span></div>
+    <h2>Loose ends</h2>
+    <p class="meta">What an agent has handed you to do, or is waiting on you to answer, kept with its chat until you've done it. Drawn 12 Oct 2026 for the owner's approval.</p>
+  </header>
+  <p class="bl-lead">Agents end turns with things only you can do: make the forum accounts, send the drafted emails, take a photo of the meter, answer which forums to post on. In a long chat these scroll away. A loose end keeps each one with its chat until you tick it off. Agents file them over CONTROL's MCP; nothing is guessed from a reply. Each chat has its own. The mail icon at the far right of the panel's tab row opens this chat's, and a chat with any open shows the count on its card, so you can see what you owe without opening every chat. Nothing pings: needs-you stays for what is blocking a turn right now.</p>
+
+  <h3 class="bl-sub"><span class="id">LE1</span>The popover</h3>
+  <div class="bl-prose">
+    <p>The icon opens a popover hung from it, over whatever view the panel shows; it doesn't switch the panel. ⌘E opens and closes it too. Each loose end is one line in the agent's words and a reason under it, with the turn it came from. A click on the turn scrolls the thread to it. An agent can attach one action: a link (Open), a file (Reveal) or a command (Copy). The box ticks it Done; the × on hover dismisses it, for one you won't do. The agent can close one itself when it can see it's done, for instance once you've sent the photos in the chat.</p>
+  </div>
+  <figure class="fig" data-fig="pop"><div data-win="pop"></div><figcaption class="cap"><span class="id">LE1</span><b>ORBIT-WEBSITE owes you three.</b><span>The icon takes strong ink and the count while anything is open (Plex 10.5 / 500). The popover is a float panel, 372 wide, radius 14, 44 down from the panel's top and 8 in from its edge. The second item is hovered: its row takes the raised tone and shows its ×. SIGNALS_101 and RELAY MAIN carry their counts on their cards.</span></figcaption></figure>
+  <div class="s-le-two">
+    <figure class="fig" data-fig="done"><div data-win="done"></div><figcaption class="cap"><span class="id">LE1b</span><b>Done, open.</b><span>Closed items fold at the foot, newest first, struck through. Each says how it closed and who closed it, you or the agent, and Undo puts it back on the list. The fold remembers whether it was open.</span></figcaption></figure>
+    <figure class="fig" data-fig="empty"><div data-win="empty"></div><figcaption class="cap"><span class="id">LE1c</span><b>Nothing open.</b><span>The icon is caption ink with no number, as in version 1.1. The popover says so, and keeps the Done fold if there is one.</span></figcaption></figure>
+  </div>
+
+  <h3 class="bl-sub"><span class="id">LE2</span>On the cards</h3>
+  <div class="bl-prose">
+    <p>Any chat with a loose end open shows the mail glyph and the count on line 2, just before the tokens. A click on the count opens that chat with its popover up. Settled chats keep the mark in the Settled fold. A long chat name gives way to it; on line 3 the state words did, and on line 1 the project name (owner's pick, 12 Oct).</p>
+  </div>
+  <figure class="fig" data-fig="cards"><div data-win="cards"></div><figcaption class="cap"><span class="id">LE2</span><b>Line 2, before the tokens.</b><span>At 1:1. The icon is the tab row's mail at 12 px; the count is Plex 10.5 / 500 in secondary ink, a step stronger than the tokens beside it.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">LE3</span>Settling</h3>
+  <div class="bl-prose">
+    <p>Every way of settling a chat that still owes you asks first: the menu, ⌘⇧S and a drop on the Settled fold. Settle keeps the loose ends with the chat, and its card keeps the mark in Settled. Esc and Cancel leave it where it was. A chat with nothing open settles as it does today.</p>
+  </div>
+  <figure class="fig" data-fig="settle"><div data-win="settle"></div><figcaption class="cap"><span class="id">LE3</span><b>Settling RELAY MAIN.</b><span>The app's dialog backdrop, as the lock sheet uses; the dialog is 400 wide, radius 20. The open loose ends are listed in a well, so you see what you'd be leaving.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">LE4</span>The phone</h3>
+  <div class="bl-prose">
+    <p>The phone has no panel, so the chat's header carries the mail item beside its list item, with the count as a badge. It opens a sheet with the same list, at half height first, and everything works there: tick, dismiss, Open and Copy. The phone's own reskin is not designed yet (HANDOFF §12); the header items are native (SF Symbols <code>envelope</code> and <code>list.bullet</code>), so only the sheet is CONTROL's own drawing.</p>
+  </div>
+  <div class="s-le-ph2">
+    <figure class="fig" data-fig="phone"><div data-win="phone"></div><figcaption class="cap"><span class="id">LE4</span><b>The header.</b><span>The badge is the count pearl, only while something is open.</span></figcaption></figure>
+    <figure class="fig" data-fig="phone-sheet"><div data-win="phone-sheet"></div><figcaption class="cap"><span class="id">LE4b</span><b>The sheet.</b><span>Rows grow to touch size: a 22 px round box, 15 px text, 30 high buttons. A file's action is Copy here, which copies its path, because the file is on the Mac.</span></figcaption></figure>
+  </div>
+</section>
+<script data-part="loose">
+(() => {
+const G = Bloom.gi;
+const TICK = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.6 6.3l2.2 2.2 4.6-4.9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+/* ORBIT-WEBSITE's loose ends: [line, reason, turn, action] in the agent's words */
+const OPEN = [
+  ['Which forums should the launch posts go to?', 'Drafts are ready for r/ableton, KVR Audio and Elektronauts. Say which to keep and I\'ll drop the rest.', 'T12 · 23:20'],
+  ['Make accounts on KVR Audio and Elektronauts', 'So the posts can go up the day 1.0 ships. Both need an email check, which I can\'t do.', 'T12 · 23:20', 'Reveal'],
+  ['Send the two press emails', 'Drafted in Gmail to Ask.Audio and MusicRadar, with the 1.0 screenshots attached.', 'T14 · now', 'Open'],
+];
+const DONE = [
+  ['Switch on GitHub\'s private vulnerability reporting', 'Done by you · 21:40'],
+  ['Send me a screenshot of the notarisation email', 'Closed by the agent · T13'],
+];
+const COUNTS = { 'ORBIT-WEBSITE': 3, 'SIGNALS_101': 1, 'RELAY MAIN': 1 };
+
+const box = on => `<span class="s-le-box"${on ? ' data-on' : ''}>${on ? TICK : ''}</span>`;
+const item = ([t, w, m, act], o = {}) => `<div class="s-le-it"${o.hover ? ' data-hover' : ''}>${box()}<div class="s-le-tx"><div class="s-le-t">${t}</div><div class="s-le-w">${w}</div><div class="s-le-m">${m}</div></div>`
+  + `<div class="s-le-acts">${act ? `<span class="pill ghost sm">${act}</span>` : ''}<span class="s-le-x" title="Dismiss">${G('x')}</span></div></div>`;
+const done = ([t, how]) => `<div class="s-le-it s-le-done">${box(true)}<div class="s-le-tx"><div class="s-le-t">${t}</div><div class="s-le-m">${how}</div></div><div class="s-le-acts"><span class="pill ghost sm">Undo</span></div></div>`;
+const fold = (open, n = DONE.length) => `<div class="s-le-fold">${G(open ? 'chev-d' : 'chev-r')}Done${Bloom.pearl({ n, p: 16 })}</div>`;
+const head = n => `<div class="s-le-ph">Loose ends${n ? `<span class="s-le-pc"><span class="t-num">${n}</span> open</span>` : ''}<span class="sp"></span><span class="kbd">⌘E</span></div>`;
+function pop(mode) {
+  const list = mode === 'empty'
+    ? `<div class="s-le-empty"><b>Nothing open in this chat.</b>When an agent hands you something to do, it shows here.</div>${fold(false, 4)}`
+    : `<div class="s-le-list">${OPEN.map((x, i) => item(x, { hover: mode === 'pop' && i === 1 })).join('')}</div>${fold(mode === 'done')}${mode === 'done' ? `<div class="s-le-list">${DONE.map(done).join('')}</div>` : ''}`;
+  return `<div class="panel float s-le-pop" role="dialog" aria-label="Loose ends">${head(mode === 'empty' ? 0 : OPEN.length)}${list}</div>`;
+}
+/* the tab row's icon: with the count while anything is open, held down while its popover is up */
+const icon = (n, open) => `<span class="d-loose s-le-ic${n ? ' s-le-has' : ''}" role="button" title="Loose ends"${open ? ' data-open' : ''}>${G('mail')}${n ? `<b>${n}</b>` : ''}</span>`;
+const withIcon = (html, n, open) => html.replace(/<span class="d-loose"[^>]*>[\s\S]*?<\/span><\/div>/, `${icon(n, open)}</div>`);
+const withPop = (html, mode) => html.replace(/(<div class="t3d-panel">)/, `$1${pop(mode)}`);
+/* the panel alone, cropped to the popover */
+const crop = (mode, h) => withPop(withIcon(Hy.dPanel('Outputs'), mode === 'empty' ? 0 : 3, true), mode)
+  .replace('data-h="945"', `data-h="${h}"`).replace('t3-d dp-w"', `t3-d dp-w s-le-crop" style="height:${h}px"`);
+/* the sidebar's cards, cropped: four cards at 1:1, three of them owing you something */
+const CARDS = ['ORBIT-WEBSITE', 'LINEAR_ALGEBRA', 'SIGNALS_101', 'RELAY MAIN'];
+const cards = () => `<div class="bl-scale" data-w="256" data-h="344"><div class="t3w t3-bloom t3-d s-le-cards" data-region>${Hy.dWin().match(/<aside class="t3-side">[\s\S]*?<\/aside>/)[0]}</div></div>`;
+const settle = () => `<div class="panel float s-le-dlg" role="dialog" aria-label="Settle"><p class="s-le-q">Settle <code>RELAY MAIN</code>?</p><p class="s-le-qs">One loose end is still open. It stays with the chat in Settled, and the card keeps its mark.</p>`
+  + `<div class="s-le-ol"><span>Pair the watch and send me a rep log from one set</span></div><div class="s-le-dlf"><span class="sp"></span><button class="pill ghost">Cancel</button><button class="pill primary">Settle <span class="kbd">↩</span></button></div></div>`;
+const over = (html, inner) => html.replace(/<\/div><\/div>$/, `<div class="s-le-scrim">${inner}</div></div></div>`);
+
+/* the phone: the chat under a native header; the header's mail item opens the sheet */
+function phone(sheet) {
+  const nav = `<div class="s-le-nav"><span class="s-le-glass"><span class="s-le-gb">${G('chev-l')}</span></span><div class="s-le-nt"><b>ORBIT-WEBSITE</b><span>working · site-v2</span></div>`
+    + `<span class="s-le-glass"><span class="s-le-gb">${G('mail')}${Bloom.pearl({ n: 3, p: 17 })}</span><span class="s-le-gb">${G('set')}</span></span></div>`;
+  const body = `<div class="s-le-body"><div class="s-le-band">put the release size in one place, read from the DMG</div>`
+    + `<div class="s-le-say">Done. <code>lib/release.ts</code> holds the size in bytes and both pages format it. I've also drafted the two press emails in Gmail and the launch posts; they need you before 1.0 ships, so I've left them as loose ends.</div></div>`;
+  const sh = sheet ? `<div class="s-le-pscrim"></div><div class="s-le-sheet"><div class="s-le-grab"></div>${head(OPEN.length).replace(/<span class="kbd">⌘E<\/span>/, '')}<div class="s-le-list">${OPEN.map(x => item(x[3] === 'Reveal' ? [...x.slice(0, 3), 'Copy'] : x)).join('')}</div>${fold(false)}</div>` : '';
+  return `<div class="bl-scale" data-w="390" data-h="844" style="max-width:390px"><div class="s-le-phone"><div class="s-le-sb"><span class="t-num">21:47</span><i></i></div>${nav}${body}${sh}</div></div>`;
+}
+
+Bloom.section('loose', { init(el) {
+  const W = {
+    pop: () => withPop(withIcon(Hy.dWin(), 3, true), 'pop'),
+    done: () => crop('done', 624),
+    empty: () => crop('empty', 300),
+    cards,
+    settle: () => over(withIcon(Hy.dWin(), 3, false), settle()),
+    phone: () => phone(false),
+    'phone-sheet': () => phone(true),
+  };
+  el.querySelectorAll('[data-win]').forEach(d => { d.outerHTML = W[d.dataset.win](); });
+  /* version 1.1's Simple trace, as on S6 */
+  el.querySelectorAll('.t3w.t3-d').forEach(w => { w.dataset.tv = 'simple'; });
+  /* the cards crop keeps only its four cards */
+  el.querySelectorAll('.s-le-cards .t3-list > *').forEach(x => { if (!CARDS.includes(x.querySelector('.t3-ttl')?.textContent)) x.remove(); });
+  /* the card's mark: line 2, before the tokens */
+  el.querySelectorAll('.t3-card').forEach(c => {
+    const n = COUNTS[c.querySelector('.t3-ttl').textContent];
+    if (n) c.querySelector('.d-sw').insertAdjacentHTML('beforebegin', `<span class="s-le-cm" title="${n} loose end${n > 1 ? 's' : ''}">${G('mail')}<b>${n}</b></span>`);
+  });
+  Hy.wire(el);
+  requestAnimationFrame(() => Hy.dashes(el));
+} });
+})();
+</script>

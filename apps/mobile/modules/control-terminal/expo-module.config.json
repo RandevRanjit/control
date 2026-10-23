@@ -1,0 +1,10 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["ControlTerminalModule"],
+    "podspecPath": "ControlTerminalNative.podspec"
+  },
+  "android": {
+    "modules": ["expo.modules.controlterminal.ControlTerminalModule"]
+  }
+}

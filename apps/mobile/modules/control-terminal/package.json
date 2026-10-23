@@ -1,0 +1,17 @@
+{
+  "name": "@control/mobile-terminal-native",
+  "version": "0.0.0",
+  "private": true,
+  "expo-module": {
+    "ios": {
+      "modules": [
+        "ControlTerminalModule"
+      ]
+    },
+    "android": {
+      "modules": [
+        "expo.modules.controlterminal.ControlTerminalModule"
+      ]
+    }
+  }
+}

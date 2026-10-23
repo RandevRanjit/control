@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.randevranjit.control</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Control</name>
+  <summary>Desktop app for Claude Code</summary>
+  <developer id="io.github.randevranjit">
+    <name>Control</name>
+  </developer>
+  <description>
+    <p>
+      Control is an open-source desktop app for Claude Code. Work with your
+      existing Claude subscription, review code changes, and run commands in
+      your projects.
+    </p>
+    <p>
+      Connect from desktop, web, or mobile to continue working remotely.
+    </p>
+  </description>
+  <launchable type="desktop-id">control.desktop</launchable>
+  <icon type="stock">control</icon>
+  <provides>
+    <binary>control</binary>
+  </provides>
+  <categories>
+    <category>Development</category>
+  </categories>
+  <url type="homepage">https://github.com/RandevRanjit/control</url>
+  <url type="bugtracker">https://github.com/RandevRanjit/control/issues</url>
+  <url type="vcs-browser">https://github.com/RandevRanjit/control</url>
+</component>

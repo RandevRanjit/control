@@ -1,0 +1,606 @@
+# CONTROL design tokens: the single source for the app's Swift (`DS`), CONTROL's terminal
+# (Ghostty), the tmux theme and the Claude Code theme (ctrl-tokens).
+# `UPDATE_GOLDEN=1 cargo test -p ctrl-tokens` regenerates the goldens and the app's Tokens.swift.
+#
+# Bloom (design/bloom/, owner-reviewed 5-6 Oct 2026), transcribed from
+# design/bloom/engineering/tokens.css and proved in colour-proofs.md; print no colour that is not
+# there. Laws: spec H13 as the Bloom spec amends it (docs/specs/2026-10-06-bloom.md §1.2).
+#
+# Two themes, Field (the default) and Night. A themed colour is { field = "#...", night = "#..." };
+# "@key" names another token in that theme, one level deep, as tokens.css writes var(--...).
+# sRGB hex throughout, except arm's Display P3 components (the one colour past sRGB, B5).
+
+[meta]
+name = "CONTROL"
+source = "design/bloom/engineering/tokens.css (Bloom 2), 2026-10-06"
+themes = ["field", "night"]
+default = "field"
+
+[color.surface]
+field = { field = "#d6deee", night = "#2f2e2e" }
+deep = { field = "#d6deee", night = "#1b1a1a" }       # terminal, chat, code, diffs
+sunken = { field = "#cdd7ed", night = "#242323" }     # inputs, tracks
+raised = { field = "#e3e9f4", night = "#383737" }
+overlay = { field = "#edf1f9", night = "#424141" }
+seam = { field = "#b9c2d9", night = "#4f4e4e" }
+occlusion = { field = "#262b5b", night = "#060714" }  # shading only, never a fill (B22)
+selection = "@blue_wash"
+
+[color.ink]
+ink_1 = { field = "#262b5b", night = "#f5ebe4" }
+ink_2 = { field = "#333964", night = "#ebdcd5" }
+ink_3 = { field = "#414970", night = "#c1c6d5" }
+ink_4 = { field = "#525a7c", night = "#a9aebf" }
+ghost = { field = "#7d85a0", night = "#767882" }
+cream = { field = "#dbc3c2", night = "#dbc3c2" }
+navy = { field = "#262b5b", night = "#2a2f63" }
+
+[color.red]
+# arm = needs you, the one signal red; danger = destructive consequence (B5).
+arm = { field = "#d90e0b", night = "#ff4438", p3 = { field = [0.822, 0.085, 0.028], night = [0.993, 0.249, 0.161] } }
+arm_dim = { field = "#e8ada5", night = "#6b2620" }
+arm_deep = { field = "#861118", night = "#c22823" }
+danger = { field = "#9b3a20", night = "#ea9d82" }
+
+[color.family]
+rose_light = { field = "#ef9cac", night = "#fcb1bf" }
+rose_base = { field = "#b54b6a", night = "#ed7d99" }
+rose_deep = { field = "#7c2e45", night = "#b94769" }
+rose_wash = { field = "#e9c8cf", night = "#1d070e" }
+rose_word = { field = "#e7a8b6", night = "#450f23" }
+green_light = { field = "#a2c580", night = "#b1d391" }
+green_base = { field = "#4a7f1b", night = "#7daf4e" }
+green_deep = { field = "#2b5a17", night = "#48871e" }
+green_wash = { field = "#dbefd1", night = "#1b2d17" }
+green_word = { field = "#c8f2ae", night = "#254519" }
+blue_light = { field = "#a1b4f8", night = "#b3c3fc" }
+blue_base = { field = "#465cb3", night = "#7792ef" }
+blue_deep = { field = "#334889", night = "#4f6dcc" }
+blue_wash = { field = "#e7edff", night = "#373f5b" }
+lilac_light = { field = "#d0a4e4", night = "#e0b7f3" }
+lilac_deep = { field = "#67327d", night = "#b481cb" }
+amber_light = { field = "#f0d565", night = "#fde68a" }
+amber_base = { field = "#e4b125", night = "#fccf47" }
+amber_deep = { field = "#c6911d", night = "#eeb32f" }
+amber_wash = { field = "#f4eac4", night = "#302b1f" }
+amber_word = { field = "#f0d680", night = "#473c24" }
+
+[color.bar_key]
+bar_blue_l = { field = "#899ff3", night = "#a4b7fa" }
+bar_blue_b = { field = "#5773e1", night = "#6d8bf8" }
+bar_blue_d = { field = "#3653c5", night = "#4768db" }
+bar_green_l = { field = "#93c35e", night = "#b0dc75" }
+bar_green_b = { field = "#5da12a", night = "#7cc74b" }
+bar_green_d = { field = "#397f19", night = "#449a2f" }
+bar_lilac_l = { field = "#d1a9e3", night = "#e1c0f0" }
+bar_lilac_b = { field = "#b283c7", night = "#d0a4e4" }
+bar_lilac_d = { field = "#8f5da4", night = "#b481cb" }
+
+[color.identity]
+# Group pearls, picked by a hash of the group id until groups carry a tint.
+id_rose = { field = "#b86c81", night = "#e299ac" }
+id_butter = { field = "#9e8337", night = "#c7af6d" }
+id_sage = { field = "#65955a", night = "#93c089" }
+id_mint = { field = "#209993", night = "#66c4be" }
+id_peri = { field = "#6c84c3", night = "#98afeb" }
+id_lilac = { field = "#9f72ad", night = "#c99fd6" }
+
+[role]
+text_strong = "@ink_1"
+text_body = { field = "@ink_1", night = "@ink_2" }
+text_secondary = { field = "@ink_2", night = "@ink_3" }
+text_label = "@ink_3"
+text_caption = "@ink_4"
+text_disabled = "@ghost"
+# Lamps carry no hue (B6): state colour lives in the bar.
+lamp_needs = "@ink_1"
+lamp_failed = "@ink_1"
+lamp_done = "@ink_1"
+lamp_working = "@ink_1"
+lamp_bg = "@ink_1"
+lamp_choose = "@ink_3"
+lamp_house = "@ink_4"
+lamp_outside = "@ink_4"
+lamp_idle = "@ink_4"
+lamp_gone = "@ink_4"
+lamp_band = "@field"
+lamp_bridge = "@seam"
+st_needs = "@arm"
+st_failed = "@amber_base"
+st_done = "@bar_green_b"
+st_working = "@bar_blue_b"
+st_bg = "@bar_blue_l"
+st_choose = "@bar_lilac_b"
+st_house = "@rs_a"
+st_outside = "@ink_4"
+st_idle = "@seam"
+st_gone = "@seam"
+bar_track = "@sunken"
+focus = { field = "@blue_base", night = "@blue_light" }
+link = { field = "@blue_deep", night = "@blue_light" }
+trace_read = { field = "@blue_deep", night = "@blue_light" }
+trace_write = { field = "@green_deep", night = "@green_light" }
+trace_agent = { field = "@lilac_deep", night = "@lilac_light" }
+trace_error = "@ink_1"
+trace_live = { field = "@ink_2", night = "@cream" }
+# Diffs (B10): removed a rose wash below the well, added a sage wash above it; never arm.
+diff_add_wash = "@green_wash"
+diff_add_word = "@green_word"
+diff_add_mark = { field = "@green_deep", night = "@green_light" }
+diff_rem_wash = "@rose_wash"
+diff_rem_word = "@rose_word"
+diff_rem_mark = { field = "@rose_deep", night = "@rose_light" }
+use_ink = "@ink_1"
+use_track = "@sunken"
+rim = "@cream"
+chain_empty = "@seam"
+wave_hi = { field = "@blue_base", night = "@blue_light" }
+toggle_on = { field = "@blue_base", night = "@blue_deep" }
+# The bridge a bar change passes through, and the safe ramp's plateaus: never inside a bar.
+wine = { field = "#5c2b40", night = "#5c2b40" }
+rs_a = { field = "#333964", night = "#dbc3c2" }
+rs_b = { field = "#305d12", night = "#a2ce72" }
+rs_c = { field = "#2b44a6", night = "#9cb0fb" }
+
+[bar]
+# One smooth ramp per state inside its family: 21 stops at k/20, first = last, so a tile repeats
+# with no seam. Working and Background share one bar. Flowed by transform only, never `colors`.
+working = { field = ["#5773e1", "#6681e7", "#748dec", "#7f97f0", "#869df2", "#899ff3", "#869df2", "#7f97f0", "#748dec", "#6681e7", "#5773e1", "#4d69d8", "#4360d1", "#3c59ca", "#3855c6", "#3653c5", "#3855c6", "#3c59ca", "#4360d1", "#4d69d8", "#5773e1"], night = ["#6d8bf8", "#7e99f9", "#8da5fa", "#99affa", "#a1b5fa", "#a4b7fa", "#a1b5fa", "#99affa", "#8da5fa", "#7e99f9", "#6d8bf8", "#6180ef", "#5676e7", "#4e6fe1", "#496adc", "#4768db", "#496adc", "#4e6fe1", "#5676e7", "#6180ef", "#6d8bf8"] }
+done = { field = ["#5da12a", "#6eab3c", "#7db54a", "#89bc55", "#90c15c", "#93c35e", "#90c15c", "#89bc55", "#7db54a", "#6eab3c", "#5da12a", "#529625", "#488d20", "#40851c", "#3b811a", "#397f19", "#3b811a", "#40851c", "#488d20", "#529625", "#5da12a"], night = ["#7cc74b", "#8dce59", "#9bd364", "#a6d86d", "#aedb73", "#b0dc75", "#aedb73", "#a6d86d", "#9bd364", "#8dce59", "#7cc74b", "#6bb942", "#5cac3a", "#4fa234", "#479c30", "#449a2f", "#479c30", "#4fa234", "#5cac3a", "#6bb942", "#7cc74b"] }
+failed = { field = ["#e4b125", "#e8bc3d", "#ebc64f", "#eece5b", "#efd362", "#f0d565", "#efd362", "#eece5b", "#ebc64f", "#e8bc3d", "#e4b125", "#dba722", "#d29e20", "#cc971f", "#c7931d", "#c6911d", "#c7931d", "#cc971f", "#d29e20", "#dba722", "#e4b125"], night = ["#fccf47", "#fcd65f", "#fddd71", "#fde27f", "#fde587", "#fde68a", "#fde587", "#fde27f", "#fddd71", "#fcd65f", "#fccf47", "#f8c640", "#f4bf39", "#f1b834", "#efb430", "#eeb32f", "#efb430", "#f1b834", "#f4bf39", "#f8c640", "#fccf47"] }
+choose = { field = ["#b283c7", "#bc8fd0", "#c499d7", "#cba2de", "#cfa7e2", "#d1a9e3", "#cfa7e2", "#cba2de", "#c499d7", "#bc8fd0", "#b283c7", "#a777bc", "#9d6db2", "#9664ab", "#915fa6", "#8f5da4", "#915fa6", "#9664ab", "#9d6db2", "#a777bc", "#b283c7"], night = ["#d0a4e4", "#d5ade8", "#dab4eb", "#debbee", "#e0bfef", "#e1c0f0", "#e0bfef", "#debbee", "#dab4eb", "#d5ade8", "#d0a4e4", "#c799dc", "#bf8fd5", "#b988d0", "#b583cc", "#b481cb", "#b583cc", "#b988d0", "#bf8fd5", "#c799dc", "#d0a4e4"] }
+house = { field = ["#333964", "#314652", "#30503f", "#30572c", "#305c1b", "#305d12", "#305c1b", "#30572c", "#30503f", "#314652", "#333964", "#313d78", "#2f408a", "#2d4299", "#2b44a3", "#2b44a6", "#2b44a3", "#2d4299", "#2f408a", "#313d78", "#333964"], night = ["#dbc3c2", "#cac7ab", "#bbca95", "#aecc83", "#a5ce77", "#a2ce72", "#a5ce77", "#aecc83", "#bbca95", "#cac7ab", "#dbc3c2", "#c8bed5", "#b6b9e5", "#a8b4f1", "#9fb1f8", "#9cb0fb", "#9fb1f8", "#a8b4f1", "#b6b9e5", "#c8bed5", "#dbc3c2"] }
+
+[bar.needs]
+# Mixed in OKLab from P3 arm into arm_deep by ctrl-tokens: weight k is arm_deep's share at k/20,
+# a cosine, as tokens.css's --sb-needs writes it.
+from = "@arm"
+to = "@arm_deep"
+weights = [0.0, 0.024, 0.095, 0.206, 0.345, 0.5, 0.655, 0.794, 0.905, 0.976, 1.0, 0.976, 0.905, 0.794, 0.655, 0.5, 0.345, 0.206, 0.095, 0.024, 0.0]
+
+[bar.hero]
+# Ambient places only; while a needs-you lamp or bar is lit in a window it turns safe (B17).
+at = [0.0, 0.11, 0.14, 0.25, 0.28, 0.31, 0.34, 0.45, 0.48, 0.58, 0.61, 0.64, 0.67, 0.77, 0.80, 0.89, 0.92, 0.97, 1.0]
+field = ["#cd1f66", "#cd1f66", "#fc7392", "#fc7392", "#dbc3c2", "#dbc3c2", "#91b45e", "#91b45e", "#539624", "#539624", "#dbc3c2", "#dbc3c2", "#8ba0f1", "#8ba0f1", "#3d5ad9", "#3d5ad9", "#262b5b", "#262b5b", "#cd1f66"]
+night = ["#cf2668", "#cf2668", "#fe799b", "#fe799b", "#dbc3c2", "#dbc3c2", "#98bd5e", "#98bd5e", "#5ea130", "#5ea130", "#dbc3c2", "#dbc3c2", "#8fa5fa", "#8fa5fa", "#4765e8", "#4765e8", "#2a2f63", "#2a2f63", "#cf2668"]
+
+[bar.safe]
+at = [0.0, 0.08, 0.20, 0.38, 0.50, 0.58, 0.70, 0.88, 1.0]
+field = ["#333964", "#333964", "#305d12", "#305d12", "#333964", "#333964", "#2b44a6", "#2b44a6", "#333964"]
+night = ["#dbc3c2", "#dbc3c2", "#a2ce72", "#a2ce72", "#dbc3c2", "#dbc3c2", "#9cb0fb", "#9cb0fb", "#dbc3c2"]
+
+[bar.motion]
+# A tile is base × the state's multiplier; one tile flows by per period (colour-proofs §M).
+tile_full = 360.0
+tile_compact = 240.0
+tile_tip = 120.0
+needs = { period = 1.75, tile = 0.5, opacity = 1.0 }
+failed = { period = 3.5, tile = 0.75, opacity = 1.0 }
+done = { period = 3.5, tile = 0.75, opacity = 1.0 }
+working = { period = 7.0, tile = 1.0, opacity = 1.0 }
+choose = { period = 7.0, tile = 1.0, opacity = 1.0 }
+house = { period = 14.0, tile = 1.0, opacity = 0.7 }
+
+[material]
+# Depth by navy occlusion: inset on objects, a soft navy shadow only under what floats; never a
+# grey shadow, never blur (B13). Night's shading is the blue-black #060714.
+rim_mix = { field = 0.30, night = 0.60 }
+press = 0.96
+occl = { field = { color = "@occlusion", alpha = 0.16 }, night = { color = "@occlusion", alpha = 0.55 } }
+occl_deep = { field = { color = "@occlusion", alpha = 0.28 }, night = { color = "@occlusion", alpha = 0.75 } }
+occl_light = { field = { color = "@occlusion", alpha = 0.16 }, night = { color = "#262b5b", alpha = 0.22 } }
+lip = { field = { color = "@overlay", alpha = 0.90 }, night = { color = "@cream", alpha = 0.20 } }
+lip_hi = { field = { color = "@overlay", alpha = 1.0 }, night = { color = "@cream", alpha = 0.32 } }
+lift = { field = { color = "@overlay", alpha = 0.55 }, night = { color = "@ink_1", alpha = 0.10 } }
+pearl_lift = { field = { color = "@overlay", alpha = 0.85 }, night = { color = "@ink_1", alpha = 0.55 } }
+needs_tint = { field = { color = "@arm", alpha = 0.06 }, night = { color = "@arm", alpha = 0.06 } }
+failed_tint = { field = { color = "@amber_base", alpha = 0.10 }, night = { color = "@amber_base", alpha = 0.06 } }
+# A pill's or key's ground and its ink: raised in Field, overlay in Night.
+puff = { field = { color = "@raised", alpha = 1.0 }, night = { color = "@overlay", alpha = 1.0 } }
+puff_ink = { field = { color = "@ink_1", alpha = 1.0 }, night = { color = "@ink_1", alpha = 1.0 } }
+
+[material.well]
+# inset 0 8 12 -8: deep panes, inputs, diffs.
+y = 8.0
+blur = 12.0
+spread = { field = -8.0, night = -8.0 }
+field = { color = "@occlusion", alpha = 0.22 }
+night = { color = "@occlusion", alpha = 0.65 }
+
+[[material.float]]
+y = 24.0
+blur = 48.0
+spread = { field = -18.0, night = -16.0 }
+field = { color = "@occlusion", alpha = 0.32 }
+night = { color = "@occlusion", alpha = 0.70 }
+
+[[material.float]]
+y = 2.0
+blur = 6.0
+spread = { field = 0.0, night = 0.0 }
+field = { color = "@occlusion", alpha = 0.12 }
+night = { color = "@occlusion", alpha = 0.35 }
+
+[radius]
+# B3: continuous corners; nothing else (no --r-puffy).
+xs = 4.0
+s = 6.0
+m = 10.0
+l = 14.0
+win = 16.0
+xl = 20.0
+pill = 999.0
+
+[motion]
+# One clock, T = 7 s: every duration is T × 2^n (B14). Loops phase-lock to a 14 s epoch.
+t = 7.0
+epoch = 14.0
+tap = 0.109375
+quick = 0.21875
+state = 0.4375     # a state change; quick into needs-you (Q4)
+scene = 0.875
+beat = 1.75        # needs you only
+breath = 3.5
+cycle = 7.0
+drift = 14.0
+sine = [0.37, 0.0, 0.63, 1.0]
+sine_out = [0.61, 1.0, 0.88, 1.0]
+sine_in = [0.12, 0.0, 0.39, 0.0]
+settle = [0.25, 1.0, 0.5, 1.0]
+ambient = { min = 10.0, max = 30.0, preferred = 30.0 }
+calm = { min = 8.0, max = 15.0, preferred = 15.0 }
+hero = { min = 30.0, max = 60.0, preferred = 60.0 }
+
+[motion.lamp]
+# Per lamp (Bloom spec §5): `_period` and `_cue` in seconds, the rest amounts. One flat table, so
+# the Swift reads `DS.Motion.Lamp.needsScale` (the U plan's names). Every cue but failed's is 0.
+needs_period = 1.75
+needs_scale = 1.16
+bullseye = 1.7            # the needs ring, × the disc
+needs_halo = 2.4
+needs_halo_opacity = 0.7
+arrival = 2.8
+arrival_opacity = 0.6
+working_period = 7.0
+working_bands = 2.0       # Background's gradient carries the same two
+bg_period = 7.0
+done_from = 0.92
+failed_period = 3.5
+failed_cue = 2.625
+failed_dip = 0.45
+choose_period = 7.0
+tide = 0.15
+house_period = 14.0
+house_rest = 0.8
+house_low = 0.45
+outside_period = 7.0
+outside_rest = 0.8
+outside_dip = 0.4
+outside_dip_at = 0.875
+idle_period = 14.0
+idle_low = 0.82
+gone = 0.35
+
+[font]
+# Chrome in Neue Regrade; IBM Plex Mono for anything one could paste into a shell; Departure Mono
+# only for the menu-bar count; no Inter (B2).
+chrome = "Neue Regrade"
+mono = "IBM Plex Mono"
+count = "Departure Mono"
+
+# Text roles. `weight` is the face's own: chrome 400/520/640 on Regrade's wght axis, mono
+# 400/500/600. `line` is a line height in points where the design sets one.
+[text.wordmark]
+face = "mono"
+size = 12.0
+weight = 600
+tracking_em = 0.26
+uppercase = true
+
+[text.label]
+face = "chrome"
+size = 12.0
+weight = 520
+
+[text.body]
+face = "chrome"
+size = 13.0
+weight = 400
+
+[text.caption]
+face = "chrome"
+size = 11.0
+weight = 400
+
+[text.button]
+face = "chrome"
+size = 12.0
+weight = 520
+
+[text.group]
+face = "chrome"
+size = 11.5
+weight = 640
+
+[text.title]
+face = "chrome"
+size = 15.0
+weight = 640
+
+[text.question]
+face = "chrome"
+size = 14.0
+weight = 520
+
+[text.sheet_question]
+face = "chrome"
+size = 16.0
+weight = 640
+
+[text.chat]
+face = "chrome"
+size = 14.0
+weight = 400
+line = 22.0
+
+[text.finder]
+face = "chrome"
+size = 14.0
+weight = 400
+
+[text.section]
+face = "chrome"
+size = 11.5
+weight = 520
+
+[text.lock]
+face = "chrome"
+size = 36.0
+weight = 640
+
+[text.name]
+face = "mono"
+size = 12.5
+weight = 500
+
+[text.path]
+face = "mono"
+size = 12.0
+weight = 400
+
+[text.mono]
+face = "mono"
+size = 10.5
+weight = 400
+
+[text.meta]
+face = "mono"
+size = 10.0
+weight = 400
+
+[text.chip]
+face = "mono"
+size = 9.0
+weight = 500
+uppercase = true
+
+[text.kind]
+face = "mono"
+size = 10.0
+weight = 500
+
+[text.usage_key]
+face = "mono"
+size = 10.5
+weight = 500
+
+[text.usage_value]
+face = "mono"
+size = 11.0
+weight = 600
+
+[text.worktree]
+face = "mono"
+size = 11.5
+weight = 400
+
+[text.tab]
+face = "mono"
+size = 11.5
+weight = 400
+
+[text.code]
+face = "mono"
+size = 12.5
+weight = 400
+
+[text.diff]
+face = "mono"
+size = 11.5
+weight = 400
+line = 17.0
+
+[text.mini_diff]
+face = "mono"
+size = 11.0
+weight = 400
+line = 16.0
+
+[text.logs]
+face = "mono"
+size = 11.0
+weight = 400
+
+[text.menu_count]
+face = "count"
+size = 11.0
+weight = 400
+
+[space]
+xs = 4.0
+s = 6.0
+m = 8.0
+l = 11.0
+xl = 14.0
+xxl = 20.0
+
+[shape]
+panel_width = 360.0    # the menu-bar panel
+glyph_grid = 16.0
+glyph_stroke = 1.3
+
+[layout]
+# In points. Today's keys (sidebar 272 and panel 440 unchanged), then Bloom's.
+window_width = 1440.0
+window_height = 900.0
+sidebar_width = 272.0
+diff_width = 440.0        # the right panel
+band_height = 42.0        # each column's top
+tab_bar_height = 34.0
+group_row = 38.0          # 28 drawn, 10 of air above
+session_row = 42.0
+worktree_row = 22.0
+new_session_row = 32.0
+background_row = 34.0
+row_indent = 14.0
+grouped_indent = 30.0
+child_indent = 18.0
+head = 34.0               # ARCHIVE's header
+sidebar_head = 30.0
+tool_row = 30.0
+archive_row = 38.0
+search = 24.0
+lamp = 15.0               # in session rows and menu-panel rows
+lamp_chrome = 10.0        # ⌘K results and the solo head
+bead = 5.0
+bead_pitch = 8.0
+bar_row = 6.0             # a bar takes 1/6 of a sidebar row
+bar_panel = 4.0           # and 1/4 of a menu-panel row
+head_bar = 6.0
+head_bar_max = 360.0
+pearl_min = 8.0
+pearl_max = 20.0
+pearl_group = 14.0
+pearl_head = 16.0
+pearl_count = 18.0
+tally_gap = 3.0
+gutter = 6.0
+seam = 2.0
+row_margin = 6.0
+context_line = 28.0       # B23 (not colour-proofs §J's 32)
+use_line = 3.0
+pill = 22.0               # the head's pills
+strip_tab_width = 30.0
+strip_tab_height = 26.0
+card_row = 26.0
+turn_pad = 52.0
+thread = 2.0
+chat_max = 600.0
+menu_row = 42.0
+menu_head = 44.0
+
+[terminal]
+# CONTROL's own Ghostty config per theme (B15, Q6, Q8): never copied from the owner's.
+font_family = ["IBM Plex Mono"]
+font_size = 13.0
+background = "@deep"
+foreground = "@ink_1"
+cursor = { field = "@ink_1", night = "@cream" }
+cursor_text = "@deep"
+selection_background = "@blue_wash"
+selection_foreground = "@ink_1"
+
+[terminal.palette]
+# colour-proofs §N: green slots carry green; slot 9 is a light clay, never arm.
+field = ["#262b5b", "#9b3a1f", "#32671c", "#7d5e07", "#354faa", "#77398a", "#076b6f", "#414970", "#525a7c", "#892504", "#265511", "#694e00", "#283f92", "#642b74", "#04585c", "#262b5b"]
+night = ["#30354e", "#d98d73", "#99c77f", "#d9c37f", "#99adf7", "#ce9bdf", "#76c8c7", "#e2d2cb", "#979db4", "#edac93", "#bbe2a6", "#ecdeaa", "#bdccfd", "#e1c0ec", "#a6e1e0", "#f2e9e2"]
+
+[tmux]
+# CONTROL's server: seams between split panes, titled panes (Bloom spec §2.4).
+pane_border = "@seam"
+pane_active_border = "@ink_4"
+pane_title = "@ink_4"
+pane_title_active = "@ink_1"
+message_background = "@raised"
+message_foreground = "@ink_1"
+mode_background = "@blue_wash"
+mode_foreground = "@ink_1"
+
+[claude]
+# ~/.claude/themes/control.json, selected with "theme": "custom:control". Arm stays out; error
+# is ink; the diff keys follow the diff roles whatever this table says.
+name = "CONTROL"
+base = { field = "light-ansi", night = "dark-ansi" }
+
+[claude.overrides]
+autoAccept = "@ink_3"
+skill = "@ink_2"
+bashBorder = "@ink_3"
+claude = "@ink_1"
+claudeShimmer = "@ink_3"
+claudeBlue_FOR_SYSTEM_SPINNER = "@ink_2"
+claudeBlueShimmer_FOR_SYSTEM_SPINNER = "@ink_3"
+permission = "@ink_1"
+permissionShimmer = "@ink_3"
+planMode = { field = "@lilac_deep", night = "@lilac_light" }
+ide = "@ink_4"
+promptBorder = "@ink_4"
+promptBorderShimmer = "@ink_3"
+text = "@ink_1"
+inverseText = "@deep"
+inactive = "@ink_4"
+inactiveShimmer = "@ink_3"
+subtle = "@ghost"
+suggestion = "@ink_3"
+remember = "@ink_4"
+background = "@ink_4"
+success = { field = "@green_deep", night = "@green_light" }
+error = "@ink_1"
+warning = "@ink_1"
+merged = { field = "@lilac_deep", night = "@lilac_light" }
+warningShimmer = "@ink_2"
+diffAdded = "@green_wash"
+diffRemoved = "@rose_wash"
+diffAddedDimmed = "@sunken"
+diffRemovedDimmed = "@sunken"
+diffAddedWord = "@green_word"
+diffRemovedWord = "@rose_word"
+red_FOR_SUBAGENTS_ONLY = "@id_rose"
+blue_FOR_SUBAGENTS_ONLY = "@id_peri"
+green_FOR_SUBAGENTS_ONLY = "@id_sage"
+yellow_FOR_SUBAGENTS_ONLY = "@id_butter"
+purple_FOR_SUBAGENTS_ONLY = "@id_lilac"
+orange_FOR_SUBAGENTS_ONLY = "@id_butter"
+pink_FOR_SUBAGENTS_ONLY = "@id_rose"
+cyan_FOR_SUBAGENTS_ONLY = "@id_mint"
+professionalBlue = { field = "@blue_base", night = "@blue_light" }
+chromeYellow = "@ink_3"
+clawd_body = "@ink_2"
+clawd_background = "@deep"
+userMessageBackground = "@raised"
+userMessageBackgroundHover = "@overlay"
+composerSidebarBackground = "@raised"
+selectionBg = "@blue_wash"
+bashMessageBackgroundColor = "@sunken"
+memoryBackgroundColor = "@raised"
+rate_limit_fill = "@ink_1"
+rate_limit_empty = "@sunken"
+fastMode = "@ink_3"
+fastModeShimmer = "@ink_2"
+effortUltra = "@ink_1"
+briefLabelYou = "@ink_4"
+briefLabelClaude = "@ink_1"
+rainbow_red = "@ink_1"
+rainbow_orange = "@ink_2"
+rainbow_yellow = "@ink_3"
+rainbow_green = "@ink_4"
+rainbow_blue = "@ink_3"
+rainbow_indigo = "@ink_2"
+rainbow_violet = "@ink_1"
+rainbow_red_shimmer = "@ink_1"
+rainbow_orange_shimmer = "@ink_2"
+rainbow_yellow_shimmer = "@ink_3"
+rainbow_green_shimmer = "@ink_4"
+rainbow_blue_shimmer = "@ink_3"
+rainbow_indigo_shimmer = "@ink_2"
+rainbow_violet_shimmer = "@ink_1"

@@ -1,0 +1,4564 @@
+<style data-part="motion">
+  /* ===== Motion (03), Bloom 2. Every selector carries .s-motion-; loops guarded by html[data-motion="full"].
+   Lamps are ink and carry the motion; state bars carry the colour, on the same clock. ===== */
+  .s-motion-root {
+    --s-motion-side: 300px;
+  }
+  .s-motion-root .bl-sub + .bl-prose {
+    margin-bottom: var(--s-6);
+  }
+  .s-motion-root .bl-prose + .bl-prose {
+    margin-top: 12px;
+  }
+  .s-motion-k {
+    font: var(--w-med) 12px/1.35 var(--f-chrome);
+    color: var(--text-label);
+    margin: 0 0 var(--s-3);
+  }
+  .s-motion-n {
+    font-family: var(--f-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .s-motion-root .bl-table td.s-motion-n,
+  .s-motion-root .bl-table .s-motion-n {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .s-motion-pull {
+    font: var(--w-strong) clamp(20px, 2.1vw, 26px)/1.35 var(--f-chrome);
+    color: var(--text-strong);
+    max-width: 46ch;
+    margin-top: var(--s-6);
+    text-wrap: balance;
+  }
+  .s-motion-note {
+    font: var(--w-reg) 13px/1.5 var(--f-chrome);
+    color: var(--text-caption);
+    max-width: 80ch;
+    margin-top: var(--s-3);
+  }
+  .s-motion-tbl {
+    margin-top: var(--s-6);
+  }
+  .s-motion-pillrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ---------- M1 clock ---------- */
+  .s-motion-clockwrap {
+    display: grid;
+    grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
+    gap: var(--s-8);
+    align-items: center;
+  }
+  .s-motion-clock {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    aspect-ratio: 1;
+    margin: 0 auto;
+    overflow: hidden;
+  } /* a rotated orbit box is wider than its circle */
+  .s-motion-clock > svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .s-motion-clock .s-motion-trk {
+    fill: none;
+    stroke: var(--raised);
+    stroke-width: 10;
+  }
+  .s-motion-clock .s-motion-cue {
+    fill: var(--ink-3);
+  }
+  .s-motion-clock .s-motion-arc {
+    fill: none;
+    stroke: var(--ink-4);
+    stroke-width: 10;
+    stroke-linecap: round;
+    opacity: 0.5;
+  }
+  .s-motion-orb {
+    position: absolute;
+    left: calc(50% - var(--r));
+    top: calc(50% - var(--r));
+    width: calc(var(--r) * 2);
+    height: calc(var(--r) * 2);
+    transform: rotate(var(--s-motion-a, 0deg));
+  }
+  .s-motion-rider {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 0;
+    height: 0;
+    transform: rotate(calc(var(--s-motion-a, 0deg) * -1));
+  }
+  .s-motion-rider > * {
+    position: absolute;
+    left: 0;
+    top: 0;
+    translate: -50% -50%;
+  }
+  .s-motion-cl {
+    position: absolute;
+    translate: -50% -50%;
+  }
+  html[data-motion="full"] .s-motion-orb {
+    animation: s-motion-spin var(--p) linear infinite;
+  }
+  html[data-motion="full"] .s-motion-orb > .s-motion-rider {
+    animation: s-motion-unspin var(--p) linear infinite;
+  }
+  @keyframes s-motion-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes s-motion-unspin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(-360deg);
+    }
+  }
+  .s-motion-orbits {
+    display: grid;
+    gap: 18px;
+  }
+  .s-motion-orbit {
+    display: grid;
+    grid-template-columns: 28px 64px minmax(0, 1fr);
+    column-gap: 16px;
+    align-items: start;
+  }
+  .s-motion-orbit > .bead,
+  .s-motion-orbit > .lamp {
+    justify-self: center;
+    margin-top: 1px;
+  }
+  .s-motion-orbit .s-motion-p {
+    font: 500 19px/1.1 var(--f-mono);
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .s-motion-orbit .s-motion-nm {
+    display: block;
+    font: var(--w-med) 12px/1.3 var(--f-chrome);
+    color: var(--text-caption);
+    margin-top: 3px;
+  }
+  .s-motion-orbit p {
+    font: var(--w-reg) 13.5px/1.5 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-motion-tbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 9px;
+  }
+  .s-motion-tb {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font: var(--w-reg) 12px/1 var(--f-chrome);
+    color: var(--text-caption);
+    white-space: nowrap;
+  }
+  .s-motion-tb > .sbar {
+    width: 96px;
+  }
+  .s-motion-cues {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 24px;
+    margin-top: var(--s-6);
+  }
+  .s-motion-cues li {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font: var(--w-reg) 13px/1.45 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-motion-cues li > .lamp,
+  .s-motion-cues li > .s-motion-dotk {
+    flex: none;
+    transform: translateY(1px);
+  }
+  .s-motion-dotk {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin: 0 2px;
+    border-radius: 50%;
+    background: var(--ink-3);
+  }
+  .s-motion-cues ul,
+  ul.s-motion-cues {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 0;
+  }
+  .s-motion-scrubber {
+    margin-top: var(--s-6);
+    background: var(--raised);
+    border-radius: var(--r-xl);
+    padding: 20px 24px 18px;
+  }
+  .s-motion-scrubrow {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .s-motion-read {
+    font: 500 22px/1 var(--f-mono);
+    color: var(--text-strong);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .s-motion-scrubrange {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+  .s-motion-scrub {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    width: 100%;
+    height: 24px;
+    margin: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .s-motion-scrub::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: var(--r-pill);
+    background: var(--sunken);
+    box-shadow: var(--well);
+  }
+  .s-motion-scrub::-moz-range-track {
+    height: 8px;
+    border-radius: var(--r-pill);
+    background: var(--sunken);
+    box-shadow: var(--well);
+  }
+  .s-motion-scrub::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    margin-top: -6px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--ink-1);
+    box-shadow:
+      inset 0 -3px 5px var(--occl),
+      inset 0 1px 0 var(--lip);
+  }
+  .s-motion-scrub::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--ink-1);
+    box-shadow:
+      inset 0 -3px 5px var(--occl),
+      inset 0 1px 0 var(--lip);
+  }
+  .s-motion-scrub:focus-visible {
+    outline: none;
+  }
+  .s-motion-scrub:focus-visible::-webkit-slider-thumb {
+    box-shadow:
+      0 0 0 3px var(--raised),
+      0 0 0 5px var(--focus);
+  }
+  .s-motion-ticks {
+    position: relative;
+    height: 14px;
+    margin-top: 6px;
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-motion-ticks span {
+    position: absolute;
+    top: 0;
+    left: calc(10px + (100% - 20px) * var(--f));
+    translate: -50% 0;
+    white-space: nowrap;
+  }
+  .s-motion-scrubnote {
+    font: var(--w-reg) 12.5px/1.5 var(--f-chrome);
+    color: var(--text-caption);
+    margin-top: 10px;
+  }
+
+  /* ---------- M2 easing ---------- */
+  .s-motion-curves {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--s-5);
+  }
+  .s-motion-plot {
+    position: relative;
+    aspect-ratio: 1;
+    max-width: 220px;
+    border-radius: var(--r-l);
+    background: var(--sunken);
+    box-shadow: var(--well);
+    overflow: hidden;
+  } /* the movers are plot-sized boxes; only their dot, always inside, shows */
+  .s-motion-plot > svg {
+    position: absolute;
+    left: 22px;
+    top: 22px;
+    width: calc(100% - 44px);
+    height: calc(100% - 44px);
+    overflow: visible;
+  }
+  .s-motion-plot .s-motion-crv {
+    fill: none;
+    stroke: var(--ink-3);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .s-motion-px {
+    position: absolute;
+    left: 22px;
+    top: 22px;
+    right: 22px;
+    bottom: 22px;
+  }
+  .s-motion-py {
+    position: absolute;
+    inset: 0;
+  }
+  .s-motion-py > .bead {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    translate: -50% 50%;
+  }
+  html[data-motion="full"] .s-motion-px {
+    animation: s-motion-x var(--T-beat) linear infinite alternate;
+  }
+  html[data-motion="full"] .s-motion-py {
+    animation: s-motion-y var(--T-beat) var(--s-motion-ease) infinite alternate;
+  }
+  @keyframes s-motion-x {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes s-motion-y {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-100%);
+    }
+  }
+  .s-motion-cv h4 {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: var(--s-4) 0 6px;
+    font: 600 14px/1 var(--f-mono);
+    color: var(--text-strong);
+  }
+  .s-motion-cv h4 span {
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-motion-cv .s-motion-cb {
+    display: block;
+    font: 400 11px/1.55 var(--f-mono);
+    color: var(--text-secondary);
+  }
+  .s-motion-cv p {
+    font: var(--w-reg) 13px/1.5 var(--f-chrome);
+    color: var(--text-secondary);
+    margin-top: 8px;
+  }
+  .s-motion-law {
+    margin-top: var(--s-7);
+    font: var(--w-strong) clamp(22px, 2.6vw, 32px)/1.25 var(--f-chrome);
+    color: var(--text-strong);
+    max-width: 32ch;
+    text-wrap: balance;
+  }
+
+  /* ---------- M3 lamp and bar, per state ---------- */
+  .s-motion-lamps {
+    display: grid;
+    gap: 2px;
+  }
+  .s-motion-lr {
+    display: grid;
+    grid-template-columns: 44px 44px 272px minmax(0, 1fr) 168px;
+    grid-template-areas: "live still row band bst" "txt txt txt txt txt";
+    column-gap: 18px;
+    row-gap: 12px;
+    align-items: center;
+    padding: 12px 14px 16px;
+    border-radius: var(--r-m);
+  }
+  .s-motion-lr:nth-child(odd):not(.s-motion-hd) {
+    background: color-mix(in srgb, var(--raised) 55%, transparent);
+  }
+  .s-motion-lr.s-motion-hd {
+    row-gap: 4px;
+    padding-top: 0;
+    padding-bottom: 8px;
+    align-items: end;
+    font: var(--w-med) 12px/1.3 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-motion-lr > .s-motion-c1 {
+    grid-area: live;
+    justify-self: center;
+  }
+  .s-motion-lr > .s-motion-c2 {
+    grid-area: still;
+    justify-self: center;
+  }
+  .s-motion-lr > .s-motion-c3 {
+    grid-area: row;
+    min-width: 0;
+  }
+  .s-motion-lr > .s-motion-c8 {
+    grid-area: band;
+    min-width: 0;
+  }
+  .s-motion-lr > .s-motion-c9 {
+    grid-area: bst;
+    min-width: 0;
+  }
+  .s-motion-lr > .s-motion-tx {
+    grid-area: txt;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.85fr);
+    column-gap: 18px;
+    align-items: start;
+  }
+  .s-motion-lr .s-motion-sb {
+    background: var(--raised);
+    border-radius: var(--r-m);
+    padding: 3px 0;
+  }
+  .s-motion-lr .s-motion-sb .session-row {
+    margin: 0 3px;
+  }
+  .s-motion-lr .s-motion-tx b {
+    display: block;
+    font: var(--w-strong) 14px/1.3 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-motion-lr .s-motion-line {
+    display: block;
+    margin-top: 2px;
+    font: var(--w-reg) 13px/1.45 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-motion-lr .s-motion-per {
+    display: block;
+    font: 500 12px/1.4 var(--f-mono);
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .s-motion-lr .s-motion-crv2 {
+    display: block;
+    margin-top: 2px;
+    font: 400 11px/1.45 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-motion-lr .s-motion-ch {
+    display: block;
+    margin-top: 3px;
+    font: var(--w-reg) 12.5px/1.45 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-motion-lr .s-motion-kp {
+    display: block;
+    font: 400 11px/1.5 var(--f-mono);
+    color: var(--text-label);
+  }
+  /* M3: the bead bar's Core Animation recipe, its three layers stacked so the colour lines up */
+  .s-motion-bca {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--s-6);
+    margin-top: var(--s-6);
+    padding: 24px 26px;
+    border-radius: var(--r-xl);
+    background: var(--raised);
+    align-items: center;
+  }
+  .s-motion-bst {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    gap: 16px 16px;
+    align-items: center;
+  }
+  .s-motion-bst > .s-motion-bl {
+    font: var(--w-reg) 12px/1.35 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-motion-bst > .s-motion-bl code {
+    font-size: 11px;
+  }
+  .s-motion-mk {
+    display: block;
+    height: 10px;
+    background: var(--ink-3);
+    -webkit-mask: radial-gradient(
+        circle closest-side,
+        var(--ink-1) calc(100% - 0.6px),
+        transparent 100%
+      )
+      0 0 / 14px 100% space;
+    mask: radial-gradient(circle closest-side, var(--ink-1) calc(100% - 0.6px), transparent 100%) 0
+      0 / 14px 100% space;
+  }
+  .s-motion-bca ol {
+    margin: 0;
+  }
+
+  /* ---------- M4 script ---------- */
+  .s-motion-script {
+    display: grid;
+    grid-template-columns: var(--s-motion-side) minmax(0, 1fr);
+    gap: var(--s-7);
+    align-items: start;
+  }
+  .s-motion-side {
+    background: var(--raised);
+    border-radius: var(--r-l);
+    padding: 4px 0 8px;
+  }
+  .s-motion-side .panel-h {
+    padding: 0 16px;
+    min-height: 34px;
+  }
+  .s-motion-side .panel-h .s-motion-n {
+    margin-left: auto;
+    font-size: 10.5px;
+    color: var(--text-caption);
+  }
+  .s-motion-list {
+    min-height: 210px;
+  } /* five 42 px rows while DEPS-AUDIT is in */
+  .s-motion-evs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .s-motion-evs li {
+    display: grid;
+    grid-template-columns: 64px 128px minmax(0, 1fr);
+    column-gap: 14px;
+    align-items: baseline;
+    padding: 7px 12px;
+    border-radius: var(--r-m);
+    font: var(--w-reg) 13px/1.45 var(--f-chrome);
+    color: var(--text-secondary);
+    transition:
+      background-color var(--d-tap) var(--e-settle),
+      color var(--d-tap) var(--e-settle);
+  }
+  .s-motion-evs li .s-motion-n {
+    font-size: 12px;
+    color: var(--text-caption);
+  }
+  .s-motion-evs li .s-motion-who {
+    font: 500 11.5px/1.45 var(--f-mono);
+    color: var(--text-label);
+    white-space: nowrap;
+  }
+  .s-motion-evs li[aria-current="true"] {
+    background: var(--selection);
+    color: var(--text-strong);
+  }
+  .s-motion-evs li[aria-current="true"] .s-motion-n,
+  .s-motion-evs li[aria-current="true"] .s-motion-who {
+    color: var(--text-strong);
+  }
+  .s-motion-jump {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: var(--s-4);
+  }
+  .s-motion-jump .t-cap {
+    margin-right: 4px;
+  }
+  .s-motion-tl {
+    position: relative;
+    height: 44px;
+    margin-top: var(--s-6);
+    container-type: inline-size;
+  }
+  .s-motion-tl-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    height: 8px;
+    border-radius: var(--r-pill);
+    background: var(--sunken);
+    box-shadow: var(--well);
+  }
+  .s-motion-tl-tick {
+    position: absolute;
+    z-index: 1;
+    top: 9px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink-4);
+    translate: -50% 0;
+  }
+  .s-motion-tl-lab {
+    position: absolute;
+    top: 26px;
+    translate: -50% 0;
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+    white-space: nowrap;
+  }
+  .s-motion-tl-lab.s-motion-l0 {
+    translate: 0 0;
+  }
+  .s-motion-tl-lab.s-motion-l1 {
+    translate: -100% 0;
+  }
+  .s-motion-tl-head {
+    position: absolute;
+    z-index: 2;
+    left: 0;
+    top: 2px;
+    width: 20px;
+    height: 20px;
+    margin-left: -10px;
+    border-radius: 50%;
+    background: var(--ink-1);
+    box-shadow:
+      inset 0 -3px 5px var(--occl),
+      inset 0 1px 0 var(--lip);
+    transform: translateX(calc(var(--s-motion-f, 0) * 100cqw));
+  }
+
+  /* ---------- M5 matrix ---------- */
+  .s-motion-matrix {
+    display: grid;
+    grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
+    gap: var(--s-7);
+    align-items: stretch;
+  }
+  .s-motion-stage {
+    display: grid;
+    align-content: center;
+    gap: 30px;
+    min-height: 300px;
+    padding: 30px 28px 26px;
+    border-radius: var(--r-xl);
+    background: var(--raised);
+  }
+  .s-motion-l3 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 44px;
+  }
+  .s-motion-l3 figure {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+  }
+  .s-motion-l3 .t-cap {
+    white-space: nowrap;
+  }
+  .s-motion-b3 {
+    display: grid;
+    gap: 7px;
+  }
+  .s-motion-b3 > .t-cap {
+    margin-bottom: 9px;
+  }
+  .s-motion-b3 .session-row {
+    margin: 0;
+  }
+  .s-motion-ctl {
+    display: grid;
+    align-content: center;
+    gap: 18px;
+  }
+  .s-motion-ctl .s-motion-k {
+    margin-bottom: 8px;
+  }
+  .s-motion-ctl .pill[aria-pressed="true"] {
+    --pill-c: var(--ink-1);
+    --pill-ink: var(--field);
+    --pill-occl: var(--occl-light);
+  }
+  .s-motion-ctl .pill[aria-disabled="true"] {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .s-motion-out {
+    min-height: 48px;
+    padding: 12px 16px;
+    border-radius: var(--r-l);
+    background: var(--sunken);
+    box-shadow: var(--well);
+    font: var(--w-reg) 14px/1.45 var(--f-chrome);
+    color: var(--text-body);
+  }
+  .s-motion-out b {
+    font-weight: var(--w-med);
+    color: var(--text-strong);
+  }
+  .s-motion-hint {
+    font: var(--w-reg) 12.5px/1.5 var(--f-chrome);
+    color: var(--text-caption);
+  }
+
+  /* ---------- M6 end to end ---------- */
+  .s-motion-e2e {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+    gap: var(--s-7);
+    align-items: start;
+  }
+  .s-motion-e2e .bl-table td:first-child {
+    white-space: nowrap;
+  }
+  .s-motion-e2e .bl-table tr[aria-current="true"] td {
+    background: var(--selection);
+    color: var(--text-strong);
+  }
+  .s-motion-e2e .bl-table tr[aria-current] td {
+    transition: background-color var(--d-tap) var(--e-settle);
+  } /* only once the demo has run: an idle transition made full-page shots raster unevenly */
+  .s-motion-demo {
+    background: var(--raised);
+    border-radius: var(--r-xl);
+    padding: 20px 0 20px;
+    display: grid;
+    gap: 16px;
+  }
+  .s-motion-demo > .s-motion-k,
+  .s-motion-demo > .s-motion-pillrow,
+  .s-motion-demo > .s-motion-mb,
+  .s-motion-demo > .s-motion-mini,
+  .s-motion-demo .s-motion-fb {
+    margin: 0 20px;
+  }
+  .s-motion-demo > .s-motion-k {
+    margin-bottom: -6px;
+  }
+  .s-motion-e2ebox {
+    display: grid;
+    gap: 8px;
+  }
+  .s-motion-e2e .session-row {
+    transition: background-color var(--d-state) var(--e-out);
+  }
+  .s-motion-fb {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 26px;
+  }
+  .s-motion-fb .s-motion-fbn {
+    font: 600 12px/1 var(--f-mono);
+    letter-spacing: 0.04em;
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .s-motion-fb > .sbar {
+    flex: 1;
+    min-width: 40px;
+  }
+  .s-motion-mb {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+    height: 28px;
+    padding: 0 14px;
+    border-radius: var(--r-pill);
+    background: var(--sunken);
+    box-shadow: var(--well);
+    color: var(--ink-1);
+  }
+  .s-motion-mb .t-cap {
+    margin-right: auto;
+  }
+  .s-motion-mbi {
+    display: inline-flex;
+    padding: 2px 4px;
+    border-radius: var(--r-xs);
+    color: var(--ink-1);
+  }
+  .s-motion-mbi > svg {
+    display: block;
+    width: 26px;
+    height: auto;
+  }
+  .s-motion-mbi[data-on="1"] {
+    background: var(--ink-1);
+    color: var(--sunken);
+  }
+  .s-motion-mini {
+    position: relative;
+    height: 34px;
+    container-type: inline-size;
+  }
+  .s-motion-mini .s-motion-tl-track {
+    top: 6px;
+  }
+  .s-motion-mini .s-motion-tl-tick {
+    top: 7px;
+  }
+  .s-motion-mini .s-motion-tl-lab {
+    top: 22px;
+  }
+  .s-motion-mini .s-motion-tl-head {
+    top: 0;
+  }
+
+  /* ---------- M7 panels and the selection bar ---------- */
+  .s-motion-win {
+    background: var(--raised);
+    border-radius: var(--r-win);
+    box-shadow:
+      var(--float),
+      inset 0 1px 0 var(--lip);
+    overflow: hidden;
+  }
+  .s-motion-band {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 42px;
+    padding: 0 12px 0 14px;
+  }
+  .s-motion-band .s-motion-lights {
+    display: inline-flex;
+    gap: 8px;
+    margin-right: 6px;
+  }
+  .s-motion-band .s-motion-lights i {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--seam);
+  }
+  .s-motion-band .s-motion-nm {
+    font: 600 13px/1 var(--f-mono);
+    letter-spacing: 0.04em;
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .s-motion-band .s-motion-path {
+    font: 400 11px/1 var(--f-mono);
+    color: var(--text-caption);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .s-motion-band .s-motion-bb {
+    flex: 0 1 200px;
+    min-width: 40px;
+    margin-left: 4px;
+  }
+  .s-motion-band .pill[aria-pressed="true"] {
+    --pill-c: var(--overlay);
+    --pill-ink: var(--text-strong);
+  }
+  .s-motion-body {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr) 392px;
+    gap: 6px;
+    padding: 0 6px 6px 0;
+    height: 404px;
+  }
+  .s-motion-body.s-motion-shut {
+    grid-template-columns: 280px minmax(0, 1fr) 0;
+    gap: 6px 6px;
+  }
+  .s-motion-body.s-motion-shut > .s-motion-rp {
+    visibility: hidden;
+  }
+  .s-motion-sbar {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    padding-top: 2px;
+  }
+  .s-motion-sbar .panel-h {
+    padding: 0 10px 0 16px;
+    min-height: 34px;
+  }
+  .s-motion-sbar .panel-h .pill {
+    margin-left: auto;
+  }
+  .s-motion-rows {
+    flex: 1;
+    min-height: 0;
+  }
+  .s-motion-ahead {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    margin: 0 6px;
+    padding: 0 6px 0 10px;
+    font: var(--w-strong) 11.5px/1 var(--f-chrome);
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+  }
+  .s-motion-ahead .gi {
+    width: 10px;
+    height: 10px;
+    color: var(--text-caption);
+  }
+  .s-motion-ahead .seg {
+    margin-left: auto;
+  }
+  .s-motion-slot {
+    min-height: 50px;
+    padding: 6px 6px 0;
+  }
+  .s-motion-slot .toast {
+    min-height: 38px;
+  }
+  .s-motion-slot .toast[hidden] {
+    display: none;
+  }
+  .s-motion-term {
+    background: var(--deep);
+    border-radius: var(--r-l);
+    padding: 10px 14px;
+    overflow: hidden;
+    min-width: 0;
+    font: 400 12px/17px var(--f-mono);
+    color: var(--text-body);
+    white-space: pre;
+  }
+  .s-motion-term .s-motion-me {
+    color: var(--text-strong);
+  }
+  .s-motion-term .s-motion-dim {
+    color: var(--text-caption);
+  }
+  .s-motion-rp {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .s-motion-rpi {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--deep);
+    border-radius: var(--r-l);
+  }
+  .s-motion-rph {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 38px;
+    padding: 0 8px 0 14px;
+  }
+  .s-motion-rph .t-label {
+    margin-right: auto;
+  }
+  .s-motion-view {
+    padding: 4px 8px 12px;
+    min-height: 0;
+  }
+  .s-motion-view[hidden] {
+    display: none;
+  }
+  .s-motion-turn {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    column-gap: 6px;
+    padding: 8px 8px;
+    border-radius: var(--r-m);
+  }
+  .s-motion-turn:first-child {
+    background: var(--raised);
+  }
+  .s-motion-turn .s-motion-tn {
+    font: 400 11px/17px var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-motion-turn .s-motion-tt {
+    font: 500 12px/17px var(--f-mono);
+    color: var(--text-strong);
+  }
+  .s-motion-turn .s-motion-tm {
+    grid-column: 2;
+    font: 400 10.5px/15px var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-motion-turn .s-motion-tm em {
+    font-style: normal;
+    color: var(--text-secondary);
+  }
+  .s-motion-dsum {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 6px 8px 10px;
+    font: 500 12px/1 var(--f-mono);
+    color: var(--text-strong);
+  }
+  .s-motion-df {
+    display: grid;
+    grid-template-columns: 12px 12px minmax(0, 1fr) auto;
+    column-gap: 8px;
+    align-items: center;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: var(--r-m);
+    font: 400 11.5px/1 var(--f-mono);
+    color: var(--text-body);
+  }
+  .s-motion-df:nth-child(odd) {
+    background: var(--raised);
+  }
+  .s-motion-df .s-motion-dim {
+    color: var(--text-caption);
+  }
+  .s-motion-df .s-motion-st {
+    font-size: 10.5px;
+    color: var(--text-caption);
+  }
+  .s-motion-dfoot {
+    padding: 12px 8px 0;
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+
+  /* ---------- M8 archive ---------- */
+  .s-motion-arch {
+    display: grid;
+    grid-template-columns: var(--s-motion-side) minmax(0, 1fr);
+    gap: var(--s-7);
+    align-items: start;
+  }
+  .s-motion-arch .s-motion-side {
+    padding-bottom: 6px;
+  }
+  .s-motion-sess {
+    min-height: 166px;
+  }
+  .s-motion-arch .session-row {
+    cursor: pointer;
+  }
+  .s-motion-arch .s-motion-ahead {
+    margin-top: 6px;
+  }
+  .s-motion-ahead .s-motion-al {
+    display: inline-block;
+    transform-origin: 0 50%;
+  }
+  .s-motion-search {
+    margin: 4px 12px 8px;
+    height: 26px;
+  }
+  .s-motion-search input {
+    all: unset;
+    flex: 1;
+    min-width: 0;
+    font: 400 12px/1 var(--f-mono);
+    color: var(--text-strong);
+  }
+  .s-motion-search input::placeholder {
+    color: var(--text-disabled);
+    font-family: var(--f-chrome);
+  }
+  .s-motion-search .kbd {
+    height: 18px;
+    font-size: 10px;
+  }
+  .s-motion-sortrow {
+    margin: 0 12px 6px;
+  }
+  .s-motion-alist {
+    height: 236px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    padding-bottom: 2px;
+  }
+  .s-motion-ar {
+    display: grid;
+    grid-template-columns: 14px minmax(0, 1fr) auto;
+    grid-template-rows: 17px 14px;
+    column-gap: 9px;
+    row-gap: 1px;
+    align-items: center;
+    min-height: 38px;
+    margin: 0 6px;
+    padding: 3px 10px 3px 12px;
+    border-radius: var(--r-m);
+    cursor: pointer;
+    transition: background-color var(--d-tap) var(--e-settle);
+  }
+  .s-motion-ar:hover {
+    background: color-mix(in srgb, var(--raised) 70%, var(--overlay));
+  }
+  .s-motion-ar[aria-selected="true"] {
+    background: var(--selection);
+  }
+  .s-motion-ar .gi {
+    width: 13px;
+    height: 13px;
+    color: var(--text-caption);
+    grid-row: 1;
+  }
+  .s-motion-ar .s-motion-an {
+    grid-row: 1;
+    grid-column: 2;
+    font: 500 12px/17px var(--f-mono);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-motion-ar[data-kind="chat"] .s-motion-an {
+    font-weight: 400;
+  }
+  .s-motion-ar[aria-selected="true"] .s-motion-an {
+    color: var(--text-strong);
+  }
+  .s-motion-ar .s-motion-aa {
+    grid-row: 1;
+    grid-column: 3;
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-motion-ar .s-motion-as {
+    grid-row: 2;
+    grid-column: 2 / 4;
+    font: 400 10.5px/14px var(--f-mono);
+    color: var(--text-caption);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-motion-restore {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .s-motion-rb {
+    display: inline-flex;
+    gap: 3px;
+  }
+  .s-motion-rb > i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--lamp-bg);
+  }
+  html[data-motion="full"] .s-motion-rb > i {
+    animation: w-pass var(--T-breath) var(--e-sine) infinite;
+    animation-delay: calc(var(--i) * var(--d-state) - var(--T-breath));
+  }
+  .s-motion-arch .lamp.s-motion-empty {
+    opacity: 0;
+  }
+  .s-motion-acts .bl-table td:first-child {
+    white-space: nowrap;
+  }
+
+  /* ---------- M9 theme ---------- */
+  .s-motion-theme {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--s-7);
+    align-items: center;
+  }
+  .s-motion-chart {
+    border-radius: var(--r-xl);
+    background: var(--raised);
+    padding: 20px 20px 12px;
+  }
+  .s-motion-chart svg {
+    display: block;
+    overflow: visible;
+  }
+  .s-motion-chart .s-motion-up {
+    fill: none;
+    stroke: var(--ink-2);
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+  .s-motion-chart .s-motion-dn {
+    fill: none;
+    stroke: var(--blue-base);
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+  .s-motion-chart .s-motion-band9 {
+    fill: var(--sunken);
+  }
+  .s-motion-chart text {
+    font: 400 11px var(--f-mono);
+    fill: var(--text-caption);
+  }
+  .s-motion-chart text.s-motion-ax {
+    font-size: 10.5px;
+  }
+  .s-motion-chart text.s-motion-lt {
+    fill: var(--text-strong);
+    font-weight: 500;
+  }
+  .s-motion-chart .s-motion-pt {
+    stroke: var(--ink-4);
+    stroke-width: 2;
+  }
+  .s-motion-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--s-5);
+    display: grid;
+    gap: 14px;
+    counter-reset: s-motion-st;
+  }
+  .s-motion-steps li {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 12px;
+    font: var(--w-reg) 14px/1.5 var(--f-chrome);
+    color: var(--text-secondary);
+    counter-increment: s-motion-st;
+  }
+  .s-motion-steps li::before {
+    content: counter(s-motion-st);
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--raised);
+    font: 500 11px/1 var(--f-mono);
+    color: var(--text-label);
+  }
+  .s-motion-steps li b {
+    color: var(--text-strong);
+  }
+
+  /* ---------- M10 components ---------- */
+  .s-motion-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-5);
+  }
+  .s-motion-tile {
+    background: var(--raised);
+    border-radius: var(--r-xl);
+    padding: 20px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+  .s-motion-tile > .s-motion-k {
+    margin: 0;
+  }
+  .s-motion-spec {
+    flex: 1;
+    display: grid;
+    align-content: center;
+    gap: 16px;
+    min-width: 0;
+  }
+  .s-motion-tile > .s-motion-tn2 {
+    font: var(--w-reg) 12.5px/1.5 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-motion-empty2 {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: 26px 18px 24px;
+    border-radius: var(--r-l);
+    background: var(--deep);
+    box-shadow: var(--well);
+  }
+  .s-motion-empty2 b {
+    font: var(--w-strong) 14px/1.2 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-motion-empty2 p {
+    font: var(--w-reg) 12.5px/1.5 var(--f-chrome);
+    color: var(--text-secondary);
+    max-width: 30ch;
+  }
+  .s-motion-use {
+    display: grid;
+    gap: 12px;
+  }
+  .s-motion-ur {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    font: 400 11px/1 var(--f-mono);
+    color: var(--text-secondary);
+  }
+  .s-motion-ur .s-motion-ul {
+    width: 20px;
+  }
+  .s-motion-ur .s-motion-uv {
+    margin-left: auto;
+    white-space: nowrap;
+  }
+  .s-motion-use .s-motion-pc {
+    color: var(--text-strong);
+  }
+  .s-motion-use .s-motion-rs {
+    color: var(--text-caption);
+    margin-left: 8px;
+  }
+  .s-motion-big .bead-chain {
+    --b: 13px;
+    --gap: 5px;
+  }
+  .s-motion-ur > .use-line {
+    flex: 1 1 120px;
+  }
+  .s-motion-big .use-line {
+    --uh: 6px;
+  }
+  .s-motion-slide {
+    display: grid;
+    gap: 6px;
+  }
+  .s-motion-slide .s-motion-scrub {
+    height: 20px;
+  }
+  .s-motion-slide label {
+    font: var(--w-med) 12px/1.3 var(--f-chrome);
+    color: var(--text-label);
+    display: flex;
+    justify-content: space-between;
+  }
+  .s-motion-bgl {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 14px;
+    column-gap: 12px;
+    align-items: center;
+    font: 500 12px/1 var(--f-mono);
+    color: var(--text-body);
+  }
+  .s-motion-big .bead-wave {
+    --b: 9px;
+    gap: 5px;
+  }
+  .s-motion-big .bead-wave > em {
+    font-size: 11px;
+  }
+  .s-motion-prog {
+    display: grid;
+    gap: 12px;
+  }
+  .s-motion-prog .s-motion-ph {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font: var(--w-med) 13px/1.3 var(--f-chrome);
+    color: var(--text-body);
+  }
+  .s-motion-prog .s-motion-ph span {
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-motion-hov {
+    margin: 0 -14px;
+  }
+  .s-motion-hov .group-row {
+    margin-top: 0;
+  }
+
+  /* ---------- M11 Core Animation ---------- */
+  .s-motion-xp {
+    --s-motion-tile: 360px;
+    margin-top: var(--s-6);
+    padding: 30px 0 20px;
+    border-radius: var(--r-xl);
+    background: var(--raised);
+    overflow: hidden;
+  }
+  .s-motion-xr {
+    position: relative;
+    width: calc(var(--s-motion-tile) * 3);
+    height: 36px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  .s-motion-xs,
+  .s-motion-xd {
+    position: absolute;
+    left: 0;
+    width: calc(var(--s-motion-tile) * 4);
+  }
+  .s-motion-xs {
+    top: 0;
+    height: 22px;
+    background: linear-gradient(to right, var(--sb-working)) 0 0 / var(--s-motion-tile) 100%
+      repeat-x;
+  }
+  .s-motion-xg {
+    opacity: 0.3;
+  } /* the part of the layer outside its track: there, but never seen */
+  .s-motion-xd {
+    top: 30px;
+    height: 6px;
+    background: radial-gradient(circle at 3px 50%, var(--ink-3) 2.5px, transparent 3px) -3px 0 /
+      var(--s-motion-tile) 100% repeat-x;
+  } /* a dot at every tile boundary */
+  .s-motion-xw {
+    position: absolute;
+    top: 0;
+    left: var(--s-motion-tile);
+    width: var(--s-motion-tile);
+    height: 22px;
+    border-radius: var(--r-pill);
+    overflow: hidden;
+  }
+  .s-motion-xw > .s-motion-xs {
+    left: calc(var(--s-motion-tile) * -1);
+  }
+  html[data-motion="full"] .s-motion-xs,
+  html[data-motion="full"] .s-motion-xd {
+    animation: s-motion-xflow var(--T) linear infinite;
+  }
+  @keyframes s-motion-xflow {
+    to {
+      transform: translateX(calc(var(--s-motion-tile) * -1));
+    }
+  }
+  .s-motion-xl {
+    display: grid;
+    grid-template-columns: repeat(3, var(--s-motion-tile));
+    width: calc(var(--s-motion-tile) * 3);
+    margin: 12px auto 0;
+    text-align: center;
+    font: var(--w-reg) 12px/1.4 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-motion-xl b {
+    font-weight: var(--w-med);
+    color: var(--text-secondary);
+  }
+  .s-motion-codes {
+    display: grid;
+    gap: var(--s-5);
+    margin-top: var(--s-6);
+  }
+  .s-motion-code {
+    background: var(--sunken);
+    box-shadow: var(--well);
+    border-radius: var(--r-l);
+    padding: 16px 0 18px;
+    min-width: 0;
+  }
+  .s-motion-code .s-motion-k {
+    padding: 0 20px;
+    margin-bottom: 10px;
+  }
+  .s-motion-code pre {
+    margin: 0;
+    padding: 0 20px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    font: 400 11.5px/1.6 var(--f-mono);
+    color: var(--text-body);
+    tab-size: 4;
+  }
+  .s-motion-code pre .s-motion-cm {
+    color: var(--text-caption);
+  }
+  .s-motion-grid2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-7);
+    margin-top: var(--s-7);
+    align-items: start;
+  }
+  .s-motion-grid2 .bl-table {
+    margin-top: 4px;
+  }
+  .s-motion-list2 {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0;
+    display: grid;
+    gap: 10px;
+  }
+  .s-motion-list2 li {
+    position: relative;
+    padding-left: 20px;
+    font: var(--w-reg) 14px/1.5 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-motion-list2 li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0.6em;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--seam);
+  }
+  .s-motion-list2 li b {
+    color: var(--text-strong);
+  }
+  ol.s-motion-list2 {
+    counter-reset: s-motion-m;
+  }
+  ol.s-motion-list2 li {
+    padding-left: 32px;
+    counter-increment: s-motion-m;
+  }
+  ol.s-motion-list2 li::before {
+    content: counter(s-motion-m);
+    width: 22px;
+    height: 22px;
+    top: 0;
+    left: 0;
+    display: grid;
+    place-items: center;
+    background: var(--raised);
+    font: 500 11px/1 var(--f-mono);
+    color: var(--text-label);
+  }
+  .s-motion-unm {
+    margin-top: var(--s-5);
+    padding: 18px 22px;
+    border-radius: var(--r-l);
+    background: var(--raised);
+    font: var(--w-med) 15px/1.5 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-motion-unm span {
+    display: block;
+    margin-top: 4px;
+    font-weight: var(--w-reg);
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  /* ---------- M12 rules ---------- */
+  .s-motion-rules {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--s-8);
+    align-items: start;
+  }
+  .s-motion-pr {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 22px;
+    counter-reset: s-motion-p;
+  }
+  .s-motion-pr li {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    counter-increment: s-motion-p;
+    font: var(--w-reg) 17px/1.5 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-motion-pr li::before {
+    content: counter(s-motion-p);
+    font: 500 13px/1.9 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-motion-pr li b {
+    display: block;
+    font: var(--w-strong) clamp(20px, 2vw, 24px)/1.25 var(--f-chrome);
+    color: var(--text-strong);
+    margin-bottom: 4px;
+  }
+  .s-motion-dont {
+    list-style: none;
+    padding: 24px 26px;
+    margin: 0;
+    display: grid;
+    gap: 14px;
+    background: var(--raised);
+    border-radius: var(--r-xl);
+  }
+  .s-motion-dont li {
+    font: var(--w-reg) 14.5px/1.5 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-motion-dont li b {
+    color: var(--text-strong);
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 1240px) {
+    .s-motion-lr {
+      grid-template-columns: 44px 44px minmax(0, 272px) minmax(0, 1fr);
+      grid-template-areas: "live still row bst" "band band band band" "txt txt txt txt";
+    }
+    .s-motion-lr.s-motion-hd {
+      display: none;
+    }
+    .s-motion-lr > .s-motion-tx {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      row-gap: 12px;
+    }
+    .s-motion-lr [data-l]::before {
+      content: attr(data-l);
+      display: block;
+      margin-bottom: 3px;
+      font: var(--w-med) 11.5px/1.3 var(--f-chrome);
+      color: var(--text-caption);
+    }
+    .s-motion-body {
+      grid-template-columns: 260px minmax(0, 1fr) 340px;
+    }
+    .s-motion-body.s-motion-shut {
+      grid-template-columns: 260px minmax(0, 1fr) 0;
+    }
+  }
+  @media (max-width: 1100px) {
+    .s-motion-curves {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .s-motion-tiles {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .s-motion-xp {
+      --s-motion-tile: 240px;
+    }
+  }
+  @media (max-width: 1000px) {
+    .s-motion-clockwrap,
+    .s-motion-script,
+    .s-motion-matrix,
+    .s-motion-e2e,
+    .s-motion-arch,
+    .s-motion-theme,
+    .s-motion-rules,
+    .s-motion-grid2,
+    .s-motion-bca {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s-6);
+    }
+    .s-motion-side {
+      max-width: 420px;
+    }
+    .s-motion-body {
+      grid-template-columns: 250px minmax(0, 1fr);
+      height: auto;
+      padding: 0 6px 6px;
+    }
+    .s-motion-body.s-motion-shut {
+      grid-template-columns: 250px minmax(0, 1fr);
+    }
+    .s-motion-term {
+      display: none;
+    }
+    .s-motion-rp {
+      min-height: 320px;
+    }
+    .s-motion-body.s-motion-shut > .s-motion-rp {
+      display: none;
+    }
+  }
+  @media (max-width: 720px) {
+    .s-motion-lr {
+      grid-template-columns: 34px 34px minmax(0, 1fr);
+      grid-template-areas: "live still ." "row row row" "band band band" "bst bst bst" "txt txt txt";
+      padding: 14px 10px;
+    } /* the row gets the full width, as in a phone-wide sidebar */
+    .s-motion-lr > .s-motion-tx {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .s-motion-curves {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--s-4);
+    }
+    .s-motion-tiles {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .s-motion-cues {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .s-motion-evs li {
+      grid-template-columns: 52px minmax(0, 1fr);
+    }
+    .s-motion-evs li > :last-child {
+      grid-column: 2;
+    }
+    .s-motion-l3 {
+      gap: 28px;
+    }
+    .s-motion-stage {
+      padding: 24px 16px;
+    }
+    .s-motion-body,
+    .s-motion-body.s-motion-shut {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 0 6px 6px;
+    }
+    .s-motion-band .s-motion-path {
+      display: none;
+    }
+    .s-motion-tl-lab.s-motion-lm {
+      display: none;
+    }
+    .s-motion-scrubrow {
+      flex-wrap: wrap;
+      gap: 10px 14px;
+    }
+    .s-motion-scrubrange {
+      flex-basis: 100%;
+      order: 3;
+    }
+    .s-motion-side {
+      max-width: none;
+    }
+    .s-motion-pr li {
+      grid-template-columns: 32px minmax(0, 1fr);
+      font-size: 15.5px;
+    }
+    .s-motion-cv .s-motion-cb {
+      font-size: 10px;
+    }
+    .s-motion-xp {
+      --s-motion-tile: 100px;
+    }
+    .s-motion-bca {
+      padding: 20px 16px;
+    }
+    .s-motion-bst {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 6px;
+    }
+    .s-motion-bst > .s-motion-bl:not(:first-child) {
+      margin-top: 10px;
+    }
+    .s-motion-stack thead {
+      display: none;
+    }
+    .s-motion-stack,
+    .s-motion-stack tbody,
+    .s-motion-stack tr {
+      display: block;
+      width: 100%;
+    }
+    .s-motion-stack tr {
+      padding: 10px 12px;
+      border-radius: var(--r-m);
+      margin-bottom: 2px;
+    }
+    .s-motion-stack tr:nth-child(odd) {
+      background: color-mix(in srgb, var(--raised) 55%, transparent);
+    }
+    .s-motion-e2e .s-motion-stack tr[aria-current="true"] {
+      background: var(--selection);
+    }
+    .s-motion-stack td {
+      display: block;
+      padding: 2px 0;
+      background: none;
+    }
+    .s-motion-root .s-motion-stack td.s-motion-n {
+      white-space: normal;
+    }
+    .s-motion-stack td[data-l] {
+      display: grid;
+      grid-template-columns: 84px minmax(0, 1fr);
+      column-gap: 10px;
+    }
+    .s-motion-stack td[data-l]::before {
+      content: attr(data-l);
+      font: var(--w-med) 11.5px/1.6 var(--f-chrome);
+      color: var(--text-caption);
+    }
+    .s-motion-stack td:first-child {
+      display: block;
+      padding-bottom: 4px;
+      color: var(--text-strong);
+      font-weight: var(--w-med);
+    }
+    .s-motion-stack td:first-child::before {
+      content: none;
+    }
+    .s-motion-stack td:empty {
+      display: none;
+    }
+    .s-motion-ladder.s-motion-stack td:nth-child(-n + 4) {
+      display: inline-block;
+      margin-right: 12px;
+      padding-bottom: 6px;
+    }
+    .s-motion-ladder.s-motion-stack td:nth-child(-n + 4)::before {
+      content: none;
+    }
+    .s-motion-ladder.s-motion-stack td:last-child {
+      display: block;
+    }
+    .s-motion-ladder.s-motion-stack td:last-child::before {
+      content: none;
+    }
+  }
+
+  /* ---------- jumps: no transitions while the clock is held (the runtime's sync pauses CSS transitions) ---------- */
+  .s-motion-cut .lamp > i,
+  .s-motion-cut .session-row,
+  .s-motion-cut .bead-chain > i::before,
+  .s-motion-cut .use-line > i::before,
+  .s-motion-cut .use-line::after,
+  .s-motion-cut .seg > .seg-pill,
+  .s-motion-cut .seg > button,
+  .s-motion-cut .s-motion-evs li,
+  .s-motion-cut .bl-table td,
+  .s-motion-cut .s-motion-ar {
+    transition: none;
+  }
+</style>
+
+<section id="motion" class="bl-sec s-motion-root">
+  <header class="bl-sh">
+    <div class="no">03 <span class="bl-steps"></span></div>
+    <h2>Motion</h2>
+    <p class="meta">One clock: 1.75, 3.5, 7 and 14 s.</p>
+  </header>
+  <p class="bl-lead">
+    The reel loops because every period in it is a power of two of 7 seconds. CONTROL takes the
+    clock, not the flower: every loop runs at 1.75, 3.5, 7 or 14 s from one shared instant, so the
+    window breathes as one object. Each session now moves in two places at once. Its lamp carries
+    the motion, in ink. Its state bar carries the colour, flowing at the state's tempo on the same
+    clock. Linear means work, sine means waiting, still means nothing to do.
+  </p>
+
+  <!-- M1 -->
+  <h3 class="bl-sub"><span class="id">M1</span>One clock</h3>
+  <div class="bl-prose">
+    <p>
+      Every loop counts from one instant: host time floored to a 14 s boundary. Host time is shared
+      by every process on the Mac, so the main window, the menu-bar panel and any helper land on the
+      same phase grid without talking to each other. A loop starts one 14 s cycle early, so a lamp
+      or a bar that appears late is already in step: nothing fills in, and nothing stores a phase.
+      One-shots never wait for the beat. A change shows on the frame it's caused; only its loop
+      falls into step.
+    </p>
+  </div>
+  <figure class="fig" data-fig="clock">
+    <div class="s-motion-clockwrap">
+      <div class="s-motion-clock" aria-label="Four orbits at 14, 7, 3.5 and 1.75 s"></div>
+      <div>
+        <div class="s-motion-orbits"></div>
+        <ul class="s-motion-cues" aria-label="Cues on the 7 s orbit"></ul>
+        <div class="s-motion-scrubber">
+          <div class="s-motion-scrubrow">
+            <span class="s-motion-read" aria-live="off">t 00.00 s</span>
+            <div class="s-motion-scrubrange">
+              <input
+                class="s-motion-scrub"
+                type="range"
+                min="0"
+                max="14000"
+                step="10"
+                value="0"
+                aria-label="Clock position, 0 to 14 s"
+              />
+              <div class="s-motion-ticks">
+                <span style="--f: 0">0</span><span style="--f: 0.25">3.5</span
+                ><span style="--f: 0.5">7</span><span style="--f: 0.75">10.5</span
+                ><span style="--f: 1">14 s</span>
+              </div>
+            </div>
+            <button class="pill sm s-motion-play" type="button"></button>
+          </div>
+          <p class="s-motion-scrubnote">
+            Scrubbing holds every loop, bar and demo on the page at that moment. Play carries on
+            from there.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="bl-scroll s-motion-tbl">
+      <table class="bl-table s-motion-ladder s-motion-stack">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Duration</th>
+            <th>Of T</th>
+            <th>Kind</th>
+            <th>Used for</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="s-motion-note">
+      The old tokens map onto the ladder: <code>fast</code> 0.15 becomes tap or quick,
+      <code>panel</code> 0.2 becomes quick. The old hover cap (150 ms or less) still holds.
+    </p>
+    <p class="s-motion-pull">
+      Same state, same phase, on every row; different states on different eighths of the wheel, so a
+      full sidebar never throbs in unison.
+    </p>
+    <figcaption class="cap">
+      <span class="id">M1</span><b>One clock.</b> Four orbits at 14, 7, 3.5 and 1.75 s, all started
+      from the same epoch, so the four meet at the top again every 14 s. The inner one carries a
+      needs-you lamp: it beats each time it passes the top. Beside each orbit, the bars that flow at
+      its tempo. This diagram is the one thing on the page that rotates, because it draws time, not
+      app UI.
+    </figcaption>
+  </figure>
+
+  <!-- M2 -->
+  <h3 class="bl-sub"><span class="id">M2</span>Five curves</h3>
+  <div class="bl-prose">
+    <p>
+      Space is sine and colour is linear, as in the reel. The rule that falls out of it: linear
+      means work, sine means waiting, still means nothing to do. Working, Background, housekeeping
+      and the loader are linear lamps: a machine doing something. Needs-you, done, failed, choose,
+      outside and idle are sine: a thing waiting, breathing. Gone is still.
+    </p>
+    <p>
+      Every state bar is colour travel, so every bar is linear. What tells a waiting bar from a
+      working one is its tempo, and the lamp beside it.
+    </p>
+  </div>
+  <figure class="fig" data-fig="easing">
+    <div class="s-motion-curves"></div>
+    <p class="s-motion-law">
+      No curve leaves y ∈ [0, 1], so overshoot is impossible by construction.
+    </p>
+    <p class="s-motion-note">
+      <code>CASpringAnimation</code> and NSAnimation springs are banned. The spike's
+      <code>.easeInEaseOut</code> (0.42, 0, 0.58, 1) is close but isn't the reel's curve; it swaps
+      for sine.
+    </p>
+    <div class="bl-scroll s-motion-tbl">
+      <table class="bl-table s-motion-stack">
+        <thead>
+          <tr>
+            <th>Pairing</th>
+            <th>In</th>
+            <th>Out</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Press</td>
+            <td>down at tap with settle</td>
+            <td>up at quick with sine</td>
+          </tr>
+          <tr>
+            <td>Hover</td>
+            <td>in at tap or quick with settle</td>
+            <td>out at quick with sine</td>
+          </tr>
+          <tr>
+            <td>Enter or exit</td>
+            <td>enter at state with sineOut</td>
+            <td>
+              exit at quick with sineIn: exits are shorter than entries, because the eye has already
+              moved on
+            </td>
+          </tr>
+          <tr>
+            <td>Panel</td>
+            <td>open at quick with settle</td>
+            <td>close at tap with sineIn</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption class="cap">
+      <span class="id">M2</span><b>Five curves.</b> Each dot runs its curve there and back on 3.5 s:
+      x moves linearly, y follows the curve, 1.75 s each way, so there is never a cut. CSS and Core
+      Animation use the same four control points.
+    </figcaption>
+  </figure>
+
+  <!-- M3 -->
+  <h3 class="bl-sub"><span class="id">M3</span>Every lamp and bar, live and still</h3>
+  <div class="bl-prose">
+    <p>
+      Urgency is ranked by four levers, most salient first: reach (does the motion leave the lamp?),
+      tempo, channel (scale, then travel, then fill level, then opacity) and hue. The lamp carries
+      the first three in ink, so every eye reads state the same way, colour-blind or not. The bead
+      bar before it adds the fourth: blue working, amber failed, green done, and red for needs-you
+      alone.
+    </p>
+    <p>
+      In a row the two sit together at the right: a run of beads a sixth of the row wide, then the
+      lamp at the far end as its cap. Read right to left, the lamp says what's happening and the
+      beads say it in colour. Each bar is one smooth wave inside its state's family, base to light
+      to base to deep, so the colour flows through the beads with no band in it. Needs-you alone
+      runs at 1.75 s; failed and done at 3.5 s; working, Background and choose at 7 s; housekeeping
+      at 14 s. Idle, outside and gone hold still. Working and Background share one bar; the lamp
+      tells them apart. Only the one session in focus keeps a continuous bar, at the top of the
+      view.
+    </p>
+  </div>
+  <figure class="fig" data-fig="lamps">
+    <div class="s-motion-lamps" role="table" aria-label="Lamp and bar per state"></div>
+    <div class="s-motion-bca">
+      <div class="s-motion-bst" aria-hidden="true">
+        <span class="s-motion-bl"><b>1</b> · the ramp, sliding</span
+        ><span class="s-motion-bx" data-x="ramp"></span>
+        <span class="s-motion-bl"><b>2</b> · the bead mask, still</span
+        ><span class="s-motion-mk"></span> <span class="s-motion-bl"><b>3</b> · what you see</span
+        ><span class="s-motion-bx" data-x="beads"></span>
+      </div>
+      <ol class="s-motion-list2">
+        <li>
+          <b>The ramp.</b> One <code>CAGradientLayer</code> holds the state's smooth stops over the
+          track plus one tile. It slides left by one tile per period on
+          <code>transform.translation.x</code>, linear, its <code>beginTime</code> from
+          <code>Clock.begin</code>, so every bar of one state is in one phase.
+        </li>
+        <li>
+          <b>The beads.</b> The track's <code>mask</code> is a <code>CAReplicatorLayer</code> of one
+          circle: 5 pt beads at an 8 pt pitch in a row, <code>instanceTransform</code> = the pitch,
+          <code>instanceCount</code> = the whole beads that fit. A pattern-image mask does the same
+          job. It's built once and never animates.
+        </li>
+        <li>
+          <b>The result.</b> The colour travels; the beads never move. Outside swaps the circle for
+          a ring, open like its lamp; idle and gone drop the ramp and show the track. A change of
+          state wipes the old ramp off under the same mask. <code>BloomBar.beads</code> in M11.
+        </li>
+      </ol>
+    </div>
+    <figcaption class="cap">
+      <span class="id">M3</span><b>Every lamp and every bar, live and still.</b> The tiers keep
+      states apart even in peripheral vision: 1.75 s is needs-you alone; 3.5 s the two "come and
+      look" states, told apart by channel and by the bar's hue; 7 s the busy and in-between states;
+      14 s the quiet ones. Needs-you beats at 0.57 Hz, five times under WCAG 2.3.1's three flashes a
+      second, and never goes dark. In the still columns every lamp stills into its shape (the ring
+      round needs-you, the band across working, the half fill, the open ring) and every bar holds
+      its k = 0 pose, the start of its wave, so the colour still reads. The showcase bars are the
+      bead bar at doc size (10 px beads, tile 480 px); in the app a row's beads are 5 px at an 8 px
+      pitch, ending in its 15 px lamp, and the one session in focus gets the one continuous head
+      bar, 6 px. Under the bars, the recipe: the ramp above and the result below flow in one phase,
+      so you can watch the same colour pass through the still beads.
+    </figcaption>
+  </figure>
+
+  <!-- M4 -->
+  <h3 class="bl-sub"><span class="id">M4</span>A sidebar on the clock</h3>
+  <div class="bl-prose">
+    <p>
+      Five rows run a script on the shared clock. Each frame is computed from where the clock is, so
+      a scrub or a <code>?t=</code> shot lands on the exact state, and a jump never plays a
+      transition. State never waits; only position may lag, by one T/16 at most. Every bar of one
+      state shares one phase, so the working bars here flow as one.
+    </p>
+  </div>
+  <figure class="fig" data-fig="script">
+    <div class="s-motion-script">
+      <div class="s-motion-side" data-region>
+        <div class="panel-h">Sessions<span class="s-motion-n">recent first</span></div>
+        <div class="s-motion-list"></div>
+      </div>
+      <div>
+        <ol class="s-motion-evs" aria-label="The script"></ol>
+        <div class="s-motion-jump"><span class="t-cap">Jump to</span></div>
+      </div>
+    </div>
+    <div class="s-motion-tl" aria-hidden="true">
+      <div class="s-motion-tl-track"></div>
+      <i class="s-motion-tl-head"></i>
+    </div>
+    <figcaption class="cap">
+      <span class="id">M4</span><b>A sidebar on the clock.</b> STATISTICS goes working at 1.75 s and
+      re-sorts to the top, needs you at 5.25 s, working at 7 s, done at 8.75 s and idle at 12.25 s;
+      DEPS-AUDIT enters at 3.5 s and leaves at 10.5 s. At the 14 s wrap the rows travel back with
+      the same move, so there is no cut. Watch the bars: idle to working and working to done wipe
+      through cream; working to needs you, and back, drop through navy and wine. Needs-you never
+      moves a row: only recency re-sorts.
+    </figcaption>
+  </figure>
+
+  <!-- M5 -->
+  <h3 class="bl-sub"><span class="id">M5</span>Fire any change</h3>
+  <div class="bl-prose">
+    <p>
+      A change of state is the reel's rest → stripes → settle, played in two places at once. In the
+      lamp, the new shape is drawn and an ink band sweeps up through it. In the bar, the old ramp is
+      wiped off left to right by its bridge, while the new ramp is already flowing underneath, in
+      phase since the first frame. A bar on its own never holds a bridge: it stays inside one
+      family, so it blends. A change crosses families, so it bridges. Most changes pass through
+      cream: a bright, ordinary change. A calm state turning into needs-you, or back, passes through
+      navy and wine instead: the system's one dark beat, so a calm session suddenly needing you has
+      its own drop. In a row the wipe runs under the beads, so the bridge crosses them bead by bead.
+    </p>
+  </div>
+  <figure class="fig" data-fig="matrix">
+    <div class="s-motion-matrix">
+      <div class="s-motion-stage" data-region>
+        <div class="s-motion-l3">
+          <figure>
+            <span class="s-motion-m5l" data-d="56"></span>
+            <figcaption class="t-cap">56 px, to judge</figcaption>
+          </figure>
+          <figure>
+            <span class="s-motion-m5l" data-d="24"></span>
+            <figcaption class="t-cap">24 px</figcaption>
+          </figure>
+          <figure>
+            <span class="s-motion-m5l" data-d="15"></span>
+            <figcaption class="t-cap">15 px, a row</figcaption>
+          </figure>
+        </div>
+        <div class="s-motion-b3">
+          <span class="s-motion-m5b" data-f="beads"></span
+          ><span class="t-cap">The bead bar at doc size, 10 px beads</span>
+          <span class="s-motion-m5b" data-f="full"></span
+          ><span class="t-cap">Full, 6 px: the one head bar, continuous</span>
+          <div class="s-motion-m5r"></div>
+          <span class="t-cap">A row: the bead bar, a third of it, then the lamp</span>
+        </div>
+      </div>
+      <div class="s-motion-ctl">
+        <div>
+          <p class="s-motion-k">From (sets every lamp and bar without a transition)</p>
+          <div class="s-motion-pillrow" data-row="from" role="group" aria-label="From state"></div>
+        </div>
+        <div>
+          <p class="s-motion-k">To (runs the change)</p>
+          <div class="s-motion-pillrow" data-row="to" role="group" aria-label="To state"></div>
+        </div>
+        <p class="s-motion-out" aria-live="polite">Pick a "to" state.</p>
+        <p class="s-motion-hint">
+          Use ¼× in the nav to watch the wipe and the sweep. Press a second "to" mid-change: it
+          replaces the one in flight.
+        </p>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">M5</span><b>Fire any change.</b
+      ><span
+        >437.5 ms for every change; 218.75 ms into needs-you, then the arrival bloom (halo 1 → 2.8×,
+        opacity .6 → 0, over 875 ms). The bridge rides the wiping edge, max(8 px, 6 %) wide. Every
+        lamp and bar here changes through <code>Bloom.setState</code>, together. An interrupted
+        change replaces the one in flight; nothing queues. Under Reduce motion the lamp dissolves
+        (opacity .35 → 1) and the old bar fades out over 218.75 ms, with no sweep, wipe or
+        bloom.</span
+      >
+    </figcaption>
+  </figure>
+
+  <!-- M6 -->
+  <h3 class="bl-sub"><span class="id">M6</span>A session going needs-you, end to end</h3>
+  <figure class="fig" data-fig="e2e">
+    <div class="s-motion-e2e">
+      <div class="bl-scroll">
+        <table class="bl-table s-motion-stack">
+          <thead>
+            <tr>
+              <th>t</th>
+              <th>Lamp</th>
+              <th>Bar</th>
+              <th>Row</th>
+              <th>Elsewhere</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-at="0">
+              <td class="s-motion-n">0</td>
+              <td>The bullseye is drawn and an ink band sweeps up through it</td>
+              <td>
+                The idle track is wiped off by navy and wine; the arm ramp already flows underneath
+              </td>
+              <td>The arm tint fades in over T/16 (sineOut); the name goes to semibold at once</td>
+              <td></td>
+            </tr>
+            <tr data-at="219">
+              <td class="s-motion-n">219 ms</td>
+              <td>Complete; the arrival bloom starts</td>
+              <td>The wipe ends; the bar flows at 1.75&nbsp;s</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr data-at="1100">
+              <td class="s-motion-n">1.1 s</td>
+              <td>The bloom ends; the beat and ripple carry on, already in phase</td>
+              <td></td>
+              <td>The tint holds</td>
+              <td></td>
+            </tr>
+            <tr data-at="2000">
+              <td class="s-motion-n">2 s calm</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>
+                The menu-bar icon changes after 2 s of calm, as a still template with no motion
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="s-motion-demo" data-region>
+        <p class="s-motion-k">Run it on one session</p>
+        <div class="s-motion-mb">
+          <span class="t-cap">Menu bar</span><span class="s-motion-mbi" data-on="0"></span>
+        </div>
+        <div class="s-motion-e2ebox">
+          <div class="s-motion-fb">
+            <span class="t-cap">Band</span><span class="s-motion-fbn">STATISTICS</span
+            ><span class="s-motion-fbar"></span>
+          </div>
+          <div class="s-motion-e2erow"></div>
+        </div>
+        <div class="s-motion-mini" aria-hidden="true">
+          <div class="s-motion-tl-track"></div>
+          <i class="s-motion-tl-head"></i>
+        </div>
+        <div class="s-motion-pillrow">
+          <button class="pill primary sm s-motion-run" type="button">Make it need you</button
+          ><span class="t-cap">idle → needs you, via navy and wine</span>
+        </div>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">M6</span><b>End to end.</b> The window band's full bar and the row's bead bar
+      change together, in one phase, with the lamp at the row's end. The row does not jump to the
+      top because of needs-you; only recency re-sorts. The menu-bar icon waits for 2 s of calm and
+      then changes as a still template image: state by shape, no motion.
+    </figcaption>
+  </figure>
+
+  <!-- M7 -->
+  <h3 class="bl-sub"><span class="id">M7</span>Panels and the selection bar</h3>
+  <div class="bl-prose">
+    <p>
+      Ambient motion says state and nothing else: here, the lamps and the state bars. One-shot
+      motion may also answer your hand (press, hover, focus, panels, rows, theme), and it ends
+      within 875 ms. Panels lay out once and then animate the layer: the final frame commits on the
+      first frame, so the terminal reflows exactly once, and the panel's content slides 24 pt and
+      fades in.
+    </p>
+  </div>
+  <figure class="fig" data-fig="bars">
+    <div class="s-motion-win">
+      <div class="s-motion-band">
+        <span class="s-motion-lights"><i></i><i></i><i></i></span
+        ><span class="s-motion-nm">ORBIT-WEBSITE</span
+        ><span class="s-motion-path">~/Projects/orbit-website</span
+        ><span class="sbar s-motion-bb" data-st="working" aria-hidden="true"></span
+        ><span class="sp"></span
+        ><button class="pill sm s-motion-ptog" type="button" aria-pressed="true">
+          Panel <span class="kbd">⌘⇧G</span>
+        </button>
+      </div>
+      <div class="s-motion-body">
+        <div class="s-motion-sbar">
+          <div class="panel-h">
+            Sessions<button class="pill sm s-motion-sel" type="button">Select 3</button>
+          </div>
+          <div class="s-motion-rows"></div>
+          <div class="s-motion-ahead">
+            <span class="s-motion-gl" data-g="chev-r"></span><span>ARCHIVE</span
+            ><span class="pearl count" style="--p: 16px" aria-label="412 archived">412</span>
+            <div class="seg sm s-motion-sort7" role="group" aria-label="Sort ARCHIVE">
+              <button aria-pressed="true">Recent</button><button aria-pressed="false">Name</button
+              ><button aria-pressed="false">Folder</button>
+            </div>
+          </div>
+          <div class="s-motion-slot"><div class="toast" hidden></div></div>
+        </div>
+        <div class="s-motion-term"></div>
+        <div class="s-motion-rp">
+          <div class="s-motion-rpi">
+            <div class="s-motion-rph">
+              <span class="t-label">Trace</span>
+              <div class="seg sm s-motion-mode" role="group" aria-label="Trace mode">
+                <button aria-pressed="true">Turns</button><button aria-pressed="false">Diff</button>
+              </div>
+            </div>
+            <div class="s-motion-view" data-view="Turns"></div>
+            <div class="s-motion-view" data-view="Diff" hidden></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">M7</span><b>Panels and the selection bar.</b> The band carries the focused
+      session's full bar, the one continuous bar in view; the rows carry bead bars; everything else
+      holds still until you touch it. Segmented pills slide at T/32 with settle. Select 3: the
+      selection bar rises 12 pt and fades in at T/32, and Esc sends it away at T/64. Archive swaps
+      the bar's content with a T/32 crossfade for the one danger moment; nothing pulses or shakes,
+      because urgency in a destructive confirm is pressure, not information. Panel: content in at
+      T/32 with settle, out at T/64 with sineIn.
+    </figcaption>
+  </figure>
+
+  <!-- M8 -->
+  <h3 class="bl-sub"><span class="id">M8</span>ARCHIVE row actions</h3>
+  <figure class="fig" data-fig="archive">
+    <div class="s-motion-arch">
+      <div class="s-motion-side" data-region>
+        <div class="panel-h">Sessions</div>
+        <div class="s-motion-sess"></div>
+        <div class="s-motion-ahead">
+          <span class="s-motion-gl" data-g="chev-d"></span><span class="s-motion-al">ARCHIVE</span
+          ><span class="pearl count s-motion-cnt" style="--p: 18px" aria-label="archived">412</span>
+        </div>
+        <span class="input s-motion-search"
+          ><input
+            type="text"
+            placeholder="name, folder, prompt"
+            aria-label="Search ARCHIVE"
+            spellcheck="false"
+          /><span class="kbd">⌘F</span></span
+        >
+        <div class="s-motion-sortrow">
+          <div class="seg sm s-motion-sort8" role="group" aria-label="Sort ARCHIVE">
+            <button aria-pressed="true">Recent</button><button aria-pressed="false">Name</button
+            ><button aria-pressed="false">Folder</button>
+          </div>
+        </div>
+        <div class="s-motion-alist"></div>
+      </div>
+      <div class="s-motion-acts">
+        <p class="s-motion-k">Pick a session or an ARCHIVE row, then</p>
+        <div class="s-motion-pillrow">
+          <button class="pill s-motion-a-arc" type="button">
+            Archive <span class="kbd">⌘W</span></button
+          ><button class="pill s-motion-a-back" type="button">Bring back</button
+          ><button class="pill ghost s-motion-a-forget" type="button">Forget</button>
+        </div>
+        <div class="bl-scroll s-motion-tbl">
+          <table class="bl-table s-motion-stack">
+            <tbody>
+              <tr>
+                <td><b>Archive</b></td>
+                <td>
+                  The row leaves, its bar with it. If ARCHIVE is open, the record enters at its top
+                  T/32 later, so the eye follows: out here, then in there. The count crossfades at
+                  T/64 and its label swells once (1 → 1.06 → 1, T/16, sine) to show where the row
+                  went. No flying rows.
+                </td>
+              </tr>
+              <tr>
+                <td><b>Bring back</b></td>
+                <td>
+                  The ARCHIVE row deflates (T/32, sineIn). The session inflates at the top of
+                  Sessions T/32 later (T/16, sineOut), its lamp slot empty and its beads a bare
+                  track until the daemon reports a state. Line 2 reads restoring over a three-bead
+                  chain whose highlight walks across (3.5 s, instance delay T/16).
+                </td>
+              </tr>
+              <tr>
+                <td><b>Forget</b></td>
+                <td>
+                  The row deflates through the navy bridge (T/32). It isn't destructive (the
+                  transcript stays), so it isn't danger-coloured.
+                </td>
+              </tr>
+              <tr>
+                <td><b>Search, sort</b></td>
+                <td>
+                  Nothing animates per keystroke: there are 412 rows and more, and the work must
+                  stay in budget. Results swap at once. A sort change crossfades the whole list once
+                  (T/64).
+                </td>
+              </tr>
+              <tr>
+                <td><b>Hover</b></td>
+                <td>A wash at T/64 with settle. No spatial hover on rows.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">M8</span><b>ARCHIVE row actions.</b> Type in the search field or change the
+      sort: rows swap at once and nothing slides. Archive, Bring back and Forget each play once; the
+      walking chain on a restoring row is the only loop besides the bars, and it stops when the
+      daemon reports a state. The count is a pearl: its digits swap, the pearl never moves.
+    </figcaption>
+  </figure>
+
+  <!-- M9 -->
+  <h3 class="bl-sub"><span class="id">M9</span>Theme without a flash</h3>
+  <div class="bl-prose">
+    <p>
+      Crossfading every colour per element sends the window through mid-grey mush, where text and
+      ground pass through equal lightness: an unreadable frame, then a jump. So lightness moves one
+      way only, through the bridge. Night → Field passes through cream and only rises; Field → Night
+      passes through navy and only falls. It is the reel's rest → bridge → rest at window scale.
+    </p>
+  </div>
+  <figure class="fig" data-fig="theme">
+    <div class="s-motion-theme">
+      <div class="s-motion-chart"></div>
+      <div>
+        <ol class="s-motion-steps">
+          <li>
+            <span
+              ><b>Bloom out</b> (T/16, sine). A scrim of the bridge colour at .94 grows from the
+              toggle as a circle with a soft 64 pt front.</span
+            >
+          </li>
+          <li>
+            <span
+              ><b>Swap under cover.</b> The appearance, every layer colour, the terminal palette and
+              the tmux theme change while nothing can be seen. The lamps and bars keep flowing
+              underneath, in phase.</span
+            >
+          </li>
+          <li>
+            <span><b>Dissolve</b> (T/16, sine). The scrim fades .94 → 0.</span>
+          </li>
+          <li>
+            <span
+              ><b>Reduce motion:</b> the same three steps with no bloom, a T/32 fade up and a T/32
+              fade down.</span
+            >
+          </li>
+        </ol>
+        <button class="pill primary s-motion-sw" type="button">Switch to Night from here</button>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">M9</span><b>Theme without a flash.</b> Lightness (OKLCH L) over the 875 ms
+      switch: Night .302 → cream .837 → Field .899, and Field → navy .312 → Night .302. Neither line
+      ever turns back. Field is the default; the button blooms the scrim from its own centre.
+    </figcaption>
+  </figure>
+
+  <!-- M10 -->
+  <h3 class="bl-sub"><span class="id">M10</span>Signature components</h3>
+  <figure class="fig" data-fig="components">
+    <div class="s-motion-tiles">
+      <div class="s-motion-tile">
+        <p class="s-motion-k">Indeterminate wait</p>
+        <div class="s-motion-spec">
+          <div class="s-motion-empty2">
+            <span class="s-motion-ring"></span><b>Connecting</b>
+            <p>Waiting for the daemon. Sessions live in tmux, so nothing is lost meanwhile.</p>
+          </div>
+        </div>
+        <p class="s-motion-tn2">
+          15 beads that never move; the safe ramp's colours travel round once every 7 s with a 3.5 s
+          breath. Only for indeterminate waits, 24 pt or larger. Still: a still hue wheel.
+        </p>
+      </div>
+      <div class="s-motion-tile">
+        <p class="s-motion-k">Usage, 5H and 7D</p>
+        <div class="s-motion-spec">
+          <div class="s-motion-use"></div>
+          <div class="s-motion-slide">
+            <label for="s-motion-5h"
+              ><span>Drag 5H past 80 %</span><span class="s-motion-n s-motion-5hv">71%</span></label
+            ><input
+              class="s-motion-scrub s-motion-5h"
+              id="s-motion-5h"
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value="71"
+            />
+          </div>
+        </div>
+        <p class="s-motion-tn2">
+          A thin rounded line in plain ink on a quiet track: navy ink in Field, near-white in Night,
+          no hue and no beads. At rest it's still: usage is data, not state. The fill tweens at T/16
+          when the number changes; past 80 % only its leading end breathes, on 3.5 s. No red.
+        </p>
+      </div>
+      <div class="s-motion-tile">
+        <p class="s-motion-k">Background{n}</p>
+        <div class="s-motion-spec"><div class="s-motion-bgl"></div></div>
+        <p class="s-motion-tn2">
+          n beads in ink, capped at 7 and then +k; a highlight walks across once every 7 s, passing
+          bead i at i·T/n. The count lives here, on line 2 of the row. The row's bead bar is
+          working's own: the lamp's ring says Background.
+        </p>
+      </div>
+      <div class="s-motion-tile">
+        <p class="s-motion-k">Progress</p>
+        <div class="s-motion-spec"><div class="s-motion-prog"></div></div>
+        <p class="s-motion-tn2">
+          Beads fill in sequence, each inflating .6 → 1 at T/16. At bead 11 it stalls for 3.5 s and
+          nothing moves at all: a stalled job looks stalled.
+        </p>
+      </div>
+      <div class="s-motion-tile">
+        <p class="s-motion-k">Press, hover, focus</p>
+        <div class="s-motion-spec">
+          <div class="s-motion-pillrow">
+            <button class="pill primary" type="button">Restore</button
+            ><button class="pill" type="button">Lock</button
+            ><button class="pill" type="button">Go to tab</button
+            ><button class="pill ghost" type="button">Later</button>
+          </div>
+          <div class="s-motion-pillrow">
+            <div class="seg s-motion-segx" role="group" aria-label="Updates">
+              <button aria-pressed="true">Ask</button><button aria-pressed="false">Auto</button>
+            </div>
+            <button class="toggle s-motion-tg" role="switch" aria-checked="true" aria-label="Sound">
+              <i></i>
+            </button>
+          </div>
+        </div>
+        <p class="s-motion-tn2">
+          Press .96 at T/64; hover lifts 1 pt. Tab here: the focus ring, 2 pt and 4 pt out, arrives
+          1.08 → 1 and breathes 1 → .6 over 3.5 s.
+        </p>
+      </div>
+      <div class="s-motion-tile">
+        <p class="s-motion-k">Rows, bars, pearls</p>
+        <div class="s-motion-spec"><div class="s-motion-hov"></div></div>
+        <p class="s-motion-tn2">
+          Rows only wash on hover, at T/64. Many items moving under a sweeping pointer read as
+          jitter, so nothing in a list moves in space: the bars' colours travel, the rows never do.
+          Pearls never move: the one beside a group's name, and a folded group's tally, one pearl
+          per hidden session in its own state.
+        </p>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">M10</span><b>Signature components.</b> Colour travels; shapes stay put.
+      Nothing here rotates, and nothing loops faster than 3.5 s.
+    </figcaption>
+  </figure>
+
+  <!-- M11 -->
+  <h3 class="bl-sub"><span class="id">M11</span>Core Animation recipes</h3>
+  <div class="bl-prose">
+    <p>
+      Every loop is a render-server animation, committed once on a state change. No main-thread work
+      happens per frame: the only main-thread cost is adding or removing an animation in the
+      transaction that applies a daemon View. Each lamp is at most 3 layers and at most 2 running
+      animations. A state bar is one gradient layer with one running animation, a translate: in a
+      row it slides under a still mask of beads, and the head bar slides in a clipping pill.
+    </p>
+  </div>
+  <figure class="fig" data-fig="ca">
+    <div class="s-motion-xp" aria-hidden="true">
+      <div class="s-motion-xr">
+        <div class="s-motion-xs s-motion-xg"></div>
+        <div class="s-motion-xw"><div class="s-motion-xs"></div></div>
+        <div class="s-motion-xd"></div>
+      </div>
+      <div class="s-motion-xl">
+        <span>leaves, unseen</span><span><b>the track</b>: what you see</span
+        ><span>arrives, unseen</span>
+      </div>
+    </div>
+    <p class="s-motion-note">
+      The working bar's layer, taken out of its track. The gradient is longer than the track by one
+      tile and slides left by exactly one tile per period; the dots mark tile boundaries. Tile n + 1
+      is tile n, so the wrap is invisible (seam ΔE 0.0000), and inside a tile it's one smooth wave,
+      so no band shows either. Its colours and its width never change while it flows. In a row the
+      same layer sits under the bead mask (M3).
+    </p>
+    <div class="bl-scroll s-motion-tbl">
+      <table class="bl-table s-motion-recipe s-motion-stack">
+        <thead>
+          <tr>
+            <th>State</th>
+            <th>Layers</th>
+            <th>Loop keyPath(s)</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="s-motion-codes"></div>
+    <p class="s-motion-note">
+      The kit file still gives the halo 2.2× and .5; the motion table and the tested CSS agree on
+      2.4× and .7, so that is what is quoted here. The kit's flow comment predates Bloom 2: the
+      working lamp's gradient now holds ink and band stops, not the safe ramp; the layer and its
+      animation are unchanged. <code>BloomBar.flow</code> and <code>BloomBar.beads</code> are new in
+      this revision: they typecheck with the kit under Swift 6 with strict concurrency, and they
+      have not run yet.
+    </p>
+    <div class="s-motion-grid2">
+      <div>
+        <p class="s-motion-k">Frame-rate hints (<code>preferredFrameRateRange</code>)</p>
+        <div class="bl-scroll">
+          <table class="bl-table s-motion-fps s-motion-stack">
+            <thead>
+              <tr>
+                <th>Use</th>
+                <th>Range</th>
+                <th>Why</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <p class="s-motion-k">Window and power</p>
+        <div class="bl-scroll">
+          <table class="bl-table s-motion-pow s-motion-stack">
+            <thead>
+              <tr>
+                <th>Condition</th>
+                <th>What happens</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="s-motion-grid2">
+      <div>
+        <p class="s-motion-k">What to avoid (each one breaks the budget or energy)</p>
+        <ul class="s-motion-list2 s-motion-avoid"></ul>
+      </div>
+      <div>
+        <p class="s-motion-k">Measurement plan, before anyone calls this cheap</p>
+        <ol class="s-motion-list2 s-motion-meas"></ol>
+        <p class="s-motion-unm">
+          Unmeasured. Nothing has run in the app yet.<span
+            >The gate is the spike's 4.17 ms per frame (240 Hz). Expected to stay well inside it,
+            because nothing runs on the main thread per frame; that is a claim until the numbers
+            exist.</span
+          >
+        </p>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">M11</span><b>Core Animation recipes.</b
+      ><span
+        >The lamp code is from <code>BloomMotion.swift</code>, which typechecks under Swift 6 with
+        strict concurrency for macOS 26. Each layer gets <code>contentsScale</code> from the window
+        and its implicit actions off, and every loop, lamp or bar, takes its
+        <code>beginTime</code> from <code>Clock.begin</code>.</span
+      >
+    </figcaption>
+  </figure>
+
+  <!-- M12 -->
+  <h3 class="bl-sub"><span class="id">M12</span>Principles and don'ts</h3>
+  <figure class="fig" data-fig="rules">
+    <div class="s-motion-rules">
+      <div>
+        <p class="s-motion-k">Principles</p>
+        <ol class="s-motion-pr"></ol>
+      </div>
+      <div>
+        <p class="s-motion-k">Don'ts</p>
+        <ul class="s-motion-dont"></ul>
+      </div>
+    </div>
+  </figure>
+</section>
+
+<script data-part="motion">
+  (() => {
+    "use strict";
+    const B = window.Bloom,
+      D = B.D,
+      E = B.E;
+
+    /* =================== DATA (SRC/motion.md and BRIEF-2.md; line numbers or sections in brackets) =================== */
+    // §1.1 the ladder [34-41]; bar periods BRIEF-2 §4, §11.3
+    const LADDER = [
+      [
+        "drift",
+        "14 s",
+        "2T",
+        "loop",
+        "Idle breath; housekeeping's chores fade and its bar. 14 s is also the LCM of every loop, so the whole app lines up again every 14 s.",
+      ],
+      [
+        "cycle",
+        "7 s",
+        "T",
+        "loop",
+        "Working's band; Background{n} wave; choose-on-return tide; outside dip; loader colour; the lock screen's ramp; the working, Background and choose bars.",
+      ],
+      [
+        "breath",
+        "3.5 s",
+        "T/2",
+        "loop",
+        "Failed stumble; loader breathe; focus ring; a usage line's leading end from 80 %; the done and failed bars.",
+      ],
+      [
+        "beat",
+        "1.75 s",
+        "T/4",
+        "loop",
+        "Needs-you only, its lamp and its bar. This is the floor: no loop in CONTROL runs faster.",
+      ],
+      [
+        "scene",
+        "875 ms",
+        "T/8",
+        "one-shot",
+        "Theme switch (2 × 437.5 ms); needs-you arrival bloom; done arrival; gone fade.",
+      ],
+      [
+        "state",
+        "437.5 ms",
+        "T/16",
+        "one-shot",
+        "Lamp state change and the bar's wipe; row enter; live re-sort move; data tween (usage).",
+      ],
+      [
+        "quick",
+        "218.75 ms",
+        "T/32",
+        "one-shot",
+        "Panel open; exits; press release; hover lift; pill slide; focus arrival; TRACE row grow; lamp and bar change into needs-you; every Reduce-motion dissolve.",
+      ],
+      [
+        "tap",
+        "109.4 ms",
+        "T/64",
+        "one-shot",
+        "Press down; row hover wash; selection; number swap; panel close.",
+      ],
+    ];
+    // M1 orbits (BRIEF 6.3 M1; uses from §1.1; bars by tempo BRIEF-2 §4) and cues on the 7 s orbit (§3 [118-128], §3.1 [145])
+    const ORBITS = [
+      {
+        p: 14000,
+        r: 180,
+        b: 22,
+        c: "st-house",
+        per: "14 s",
+        nm: "drift",
+        use: "Idle's breath and housekeeping's chores. The LCM of every loop: the whole app lines up again every 14 s.",
+        sts: ["house"],
+      },
+      {
+        p: 7000,
+        r: 136,
+        b: 20,
+        c: "st-working",
+        per: "7 s",
+        nm: "cycle",
+        use: "Working's band, the Background wave, choose's tide, outside's dip, the loader.",
+        sts: ["working", "bg", "choose"],
+      },
+      {
+        p: 3500,
+        r: 92,
+        b: 18,
+        c: "st-failed",
+        per: "3.5 s",
+        nm: "breath",
+        use: "Failed's stumble, the loader's breath, the focus ring.",
+        sts: ["done", "failed"],
+      },
+      {
+        p: 1750,
+        r: 50,
+        lamp: "needs",
+        per: "1.75 s",
+        nm: "beat",
+        use: "Needs-you only. The floor: nothing in CONTROL loops faster.",
+        sts: ["needs"],
+      },
+    ];
+    const CUES = [
+      // angle on the 7 s orbit = cue / 7 s
+      {
+        st: "failed",
+        at: [2625, 6125],
+        txt: "failed's dips start at 2.625 s, and again 3.5 s later",
+      },
+      { st: "choose", at: [3500], txt: "choose crests at 3.5 s" },
+      { st: "outside", at: [6562.5], txt: "outside dips from 6.125 to 7 s" },
+    ];
+    // §2 easing [85-89]
+    const CURVES = [
+      {
+        nm: "sine",
+        role: "waiting",
+        css: ".37,0,.63,1",
+        ca: "0.37, 0, 0.63, 1",
+        p: [0.37, 0, 0.63, 1],
+        use: "Every spatial or opacity loop: two segments make one cosine. Also symmetric one-shots: the lamp's sweep and the bar's wipe, re-sort, the theme scrim.",
+      },
+      {
+        nm: "sineOut",
+        role: "arriving",
+        css: ".61,1,.88,1",
+        ca: "0.61, 1, 0.88, 1",
+        p: [0.61, 1, 0.88, 1],
+        use: "Arrivals of T/16 or longer: row inflate, needs-you ripple and arrival, data tweens.",
+      },
+      {
+        nm: "sineIn",
+        role: "leaving",
+        css: ".12,0,.39,0",
+        ca: "0.12, 0, 0.39, 0",
+        p: [0.12, 0, 0.39, 0],
+        use: "Departures: row deflate, panel close, the selection bar leaving.",
+      },
+      {
+        nm: "settle",
+        role: "your hand",
+        css: ".25,1,.5,1",
+        ca: "0.25, 1, 0.5, 1",
+        p: [0.25, 1, 0.5, 1],
+        use: "Your own hand, at T/32 or shorter: press down, hover in, panel open, pill slide, focus arrival. A fast start, so the response is felt on the first frame, and a soft landing.",
+      },
+      {
+        nm: "linear",
+        role: "work",
+        css: null,
+        ca: ".linear",
+        p: [0, 0, 1, 1],
+        use: "Colour travel (every state bar, ramp flow, loader hue, the chain wave's carrier) and anything that must never rest.",
+      },
+    ];
+    // Lamps: BRIEF-2 §5 (shapes, inks) over motion.md §3 [118-129]; lines §11 [702-710], adapted where the lamp lost its hue;
+    // keyPaths §6.3 [559-567]. Bars: BRIEF-2 §4 table and §11.3 (periods, tiles, px/s full / compact). Rows: inventory §1.2 [87-96], §1.3 [117-122]
+    const LAMPS = [
+      {
+        st: "needs",
+        nm: "Needs you",
+        shape: "filled disc + still ring at 1.7× (the bullseye), ink-1",
+        per: "1.75 s · 0",
+        crv: "rise sineOut over T/16, fall sine; ripple sineOut",
+        ch: "scale 1 → 1.16 → 1; halo 1 → 2.4, opacity .7 → 0. The only loop that leaves its footprint.",
+        line: "Beats every 1.75 s and sends a soft ring past its own edge. The only thing that reaches outside itself, and it never goes dark. Its bar is the only red.",
+        key: "body transform.scale; halo transform.scale + opacity",
+        bar: {
+          per: "1.75 s · tile × 0.5",
+          sp: "102.9 / 68.6 px/s",
+          fam: "Arm into arm-deep and back, one smooth cosine, half and half. The only red bar.",
+        },
+        row: ["STATISTICS", '<span class="chip on-needs">LOGIN</span>', "2m", "needs you"],
+      },
+      {
+        st: "failed",
+        nm: "Failed",
+        shape: "cross (✕), ink-1",
+        per: "3.5 s · 2.625 s",
+        crv: "sine",
+        ch: "opacity 1 → .45 → 1 → .45 → 1 in the first T/4, then holds 1",
+        line: "Two soft dips every 3.5 s, then still: a stumble, not a blink.",
+        key: "opacity (the cross is one shape)",
+        bar: {
+          per: "3.5 s · tile × 0.75",
+          sp: "77.1 / 51.4 px/s",
+          fam: "Amber-yellow in one smooth wave: base, light, base, deep. Never brown at its base.",
+        },
+        row: ["CV-BUILD", '<span class="chip">EXIT 1</span>', "2h", "failed · main"],
+      },
+      {
+        st: "done",
+        nm: "Done",
+        shape: "tick (✓), ink-1",
+        per: "still",
+        crv: "none",
+        ch: "none: the tick holds",
+        line: "A tick, and it holds. Finished needs no motion; the green bar beside it carries on.",
+        key: "none",
+        bar: {
+          per: "3.5 s · tile × 0.75",
+          sp: "77.1 / 51.4 px/s",
+          fam: "Green in one smooth wave through base, light and deep, alive at the breath.",
+        },
+        row: ["LINEAR_ALGEBRA", "", "14m", "done · main"],
+      },
+      {
+        st: "working",
+        nm: "Working",
+        shape: "ink-1 disc crossed by a field-coloured band about 30 % of the lamp tall",
+        per: "7 s · 0",
+        crv: "linear",
+        ch: "two bands per tile rise through the disc, one every 3.5 s; no scale or opacity change",
+        line: "A field-coloured band rises through the ink disc every 3.5 s, steadily, bold enough to read at row size. It never rests.",
+        key: "startPoint + endPoint (one group)",
+        bar: {
+          per: "7 s · tile × 1",
+          sp: "51.4 / 34.3 px/s",
+          fam: "Blue in one smooth wave through base, light and deep.",
+        },
+        row: ["ORBIT-WEBSITE", "", "now", "working"],
+      },
+      {
+        st: "bg",
+        nm: "Background (n)",
+        shape: "ink-1 ring crossed by the same band",
+        per: "7 s · 0",
+        crv: "linear (ring), sine (wave)",
+        ch: "the band through the ring; the chain's highlight passes bead i at i·T/n",
+        line: "The working band in a ring; on line 2, a light walks along n beads once every 7 s.",
+        key: "startPoint/endPoint; bead backgroundColor",
+        bar: {
+          per: "7 s · tile × 1",
+          sp: "51.4 / 34.3 px/s",
+          fam: "Working's own bar: the lamp's ring and the count on line 2 tell them apart.",
+        },
+        row: ["CONTROL", "wave", "1m", "background"],
+      },
+      {
+        st: "choose",
+        nm: "Choose on return",
+        shape: "ring + half fill, ink-3",
+        per: "7 s · crest 3.5 s",
+        crv: "sine",
+        ch: "fill level 35 % ↔ 65 % (translate ±15 % of the lamp)",
+        line: "The half fill rises and falls like a tide, every 7 s.",
+        key: "fill transform.translation.y",
+        bar: {
+          per: "7 s · tile × 1",
+          sp: "51.4 / 34.3 px/s",
+          fam: "Lilac at lower chroma (max C 0.119), one smooth wave: wants you later, not now.",
+        },
+        row: ["PORTFOLIO-SCROLL", '<span class="chip">138K</span>', "3d", "choose on return"],
+      },
+      {
+        st: "house",
+        nm: "Housekeeping",
+        shape: "dashed ring, four dashes, ink-4",
+        per: "14 s · 0",
+        crv: "linear",
+        ch: "opacity .8 → .45 → .8",
+        line: "A dashed ring that fades and comes back once every 14 s: Claude's own chores.",
+        key: "opacity (14 s)",
+        bar: {
+          per: "14 s · tile × 1",
+          sp: "25.7 / 17.1 px/s",
+          fam: "The safe ramp's three colours as one smooth wave, at .7: no red, no flash.",
+        },
+        row: ["RELAY MAIN", "", "9m", "dreaming"],
+      },
+      {
+        st: "outside",
+        nm: "Outside",
+        shape: "open ring, a gap at the top, ink-4",
+        per: "7 s · dip at 6.125–7 s",
+        crv: "sine",
+        ch: "opacity .8 → .4 → .8 over T/8",
+        line: "Holds, then dips once at the end of every 7 s: alive, not ours.",
+        key: "opacity",
+        bar: { per: "still", sp: "", fam: "Open beads: ink-4 rings, like its lamp." },
+        row: [
+          "INTERNSHIP-SEARCH",
+          '<span class="chip mark">OUTSIDE</span>',
+          "4h",
+          "vs code · read-only",
+        ],
+      },
+      {
+        st: "idle",
+        nm: "Idle",
+        shape: "ring, ink-4",
+        per: "14 s · 0",
+        crv: "sine",
+        ch: "opacity 1 → .82 → 1",
+        line: "A 14 s breath, barely there.",
+        key: "opacity (Pace.calm)",
+        bar: { per: "still", sp: "", fam: "Beads in the track colour only: quiet." },
+        row: ["INTERNSHIPS", "", "1h", "idle · main"],
+      },
+      {
+        st: "gone",
+        nm: "Gone",
+        shape: "dim ring (.35), ink-4",
+        per: "no loop",
+        crv: "sine, one T/8 fade",
+        ch: "a T/8 fade to .35, then still",
+        line: "No loop. Dimmed: a T/8 fade to .35, then still. Removed: the row deflates.",
+        key: "none",
+        bar: { per: "still", sp: "", fam: "The track beads at .4: quieter." },
+        row: ["GT-LAYER-RETIRE", "", "1w", "gone · main"],
+      },
+    ];
+    const PRETTY = {
+      needs: "needs you",
+      failed: "failed",
+      done: "done",
+      working: "working",
+      bg: "background",
+      choose: "choose",
+      house: "housekeeping",
+      outside: "outside",
+      idle: "idle",
+      gone: "gone",
+    };
+    // M4 script: motion.md §11 [686], BRIEF 6.3 M4; bridges per Bloom.bridgeOf (BRIEF-2 §4: navy and wine between a calm state and needs-you)
+    const EVENTS = [
+      { at: 0, who: "start", txt: "STATISTICS idle, last in recency order" },
+      { at: 1750, who: "STATISTICS", txt: "working, via cream; re-sorts to the top" },
+      {
+        at: 3500,
+        who: "DEPS-AUDIT",
+        txt: "enters: inflates at T/16, lamp .4 → 1, its bar wiped in through cream",
+      },
+      {
+        at: 5250,
+        who: "STATISTICS",
+        txt: "needs you, via navy and wine in 218.75 ms, then the arrival bloom; stays put",
+      },
+      { at: 7000, who: "STATISTICS", txt: "working, back through navy and wine" },
+      { at: 8750, who: "STATISTICS", txt: "done, via cream, with its T/8 arrival" },
+      { at: 10500, who: "DEPS-AUDIT", txt: "leaves: collapses at T/32 with sineIn" },
+      { at: 12250, who: "STATISTICS", txt: "idle, via cream" },
+    ];
+    const JUMPS = [
+      [0, "0 s idle"],
+      [1750, "1.75 s working"],
+      [5250, "5.25 s needs you"],
+      [8750, "8.75 s done"],
+    ];
+    const SUB = {
+      idle: "idle · main",
+      working: "working · main",
+      needs: "needs you",
+      done: "done · main",
+    };
+    // inventory §1.3 [117-122]: ARCHIVE rows
+    const ARCHIVE = [
+      ["sess", "STATISTICS-W4", "~/Uni/statistics · 2 tabs", "1d"],
+      ["chat", "Clean up my calendar for next week", "~", "2d"],
+      ["sess", "PORTFOLIO-SCROLL", "~/Projects/portfolio · 1 tab", "3d"],
+      ["chat", "Scrape Brightspace for DC week 5 and make notes", "~/Uni/linear-algebra", "4d"],
+      ["chat", "deps audit", "~/Projects/orbit", "5d"],
+      ["sess", "LECTURE-NOTES-W5", "~/Uni/statistics · 1 tab", "6d"],
+      ["chat", "Find internships and draft the emails", "~/Life", "1w"],
+      ["sess", "GT-LAYER-RETIRE", "~/Projects/control · 3 tabs", "1w"],
+      ["chat", "Why is the Audio bridge dropping MIDI?", "~/Projects/orbit", "2w"],
+      ["chat", "Clean up my projects folder", "~/Projects", "2w"],
+      ["sess", "ORBIT-1-MARKET", "~/Projects/orbit · 2 tabs", "3w"],
+      ["chat", "Summarise the club onboarding pack", "~/Life/cv", "3w"],
+    ];
+    // inventory §1.2 [87-94] with folders from §1.1 / §1.3
+    const SESS8 = [
+      ["working", "ORBIT-WEBSITE", "now", "working", "~/Projects/orbit-website"],
+      ["done", "LINEAR_ALGEBRA", "14m", "done · main", "~/Uni/linear-algebra"],
+      ["bg", "CONTROL", "1m", "background", "~/Projects/control"],
+    ];
+    // inventory §1.6 TRACE [193-206] and DIFF [241-242]; transcript §1.5 [148-154]
+    const TURNS = [
+      [
+        "T14",
+        "put the release size in one place so /download and /admin can't drift",
+        "<em>running</em> · 23:41 · 31s · 3 writes · 1 error",
+      ],
+      ["T13", "/download says 11.2 MB but the DMG is 11.7", "23:38 · 18s · reads only"],
+      ["T12", "tag v0.2.3 and attach the notarised DMG ▸", "23:20 · 2m 10s · 4 reads · 1 write"],
+      ["T11", "hero spacing on the 8 pt grid ▸", "22:58 · 6m · 6 reads · 3 writes · 1 agent"],
+    ];
+    const DIFFS = [
+      ["C", "M", "lib/release.ts", "+2 −1"],
+      ["C", "M", "app/download/page.tsx", "+1 −1"],
+      ["C", "A", "app/admin/page.tsx", "+31"],
+      ["", "M", "docs/DESIGN.md", "+4 −10"],
+    ];
+    const TERM = [
+      '<span class="s-motion-me">&gt; the hero spacing is off on mobile, put it on the 8 pt grid</span>',
+      '⏺ Read(app/page.tsx)           <span class="s-motion-dim">⎿ Read 212 lines</span>',
+      '⏺ Read(app/globals.css)        <span class="s-motion-dim">⎿ Read 148 lines</span>',
+      '⏺ Update(app/globals.css)      <span class="s-motion-dim">⎿ Updated globals.css with 6 additions and 6 removals</span>',
+      '⏺ Update(app/page.tsx)         <span class="s-motion-dim">⎿ Updated page.tsx with 2 additions and 2 removals</span>',
+      "  The hero sits on the 8 pt grid now; /download is next.",
+      "",
+      '<span class="s-motion-me">&gt; /download says 11.2 MB but the DMG is 11.7</span>',
+      '⏺ Read(app/download/page.tsx)  <span class="s-motion-dim">⎿ Read 64 lines</span>',
+      '⏺ Read(app/admin/page.tsx)     <span class="s-motion-dim">⎿ Read 118 lines</span>',
+      "⏺ The DMG grew in 0.2.3 and the label is a hand-typed",
+      "  string in two places. Neither page reads the file.",
+    ];
+    // M9: lightness over the switch (BRIEF-2 §11.8; the dots wear each theme's own value, shown as data, so both lines read in either theme)
+    const L9 = {
+      up: [
+        ["Night", 0.302, "#2f2e2e"],
+        ["cream", 0.837, "#dbc3c2"],
+        ["Field", 0.899, "#d6deee"],
+      ],
+      dn: [
+        ["Field", 0.899, "#d6deee"],
+        ["navy", 0.312, "#262b5b"],
+        ["Night", 0.302, "#2f2e2e"],
+      ],
+    };
+    // §6.3 layer recipe [559-567], lamps per BRIEF-2 §5; the bar rows are this revision's recipe (BRIEF-2 §4, §11.3)
+    const RECIPE = [
+      [
+        "Needs",
+        "<code>CAShapeLayer</code> body + <code>CAShapeLayer</code> halo behind it",
+        "body <code>transform.scale</code> keyframes; halo group <code>transform.scale</code> + <code>opacity</code>",
+        "Halo <code>contentsScale</code> = backing scale, or the ripple's edge blurs as it grows",
+      ],
+      [
+        "Working",
+        "One <code>CAGradientLayer</code> (self-clipped): ink with two band stops, doubled",
+        "group <code>startPoint</code> + <code>endPoint</code>",
+        "No mask, no sublayer",
+      ],
+      [
+        "Background",
+        "The band gradient + a ring <code>mask</code>, plus a <code>CAReplicatorLayer</code> chain on line 2",
+        "<code>startPoint</code>/<code>endPoint</code>; bead <code>backgroundColor</code>",
+        "The one lamp with a mask: one offscreen pass on a ~20 px target. Its bar is working's",
+      ],
+      ["Done", "One shape layer: the tick path", "none: it holds still", ""],
+      ["Failed", "One shape layer: the cross path", "<code>opacity</code>", ""],
+      [
+        "Choose",
+        "Ring + a clipping container + fill",
+        "fill <code>transform.translation.y</code>",
+        "",
+      ],
+      [
+        "Housekeeping",
+        "Dashed ring shape (<code>lineDashPattern</code>, four dashes)",
+        "<code>opacity</code> (14 s, linear)",
+        "",
+      ],
+      ["Outside", "Open-ring shape", "<code>opacity</code>", ""],
+      ["Idle", "Ring shape", "<code>opacity</code> (<code>Pace.calm</code>)", ""],
+      [
+        "State bar",
+        "One <code>CAGradientLayer</code>: the state's smooth stops repeated over the track plus one tile. In a row the track's <code>mask</code> is a <code>CAReplicatorLayer</code> of one circle (<code>instanceTransform</code> = the 8 pt pitch, <code>instanceCount</code> = whole beads) or a pattern-image mask; the head bar clips to its pill instead",
+        "<code>transform.translation.x</code>, 0 → −tile, linear; period 1.75, 3.5, 7 or 14 s by state. The mask never animates",
+        "Never animate <code>colors</code>, <code>bounds</code> or the mask. <code>beginTime</code> from <code>Clock.begin</code>, so every bar of a state shares one phase. Working and Background share one bar. Outside: a ring instead of the circle. Idle, outside, gone: no animation",
+      ],
+      [
+        "Bar change",
+        "The old gradient in a clipping container, and a bridge layer on its left edge (cream; navy into wine next to needs-you), all under the bar's bead mask",
+        "container and content <code>transform.translation.x</code> in opposite directions, sine, 437.5 ms (218.75 ms into needs-you)",
+        "One-shot. The new bar is already flowing underneath. Reduce motion: <code>opacity</code> 1 → 0 over 218.75 ms",
+      ],
+    ];
+    // §1.3 frame-rate hints [58-63]
+    const FPS = [
+      [
+        "Ambient loops: lamps and bars",
+        "min 10, max 30, preferred 30",
+        "A 3.5 s sine at 30 fps changes opacity by less than 1 % a frame. Nobody can see that as steps.",
+      ],
+      [
+        "Idle, Low Power Mode",
+        "min 8, max 15, preferred 15",
+        "Idle's slope is about 0.13 % a frame at 15 fps.",
+      ],
+      [
+        "Needs-you ripple, arrival",
+        "min 30, max 60, preferred 60",
+        "The one loop that travels outward, and the hero.",
+      ],
+      [
+        "Your input, the theme scrim",
+        "the screen's top rate (<code>FramePacing.range</code>)",
+        "It must feel instant.",
+      ],
+    ];
+    // §1.4 window and power [71-77], shortened
+    const POWER = [
+      ["Key window", "Everything."],
+      [
+        "Visible, not key",
+        "Every state loop keeps running at full: reading CONTROL from the corner of your eye while you work elsewhere is the lamps' and bars' main job. Hover tracking is off, selection and focus accents fade to the inactive tone over T/32, and the focus ring stops breathing.",
+      ],
+      [
+        "Occluded",
+        "Remove every loop (the same still path as Reduce motion); on becoming visible, re-add with <code>Clock.begin</code>, so everything re-enters in step. Running one-shots jump to their end.",
+      ],
+      [
+        "Low Power, thermal .serious",
+        "The same motions with the frame hint at 15 fps. Idle's 14 s breath stills, because its ring already says idle. Periods never slow: that would break the harmonics.",
+      ],
+      ["On battery", "No change. Measure first."],
+      [
+        "Reduce motion",
+        "Every loop stills to its pose, bars included, and every one-shot becomes a dissolve of T/32 or less.",
+      ],
+      [
+        "Live resize",
+        "No row or height animation. Loops carry on; a bar's track resizes, its tile does not.",
+      ],
+    ];
+    // §7.2 what to avoid [588-595]; BRIEF-2 §9 gotchas for the bar
+    const AVOID = [
+      [
+        "Driving motion from the CPU.",
+        "No <code>CADisplayLink</code>, <code>NSTimer</code> or <code>Task.sleep</code> loops driving colours or positions, and no <code>draw(_:)</code> per frame: each wakes the main thread at 120 Hz.",
+      ],
+      [
+        "Blur and filters.",
+        "No animated <code>shadowRadius</code>, <code>shadowOpacity</code> or <code>shadowPath</code>; no <code>filters</code> or Core Image on moving layers; no <code>NSVisualEffectView</code> under moving content.",
+      ],
+      [
+        "Gradient colour animation.",
+        "Never animate <code>colors</code>: it re-renders, interpolates in gamma sRGB and has to be rebuilt on every theme swap. A bar moves its layer; its colours never change.",
+      ],
+      [
+        "Rasterising moving content.",
+        "No <code>shouldRasterize</code> on a layer whose content animates.",
+      ],
+      [
+        "Masks in loops.",
+        "Nothing beyond the Background lamp's ring and the bead bars' bead masks. A bead mask is built once and never moves, but its bar still renders offscreen each frame: one small pass, about 90 × 5 pt a row. Prefer self-clipping everywhere else.",
+      ],
+      [
+        "Path animation in loops.",
+        "It re-tessellates every frame. Fine for one-shot morphs at lamp size.",
+      ],
+      [
+        "Layout animation.",
+        "None during live resize or scroll, and nothing per keystroke in ARCHIVE search. A bar never animates its width.",
+      ],
+      ["Too many transactions.", "Not one per hook event. Batch per View apply."],
+    ];
+    // §7.3 measurement plan [599-601]
+    const MEAS = [
+      [
+        "Spike --stress.",
+        "Add the Bloom lamp and bead-bar layers, masks included, and re-run the 200-push hook burst and the fast diff scroll, with all nine states visible. The gate stays at p95 ≤ 4.17 ms.",
+      ],
+      [
+        "Energy.",
+        "With 12 lamps and their bars, Night, 60 s each: all still, Bloom at <code>Pace.ambient</code>, Bloom at the top rate. Instruments' Energy Log or <code>powermetrics</code>. Repeat with all 12 idle, the overnight case. You judge the gaps.",
+      ],
+      [
+        "Display rate.",
+        "Core Animation FPS or Quartz Debug, to confirm the panel drops below 120 Hz when only ambient loops run.",
+      ],
+    ];
+    // §8.1 principles [609-616], §8.2 don'ts [620-630]; BRIEF-2 §5, §7, §9
+    const PRINCIPLES = [
+      [
+        "One clock.",
+        "Every loop runs at 1.75, 3.5, 7 or 14 s and counts from the same instant, so the window breathes as one object, the way the flower's turn and sway always line up.",
+      ],
+      [
+        "Motion says state.",
+        "Loops live only on things that have a state: lamps, state bars, loaders, the leading end of a usage line past 80 %. Chrome moves only when you touch it, and stops when it's done.",
+      ],
+      [
+        "The lamp moves, the bar colours.",
+        "Lamps are ink, so shape and motion carry state for every eye. The bead bar before the lamp carries the colour, one smooth wave inside its family, and flows on the same clock.",
+      ],
+      [
+        "Linear is work, sine is waiting, still is nothing to do.",
+        "Colour is always linear: every bar travels at a constant speed, and its tempo says how much it wants you.",
+      ],
+      [
+        "Urgency is tempo plus reach.",
+        "The faster and further a thing moves, the more it wants you. Needs-you alone beats at 1.75 s, alone reaches past its own edge, and alone has a red bar.",
+      ],
+      [
+        "Rest, stripes, settle.",
+        "Every change of state passes through its bridge once: an ink band through the lamp; on the bar, cream for an ordinary change, navy and wine when calm turns to needs you.",
+      ],
+      [
+        "Nothing steps, nothing bounces.",
+        "No blinks, no springs, no overshoot; every curve lands the way the flower does.",
+      ],
+      [
+        "Never wait for the beat.",
+        "A change shows on the next frame; only its loop falls into step.",
+      ],
+      [
+        "Still is a full answer.",
+        "With Reduce motion, every lamp keeps its shape and every bar holds a pose that still shows its colours; every transition becomes a short dissolve.",
+      ],
+    ];
+    const DONTS = [
+      [
+        "No hard-step blinks.",
+        "D's needs-you blink, failed double blink and outside dip retire. The terminal cursor's blink goes too: it would be the last strobe in the window.",
+      ],
+      ["No loop faster than 1.75 s,", "and nothing anywhere near 3 Hz."],
+      [
+        "No springs, overshoot or rubber-banding",
+        "in our own motion. Leave the system's scroll elasticity alone.",
+      ],
+      [
+        "No per-row phase offsets.",
+        "Same-state lamps pulse together and same-state bars flow in one phase; no chasers down the sidebar.",
+      ],
+      [
+        "No red in motion except needs-you's bar.",
+        "Lamps are ink, and so is usage. The loader, the chains and every other bar are red-free.",
+      ],
+      [
+        "No animating a bar's colours, width or beads.",
+        "A bar is a translate on a compositor layer under still beads. Its state changes by a wipe, never by a crossfade of colours.",
+      ],
+      [
+        "No ambient motion on chrome:",
+        "not on panels, headers, the wordmark, backgrounds, empty states, pearls or text. No bobbing or swaying.",
+      ],
+      ["Nothing rotates.", "Loader beads stay put and colour travels."],
+      [
+        "No animation that delays data.",
+        "No queued reveals in a burst, no waiting for a beat, no animating ARCHIVE results while typing.",
+      ],
+      ["No odometer or rolling digits.", "Numbers swap, with at most a T/64 crossfade."],
+      ["No full-window flash.", "A theme change moves lightness one way, through one bridge."],
+      ["No height animation during live resize.", ""],
+    ];
+    // SRC/motion-kit/BloomMotion.swift [9-25], [52-66], [72-92] (halo at 2.4×, .7 → 0: BRIEF conflict 25), [94-115];
+    // BloomBar.flow and .beads: round 3 (scratchpad/r3/motion-swift/BloomBar.swift, typechecked with the kit: swiftc -typecheck -swift-version 6 -strict-concurrency=complete, exit 0)
+    const SWIFT = [
+      [
+        "Clock and loop(...)",
+        `/// Bloom's one clock (motion brief §1). Every loop counts from \`epoch\`; one-shots never wait for it.
+enum Clock {
+    static let T: CFTimeInterval = 7
+    static let lcm: CFTimeInterval = 14
+    /// Host time floored to a 14 s boundary. Host time is shared by every process, so the main window,
+    /// the menu-bar panel and any helper land on the same phase grid without talking to each other.
+    static let epoch: CFTimeInterval = {
+        let now = CACurrentMediaTime()
+        return now - now.truncatingRemainder(dividingBy: lcm)
+    }()
+
+    /// beginTime for a loop whose cue sits \`cue\` seconds into its period. One LCM early, so the loop and
+    /// every replicator instance are already running when the layer appears: nothing "fills in".
+    static func begin(_ layer: CALayer, cue: CFTimeInterval = 0) -> CFTimeInterval {
+        layer.convertTime(epoch - lcm + cue, from: nil)
+    }
+}
+
+/// A phase-locked loop. \`eases\` has one entry per segment, or a single entry for all of them.
+@MainActor func loop(_ keyPath: String, _ values: [Any], keyTimes: [Double], period: CFTimeInterval,
+          eases: [CAMediaTimingFunction], cue: CFTimeInterval = 0, pace: CAFrameRateRange = Pace.ambient,
+          on layer: CALayer) -> CAKeyframeAnimation {
+    let a = CAKeyframeAnimation(keyPath: keyPath)
+    a.values = values
+    a.keyTimes = keyTimes.map { NSNumber(value: $0) }
+    a.duration = period
+    a.repeatCount = .infinity
+    a.timingFunctions = eases.count == 1 ? Array(repeating: eases[0], count: values.count - 1) : eases
+    a.beginTime = Clock.begin(layer, cue: cue)
+    a.isRemovedOnCompletion = false
+    a.preferredFrameRateRange = pace
+    return a
+}`,
+      ],
+      [
+        "BloomBar.flow and BloomBar.beads (new: the state bar)",
+        `/// The state bar (BRIEF-2 §4, round 3): one smooth ramp per state, travelling left through a fixed track.
+@MainActor enum BloomBar {
+    static let key = "bar"
+
+    /// \`ramp\` holds the state's stops repeated over the track plus one tile (twice, for a bar no wider
+    /// than its tile); the track clips it. It slides left by exactly one tile per period, linear, so the
+    /// wrap is invisible. beginTime comes from the shared epoch, so every bar of one state is in one
+    /// phase on every row: no chasers. Reduce motion: no animation, k = 0.
+    static func flow(_ ramp: CAGradientLayer, tile: CGFloat, period: CFTimeInterval,
+                     pace: CAFrameRateRange = Pace.ambient) {
+        let a = CABasicAnimation(keyPath: "transform.translation.x")
+        a.fromValue = 0
+        a.toValue = -tile
+        a.duration = period
+        a.repeatCount = .infinity
+        a.timingFunction = Ease.linear
+        a.beginTime = Clock.begin(ramp)
+        a.isRemovedOnCompletion = false
+        a.preferredFrameRateRange = pace
+        ramp.add(a, forKey: key)
+    }
+
+    /// A row's bead bar: the same ramp seen through whole beads. The mask is a replicator of one circle
+    /// (diameter \`d\`, pitch \`p\`), and it never moves: only the ramp under it does, so the colour travels
+    /// through still beads. The track is a whole number of pitches wide, so the end beads sit flush.
+    /// One small offscreen pass per bar (about 90 x 5 pt); the mask is built once, never animated.
+    static func beads(_ ramp: CAGradientLayer, in track: CALayer, diameter d: CGFloat = 5, pitch p: CGFloat = 8) {
+        let dot = CALayer()
+        dot.frame = CGRect(x: (p - d) / 2, y: (track.bounds.height - d) / 2, width: d, height: d)
+        dot.cornerRadius = d / 2
+        dot.backgroundColor = CGColor(gray: 0, alpha: 1)
+        dot.contentsScale = track.contentsScale
+        let rep = CAReplicatorLayer()
+        rep.frame = track.bounds
+        rep.instanceCount = max(1, Int(track.bounds.width / p))
+        rep.instanceTransform = CATransform3DMakeTranslation(p, 0, 0)
+        rep.addSublayer(dot)
+        track.mask = rep
+        track.masksToBounds = true
+        if ramp.superlayer !== track { track.addSublayer(ramp) }
+    }
+}
+
+// A row's needs-you bead bar:  BloomBar.beads(ramp, in: track); BloomBar.flow(ramp, tile: 240 * 0.5, period: Beat.beat)
+// The working head bar:        BloomBar.flow(ramp, tile: 360, period: Clock.T)   (a pill track, no mask)`,
+      ],
+      [
+        "BloomLamp.needs",
+        `/// Needs you: the body beats, the halo ripples past the lamp's edge. 1.75 s, cue 0.
+static func needs(body: CALayer, halo: CALayer) {
+    body.add(loop("transform.scale", [1, 1.16, 1], keyTimes: [0, 0.25, 1], period: Beat.beat,
+                  eases: [Ease.sineOut, Ease.sine], pace: Pace.hero, on: body), forKey: key)
+    let grow = CABasicAnimation(keyPath: "transform.scale")
+    grow.fromValue = 1
+    grow.toValue = 2.4
+    let fade = CABasicAnimation(keyPath: "opacity")
+    fade.fromValue = 0.7
+    fade.toValue = 0
+    for a in [grow, fade] { a.duration = Beat.beat }
+    let g = CAAnimationGroup()
+    g.animations = [grow, fade]
+    g.duration = Beat.beat
+    g.repeatCount = .infinity
+    g.timingFunction = Ease.sineOut
+    g.beginTime = Clock.begin(halo)
+    g.isRemovedOnCompletion = false
+    g.preferredFrameRateRange = Pace.hero
+    halo.add(g, forKey: key)
+}`,
+      ],
+      [
+        "BloomLamp.flow",
+        `/// Working (7 s) and housekeeping's core (14 s): the chrome-safe ramp rises through the bead,
+/// linear. \`ramp\` holds the ramp twice (stops at 0...0.5 and again at 0.5...1) and clips itself
+/// (cornerRadius = width / 2, masksToBounds, no sublayers). The visible 0...1 always lies inside
+/// startPoint...endPoint, and the shift is exactly one copy, so the wrap is seamless.
+static func flow(_ ramp: CAGradientLayer, period: CFTimeInterval = Clock.T, pace: CAFrameRateRange = Pace.ambient) {
+    let s = CABasicAnimation(keyPath: "startPoint")
+    s.fromValue = NSValue(point: CGPoint(x: 0.5, y: -2))
+    s.toValue = NSValue(point: CGPoint(x: 0.5, y: 0))
+    let e = CABasicAnimation(keyPath: "endPoint")
+    e.fromValue = NSValue(point: CGPoint(x: 0.5, y: 2))
+    e.toValue = NSValue(point: CGPoint(x: 0.5, y: 4))
+    for a in [s, e] { a.duration = period }
+    let g = CAAnimationGroup()
+    g.animations = [s, e]
+    g.duration = period
+    g.repeatCount = .infinity
+    g.timingFunction = Ease.linear
+    g.beginTime = Clock.begin(ramp)
+    g.isRemovedOnCompletion = false
+    g.preferredFrameRateRange = pace
+    ramp.add(g, forKey: key)
+}`,
+      ],
+    ];
+
+    /* =================== helpers =================== */
+    const q = (s, r) => r.querySelector(s),
+      qa = (s, r) => [...r.querySelectorAll(s)];
+    const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const fmt = (ms) => (ms / 1000).toFixed(2).padStart(5, "0");
+    // Changes made while the clock is held (or after a jump) must land without CSS transitions:
+    // the runtime's sync() pauses any running transition while paused, which would freeze it at its start.
+    function cut(el, fn) {
+      el.classList.add("s-motion-cut");
+      fn();
+      void el.offsetWidth;
+      el.classList.remove("s-motion-cut");
+    }
+    function jumpLamp(l, st) {
+      // set a lamp with no transition (a seek, a jump, the "from" row)
+      l.querySelectorAll(".sweep, .bloom").forEach((b) => b.remove());
+      const prev = l.dataset.st;
+      if (prev === st) return;
+      l.classList.replace("st-" + prev, "st-" + st);
+      l.dataset.st = st;
+      const row = l.closest(".session-row");
+      if (row) row.dataset.st = st;
+    }
+    function jumpState(box, st) {
+      // every lamp and bar in a box, no sweep, no wipe
+      (box.matches(".lamp") ? [box] : qa(".lamp", box)).forEach((l) => jumpLamp(l, st));
+      (box.matches(".sbar") ? [box] : qa(".sbar", box)).forEach((b) => {
+        b.querySelectorAll(":scope > .sb-old").forEach((x) => x.remove());
+        b.dataset.st = st;
+      });
+      if (box.classList.contains("session-row")) box.dataset.st = st;
+      B.preempt(box.closest("[data-region]"));
+    }
+    function stateTo(box, st, scope) {
+      // a real change: lamps sweep, bars wipe, both through their bridge
+      if (B.paused()) cut(scope, () => B.setState(box, st));
+      else B.setState(box, st);
+    }
+    const wrapRow = (inner, id) =>
+      `<div class="s-motion-rw" data-id="${id}" style="display:grid;grid-template-rows:1fr"><div style="min-height:0;overflow:hidden">${inner}</div></div>`;
+    // Every row is Bloom.row (lib.css §13): the 15 px lamp at the far right, its bead bar before it; chips, the context line,
+    // tokens and the age on line 2. sub never says "claude": the spark does.
+    const srow = (st, name, sub, o = {}) =>
+      B.row({
+        st,
+        name,
+        sub,
+        right: o.right,
+        age: o.age,
+        sel: o.sel,
+        ind: o.ind,
+        lamp: o.lamp,
+        attrs: o.attrs,
+      });
+    function placeSeg(el) {
+      // same maths as the runtime's, for segs we change from code
+      const on = q('button[aria-pressed="true"]', el),
+        pill = q(".seg-pill", el);
+      if (on && pill) {
+        pill.style.setProperty("--x", on.offsetLeft + "px");
+        pill.style.setProperty("--w", on.offsetWidth + "px");
+      }
+    }
+    // A small sequencer for button-driven demos: steps run from tick(t), so Pause and the rate apply; a held clock runs them all at once.
+    function seq(host, steps) {
+      host.seq = { t0: B.t(), steps: steps.map((s) => ({ ...s, done: false })) };
+      runSeq(host, B.t(), host.scope);
+    }
+    function runSeq(host, t, scope) {
+      const s = host.seq;
+      if (!s) return;
+      const flush = B.paused() || t < s.t0;
+      const go = () => {
+        for (const st of s.steps)
+          if (!st.done && (flush || t - s.t0 >= st.at)) {
+            st.done = true;
+            st.fn(t - s.t0);
+          }
+      };
+      flush ? cut(scope, go) : go();
+      if (s.steps.every((x) => x.done)) host.seq = null;
+    }
+
+    /* =================== M1 clock =================== */
+    function buildClock(el) {
+      const W = 400,
+        C = 200,
+        fig = q(".s-motion-clock", el);
+      const pt = (r, a) => [
+        C + r * Math.sin((a * Math.PI) / 180),
+        C - r * Math.cos((a * Math.PI) / 180),
+      ];
+      let svg = `<svg viewBox="0 0 ${W} ${W}" aria-hidden="true">`;
+      for (const o of ORBITS)
+        svg += `<circle class="s-motion-trk" cx="${C}" cy="${C}" r="${o.r}"/>`;
+      const [ax, ay] = pt(136, 315);
+      svg += `<path class="s-motion-arc" d="M${ax.toFixed(2)} ${ay.toFixed(2)} A136 136 0 0 1 ${C} ${C - 136}"/>`;
+      for (const a of [0, 90, 180, 270]) {
+        const [x, y] = pt(119, a);
+        svg += `<circle class="s-motion-cue" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3"/>`;
+      }
+      svg += "</svg>";
+      let html = svg;
+      for (const c of CUES)
+        for (const at of c.at) {
+          const [x, y] = pt(160, (at / 7000) * 360);
+          html += `<span class="s-motion-cl" style="left:${((x / W) * 100).toFixed(3)}%;top:${((y / W) * 100).toFixed(3)}%">${B.lamp(c.st, { still: true, label: c.st + " cue" })}</span>`;
+        }
+      const rider = (o, still) =>
+        o.lamp
+          ? B.lamp(o.lamp, { d: 14, still, label: "needs you, 1.75 s" })
+          : `<span class="bead" style="--b:${o.b}px;--c:var(--${o.c})"></span>`;
+      for (const o of ORBITS)
+        html += `<div class="s-motion-orb" data-p="${o.p}" style="--r:${((o.r / W) * 100).toFixed(3)}%;--p:${o.p}ms"><div class="s-motion-rider">${rider(o, false)}</div></div>`;
+      fig.innerHTML = html;
+      q(".s-motion-orbits", el).innerHTML = ORBITS.map(
+        (o) =>
+          `<div class="s-motion-orbit">${rider(o, true)}<span><span class="s-motion-p">${o.per}</span><span class="s-motion-nm">${o.nm}</span></span>` +
+          `<div><p>${o.use}</p><div class="s-motion-tbs">${o.sts.map((s) => `<span class="s-motion-tb">${PRETTY[s]}${B.bar(s, { form: "compact" })}</span>`).join("")}</div></div></div>`,
+      ).join("");
+      q(".s-motion-cues", el).innerHTML =
+        `<li><span class="s-motion-dotk"></span><span>needs-you beats every 1.75 s, from 0</span></li>` +
+        CUES.map((c) => `<li>${B.lamp(c.st, { still: true })}<span>${c.txt}</span></li>`).join("");
+      q(".s-motion-ladder tbody", el).innerHTML = LADDER.map(
+        (r) =>
+          `<tr><td>${r[0]}</td><td class="s-motion-n">${r[1]}</td><td class="s-motion-n">${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`,
+      ).join("");
+      const scrub = q(".s-motion-scrub", el),
+        play = q(".s-motion-play", el);
+      scrub.addEventListener("input", () => B.seek(+scrub.value));
+      const paint = () => {
+        play.innerHTML = B.gi(B.paused() ? "play" : "pause") + (B.paused() ? "Play" : "Pause");
+      };
+      play.addEventListener("click", () => (B.paused() ? B.play() : B.pause()));
+      document.addEventListener("bloom:clock", paint);
+      paint();
+      return {
+        scrub,
+        read: q(".s-motion-read", el),
+        orbs: qa(".s-motion-orb", fig),
+        last: -1,
+        tenth: -1,
+        frozen: false,
+      };
+    }
+    function tickClock(m, t) {
+      const p = t % 14000;
+      if (B.paused() || Math.abs(p - m.last) >= 20) {
+        m.scrub.value = p;
+        m.last = p;
+      }
+      const tenth = Math.floor(p / 10);
+      if (tenth !== m.tenth) {
+        m.tenth = tenth;
+        m.read.textContent = "t " + fmt(p) + " s";
+      }
+      if (B.reduced() && (B.paused() || !m.frozen)) {
+        // Still: the diagram holds, but a scrub still moves it
+        m.frozen = true;
+        for (const o of m.orbs)
+          o.style.setProperty(
+            "--s-motion-a",
+            (((t % +o.dataset.p) / +o.dataset.p) * 360).toFixed(2) + "deg",
+          );
+      }
+    }
+
+    /* =================== M2 easing =================== */
+    function buildCurves(el) {
+      q(".s-motion-curves", el).innerHTML = CURVES.map((c) => {
+        const [x1, y1, x2, y2] = c.p,
+          d = `M0 100 C${x1 * 100} ${100 - y1 * 100} ${x2 * 100} ${100 - y2 * 100} 100 0`;
+        const ease = c.css ? `cubic-bezier(${c.css})` : "linear";
+        return (
+          `<div class="s-motion-cv"><div class="s-motion-plot" style="--s-motion-ease:${ease}"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path class="s-motion-crv" d="${d}"/></svg>` +
+          `<div class="s-motion-px"><div class="s-motion-py"><span class="bead" style="--b:14px;--c:var(--blue-base)"></span></div></div></div>` +
+          `<h4>${c.nm}<span>${c.role}</span></h4><span class="s-motion-cb">${c.css ? "cubic-bezier(" + c.css + ")" : "linear"}</span><span class="s-motion-cb">${c.css ? "controlPoints: " + c.ca : c.ca}</span><p>${c.use}</p></div>`
+        );
+      }).join("");
+    }
+
+    /* =================== M3 lamp and bar, per state =================== */
+    function buildLamps(el) {
+      const nb = (s) => s.replace(/(\d) s\b/g, "$1 s");
+      const head =
+        `<div class="s-motion-lr s-motion-hd" role="row"><span class="s-motion-c1">Live</span><span class="s-motion-c2">Still</span><span class="s-motion-c3">In a row: bead bar, then the 15 px lamp</span><span class="s-motion-c8">Bead bar, flowing</span><span class="s-motion-c9">Bead bar, still pose</span>` +
+        `<span class="s-motion-tx"><span>State</span><span>Lamp: period · cue, shape, curve, channel</span><span>Bar: period · tile, speed (full / compact), colours</span><span>Core Animation keyPaths</span></span></div>`;
+      q(".s-motion-lamps", el).innerHTML =
+        head +
+        LAMPS.map((L) => {
+          const [n, chip, age, sub] = L.row,
+            right = chip === "wave" ? B.wave(3) : chip,
+            flows = L.bar.per !== "still";
+          return (
+            `<div class="s-motion-lr" role="row" data-region>` +
+            `<span class="s-motion-c1">${B.lamp(L.st, { d: 24, label: L.nm + ", live" })}</span>` +
+            `<span class="s-motion-c2">${B.lamp(L.st, { d: 24, still: true, label: L.nm + ", still" })}</span>` +
+            `<div class="s-motion-c3"><div class="s-motion-sb">${srow(L.st, n, sub, { right, age })}</div></div>` +
+            `<div class="s-motion-c8" data-l="Bead bar, flowing (10 px beads, doc size)">${B.bar(L.st, { form: "beads" })}</div>` +
+            `<div class="s-motion-c9" data-l="Bead bar, still pose">${B.bar(L.st, { form: "beads", still: true })}</div>` +
+            `<div class="s-motion-tx">` +
+            `<span><b>${L.nm}</b><span class="s-motion-line">${L.line}</span></span>` +
+            `<span data-l="Lamp"><span class="s-motion-per">${nb(L.per)}</span><span class="s-motion-ch">${L.shape}</span><span class="s-motion-crv2">${L.crv}</span><span class="s-motion-ch">${L.ch}</span></span>` +
+            `<span data-l="Bar"><span class="s-motion-per">${nb(L.bar.per)}</span>${flows ? `<span class="s-motion-crv2">linear · ${L.bar.sp}</span>` : ""}<span class="s-motion-ch">${L.bar.fam}</span></span>` +
+            `<span data-l="Core Animation"><span class="s-motion-kp">lamp: ${L.key}</span><span class="s-motion-kp">bar: ${flows ? "transform.translation.x, under a still bead mask" : "none (still)"}</span></span>` +
+            `</div></div>`
+          );
+        }).join("");
+      // the recipe: the ramp (a band), the mask, the result, one width and one phase, so the colour lines up through the beads
+      qa(".s-motion-bx", el).forEach((x) => {
+        x.outerHTML = B.bar("working", { form: x.dataset.x === "ramp" ? "band" : "beads" });
+      });
+    }
+
+    /* =================== M4 script =================== */
+    function m4Want(p) {
+      const se =
+        p < 1750
+          ? "idle"
+          : p < 5250
+            ? "working"
+            : p < 7000
+              ? "needs"
+              : p < 8750
+                ? "working"
+                : p < 12250
+                  ? "done"
+                  : "idle";
+      const top = p >= 1750,
+        deps = p >= 3500 && p < 10500;
+      let ev = 0;
+      EVENTS.forEach((e, i) => {
+        if (p >= e.at) ev = i;
+      });
+      return { se, top, deps, ev };
+    }
+    function buildScript(el) {
+      const fig = q('[data-fig="script"]', el),
+        list = q(".s-motion-list", fig);
+      const rows = {
+        se: wrapRow(srow("idle", "STATISTICS", SUB.idle, { age: "3h" }), "se"),
+        control: wrapRow(
+          srow("bg", "CONTROL", "background", { right: B.wave(3), age: "1m" }),
+          "control",
+        ),
+        relay: wrapRow(srow("house", "RELAY MAIN", "dreaming", { age: "9m" }), "relay"),
+        intern: wrapRow(srow("idle", "INTERNSHIPS", "idle · main", { age: "1h" }), "intern"),
+      };
+      list.innerHTML = rows.control + rows.relay + rows.intern + rows.se;
+      const el4 = {};
+      qa(".s-motion-rw", list).forEach((w) => {
+        el4[w.dataset.id] = w;
+      });
+      q(".s-motion-evs", fig).innerHTML = EVENTS.map(
+        (e) =>
+          `<li><span class="s-motion-n">${e.at / 1000} s</span><span class="s-motion-who">${e.who}</span><span>${e.txt}</span></li>`,
+      ).join("");
+      q(".s-motion-jump", fig).insertAdjacentHTML(
+        "beforeend",
+        JUMPS.map(
+          ([t, l]) => `<button class="pill ghost sm" type="button" data-t="${t}">${l}</button>`,
+        ).join(""),
+      );
+      q(".s-motion-jump", fig).addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-t]");
+        if (b) B.seek(+b.dataset.t);
+      });
+      const tl = q(".s-motion-tl", fig);
+      tl.insertAdjacentHTML(
+        "afterbegin",
+        [...EVENTS.slice(1).map((e) => e.at)]
+          .map((a) => `<i class="s-motion-tl-tick" style="left:${a / 140}%"></i>`)
+          .join("") +
+          [
+            [0, "0", "s-motion-l0"],
+            [3500, "3.5"],
+            [7000, "7"],
+            [10500, "10.5"],
+            [14000, "14 s", "s-motion-l1"],
+          ]
+            .map(
+              ([a, l, c]) =>
+                `<span class="s-motion-tl-lab ${c || "s-motion-lm"}" style="left:${a / 140}%">${l}</span>`,
+            )
+            .join(""),
+      );
+      return {
+        fig,
+        list,
+        el: el4,
+        seRow: q(".session-row", el4.se),
+        head: q(".s-motion-tl-head", tl),
+        evs: qa(".s-motion-evs li", fig),
+        cur: null,
+        lastT: -1,
+        f: -1,
+      };
+    }
+    function m4Deps(st) {
+      const t = document.createElement("div");
+      t.innerHTML = wrapRow(srow(st, "DEPS-AUDIT", "working · main", { age: "now" }), "deps");
+      return t.firstElementChild;
+    }
+    function m4Sub(m, w) {
+      // line 2 follows the state: the words, the LOGIN chip, the age
+      q(".sr-sub", m.seRow).textContent = SUB[w.se];
+      q(".sr-right", m.seRow).innerHTML =
+        w.se === "needs" ? '<span class="chip on-needs">LOGIN</span>' : "";
+      q(".sr-age", m.seRow).textContent = w.top ? "now" : "3h";
+    }
+    function m4Order(m, w) {
+      const ids = w.top
+        ? ["se", "control", "relay", "intern"]
+        : ["control", "relay", "intern", "se"];
+      if (m.el.deps) m.list.append(m.el.deps);
+      for (const id of ids) m.list.append(m.el[id]);
+    }
+    function m4Instant(m, w) {
+      cut(m.fig, () => {
+        jumpState(m.seRow, w.se);
+        m4Sub(m, w);
+        qa('[data-id="deps"], [data-id="deps-out"]', m.list).forEach((n) => n.remove());
+        m.el.deps = w.deps ? m4Deps("working") : null;
+        m4Order(m, w);
+        m.evs.forEach((li, i) => li.setAttribute("aria-current", String(i === w.ev)));
+      });
+    }
+    function m4Step(m, a, w) {
+      if (a.se !== w.se) {
+        stateTo(m.seRow, w.se, m.fig);
+        m4Sub(m, w);
+      }
+      if (a.deps !== w.deps) {
+        if (w.deps) {
+          const d = m4Deps("idle");
+          m.el.deps = d;
+          m.list.prepend(d);
+          B.enterRow(d);
+          stateTo(q(".session-row", d), "working", m.fig);
+        } else if (m.el.deps) {
+          const d = m.el.deps;
+          m.el.deps = null;
+          d.dataset.id = "deps-out";
+          B.leaveRow(d);
+        }
+      }
+      if (a.top !== w.top) B.resort(m.list, () => m4Order(m, w));
+      if (a.ev !== w.ev)
+        m.evs.forEach((li, i) => li.setAttribute("aria-current", String(i === w.ev)));
+    }
+    function tickScript(m, t) {
+      const p = t % 14000,
+        w = m4Want(p),
+        a = m.cur;
+      const jump = !a || B.paused() || t < m.lastT || t - m.lastT > 600;
+      if (!a || a.se !== w.se || a.top !== w.top || a.deps !== w.deps || a.ev !== w.ev)
+        jump ? m4Instant(m, w) : m4Step(m, a, w);
+      m.cur = w;
+      m.lastT = t;
+      const f = Math.round((p / 14000) * 2000) / 2000;
+      if (f !== m.f) {
+        m.f = f;
+        m.head.style.setProperty("--s-motion-f", f);
+      }
+    }
+
+    /* =================== M5 matrix =================== */
+    function buildMatrix(el) {
+      const fig = q('[data-fig="matrix"]', el),
+        stage = q(".s-motion-stage", fig);
+      const st0 = "working"; // start alive: the bars flow before anything is pressed
+      qa(".s-motion-m5l", fig).forEach((s) => {
+        s.outerHTML = B.lamp(st0, { d: +s.dataset.d, label: "lamp at " + s.dataset.d + " px" });
+      });
+      qa(".s-motion-m5b", fig).forEach((s) => {
+        s.outerHTML = B.bar(st0, { form: s.dataset.f });
+      });
+      const rowBox = q(".s-motion-m5r", fig),
+        sub = (st) => PRETTY[st];
+      rowBox.innerHTML = srow(st0, "STATISTICS", sub(st0), { age: "2m" });
+      const order = [
+        "needs",
+        "failed",
+        "done",
+        "working",
+        "bg",
+        "choose",
+        "house",
+        "outside",
+        "idle",
+        "gone",
+      ];
+      const pills = () =>
+        order
+          .map(
+            (s) =>
+              `<button class="pill sm" type="button" data-st="${s}" aria-pressed="false">${PRETTY[s]}</button>`,
+          )
+          .join("");
+      const from = q('[data-row="from"]', fig),
+        to = q('[data-row="to"]', fig),
+        out = q(".s-motion-out", fig);
+      from.innerHTML = pills();
+      to.innerHTML = pills();
+      const m = { fig, stage, from, to, out, st: st0 };
+      const mark = () => {
+        qa("button", from).forEach((b) =>
+          b.setAttribute("aria-pressed", String(b.dataset.st === m.st)),
+        );
+        qa("button", to).forEach((b) =>
+          b.setAttribute("aria-disabled", String(b.dataset.st === m.st)),
+        );
+        q(".sr-sub", rowBox).textContent = sub(m.st);
+      };
+      from.addEventListener("click", (e) => {
+        const b = e.target.closest("button");
+        if (!b || b.dataset.st === m.st) return;
+        m.st = b.dataset.st;
+        cut(fig, () => jumpState(stage, m.st));
+        mark();
+        out.innerHTML = `Set to <b>${PRETTY[m.st]}</b> with no transition. Now pick a "to" state.`;
+      });
+      to.addEventListener("click", (e) => {
+        const b = e.target.closest("button");
+        if (!b || b.dataset.st === m.st) return;
+        const prev = m.st,
+          next = b.dataset.st;
+        const via = B.bridgeOf(prev, next).includes("wine") ? "navy and wine" : "cream";
+        stateTo(stage, next, fig);
+        m.st = next;
+        mark();
+        let msg = `<b>${PRETTY[prev]} → ${PRETTY[next]}</b>: `;
+        if (B.paused()) msg += "the clock is paused, so it jumps. Press Play to see it run.";
+        else if (B.reduced())
+          msg +=
+            "Reduce motion, so the lamp dissolves (opacity .35 → 1) and the old bar fades out over 218.75 ms, with no sweep and no wipe.";
+        else if (next === "needs")
+          msg += `the bar wipes via ${via} in <span class="t-num">218.75 ms</span>, then the arrival bloom (<span class="t-num">875 ms</span>).`;
+        else
+          msg += `the bar wipes via ${via} in <span class="t-num">437.5 ms</span>${next === "done" ? ", then the lamp arrives (scale .92 → 1)" : next === "gone" ? ", then a T/8 fade to .35" : ""}.`;
+        out.innerHTML = msg;
+      });
+      mark();
+      return m;
+    }
+
+    /* =================== M6 end to end =================== */
+    function buildE2E(el) {
+      const fig = q('[data-fig="e2e"]', el),
+        host = { scope: fig, seq: null };
+      q(".s-motion-mbi", fig).innerHTML = B.stairSVG({ t: 6, r: 6, a: 7, f: 3 }, 3, {
+        label: "CONTROL menu-bar icon",
+      });
+      q(".s-motion-fbar", fig).outerHTML = B.bar("idle");
+      q(".s-motion-e2erow", fig).innerHTML = srow("idle", "STATISTICS", SUB.idle, { age: "2m" });
+      const mini = q(".s-motion-mini", fig);
+      const span = 2400,
+        marks = [
+          [0, "0"],
+          [219, "219 ms"],
+          [1100, "1.1 s"],
+          [2000, "2 s"],
+        ];
+      mini.insertAdjacentHTML(
+        "afterbegin",
+        marks
+          .map(([a]) => `<i class="s-motion-tl-tick" style="left:${(a / span) * 100}%"></i>`)
+          .join("") +
+          marks
+            .slice(1)
+            .map(
+              ([a, l], i) =>
+                `<span class="s-motion-tl-lab${i === 0 ? " s-motion-l0" : ""}" style="left:${(a / span) * 100}%">${l}</span>`,
+            )
+            .join(""),
+      );
+      const box = q(".s-motion-e2ebox", fig),
+        row = q(".session-row", fig),
+        icon = q(".s-motion-mbi", fig),
+        head = q(".s-motion-tl-head", mini),
+        btn = q(".s-motion-run", fig);
+      const trs = qa("tbody tr", fig);
+      const cur = (at) =>
+        trs.forEach((tr) => tr.setAttribute("aria-current", String(+tr.dataset.at === at)));
+      const m = { host, head, t0: null, end: false, f: -1 };
+      btn.addEventListener("click", () => {
+        const line2 = (sub, chip, age) => {
+          q(".sr-sub", row).textContent = sub;
+          q(".sr-right", row).innerHTML = chip;
+          q(".sr-age", row).textContent = age;
+        };
+        cut(fig, () => {
+          jumpState(box, "idle");
+          line2(SUB.idle, "", "2m");
+          icon.dataset.on = "0";
+          cur(-1);
+        });
+        m.t0 = B.t();
+        m.end = false;
+        m.f = -1;
+        seq(host, [
+          {
+            at: 0,
+            fn: () => {
+              stateTo(box, "needs", fig);
+              line2(SUB.needs, '<span class="chip on-needs">LOGIN</span>', "now");
+              cur(0);
+            },
+          },
+          { at: 218.75, fn: () => cur(219) },
+          { at: 1093.75, fn: () => cur(1100) },
+          {
+            at: 2000,
+            fn: () => {
+              icon.dataset.on = "1";
+              cur(2000);
+            },
+          },
+          {
+            at: span,
+            fn: () => {
+              m.t0 = null;
+              m.end = true;
+            },
+          },
+        ]);
+        btn.textContent = "Run it again";
+      });
+      return m;
+    }
+    function tickE2E(m, t) {
+      runSeq(m.host, t, m.host.scope);
+      const f = m.t0 === null ? (m.end ? 1 : 0) : Math.max(0, Math.min(1, (t - m.t0) / 2400));
+      if (f !== m.f) {
+        m.f = f;
+        m.head.style.setProperty("--s-motion-f", f);
+      }
+    }
+
+    /* =================== M7 panels and the selection bar =================== */
+    function buildBars(el) {
+      const fig = q('[data-fig="bars"]', el);
+      const rows = [
+        ["idle", "SIGNALS_101", "3h", "idle · main", 1],
+        ["bg", "CONTROL", "1m", "background", 1],
+        ["idle", "INTERNSHIPS", "1h", "idle · main", 1],
+        ["working", "ORBIT-WEBSITE", "now", "working", 0],
+      ];
+      const rowsEl = q(".s-motion-rows", fig);
+      const rowHTML = ([st, n, age, sub, pick]) =>
+        wrapRow(srow(st, n, sub, { age, sel: !pick }), pick ? "pick" : "keep");
+      rowsEl.innerHTML = rows.map(rowHTML).join("");
+      q(".s-motion-term", fig).innerHTML = TERM.join("\n");
+      q('[data-view="Turns"]', fig).innerHTML = TURNS.map(
+        ([n, t, mt]) =>
+          `<div class="s-motion-turn"><span class="s-motion-tn">${n}</span><span class="s-motion-tt">${t}</span><span class="s-motion-tm">${mt}</span></div>`,
+      ).join("");
+      q('[data-view="Diff"]', fig).innerHTML =
+        `<div class="s-motion-dsum">4 files<span class="s-motion-dim">+38 −12</span></div>` +
+        DIFFS.map(
+          ([c, s, p, st]) =>
+            `<div class="s-motion-df"><span class="s-motion-dim">${c}</span><span>${s}</span><span>${p}</span><span class="s-motion-st">${st}</span></div>`,
+        ).join("") +
+        '<div class="s-motion-dfoot">live · FSEvents · 23:41:07</div>';
+      [q(".s-motion-mode", fig), q(".s-motion-sort7", fig)].forEach((s) =>
+        B.seg(s, (v) => {
+          if (B.paused()) cut(fig, () => placeSeg(s));
+          if (!s.classList.contains("s-motion-mode")) return;
+          qa(".s-motion-view", fig).forEach((x) => {
+            x.hidden = x.dataset.view !== v;
+          });
+          B.animate(
+            q(`[data-view="${v}"]`, fig),
+            { opacity: [0, 1] },
+            { duration: D.tap, easing: E.settle },
+          );
+        }),
+      );
+      const toast = q(".toast", fig),
+        sel = q(".s-motion-sel", fig);
+      const A = () => {
+        toast.innerHTML =
+          '<b>3 selected</b><span class="sp"></span><button class="pill sm" type="button" data-a="ask">Archive</button><button class="pill ghost sm" type="button" data-a="esc">Esc</button>';
+      };
+      const Bq = () => {
+        toast.innerHTML =
+          '<span><b>Archive anyway?</b> CONTROL is mid-turn in 1</span><span class="sp"></span><button class="pill danger sm" type="button" data-a="go">Archive</button><button class="pill ghost sm" type="button" data-a="esc">Esc</button>';
+      };
+      const multi = (on) =>
+        qa('[data-id="pick"] .session-row', rowsEl).forEach((r) => r.classList.toggle("multi", on));
+      const hide = () =>
+        B.sink(toast).then((a) => {
+          toast.hidden = true;
+          a.cancel();
+        }); // sink fills forwards: drop it, or the next rise ends invisible
+      let gone = false;
+      sel.addEventListener("click", () => {
+        if (gone) {
+          rowsEl.insertAdjacentHTML(
+            "afterbegin",
+            rows
+              .filter((r) => r[4])
+              .map(rowHTML)
+              .join(""),
+          );
+          qa('[data-id="pick"]', rowsEl).forEach((w) => B.enterRow(w));
+          gone = false;
+          sel.textContent = "Select 3";
+          return;
+        }
+        if (!toast.hidden) return;
+        multi(true);
+        A();
+        toast.hidden = false;
+        B.rise(toast);
+      });
+      toast.addEventListener("click", (e) => {
+        const a = e.target.closest("button") && e.target.closest("button").dataset.a;
+        if (a === "esc") {
+          multi(false);
+          hide();
+        }
+        if (a === "ask") {
+          const out = B.animate(
+            toast,
+            { opacity: [1, 0] },
+            { duration: D.quick / 2, easing: E.sine, fill: "forwards" },
+          );
+          out.finished.then(() => {
+            Bq();
+            B.animate(toast, { opacity: [0, 1] }, { duration: D.quick / 2, easing: E.sine });
+            out.cancel();
+          });
+        }
+        if (a === "go") {
+          hide();
+          qa('[data-id="pick"]', rowsEl).forEach((w) => B.leaveRow(w));
+          gone = true;
+          sel.textContent = "Bring them back";
+        }
+      });
+      const ptog = q(".s-motion-ptog", fig),
+        body = q(".s-motion-body", fig),
+        rpi = q(".s-motion-rpi", fig);
+      let closing = null;
+      ptog.addEventListener("click", () => {
+        const open = ptog.getAttribute("aria-pressed") !== "true";
+        ptog.setAttribute("aria-pressed", String(open));
+        if (open) {
+          // lay out once, then animate the layer
+          if (closing) {
+            closing.cancel();
+            closing = null;
+          }
+          body.classList.remove("s-motion-shut");
+          B.openPanel(rpi);
+          return;
+        }
+        closing = B.animate(
+          rpi,
+          B.reduced()
+            ? { opacity: [1, 0] }
+            : { transform: ["none", "translateX(24px)"], opacity: [1, 0] },
+          { duration: D.tap, easing: E.in, fill: "forwards" },
+        );
+        closing.finished.then(
+          () => {
+            if (ptog.getAttribute("aria-pressed") === "false") body.classList.add("s-motion-shut");
+          },
+          () => {},
+        );
+      });
+    }
+
+    /* =================== M8 archive =================== */
+    function buildArchive(el) {
+      const fig = q('[data-fig="archive"]', el),
+        host = { scope: fig, seq: null };
+      const sess = q(".s-motion-sess", fig),
+        alist = q(".s-motion-alist", fig),
+        cnt = q(".s-motion-cnt", fig),
+        label = q(".s-motion-al", fig);
+      let count = 412;
+      const arow = ([k, n, f, age], sel) =>
+        wrapRow(
+          `<div class="s-motion-ar" data-kind="${k}" aria-selected="${!!sel}" data-name="${n}" data-folder="${f}">${B.gi(k === "sess" ? "sess" : "chat")}<span class="s-motion-an">${n}</span><span class="s-motion-aa">${age}</span><span class="s-motion-as">${f}</span></div>`,
+          "a",
+        );
+      sess.innerHTML = SESS8.map(([st, n, age, sub, f], i) =>
+        wrapRow(srow(st, n, sub, { age, sel: i === 1, attrs: `data-folder="${f}"` }), "s"),
+      ).join("");
+      alist.innerHTML = ARCHIVE.map((r, i) => arow(r, i === 0)).join("");
+      qa(".s-motion-rw", alist).forEach((w, i) => {
+        w.dataset.rank = i;
+      });
+      const pick = (box, sel, attr) =>
+        box.addEventListener("click", (e) => {
+          const r = e.target.closest(sel);
+          if (!r) return;
+          qa(sel, box).forEach((x) => x.setAttribute(attr, String(x === r)));
+        });
+      pick(sess, ".session-row", "aria-selected");
+      pick(alist, ".s-motion-ar", "aria-selected");
+      const setCount = (d) => {
+        count += d;
+        cnt.textContent = count;
+        cnt.setAttribute("aria-label", count + " archived");
+        B.animate(cnt, { opacity: [0, 1] }, { duration: D.tap, easing: E.sine });
+      };
+      cnt.setAttribute("aria-label", count + " archived");
+      const swell = () =>
+        B.animate(
+          label,
+          [
+            { transform: "scale(1)", easing: E.sine },
+            { transform: "scale(1.06)", easing: E.sine },
+            { transform: "scale(1)" },
+          ],
+          { duration: D.state },
+        );
+      const live = (s) => `.s-motion-rw:not([data-id="out"]):not([hidden]) ${s}`;
+      const selected = (box, s) => q(live(s) + '[aria-selected="true"]', box) || q(live(s), box);
+      q(".s-motion-a-arc", fig).addEventListener("click", () => {
+        const r = selected(sess, ".session-row");
+        if (!r) return;
+        const w = r.closest(".s-motion-rw"),
+          name = q(".sr-name", r).textContent,
+          f = r.dataset.folder;
+        w.dataset.id = "out";
+        r.setAttribute("aria-selected", "false");
+        seq(host, [
+          { at: 0, fn: () => B.leaveRow(w) },
+          {
+            at: D.quick,
+            fn: () => {
+              alist
+                .querySelectorAll(".s-motion-ar")
+                .forEach((x) => x.setAttribute("aria-selected", "false"));
+              const t = document.createElement("div");
+              t.innerHTML = arow(["sess", name, f, "now"], true);
+              const nw = t.firstElementChild;
+              nw.dataset.rank = -Date.now();
+              alist.prepend(nw);
+              alist.scrollTop = 0;
+              B.enterRow(nw);
+              setCount(1);
+              swell();
+              const next = q(live(".session-row"), sess);
+              if (next && !q(live(".session-row") + '[aria-selected="true"]', sess))
+                next.setAttribute("aria-selected", "true");
+            },
+          },
+        ]);
+      });
+      q(".s-motion-a-back", fig).addEventListener("click", () => {
+        const r = selected(alist, ".s-motion-ar");
+        if (!r) return;
+        const w = r.closest(".s-motion-rw"),
+          name = r.dataset.name,
+          f = r.dataset.folder.split(" · ")[0];
+        w.dataset.id = "out";
+        let nw = null;
+        seq(host, [
+          {
+            at: 0,
+            fn: () => {
+              B.leaveRow(w);
+              setCount(-1);
+            },
+          },
+          {
+            at: D.quick,
+            fn: () => {
+              sess
+                .querySelectorAll(".session-row")
+                .forEach((x) => x.setAttribute("aria-selected", "false"));
+              const t = document.createElement("div");
+              t.innerHTML = wrapRow(
+                srow(
+                  "idle",
+                  name,
+                  '<span class="s-motion-restore">restoring <span class="s-motion-rb"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></span></span>',
+                  { age: "now", sel: true },
+                ),
+                "s",
+              );
+              nw = t.firstElementChild;
+              q(".session-row", nw).dataset.folder = f;
+              q(".lamp", nw).classList.add("s-motion-empty");
+              sess.prepend(nw);
+              B.enterRow(nw);
+            },
+          },
+          {
+            at: D.quick + D.breath,
+            fn: () => {
+              // the daemon reports a state: the lamp arrives, the walking chain stops
+              if (!nw || !nw.isConnected) return;
+              const l = q(".lamp", nw);
+              l.classList.remove("s-motion-empty");
+              B.animate(
+                l,
+                B.reduced() ? { opacity: [0, 1] } : { scale: [0.4, 1], opacity: [0, 1] },
+                { duration: D.state, easing: E.sine },
+              );
+              q(".sr-sub", nw).textContent = "idle · main";
+            },
+          },
+        ]);
+      });
+      q(".s-motion-a-forget", fig).addEventListener("click", () => {
+        const r = selected(alist, ".s-motion-ar");
+        if (!r) return;
+        const w = r.closest(".s-motion-rw");
+        w.dataset.id = "out";
+        seq(host, [
+          {
+            at: 0,
+            fn: () => {
+              B.animate(
+                r,
+                { backgroundColor: ["transparent", B.token("navy")] },
+                { duration: D.quick, easing: E.in, fill: "forwards" },
+              );
+              B.leaveRow(w);
+              setCount(-1);
+            },
+          },
+        ]);
+      });
+      const input = q(".s-motion-search input", fig);
+      input.addEventListener("input", () => {
+        // results swap at once: nothing animates per keystroke
+        const s = input.value.trim().toLowerCase();
+        qa(".s-motion-rw", alist).forEach((w) => {
+          const r = q(".s-motion-ar", w);
+          if (r)
+            w.hidden = !!s && !(r.dataset.name + " " + r.dataset.folder).toLowerCase().includes(s);
+        });
+      });
+      B.seg(q(".s-motion-sort8", fig), (v) => {
+        if (B.paused()) cut(fig, () => placeSeg(q(".s-motion-sort8", fig)));
+        const ws = qa(".s-motion-rw", alist),
+          key = (w) => {
+            const r = q(".s-motion-ar", w);
+            return r
+              ? v === "Name"
+                ? r.dataset.name.toLowerCase()
+                : r.dataset.folder.toLowerCase()
+              : "";
+          };
+        ws.sort((a, b) =>
+          v === "Recent" ? +a.dataset.rank - +b.dataset.rank : key(a).localeCompare(key(b)),
+        );
+        ws.forEach((w) => alist.append(w));
+        B.animate(alist, { opacity: [0, 1] }, { duration: D.tap, easing: E.sine }); // one crossfade for the whole list
+      });
+      return host;
+    }
+
+    /* =================== M9 theme =================== */
+    function buildTheme(el) {
+      const fig = q('[data-fig="theme"]', el),
+        box = q(".s-motion-chart", fig);
+      let w0 = 0;
+      const draw = () => {
+        const W = Math.round(box.clientWidth - 40);
+        if (W <= 0 || W === w0) return;
+        w0 = W;
+        const narrow = W < 480,
+          H = narrow ? 318 : 300,
+          x0 = narrow ? 86 : 116,
+          x1 = W - x0,
+          top = 40,
+          bot = 232;
+        const y = (L) => bot - L * (bot - top),
+          X = (ms) => x0 + ((x1 - x0) * ms) / 875;
+        const path = (pts) => {
+          let d = `M${X(0)} ${y(pts[0][1])}`;
+          for (let i = 1; i < pts.length; i++) {
+            const a = X((i - 1) * 437.5),
+              b = X(i * 437.5),
+              ya = y(pts[i - 1][1]),
+              yb = y(pts[i][1]);
+            d += ` C${a + 0.37 * (b - a)} ${ya} ${a + 0.63 * (b - a)} ${yb} ${b} ${yb}`;
+          }
+          return d;
+        };
+        let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Lightness over the theme switch">`;
+        s += `<rect class="s-motion-band9" x="${X(0)}" y="${top - 14}" width="${X(437.5) - X(0) - 3}" height="${bot - top + 28}" rx="12"/>`;
+        s += `<rect class="s-motion-band9" x="${X(437.5) + 3}" y="${top - 14}" width="${X(875) - X(437.5) - 3}" height="${bot - top + 28}" rx="12" style="opacity:.5"/>`;
+        s += `<path class="s-motion-up" d="${path(L9.up)}"/><path class="s-motion-dn" d="${path(L9.dn)}"/>`;
+        const lab = (L) => String(L).replace(/^0/, "");
+        const dot = (ms, [nm, L, c], anchor, dy) =>
+          `<circle class="s-motion-pt" cx="${X(ms)}" cy="${y(L)}" r="7" fill="${c}"/><text class="s-motion-lt" x="${X(ms) + (anchor === "end" ? -14 : anchor === "start" ? 14 : 0)}" y="${y(L) + dy}" text-anchor="${anchor}">${nm} ${lab(L)}</text>`;
+        s +=
+          dot(0, L9.up[0], "end", 4) +
+          dot(437.5, L9.up[1], "middle", -16) +
+          dot(875, L9.up[2], "start", 4);
+        s +=
+          dot(0, L9.dn[0], "end", 4) +
+          dot(437.5, L9.dn[1], "middle", 26) +
+          dot(875, L9.dn[2], "start", 4);
+        s += `<text class="s-motion-ax" x="${X(0)}" y="${bot + 36}" text-anchor="middle">0</text><text class="s-motion-ax" x="${X(437.5)}" y="${bot + 36}" text-anchor="middle">437.5 ms</text><text class="s-motion-ax" x="${X(875)}" y="${bot + 36}" text-anchor="middle">875 ms</text>`;
+        s += narrow
+          ? `<text class="s-motion-ax" x="${X(0)}" y="${bot + 58}">bloom out · T/16</text><text class="s-motion-ax" x="${X(875)}" y="${bot + 78}" text-anchor="end">dissolve · T/16</text>`
+          : `<text class="s-motion-ax" x="${X(218.75)}" y="${bot + 56}" text-anchor="middle">bloom out · T/16</text><text class="s-motion-ax" x="${X(656.25)}" y="${bot + 56}" text-anchor="middle">dissolve · T/16</text>`;
+        s += `<text class="s-motion-ax" x="${X(437.5)}" y="${top - 22}" text-anchor="middle">swap under cover</text></svg>`;
+        box.innerHTML = s;
+      };
+      draw();
+      new ResizeObserver(draw).observe(box);
+      const btn = q(".s-motion-sw", fig);
+      btn.addEventListener("click", () => {
+        const r = btn.getBoundingClientRect(),
+          next = btn.dataset.next;
+        B.setTheme(next, r.left + r.width / 2, r.top + r.height / 2);
+        themeLabel(btn, next);
+      });
+      return btn;
+    }
+    // The label follows the latest click, not data-theme (ledger 4): a second click mid-switch retargets back.
+    const themeLabel = (btn, name) => {
+      btn.dataset.next = name === "field" ? "night" : "field";
+      btn.textContent = `Switch to ${name === "field" ? "Night" : "Field"} from here`;
+    };
+
+    /* =================== M10 components =================== */
+    function buildComponents(el) {
+      const fig = q('[data-fig="components"]', el);
+      q(".s-motion-ring", fig).outerHTML = B.ring({ r: 24, b: 8 });
+      q(".s-motion-use", fig).innerHTML =
+        `<div class="s-motion-ur"><span class="s-motion-ul">5H</span>${B.chainHTML(15, 0.71, "5h")}<span class="s-motion-uv"><span class="s-motion-pc s-motion-5hv">71%</span><span class="s-motion-rs">01:10</span></span></div>` +
+        `<div class="s-motion-ur"><span class="s-motion-ul">7D</span>${B.chainHTML(14, 0.22, "7d")}<span class="s-motion-uv"><span class="s-motion-pc">22%</span><span class="s-motion-rs">Sun</span></span></div>` +
+        `<div class="s-motion-ur s-motion-big"><span class="s-motion-ul">×2</span>${B.chainHTML(15, 0.71, "5h", { label: "5H at twice the size" })}</div>`;
+      q(".s-motion-bgl", fig).innerHTML =
+        `<span>n = 3</span><span class="s-motion-big">${B.wave(3)}</span><span>n = 9</span><span class="s-motion-big">${B.wave(9)}</span><span>n = 3, row size</span><span>${B.wave(3)}</span>`;
+      q(".s-motion-prog", fig).innerHTML =
+        `<div class="s-motion-ph">Restoring 7 sessions<span>restore at login</span></div><span class="s-motion-big">${B.chainHTML(15, 0, "progress", { label: "restore progress" })}</span>`;
+      // inventory §1.2 [86-91]: THESIS (3) open; PROJECTS (3) folded, so its hidden sessions show as a tally, each pearl in its own state (ledger 1)
+      const grp = (tint, name, n, tally) =>
+        `<div class="group-row">${B.gi(tally ? "chev-r" : "chev-d")}${B.pearl({ tint, p: 10 })}${name}${tally ? `<span class="lamp-strip">${B.tally(tally, { label: "folded: " + tally.join(", ") })}</span>` : ""}<span class="n">${n}</span></div>`;
+      q(".s-motion-hov", fig).innerHTML =
+        grp("mint", "THESIS", 3) +
+        srow("needs", "STATISTICS", "needs you", {
+          right: '<span class="chip on-needs">LOGIN</span>',
+          age: "2m",
+          ind: 24,
+        }) +
+        srow("done", "LINEAR_ALGEBRA", "done · main", { age: "14m", ind: 24 }) +
+        srow("idle", "SIGNALS_101", "idle · main", { age: "3h", ind: 24 }) +
+        grp("peri", "PROJECTS", 3, ["working", "bg", "working"]);
+      B.seg(q(".s-motion-segx", fig), () => {
+        if (B.paused()) cut(fig, () => placeSeg(q(".s-motion-segx", fig)));
+      });
+      const tg = q(".s-motion-tg", fig);
+      tg.addEventListener("click", () => {
+        const on = tg.getAttribute("aria-checked") !== "true";
+        const go = () => tg.setAttribute("aria-checked", String(on));
+        B.paused() ? cut(fig, go) : go();
+      });
+      const slider = q(".s-motion-5h", fig),
+        five = qa(".s-motion-use .u5h", fig),
+        vals = qa(".s-motion-5hv", fig);
+      slider.addEventListener("input", () => {
+        const v = +slider.value / 100,
+          go = () => five.forEach((c) => B.setChain(c, v));
+        B.paused() ? cut(fig, go) : go();
+        vals.forEach((x) => {
+          x.textContent = slider.value + "%";
+        });
+      });
+      return { fig, chain: q(".s-motion-prog .bead-chain", fig), k: -1, lastT: -1 };
+    }
+    function progK(p) {
+      // 700 ms a bead; bead 12 comes 3.5 s late: the stall
+      if (p < 7700) return Math.floor(p / 700) + 1;
+      if (p < 11200) return 11;
+      return Math.min(15, 12 + Math.floor((p - 11200) / 700));
+    }
+    function tickProgress(m, t) {
+      const k = progK(t % 14000);
+      if (k === m.k) {
+        m.lastT = t;
+        return;
+      }
+      const jump = m.k < 0 || B.paused() || t < m.lastT || t - m.lastT > 600;
+      const set = () => B.setChain(m.chain, k / 15);
+      if (jump) cut(m.fig, set);
+      else {
+        set();
+        if (k > m.k && !B.reduced()) {
+          const b = m.chain.children[k - 1];
+          if (b) B.animate(b, { scale: [0.6, 1] }, { duration: D.state, easing: E.out });
+        }
+      }
+      m.k = k;
+      m.lastT = t;
+    }
+
+    /* =================== M11, M12 =================== */
+    function buildCA(el) {
+      const fig = q('[data-fig="ca"]', el);
+      q(".s-motion-recipe tbody", fig).innerHTML = RECIPE.map(
+        (r) => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`,
+      ).join("");
+      q(".s-motion-codes", fig).innerHTML = SWIFT.map(
+        ([h, code]) =>
+          `<div class="s-motion-code"><p class="s-motion-k">${h}</p><pre>${esc(code).replace(/(\/\/\/?[^\n]*)/g, '<span class="s-motion-cm">$1</span>')}</pre></div>`,
+      ).join("");
+      q(".s-motion-fps tbody", fig).innerHTML = FPS.map(
+        (r) => `<tr><td>${r[0]}</td><td class="s-motion-n">${r[1]}</td><td>${r[2]}</td></tr>`,
+      ).join("");
+      q(".s-motion-pow tbody", fig).innerHTML = POWER.map(
+        (r) => `<tr><td><b>${r[0]}</b></td><td>${r[1]}</td></tr>`,
+      ).join("");
+      q(".s-motion-avoid", fig).innerHTML = AVOID.map(([b, t]) => `<li><b>${b}</b> ${t}</li>`).join(
+        "",
+      );
+      q(".s-motion-meas", fig).innerHTML = MEAS.map(([b, t]) => `<li><b>${b}</b> ${t}</li>`).join(
+        "",
+      );
+    }
+    function buildRules(el) {
+      const fig = q('[data-fig="rules"]', el);
+      q(".s-motion-pr", fig).innerHTML = PRINCIPLES.map(
+        ([b, t]) => `<li><span><b>${b}</b>${t}</span></li>`,
+      ).join("");
+      q(".s-motion-dont", fig).innerHTML = DONTS.map(([b, t]) => `<li><b>${b}</b> ${t}</li>`).join(
+        "",
+      );
+    }
+
+    /* =================== section =================== */
+    let M = null;
+    Bloom.section("motion", {
+      init(el) {
+        M = {
+          clock: buildClock(el),
+          script: buildScript(el),
+          matrix: buildMatrix(el),
+          e2e: buildE2E(el),
+          archive: buildArchive(el),
+          themeBtn: buildTheme(el),
+          comp: buildComponents(el),
+        };
+        buildCurves(el);
+        buildLamps(el);
+        buildBars(el);
+        buildCA(el);
+        buildRules(el);
+        qa(".s-motion-gl", el).forEach((g) => {
+          g.outerHTML = B.gi(g.dataset.g);
+        });
+        qa("table.s-motion-stack", el).forEach((t) => {
+          // phone layout: each cell carries its column name
+          const hs = qa("thead th", t).map((th) => th.textContent);
+          qa("tbody tr", t).forEach((tr) =>
+            [...tr.children].forEach((td, i) => {
+              if (!i || !hs[i]) return;
+              td.dataset.l = hs[i];
+              if (td.innerHTML.trim()) td.innerHTML = `<span>${td.innerHTML}</span>`; // one grid item beside the label, however many <code> runs it holds
+            }),
+          );
+        });
+        themeLabel(M.themeBtn, document.documentElement.dataset.theme);
+        document.addEventListener("bloom:motion", () => {
+          M.clock.frozen = false;
+        });
+        const t = B.t();
+        tickScript(M.script, t);
+        tickProgress(M.comp, t);
+        tickClock(M.clock, t);
+      },
+      tick(t) {
+        if (!M) return;
+        tickClock(M.clock, t);
+        tickScript(M.script, t);
+        tickE2E(M.e2e, t);
+        runSeq(M.archive, t, M.archive.scope);
+        tickProgress(M.comp, t);
+      },
+      theme(name) {
+        if (M) themeLabel(M.themeBtn, name);
+      },
+    });
+  })();
+</script>

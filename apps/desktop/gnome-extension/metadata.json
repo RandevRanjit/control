@@ -1,0 +1,8 @@
+{
+  "uuid": "snap-shot@randevranjit.github.io",
+  "name": "Control SnapShots",
+  "description": "Allows Control to capture the focused window, identify it for optional accessibility text, and animate it into Control. Disable this extension to revoke access.",
+  "shell-version": ["45", "46", "47", "48", "49", "50"],
+  "version": 2,
+  "url": "https://github.com/RandevRanjit/control"
+}

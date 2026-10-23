@@ -1,0 +1,3012 @@
+<style data-part="chat">
+  /* ---------- section scope. Derived tokens are re-declared on every forced-theme figure, so they resolve in its theme ---------- */
+  .s-chat-root,
+  .s-chat-root [data-theme] {
+    --s-chat-card: color-mix(in srgb, var(--deep) 72%, var(--raised));
+    --s-chat-cur: var(--ink-1);
+  }
+  html[data-theme="night"] .s-chat-root,
+  .s-chat-root [data-theme="night"] {
+    --s-chat-cur: var(--cream);
+  }
+
+  /* a forced-theme figure is its own field; when it matches the page the stage simply disappears */
+  .s-chat-root .bl-prose + .fig {
+    margin-top: var(--s-6);
+  }
+  .s-chat-stage {
+    padding: 40px 40px 44px;
+    border-radius: var(--r-xl);
+    overflow: clip;
+  }
+  .s-chat-stage > .cap {
+    margin-top: var(--s-5);
+  }
+  html[data-theme="night"] .s-chat-stage[data-theme="night"],
+  html[data-theme="field"] .s-chat-stage[data-theme="field"] {
+    padding: 0;
+    overflow: visible;
+  }
+  html[data-theme="night"] .s-chat-stage[data-theme="night"] > .cap,
+  html[data-theme="field"] .s-chat-stage[data-theme="field"] > .cap {
+    margin-top: var(--s-4);
+  }
+  @media (max-width: 720px) {
+    .s-chat-stage {
+      padding: 12px 12px 16px;
+      border-radius: var(--r-l);
+    }
+    .s-chat-stage > .cap {
+      margin-top: var(--s-3);
+    }
+  }
+
+  /* ---------- the frame: sidebar full height with the lights; the conversation's head carries the session ---------- */
+  .s-chat-win.window {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: 272px minmax(0, 1fr) 440px;
+    column-gap: 6px;
+    padding: 0 6px 6px 0;
+  }
+
+  /* sidebar (chrome) */
+  .s-chat-side {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+  }
+  .s-chat-top {
+    height: 42px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    padding: 0 12px 0 16px;
+  }
+  .s-chat-sh {
+    height: 30px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 12px 0 20px;
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-chat-ib {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--text-caption);
+  }
+  .s-chat-ib .gi {
+    width: 14px;
+    height: 14px;
+  }
+  .s-chat-list {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: 8px;
+  }
+  .s-chat-gr.group-row {
+    gap: 8px;
+    padding-left: 23px;
+    margin-top: 8px;
+  }
+  .s-chat-gr .s-chat-gn {
+    white-space: nowrap;
+  }
+  .s-chat-side .session-row[aria-selected="true"] {
+    box-shadow:
+      inset 0 1px 0 var(--lip),
+      inset 0 -8px 12px -8px var(--occl);
+  }
+  .s-chat-env {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-chat-env .gi {
+    width: 12px;
+    height: 12px;
+  }
+  .s-chat-gap {
+    height: 12px;
+  }
+  .s-chat-arh {
+    height: 34px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px 0 20px;
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-chat-arh .gi {
+    width: 10px;
+    height: 10px;
+    color: var(--text-caption);
+  }
+  .s-chat-arh .pearl.count {
+    margin-left: auto;
+  }
+  .s-chat-use {
+    flex: none;
+    display: grid;
+    grid-template-columns: 22px auto minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 8px;
+    padding: 12px 18px 16px 20px;
+  }
+  .s-chat-uk {
+    font: 500 10.5px/1 var(--f-mono);
+    color: var(--text-label);
+  }
+  .s-chat-up {
+    font: 600 11px/1 var(--f-mono);
+    color: var(--text-strong);
+  }
+  .s-chat-ur {
+    grid-column: 4;
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-chat-use > .use-line {
+    grid-column: 1 / -1;
+    margin: 9px 0 15px;
+  } /* usage: a plain ink line on a quiet track, no hue */
+  .s-chat-tim {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font: var(--w-reg) 11px/1 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-chat-tim .gi {
+    width: 12px;
+    height: 12px;
+  }
+  .s-chat-tim .t-num {
+    font-size: 10.5px;
+    color: var(--text-secondary);
+  }
+  .s-chat-tim i {
+    width: 14px;
+  }
+
+  /* the conversation's head: lamp, the group's pearl, the name over the one full bar; tools at the right */
+  .s-chat-centre {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+  .s-chat-head {
+    height: 42px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 0 0 8px;
+    min-width: 0;
+  }
+  .s-chat-who {
+    display: grid;
+    grid-template-columns: 10px 14px auto auto minmax(0, 1fr);
+    grid-template-rows: 16px 6px;
+    column-gap: 9px;
+    row-gap: 6px;
+    align-items: center;
+    min-width: 0;
+    flex: 1;
+  }
+  .s-chat-who > .lamp {
+    grid-row: 1;
+    grid-column: 1;
+  }
+  .s-chat-who > .pearl {
+    grid-row: 1;
+    grid-column: 2;
+  }
+  .s-chat-nm {
+    grid-row: 1;
+    grid-column: 3;
+    font: 600 13px/16px var(--f-mono);
+    letter-spacing: 0.04em;
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .s-chat-pth {
+    grid-row: 1;
+    grid-column: 5;
+    font: 400 11px/16px var(--f-mono);
+    color: var(--text-caption);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-chat-pth b {
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .s-chat-who > .sbar {
+    grid-row: 2;
+    grid-column: 3 / 6;
+    max-width: 360px;
+  }
+  .s-chat-who.s-chat-solo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .s-chat-solo > .s-chat-pth {
+    grid-column: 1;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .s-chat-solo > .sbar {
+    grid-column: 1;
+  }
+  .s-chat-ctl {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+  }
+  .s-chat-ctl .gi {
+    width: 13px;
+    height: 13px;
+    color: var(--text-caption);
+  }
+  .s-chat-soft {
+    color: var(--text-caption);
+    font-weight: var(--w-reg);
+  }
+  .s-chat-on.pill {
+    --pill-c: var(--deep);
+    --pill-ink: var(--text-strong);
+    box-shadow: var(--well);
+  }
+
+  /* the well: the conversation, bottom-anchored, older turns fading off the top */
+  .s-chat-well.pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--well);
+  }
+  .s-chat-convo {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 30px 8px 8px;
+    -webkit-mask: linear-gradient(to bottom, transparent 0, var(--ink-1) 80px);
+    mask: linear-gradient(to bottom, transparent 0, var(--ink-1) 80px);
+  }
+  .s-chat-turn {
+    position: relative;
+    flex: none;
+    padding-left: 52px;
+    margin-top: 18px;
+  }
+  .s-chat-thread {
+    position: absolute;
+    left: 25px;
+    top: 22px;
+    bottom: 8px;
+    width: 2px;
+    border-radius: 1px;
+    background: var(--seam);
+    overflow: hidden;
+  }
+  .s-chat-thread > .ramp-flow {
+    position: absolute;
+    inset: 0;
+    --tile: 480px;
+  }
+  .s-chat-tp {
+    position: absolute;
+    left: 19px;
+    top: 9px;
+    width: 14px;
+    height: 14px;
+  }
+  .s-chat-tp > * {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  .s-chat-folded .s-chat-tp {
+    left: 21px;
+    top: 10px;
+    width: 10px;
+    height: 10px;
+  }
+  .s-chat-tp.s-chat-big {
+    left: 16px;
+    top: 6px;
+    width: 20px;
+    height: 20px;
+  }
+  .s-chat-q {
+    display: inline-block;
+    max-width: 600px;
+    padding: 9px 14px 10px;
+    border-radius: var(--r-l);
+    background: var(--raised);
+    box-shadow:
+      inset 0 1px 0 var(--lip),
+      inset 0 -5px 12px var(--occl);
+    font: 500 12.5px/18px var(--f-mono);
+    color: var(--text-strong);
+  }
+  .s-chat-meta {
+    margin: 7px 0 2px 4px;
+    font: 400 10.5px/15px var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-chat-meta b {
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  /* cards: TRACE's grammar, inline. A pearl on the thread, the kind, the path, the meta, a chevron when there is more */
+  .s-chat-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin: 6px 0 2px;
+  }
+  .s-chat-cw {
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+  .s-chat-cwi {
+    min-height: 0;
+    overflow: hidden;
+    margin-left: -34px;
+    padding-left: 34px;
+  }
+  .s-chat-card {
+    position: relative;
+    border-radius: var(--r-m);
+    transition: background-color var(--d-quick) var(--e-sine);
+  }
+  .s-chat-card[data-open] {
+    background: var(--s-chat-card);
+    box-shadow: inset 0 1px 0 var(--lip);
+  }
+  .s-chat-pin.pearl {
+    position: absolute;
+    left: -30px;
+    top: 9px;
+  }
+  .s-chat-row {
+    display: grid;
+    grid-template-columns: 50px minmax(0, 1fr) auto 12px;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 26px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--r-m);
+    background: none;
+    text-align: left;
+    font: 400 11.5px/1 var(--f-mono);
+    color: var(--text-secondary);
+  }
+  button.s-chat-row {
+    cursor: pointer;
+  }
+  button.s-chat-row:hover {
+    background: var(--s-chat-card);
+  }
+  .s-chat-pt {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-chat-k {
+    font: 500 10px/1 var(--f-mono);
+    letter-spacing: 0.06em;
+    color: var(--text-caption);
+  }
+  .s-chat-card[data-k="read"] .s-chat-k {
+    color: var(--trace-read);
+  }
+  .s-chat-card[data-k="write"] .s-chat-k {
+    color: var(--trace-write);
+  }
+  .s-chat-card[data-k="agent"] .s-chat-k {
+    color: var(--trace-agent);
+  }
+  .s-chat-card[data-k="error"] .s-chat-k {
+    color: var(--trace-error);
+  }
+  .s-chat-card[data-k="run"] .s-chat-k,
+  .s-chat-tail .s-chat-k {
+    color: var(--trace-live);
+  }
+  .s-chat-card[data-k="write"] > .s-chat-row,
+  .s-chat-card[data-k="error"] > .s-chat-row {
+    color: var(--text-strong);
+  }
+  .s-chat-m {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10.5px;
+    color: var(--text-caption);
+    white-space: nowrap;
+  }
+  .s-chat-m .sbar.tip {
+    margin-left: 2px;
+  }
+  .s-chat-cv.gi {
+    width: 10px;
+    height: 10px;
+    color: var(--text-caption);
+  }
+  .s-chat-body {
+    display: grid;
+    grid-template-rows: 0fr;
+  }
+  .s-chat-card[data-open] > .s-chat-body {
+    grid-template-rows: 1fr;
+  }
+  .s-chat-bi {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .s-chat-diff {
+    margin: 2px 10px 10px 68px;
+    border-radius: var(--r-s);
+    overflow: hidden;
+    background: var(--deep);
+    font: 400 11px/16px var(--f-mono);
+  }
+  .s-chat-dl {
+    display: grid;
+    grid-template-columns: 30px 16px minmax(0, 1fr);
+    white-space: pre;
+    color: var(--text-body);
+  }
+  .s-chat-dl > .s-chat-ln {
+    background: var(--sunken);
+    color: var(--text-caption);
+    text-align: right;
+    padding-right: 6px;
+  }
+  .s-chat-dl > .s-chat-sg {
+    text-align: center;
+  }
+  .s-chat-dl.s-chat-rem {
+    background: var(--diff-rem-wash);
+  }
+  .s-chat-dl.s-chat-add {
+    background: var(--diff-add-wash);
+    color: var(--text-strong);
+  }
+  .s-chat-dl.s-chat-rem > .s-chat-sg {
+    color: var(--diff-rem-mark);
+  }
+  .s-chat-dl.s-chat-add > .s-chat-sg {
+    color: var(--diff-add-mark);
+  }
+  .s-chat-wr {
+    background: var(--diff-rem-word);
+    border-radius: var(--r-xs);
+  }
+  .s-chat-wa {
+    background: var(--diff-add-word);
+    border-radius: var(--r-xs);
+  }
+  .s-chat-note {
+    margin: 2px 10px 10px 68px;
+    padding: 6px 10px;
+    border-radius: var(--r-s);
+    background: color-mix(
+      in srgb,
+      var(--deep) 60%,
+      var(--sunken)
+    ); /* below the open card in both themes */
+    box-shadow: var(--well);
+    font: 400 11px/16px var(--f-mono);
+    color: var(--text-body);
+  }
+  .s-chat-sub {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0 10px 10px 68px;
+    font: 400 11px/16px var(--f-mono);
+    color: var(--text-secondary);
+  }
+  .s-chat-sub span {
+    color: var(--text-caption);
+  }
+  .s-chat-card[data-k="agent"]:not([data-done]) .s-chat-dn {
+    display: none;
+  }
+  .s-chat-nest {
+    padding-bottom: 6px;
+  }
+  .s-chat-nest > .s-chat-row {
+    height: 22px;
+  }
+  .s-chat-frow.s-chat-row {
+    grid-template-columns: 30px minmax(0, 1fr) auto 12px;
+    height: 30px;
+    font-size: 12px;
+  }
+  .s-chat-frow .s-chat-tn {
+    font: 500 11px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-chat-frow .s-chat-pt {
+    color: var(--text-secondary);
+  }
+
+  /* Claude's words: the chrome face; anything you could paste stays Plex */
+  .s-chat-say {
+    position: relative;
+    margin: 8px 0 4px;
+    padding-left: 10px;
+    max-width: 600px;
+    font: var(--w-reg) 14px/22px var(--f-chrome);
+    color: var(--text-body);
+  }
+  .s-chat-say > .s-chat-pin {
+    top: 7px;
+    left: -30px;
+  }
+  .s-chat-say code {
+    font-size: 12.5px;
+    color: var(--text-strong);
+    background: var(--s-chat-card);
+  }
+  .s-chat-sayf.s-chat-say {
+    margin: 0 10px 8px 40px;
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--text-secondary);
+  }
+  .s-chat-sc {
+    display: inline-block;
+    width: 7px;
+    height: 15px;
+    margin-left: 2px;
+    vertical-align: -3px;
+    border-radius: 1px;
+    background: var(--s-chat-cur);
+  }
+  .s-chat-tail {
+    position: relative;
+    display: grid;
+    grid-template-columns: 50px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    height: 26px;
+    padding: 0 10px;
+    font: 400 11.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+
+  /* the composer: CONTROL's own text field. Send pre-types into Claude's prompt box and adds the one Enter you pressed */
+  .s-chat-comp {
+    flex: none;
+    display: grid;
+    gap: 9px;
+    margin: 6px 18px 0;
+    padding: 10px 10px 10px 14px;
+    border-radius: var(--r-l);
+    background: var(--raised);
+    box-shadow:
+      inset 0 1px 0 var(--lip),
+      inset 0 -6px 14px var(--occl);
+  }
+  .s-chat-att {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 28px;
+    padding: 0 9px 0 4px;
+    border-radius: var(--r-m);
+    background: var(--overlay);
+    box-shadow:
+      inset 0 1px 0 var(--lip),
+      inset 0 -3px 6px var(--occl);
+    font: 400 11px/1 var(--f-mono);
+    color: var(--text-strong);
+  }
+  .s-chat-att .gi {
+    width: 10px;
+    height: 10px;
+    color: var(--text-caption);
+  }
+  .s-chat-thumb {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 20px;
+    border-radius: var(--r-xs);
+  }
+  .s-chat-thumb > i {
+    display: block;
+    width: 26px;
+    height: 6px;
+    border-radius: 1px;
+  }
+  .s-chat-draft {
+    font: 400 12.5px/18px var(--f-mono);
+    color: var(--text-strong);
+  }
+  .s-chat-caret {
+    display: inline-block;
+    width: 2px;
+    height: 16px;
+    margin-left: 1px;
+    vertical-align: -3px;
+    border-radius: 1px;
+    background: var(--s-chat-cur);
+  }
+  .s-chat-cbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .s-chat-cbar .chip {
+    height: 20px;
+  }
+  .s-chat-cbar .gi {
+    width: 12px;
+    height: 12px;
+  }
+  .s-chat-stop {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 4px;
+  }
+  .s-chat-stop .kbd {
+    height: 18px;
+    font-size: 10px;
+  }
+  .s-chat-hint {
+    flex: none;
+    margin: 7px 18px 10px 32px;
+    font: var(--w-reg) 11px/1.3 var(--f-chrome);
+    color: var(--text-caption);
+  }
+
+  /* right panel: Diff, Outputs, Folder, Browser, Git and the terminal as a glyph tab */
+  .s-chat-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+  .s-chat-tabs {
+    height: 42px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    min-width: 0;
+  }
+  .s-chat-tab {
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: none;
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-caption);
+    white-space: nowrap;
+  }
+  button.s-chat-tab {
+    cursor: pointer;
+  }
+  button.s-chat-tab:hover {
+    color: var(--text-strong);
+  }
+  .s-chat-tab .gi {
+    width: 14px;
+    height: 14px;
+  }
+  .s-chat-tab.s-chat-ico {
+    width: 30px;
+    padding: 0;
+    justify-content: center;
+  }
+  .s-chat-tab[data-open] {
+    background: color-mix(in srgb, var(--deep) 50%, var(--raised));
+    color: var(--text-secondary);
+  }
+  .s-chat-tab[aria-selected="true"] {
+    background: var(--deep);
+    color: var(--text-strong);
+  }
+  .s-chat-guest.chip {
+    height: 24px;
+    gap: 6px;
+    padding: 0 8px;
+    margin-left: auto;
+  }
+  .s-chat-guest .gi {
+    width: 12px;
+    height: 12px;
+    color: var(--text-caption);
+  }
+  .s-chat-gem {
+    width: 11px;
+    height: 13px;
+    flex: none;
+  }
+  .s-chat-views {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .s-chat-stack {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 6px;
+    min-height: 0;
+  }
+  .s-chat-views > .s-chat-v[hidden],
+  .s-chat-views > .s-chat-stack[hidden] {
+    display: none;
+  }
+  .s-chat-v.pane {
+    display: flex;
+    flex-direction: column;
+  }
+  .s-chat-vh {
+    height: 34px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px 0 10px;
+    font: var(--w-reg) 11.5px/1 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-chat-vh .gi {
+    width: 13px;
+    height: 13px;
+  }
+  .s-chat-vh b {
+    font-weight: var(--w-med);
+    color: var(--text-strong);
+  }
+  .s-chat-url.input {
+    flex: 1;
+    height: 24px;
+    font-size: 11px;
+  }
+  .s-chat-pk {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+  .s-chat-pk[data-on] {
+    background: var(--s-chat-card);
+    color: var(--text-strong);
+    box-shadow: inset 0 1px 0 var(--lip);
+  }
+
+  /* the site keeps its own colours and its own type: it is not ours */
+  .s-chat-site {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    margin: 0 6px;
+    border-radius: var(--r-m);
+    overflow: hidden;
+    padding: 16px 20px;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
+  }
+  .s-chat-snav {
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+  }
+  .s-chat-snav b {
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    margin-right: auto;
+  }
+  .s-chat-sh1 {
+    margin: 40px 0 8px;
+    font:
+      700 26px/1.1 system-ui,
+      -apple-system,
+      sans-serif;
+    color: inherit;
+  }
+  .s-chat-sp {
+    max-width: 300px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .s-chat-cta {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 212px;
+    height: 40px;
+    margin-top: 20px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .s-chat-cta::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border-radius: 7px;
+    outline: 1.5px dashed var(--cream);
+    outline-offset: 0;
+  }
+  .s-chat-pickbar {
+    position: absolute;
+    left: 20px;
+    top: 222px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 5px 5px 10px;
+    border-radius: var(--r-m);
+    background: var(--overlay);
+    box-shadow:
+      var(--float),
+      inset 0 1px 0 var(--lip);
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .s-chat-pickbar .kbd {
+    height: auto;
+  }
+  .s-chat-spec {
+    margin-top: 70px;
+    display: grid;
+    gap: 2px;
+    font-size: 11.5px;
+    max-width: 320px;
+  }
+  .s-chat-spec > div {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+  }
+  .s-chat-sfoot {
+    flex: none;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    font: var(--w-reg) 11px/1 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-chat-sfoot .t-num {
+    margin-left: auto;
+    font-size: 10.5px;
+  }
+
+  /* Diff, under the browser */
+  .s-chat-dsum {
+    height: 26px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-chat-dsum .t-num {
+    font-size: 11.5px;
+  }
+  .s-chat-pn {
+    color: var(--diff-add-mark);
+  }
+  .s-chat-mn {
+    color: var(--diff-rem-mark);
+  }
+  .s-chat-df {
+    display: grid;
+    grid-template-columns: 12px 12px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    height: 24px;
+    margin: 0 6px;
+    padding: 0 10px 0 8px;
+    border-radius: 8px;
+    font: 400 11.5px/1 var(--f-mono);
+    color: var(--text-secondary);
+  }
+  .s-chat-df > :nth-child(-n + 2) {
+    font-size: 10px;
+    color: var(--text-caption);
+    text-align: center;
+  }
+  .s-chat-df > :nth-child(4) {
+    font-size: 10.5px;
+  }
+  .s-chat-dfoot {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+
+  /* the terminal tab: the same live ctrl attach surface, now a viewer */
+  .s-chat-tmux {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .s-chat-tx {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
+    padding: 0 9px;
+    border-radius: var(--r-pill);
+    font: 400 11px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-chat-tx i {
+    font-style: normal;
+    color: var(--text-caption);
+  }
+  .s-chat-tx[data-on] {
+    background: var(--s-chat-card);
+    color: var(--text-strong);
+    box-shadow: inset 0 1px 0 var(--lip);
+  }
+  .s-chat-tx[data-on] i {
+    color: var(--text-caption);
+  }
+  .s-chat-hk.kbd {
+    margin-left: auto;
+    height: 18px;
+    gap: 2px;
+    font-size: 10px;
+  }
+  .s-chat-tty {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 4px 10px 0;
+    font: 400 11px/16px var(--f-mono);
+    color: var(--ink-1);
+    white-space: pre;
+  }
+  .s-chat-tty > div {
+    min-height: 16px;
+    flex: none;
+  }
+  .s-chat-tty b {
+    font-weight: 600;
+  }
+  .s-chat-ch {
+    display: inline-block;
+    width: 1ch;
+    text-align: center;
+    font-style: normal;
+    color: var(--ink-1);
+  }
+  .s-chat-ch.s-chat-g,
+  .s-chat-tty .s-chat-g {
+    color: var(--ink-4);
+  }
+  .s-chat-tty .s-chat-u {
+    background: var(--raised);
+  }
+  .s-chat-tty .s-chat-rem {
+    background: var(--diff-rem-wash);
+    color: var(--ink-2);
+  }
+  .s-chat-tty .s-chat-add {
+    background: var(--diff-add-wash);
+  }
+  .s-chat-mr {
+    color: var(--diff-rem-mark);
+    font-style: normal;
+  }
+  .s-chat-ma {
+    color: var(--diff-add-mark);
+    font-style: normal;
+  }
+  .s-chat-pbox {
+    height: 34px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    margin: 6px 10px 0;
+    padding: 0 8px;
+    border-radius: var(--r-s);
+    box-shadow: inset 0 0 0 2px var(--seam);
+    font: 400 11px/1 var(--f-mono);
+    color: var(--ink-1);
+    white-space: pre;
+  }
+  .s-chat-bcur {
+    display: inline-block;
+    width: 6.6px;
+    height: 14px;
+    vertical-align: -3px;
+    background: var(--s-chat-cur);
+  }
+  .s-chat-mode {
+    height: 26px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    padding: 0 19px;
+    font: 400 11px/1 var(--f-mono);
+    color: var(--ink-3);
+    white-space: pre;
+  }
+
+  /* ---------- X3: cards at 1:1 ---------- */
+  .s-chat-x3 {
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+    gap: var(--s-5);
+    align-items: start;
+  }
+  @media (max-width: 1080px) {
+    .s-chat-x3 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .s-chat-col {
+    display: grid;
+    gap: var(--s-5);
+    min-width: 0;
+  }
+  .s-chat-col > .fig {
+    margin: 0;
+  }
+  .s-chat-cut {
+    min-width: 0;
+    padding: 0 6px 6px;
+    border-radius: var(--r-l);
+    background: var(--raised);
+    box-shadow: inset 0 1px 0 var(--lip);
+  }
+  .s-chat-cut > .s-chat-head {
+    height: 44px;
+  }
+  .s-chat-cut > .pane {
+    box-shadow: var(--well);
+  }
+  .s-chat-cut .s-chat-convo {
+    -webkit-mask: none;
+    mask: none;
+    padding: 2px 18px 12px 8px;
+  }
+  .s-chat-x3a .s-chat-convo {
+    justify-content: flex-start;
+  }
+  .s-chat-mconvo.s-chat-convo {
+    flex: none;
+    height: 286px;
+    padding-top: 0;
+    -webkit-mask: linear-gradient(to bottom, transparent 0, var(--ink-1) 22px);
+    mask: linear-gradient(to bottom, transparent 0, var(--ink-1) 22px);
+  }
+  .s-chat-mconvo .s-chat-turn {
+    margin-top: 0;
+  }
+  @media (max-width: 600px) {
+    .s-chat-mconvo.s-chat-convo {
+      height: 400px;
+    }
+  }
+  .s-chat-mconvo .s-chat-thread {
+    top: -300px;
+  }
+  .s-chat-lab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 4px 0 10px;
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-chat-lab .chip {
+    margin-left: auto;
+  }
+
+  /* needs-you cards float up from the well on the overlay tone: the one thing in the conversation that waits for you */
+  .s-chat-ask {
+    position: relative;
+    margin: 6px 0 8px;
+    padding: 12px 14px 12px;
+    border-radius: var(--r-l);
+    background: var(--overlay);
+    box-shadow:
+      var(--float),
+      inset 0 1px 0 var(--lip);
+  }
+  .s-chat-ask > .s-chat-pin {
+    left: -30px;
+    top: 16px;
+  }
+  .s-chat-askh {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-chat-askh .chip.mark {
+    margin-left: auto;
+  }
+  .s-chat-askq {
+    margin: 10px 0 10px;
+    font: var(--w-med) 14px/20px var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-chat-cmd {
+    display: block;
+    margin: 10px 0 2px;
+    padding: 7px 10px;
+    border-radius: var(--r-s);
+    background: var(--sunken);
+    box-shadow: var(--well);
+    font: 400 12px/16px var(--f-mono);
+    color: var(--text-strong);
+  }
+  .s-chat-ol {
+    margin: 0 0 12px;
+    padding-left: 22px;
+    font: var(--w-reg) 13px/20px var(--f-chrome);
+    color: var(--text-body);
+  }
+  .s-chat-ol code {
+    font-size: 11.5px;
+  }
+  .s-chat-opts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .s-chat-opt.pill {
+    font-family: var(--f-mono);
+    font-weight: 500;
+    font-size: 12px;
+  }
+  .s-chat-hi.pill::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: var(--r-pill);
+    box-shadow: 0 0 0 2px var(--focus);
+    pointer-events: none;
+  }
+  .s-chat-type.input {
+    height: 28px;
+    min-width: 150px;
+    flex: 1;
+  }
+  .s-chat-type .ph {
+    color: var(--text-caption);
+  } /* ledger 3: readable text never takes the ghost tier */
+  .s-chat-askf {
+    margin-top: 10px;
+    font: var(--w-reg) 11.5px/1.45 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-chat-ans {
+    color: var(--text-strong);
+    font-weight: 500;
+  }
+  .s-chat-pwell.s-chat-well {
+    position: relative;
+    display: grid;
+  }
+  .s-chat-pv {
+    grid-area: 1 / 1;
+    min-width: 0;
+    padding: 14px 18px 14px 18px;
+  }
+  .s-chat-pv[hidden] {
+    display: block;
+    visibility: hidden;
+  } /* both views keep the cell's height, so the flip never moves the page */
+  .s-chat-pv .s-chat-ask {
+    margin: 0;
+  }
+  .s-chat-dlg {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: var(--r-s);
+    box-shadow: inset 0 0 0 2px var(--seam);
+    font: 400 11px/16px var(--f-mono);
+    color: var(--ink-1);
+    white-space: pre-wrap;
+  }
+  .s-chat-dlg .s-chat-sel {
+    background: var(--selection);
+  }
+  .s-chat-flip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font: var(--w-reg) 11.5px/1.4 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-chat-flip .pill {
+    margin-left: auto;
+  }
+
+  /* ---------- X4 to X7: the feasibility panel ---------- */
+  .s-chat-oc-list {
+    display: grid;
+    gap: 6px;
+  }
+  .s-chat-oc {
+    padding: 18px 22px 20px;
+    border-radius: var(--r-xl);
+    background: color-mix(in srgb, var(--raised) 55%, transparent);
+  }
+  .s-chat-oc[data-rec] {
+    background: var(--raised);
+    box-shadow: inset 0 1px 0 var(--lip);
+  }
+  .s-chat-och {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 12px;
+  }
+  .s-chat-och h4 {
+    font: var(--w-strong) 17px/1.3 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-chat-rank {
+    font: 600 12px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-chat-och .chip {
+    align-self: center;
+  }
+  .s-chat-rec.chip {
+    background: var(--overlay);
+    color: var(--text-strong);
+    box-shadow: inset 0 1px 0 var(--lip);
+  }
+  .s-chat-ocw {
+    margin-top: 4px;
+    font: var(--w-reg) 13px/1.5 var(--f-chrome);
+    color: var(--text-secondary);
+    max-width: 100ch;
+  }
+  .s-chat-dl4 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px 24px;
+    margin-top: 14px;
+  }
+  .s-chat-dl4 > div {
+    min-width: 0;
+  }
+  .s-chat-dl4 dt {
+    font: var(--w-med) 12px/1.3 var(--f-chrome);
+    color: var(--text-label);
+    margin-bottom: 4px;
+  }
+  .s-chat-dl4 dd {
+    margin: 0;
+    font: var(--w-reg) 13px/1.5 var(--f-chrome);
+    color: var(--text-body);
+  }
+  @media (max-width: 1100px) {
+    .s-chat-dl4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 600px) {
+    .s-chat-dl4 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .s-chat-oc {
+      padding: 16px;
+    }
+  }
+  .s-chat-also {
+    margin-top: 10px;
+    display: grid;
+    gap: 6px;
+    font: var(--w-reg) 13px/1.5 var(--f-chrome);
+    color: var(--text-secondary);
+    max-width: 100ch;
+  }
+  .s-chat-also b {
+    color: var(--text-strong);
+  }
+  .s-chat-steps {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  @media (max-width: 900px) {
+    .s-chat-steps {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .s-chat-step {
+    padding: 18px 22px 20px;
+    border-radius: var(--r-xl);
+    background: var(--raised);
+    box-shadow: inset 0 1px 0 var(--lip);
+    min-width: 0;
+  }
+  .s-chat-step h4 {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font: var(--w-strong) 16px/1.3 var(--f-chrome);
+    color: var(--text-strong);
+    margin-bottom: 6px;
+  }
+  .s-chat-step h4 span {
+    font: 600 12px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-chat-step p {
+    font: var(--w-reg) 13.5px/1.55 var(--f-chrome);
+    color: var(--text-body);
+  }
+  .s-chat-step p + p {
+    margin-top: 8px;
+  }
+  .s-chat-pipe {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 0;
+    margin: 12px 0 2px;
+  }
+  .s-chat-pipe .chip {
+    height: 22px;
+  }
+  .s-chat-pipe > i {
+    width: 18px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--seam);
+  }
+  .s-chat-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: var(--r-pill);
+    background: var(--raised);
+    font: var(--w-med) 12px/1 var(--f-chrome);
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .s-chat-badge[data-b="amend"] {
+    background: var(--blue-wash);
+  }
+  .s-chat-wide {
+    min-width: 760px;
+  }
+  .s-chat-wide td:first-child {
+    white-space: nowrap;
+    font-weight: var(--w-med);
+    color: var(--text-strong);
+  }
+  .s-chat-quote {
+    color: var(--text-secondary);
+  }
+  .s-chat-un {
+    display: grid;
+    gap: 6px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    counter-reset: s-chat-un;
+  }
+  .s-chat-un > li {
+    position: relative;
+    padding: 14px 20px 15px 56px;
+    border-radius: var(--r-l);
+    background: color-mix(in srgb, var(--raised) 55%, transparent);
+    font: var(--w-reg) 14px/1.55 var(--f-chrome);
+    color: var(--text-body);
+    max-width: 100ch;
+    counter-increment: s-chat-un;
+  }
+  .s-chat-un > li::before {
+    content: counter(s-chat-un, decimal-leading-zero);
+    position: absolute;
+    left: 20px;
+    top: 16px;
+    font: 600 12px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-chat-un b {
+    color: var(--text-strong);
+  }
+  .s-chat-close {
+    margin-top: var(--s-5);
+  }
+</style>
+<section id="chat" class="bl-sec s-chat-root">
+  <header class="bl-sh">
+    <div class="no">06 <span class="bl-steps"></span></div>
+    <h2>Without a terminal</h2>
+    <p class="meta">A chat-first centre over Claude's real TUI. The terminal becomes a tab.</p>
+  </header>
+  <p class="bl-lead">
+    Your wacky idea, drawn. The centre stops being a terminal and becomes the conversation: your
+    prompt opens each turn, every read, write, error and agent sits in line as a card, and Claude's
+    reply streams in under them. Today TRACE repeats the terminal line for line; here each thing is
+    said once. Claude's own TUI keeps running in tmux, untouched, one click away as the terminal tab
+    beside Browser and Git.
+  </p>
+  <div class="bl-prose">
+    <p>
+      It is drawn over option C of the research: a chat view over the real TUI. CONTROL's mod
+      already runs inside every session and already sees every row the conversation keeps, and the
+      reply as it streams; the centre is drawn from that. The composer is CONTROL's own text field,
+      and Send pre-types into Claude's prompt box, then adds the one Enter you pressed. Nothing here
+      is built. The last part of this section says what is still unproven.
+    </p>
+  </div>
+
+  <h3 class="bl-sub"><span class="id">X1</span>The window, chat first</h3>
+  <div class="bl-prose">
+    <p>
+      The same sessions and the same Claude turn as the window in section 05, with a different
+      centre. The sidebar runs the full height and holds the lights, so the head of the conversation
+      says only what the selected row doesn't: the session's path and, under it, the one full state
+      bar in the window, a single smooth blend inside its state's family that flows on the clock.
+      The lamp, the pearl, the name, the state and the worktree are already on that row, so they
+      aren't repeated. In the sidebar every row carries the same colour through its beads, a sixth
+      of the row, just before the lamp at the far right. Each turn hangs from a thread in the
+      gutter. Your prompt sits on a soft raised pebble, in Plex, because it is exactly what you
+      typed. Every tool call is a pearl on the thread, and Claude's reply reads in the chrome face.
+    </p>
+    <p>
+      The live turn's thread carries the safe ramp, flowing, and its head is the one marble in the
+      well. When the turn ends, both settle to cream and the session's bar wipes from blue to green,
+      in the head and in its sidebar row together. The panel's tabs are icons: Outputs, Folder,
+      Browser, Git and the terminal. Diff lives inside Git as a mode, Graph | Diff, the way TRACE
+      carries Turns | Diff in the terminal window. TRACE is gone as a tab, because its rows are the
+      conversation now, and the terminal is the small glyph at the end of the strip.
+    </p>
+  </div>
+  <figure class="fig s-chat-stage themed" data-theme="field" data-fig="window-field">
+    <div class="bl-scale" data-w="1512" data-h="945">
+      <div class="window s-chat-win" data-region data-win="browser"></div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">X1</span><b>Field, live on the clock.</b
+      ><span
+        >T14 streams: reads and writes arrive as cards, the agent card's tip goes from working to
+        done, each write opens its diff, the reply types itself out from <code>turn.step</code>,
+        then the turn ends. Click any card with a chevron to fold or open it, and Browser, Diff or
+        the terminal glyph in the panel's strip.</span
+      >
+    </figcaption>
+  </figure>
+  <figure class="fig s-chat-stage themed" data-theme="night" data-fig="window-night">
+    <div class="bl-scale" data-w="1512" data-h="945">
+      <div class="window s-chat-win" data-region data-win="term"></div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">X2</span><b>Night, with the terminal tab open.</b
+      ><span
+        >The same stream on the same clock. The terminal is the live
+        <code>ctrl attach</code> surface, so Claude's own TUI keeps up line for line. Your draft
+        stays in CONTROL's composer, so Claude's prompt box is empty until you press Send. The
+        conversation sits in a well of the same plain grey, a step below the page,
+        <code>#1B1A1A</code>; the chrome around it steps up from the page. No blue-black anywhere,
+        except in the shading.</span
+      >
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">X3</span>Cards at 1:1</h3>
+  <div class="bl-prose">
+    <p>
+      One grammar for every kind of row, borrowed from TRACE: a pearl on the turn's thread, the kind
+      in its TRACE colour, the path in Plex, the meta at the right, and a chevron when there is
+      more. A write opens its diff for the live turn and folds in older ones. Consecutive reads fold
+      to one row. A subagent is a session in its own right, so its card carries a tip, three beads
+      in its own state's colour.
+    </p>
+    <p>
+      Needs-you cards are a different object. They float up from the well on the overlay tone,
+      because they are the one thing in the conversation that waits for you, and the session's bar
+      and lamp turn needs-you while they wait. The first cut only shows the card and leaves the
+      answer to Claude's dialog; the later cut lets your click send the dialog's own key.
+    </p>
+  </div>
+  <div class="s-chat-x3">
+    <figure class="fig" data-fig="cards">
+      <div class="s-chat-cut s-chat-x3a">
+        <div class="s-chat-lab">ORBIT-WEBSITE · T14, finished</div>
+        <div class="pane s-chat-well"><div class="s-chat-convo" data-x3a></div></div>
+      </div>
+      <figcaption class="cap">
+        <span class="id">X3</span><b>Tool cards.</b
+        ><span
+          >Click a card with a chevron to fold or open it. Diffs open in a well on the v1 washes;
+          the error opens on a sunken note, never danger red; RUN keeps its output folded, and here
+          there is none. T13's two reads fold to one row.</span
+        >
+      </figcaption>
+    </figure>
+    <div class="s-chat-col">
+      <figure class="fig" data-fig="ask">
+        <div class="s-chat-cut" data-region data-ask></div>
+        <figcaption class="cap">
+          <span class="id">X3</span><b>A question arrives and is answered: the later cut.</b
+          ><span
+            >RELAY MAIN asks; its bar wipes into arm through navy and wine, and the lamp beats. The
+            highlighted option is where Claude's own dialog cursor sits. Halfway round the clock the
+            click lands on it, or yours does, any time: the card folds to one line and the bar wipes
+            back to blue. The strings are the terminal mock's; the turn's opening is above the
+            fold.</span
+          >
+        </figcaption>
+      </figure>
+      <figure class="fig" data-fig="first-cut">
+        <div class="s-chat-cut" data-perm></div>
+        <figcaption class="cap">
+          <span class="id">X3</span><b>The first cut.</b
+          ><span
+            >CONTROL draws the card and leaves the answer to Claude's own dialog. Answer in terminal
+            flips to the terminal for the dialog; in the app the centre flips back on its own on the
+            next row.</span
+          >
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <h3 class="bl-sub"><span class="id">X4</span>The pipe, and why not fakechat</h3>
+  <div class="bl-prose">
+    <p>
+      You named fakechat, so it was the first thing tested, and it is the wrong pipe for the centre.
+      A channel is an MCP server that Claude Code spawns over stdio. It carries one thing in and one
+      thing out: your message arrives as an outside event (<code
+        >&lt;channel source="plugin:fakechat:fakechat" …&gt;</code
+      >, not your typed turn), and only what Claude passes to the channel's <code>reply</code> tool
+      comes back. fakechat's own instructions to Claude say it plainly: "Anything you want them to
+      see must go through the reply tool — your transcript output never reaches the UI"
+      (<code>server.ts:63</code>). The work, which is what you want in the centre, never crosses it.
+    </p>
+    <p>
+      CONTROL already ships the pipe that does carry the work. Its mod runs inside every Claude
+      session, and the mod API has <code>session.append</code>, which "fires once per row a
+      conversation of this session keeps (a prompt, a response block, a tool result, a notice),
+      before it is stored" (<code>index.d.ts:4196-4207</code>), and <code>turn.step</code>, which
+      streams the response chunk by chunk (<code>:1135-1139</code>). That is the whole chat, live,
+      with no file tailing.
+    </p>
+  </div>
+  <figure class="fig" data-fig="pipes">
+    <div class="s-chat-oc-list">
+      <article class="s-chat-oc" data-rec>
+        <div class="s-chat-och">
+          <span class="s-chat-rank">1</span>
+          <h4>C. Chat view over the real TUI</h4>
+          <span class="chip s-chat-rec">Recommended</span>
+        </div>
+        <p class="s-chat-ocw">
+          tmux unchanged; the mod's <code>session.append</code> and <code>turn.step</code> stream;
+          the composer pre-types; your Send is one keystroke you made.
+        </p>
+        <dl class="s-chat-dl4">
+          <div>
+            <dt>Fidelity</dt>
+            <dd>
+              Full. Claude still sees a typed <code>composer</code> turn; slash commands, skills,
+              <code>@</code>, modes, Esc and <code>/rewind</code> still work, because the TUI is
+              still there. Every row the transcript keeps reaches the chat.
+            </dd>
+          </div>
+          <div>
+            <dt>What breaks</dt>
+            <dd>
+              H1's second sentence needs an amendment for Send. Dialogs need native cards that map
+              to keys, or a flip to the terminal. History from before CONTROL opened needs a
+              backfill from the transcript JSONL.
+            </dd>
+          </div>
+          <div>
+            <dt>Effort</dt>
+            <dd>
+              Medium. Mod: one more <code>on('session.append')</code> and
+              <code>on('turn.step')</code> forwarding to <code>mod.sock</code>. Daemon: a
+              per-session conversation store and push. App: a chat renderer; TRACE's row kit is most
+              of it. No change to restore, update or tmux.
+            </dd>
+          </div>
+          <div>
+            <dt>Risk</dt>
+            <dd>Low. If the chat view breaks, the terminal tab still runs everything.</dd>
+          </div>
+        </dl>
+      </article>
+      <article class="s-chat-oc">
+        <div class="s-chat-och">
+          <span class="s-chat-rank">2</span>
+          <h4>B. Headless: <code>claude -p</code> with stream-json, or the Agent SDK</h4>
+        </div>
+        <p class="s-chat-ocw">
+          <code>claude -p --input-format stream-json --output-format stream-json</code>, with
+          CONTROL owning the process.
+        </p>
+        <dl class="s-chat-dl4">
+          <div>
+            <dt>Fidelity</dt>
+            <dd>
+              The highest structure: every event typed; <code>canUseTool</code> gives approvals and
+              AskUserQuestion as data you answer with buttons; interrupt; subagent streams via
+              <code>parent_tool_use_id</code>.
+            </dd>
+          </div>
+          <div>
+            <dt>What breaks</dt>
+            <dd>
+              No TUI, so built-in commands such as <code>/login</code> are gone and slash commands
+              only partly work. tmux no longer owns the process, so restore (§8), update restart
+              (§9), H11's pane check and the <code>ctrl attach</code> surface all need rewriting.
+              Plan mode, the todo list, image paste, <code>@</code> completion, Shift+Tab, the mod's
+              panes and toasts: rebuilt or lost. Auth: the Agent SDK docs say third-party products
+              may not offer claude.ai login.
+            </dd>
+          </div>
+          <div>
+            <dt>Effort</dt>
+            <dd>
+              High. A second runtime beside tmux, plus a UI for everything the TUI gives free.
+            </dd>
+          </div>
+          <div>
+            <dt>Risk</dt>
+            <dd>
+              High. Feature drift with every Claude release, and you lose the real terminal for the
+              very sessions CONTROL manages.
+            </dd>
+          </div>
+        </dl>
+      </article>
+      <article class="s-chat-oc">
+        <div class="s-chat-och">
+          <span class="s-chat-rank">3</span>
+          <h4>A. A CONTROL-owned channel, fakechat-style</h4>
+        </div>
+        <p class="s-chat-ocw">
+          A channel for input, plus the mod and the transcript for the stream.
+        </p>
+        <dl class="s-chat-dl4">
+          <div>
+            <dt>Fidelity</dt>
+            <dd>
+              Low for input. Your message arrives as an outside <code>&lt;channel&gt;</code> event,
+              not your turn; Claude must call <code>reply</code> to answer; no slash commands. The
+              stream side is fine, because it comes from the mod, not the channel.
+            </dd>
+          </div>
+          <div>
+            <dt>What breaks</dt>
+            <dd>
+              A full-screen dev-channel warning at every launch, restore and update restart, each
+              waiting for your key. The lock: <code>origin.kind</code> is <code>channel</code>, not
+              in <code>GATED</code> (<code>register.ts:9</code>), so a full lock would not stop it.
+              Research preview: flags and protocol may change.
+            </dd>
+          </div>
+          <div>
+            <dt>Effort</dt>
+            <dd>Medium: a Bun MCP server, plus all of C's stream work anyway.</dd>
+          </div>
+          <div>
+            <dt>Risk</dt>
+            <dd>
+              High: a preview API, allowlist friction, and a model that treats your words as an
+              outside event.
+            </dd>
+          </div>
+        </dl>
+      </article>
+    </div>
+    <div class="s-chat-also">
+      <p>
+        <b>Remote Control</b> (the <code>bridge</code> origin) would be ideal, since your phone
+        already drives a local session this way, but the protocol is claude.ai's, not open, so
+        CONTROL can't be a client. Not available.
+      </p>
+      <p>
+        <b>fakechat as it is</b> is one page per session on one port (<code>127.0.0.1:8787</code>),
+        with no history, no access control, no permission relay and a <code>&lt;pre&gt;</code> log.
+        Its own README: "This is a dev tool, not a messaging bridge."
+      </p>
+    </div>
+    <figcaption class="cap">
+      <span class="id">X4</span><b>Three pipes, ranked.</b
+      ><span
+        >Measured against today: tmux owns every PTY, the centre is a Ghostty surface on
+        <code>ctrl attach</code>, restore pre-types and never presses Enter, and the mod never
+        submits and never allows.</span
+      >
+    </figcaption>
+  </figure>
+  <figure class="fig" data-fig="channel">
+    <div class="bl-scroll">
+      <table class="bl-table">
+        <thead>
+          <tr>
+            <th>What Claude Code shows</th>
+            <th>Reaches a channel page?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Claude's normal answer text</td>
+            <td>
+              No, unless Claude also calls <code>reply</code>; then you get a second, model-chosen
+              summary, not the answer.
+            </td>
+          </tr>
+          <tr>
+            <td>Tool calls, diffs and file writes, thinking</td>
+            <td>No. Nothing in the contract emits them.</td>
+          </tr>
+          <tr>
+            <td>Permission prompts</td>
+            <td>
+              Tool approvals only, and only with relay. fakechat doesn't declare it; "Neither
+              verdict affects future calls".
+            </td>
+          </tr>
+          <tr>
+            <td>AskUserQuestion menus, plan approval</td>
+            <td>No. Terminal only.</td>
+          </tr>
+          <tr>
+            <td>Project trust, MCP consent, elicitation, the dev-channel warning</td>
+            <td>No. "Project trust and MCP server consent dialogs don't relay".</td>
+          </tr>
+          <tr>
+            <td>
+              Slash commands, skills by <code>/name</code>, <code>@file</code>, Shift+Tab, Esc,
+              <code>/rewind</code>, <code>/compact</code>, image paste
+            </td>
+            <td>
+              No. Channel text is message content inside a <code>&lt;channel&gt;</code> tag, not
+              composer input: <code>/compact</code> is just the word to Claude.
+            </td>
+          </tr>
+          <tr>
+            <td>Status line, spinner, elapsed time, tokens, context size, model</td>
+            <td>No. TUI only.</td>
+          </tr>
+          <tr>
+            <td>Background tasks, subagent progress, todo list</td>
+            <td>No. TUI only.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption class="cap">
+      <span class="id">X4</span><b>What a channel page never sees.</b
+      ><span>From the channels reference and fakechat's <code>server.ts</code>, read in full.</span>
+    </figcaption>
+  </figure>
+  <figure class="fig" data-fig="option-c">
+    <div class="s-chat-steps">
+      <div class="s-chat-step">
+        <h4><span>01</span>Stream</h4>
+        <div class="s-chat-pipe">
+          <span class="chip data">Claude Code TUI · tmux</span><i></i
+          ><span class="chip data">CONTROL mod</span><i></i><span class="chip data">mod.sock</span
+          ><i></i><span class="chip data">daemon</span><i></i><span class="chip data">chat</span>
+        </div>
+        <p>
+          The mod forwards <code>session.append</code> rows (the main loop and subagents, keyed by
+          <code>uuid</code> and <code>agentId</code>) and <code>turn.step</code> text deltas to the
+          daemon over <code>mod.sock</code>, the way <code>tool.call</code> goes today
+          (<code>register.ts:105-116</code>). Observing only, so H14 and H15 are untouched.
+        </p>
+        <p>
+          On opening a session the daemon backfills from the transcript,
+          <code>~/.claude/projects/&lt;slug&gt;/&lt;uuid&gt;.jsonl</code>, which uses the same
+          <code>uuid</code>s, so live rows join the backfill without duplicates.
+        </p>
+      </div>
+      <div class="s-chat-step">
+        <h4><span>02</span>Input</h4>
+        <p>
+          The composer is a native text field, and typing stays in CONTROL. Send pre-types the text
+          into Claude's prompt box (<code>PreTyped</code>, <code>send-keys -l</code>, unchanged) and
+          then sends one Enter. Claude sees an ordinary <code>composer</code> turn, so the lock's
+          gate applies as it does today.
+        </p>
+        <p>
+          <code>/</code> and <code>@</code> pass straight through to Claude's own completion by
+          mirroring keystrokes, or, as a simpler first cut, CONTROL completes them itself from the
+          skills list and the folder tree.
+        </p>
+      </div>
+      <div class="s-chat-step">
+        <h4><span>03</span>Needs you</h4>
+        <p>
+          The centre draws a card from the hook payload CONTROL already parses:
+          <code>PermissionRequest</code> (tool, command or path, the suggestion line),
+          <code>PreToolUse</code> for AskUserQuestion (header chip, question, 2–4 options, "Type
+          something") and ExitPlanMode (the plan), and <code>Elicitation</code>.
+        </p>
+        <p>
+          First cut: the card is read-only, with Answer in terminal, and the centre flips to the
+          terminal for the dialog and back on the next <code>session.append</code>. Later cut: the
+          buttons send the dialog's own keys, from your click.
+        </p>
+      </div>
+      <div class="s-chat-step">
+        <h4><span>04</span>Terminal</h4>
+        <p>
+          The Ghostty surface moves to a terminal tab in the right panel's strip, next to Browser
+          and Git. It is still the live <code>ctrl attach</code>, so tab 2's
+          <code>bun dev</code> and anything else in tmux is one click away, and nothing about
+          restore or update changes.
+        </p>
+        <p>
+          The sidebar's lamp and <code>PERMISSION</code> chip stay as they are, so a needs-you still
+          finds you from any session.
+        </p>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">X4</span><b>Option C, in four parts.</b
+      ><span>No change to restore, update or tmux; one spec amendment, for Send.</span>
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">X5</span>Said once</h3>
+  <div class="bl-prose">
+    <p>
+      Where every fact lives today, in direction D's terminal, TRACE and footer, and where it lives
+      with the conversation in the centre. TRACE (F27) is mapped, not built
+      (<code>docs/CHECKLIST.md:71</code>), so retiring it as a tab costs nothing already shipped.
+    </p>
+  </div>
+  <figure class="fig" data-fig="dedupe">
+    <div class="bl-scroll">
+      <table class="bl-table s-chat-wide">
+        <thead>
+          <tr>
+            <th>Information</th>
+            <th>Today</th>
+            <th>Chat first</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Your prompt</td>
+            <td>
+              Terminal (<code>&gt; …</code>) and TRACE's turn header (<code>T14</code> and the text)
+            </td>
+            <td>
+              The turn opens with your prompt, with <code>T14 · 23:41</code> under it. Once, not
+              twice.
+            </td>
+          </tr>
+          <tr>
+            <td>Claude's text</td>
+            <td>Terminal only</td>
+            <td>
+              Inline, full width, streamed live from <code>turn.step</code>. The centre's main body.
+            </td>
+          </tr>
+          <tr>
+            <td>Tool call</td>
+            <td>
+              Terminal (<code>⏺ Read(app/page.tsx) ⎿ Read 212 lines</code>) and TRACE (<code
+                >READ app/page.tsx 212 lines</code
+              >)
+            </td>
+            <td>
+              Inline, folded: one row per call in TRACE's grammar. Consecutive reads fold to
+              <code>READ 3 files ▸</code>.
+            </td>
+          </tr>
+          <tr>
+            <td>File read</td>
+            <td>Terminal and TRACE</td>
+            <td>An inline folded row. The file name opens it in Folder or Quick Look.</td>
+          </tr>
+          <tr>
+            <td>Write and diff</td>
+            <td>Terminal (inline diff), TRACE (WRITE row and mini diff) and DIFF mode</td>
+            <td>
+              Inline: the WRITE row with its mini diff open for the live turn, folded in older
+              turns. The whole-turn and whole-branch diff stays in the panel's Diff.
+            </td>
+          </tr>
+          <tr>
+            <td>Bash run</td>
+            <td>Terminal only; TRACE leaves it out by your rule</td>
+            <td>
+              Inline, folded: <code>RUN bun run typecheck · no output</code>; opens to the output,
+              the first 20 lines and then "show all". Long-running processes such as dev servers
+              stay in the terminal tab.
+            </td>
+          </tr>
+          <tr>
+            <td>Bash output</td>
+            <td>Terminal only</td>
+            <td>Folded under its RUN row; never shown by default.</td>
+          </tr>
+          <tr>
+            <td>Errors</td>
+            <td>
+              Terminal (<code>⎿ Error: String to replace not found in file.</code>) and TRACE (an
+              ERROR row and a note)
+            </td>
+            <td>Inline: the ERROR row with its sunken note open, never danger red.</td>
+          </tr>
+          <tr>
+            <td>Agent</td>
+            <td>
+              Terminal (<code>⏺ Task(explore: …) ⎿ Done (3 reads · 6.1k tokens · 14s)</code>) and
+              TRACE (<code>AGENT explore · 3 reads, no writes</code>)
+            </td>
+            <td>
+              Inline, folded; opens to the subagent's own rows (from <code>agentId</code>), indented
+              on the thread.
+            </td>
+          </tr>
+          <tr>
+            <td>Thinking</td>
+            <td>Terminal (<code>✻ Thinking…</code>; in full only with ctrl+o)</td>
+            <td>
+              Folded: <code>thought for 6s ▸</code>. Opens to the thinking text when the block
+              carries it.
+            </td>
+          </tr>
+          <tr>
+            <td>Permission prompt</td>
+            <td>Terminal dialog; the sidebar's lamp and <code>PERMISSION</code> chip</td>
+            <td>
+              A card at the foot of the conversation: the tool, the exact command or path, the
+              options. First cut: Answer in terminal, with the automatic flip. The lamp and chip are
+              unchanged.
+            </td>
+          </tr>
+          <tr>
+            <td>Question (AskUserQuestion)</td>
+            <td>Terminal dialog; the sidebar's lamp</td>
+            <td>
+              A card: header chip, question, option list, "Type something". The same first cut.
+            </td>
+          </tr>
+          <tr>
+            <td>Plan approval</td>
+            <td>Terminal dialog</td>
+            <td>A card with the plan as Markdown. The same first cut.</td>
+          </tr>
+          <tr>
+            <td>Status line and mode (<code>⏵⏵ accept edits on</code>)</td>
+            <td>Terminal, at the bottom</td>
+            <td>
+              The composer: a mode chip at its left, the model chip (<code>opus 5.5</code>) beside
+              it.
+            </td>
+          </tr>
+          <tr>
+            <td>Spinner, elapsed time, tokens (<code>✻ Fetching… (41s · ↓ 3.1k tokens)</code>)</td>
+            <td>Terminal</td>
+            <td>
+              The live turn's last row, <code>… fetching localhost:3000/download</code>, with
+              <code>41s · ↓ 3.1k</code> at its right; the turn's meta counts up.
+            </td>
+          </tr>
+          <tr>
+            <td>Context size, 5H and 7D, cost</td>
+            <td>
+              Sidebar footer (from <code>session.measure</code>); context only as a chip
+              (<code>138K</code>)
+            </td>
+            <td>
+              The footer is unchanged; context size also as a dim figure in the composer's corner.
+              Cost leaves the default view, since on a subscription 5H and 7D are the figures that
+              matter; <code>session.measure</code> carries it for a hover card if you want it.
+            </td>
+          </tr>
+          <tr>
+            <td>Timing per turn</td>
+            <td>TRACE's meta (<code>23:41 · 31s</code>)</td>
+            <td>The turn's meta, once.</td>
+          </tr>
+          <tr>
+            <td>Unsent draft (from Browser's Add to prompt)</td>
+            <td>Terminal prompt box</td>
+            <td>
+              The composer, with the screenshot as an attachment chip. Still never sent for you.
+            </td>
+          </tr>
+          <tr>
+            <td>TRACE as a tab</td>
+            <td>Right panel</td>
+            <td>
+              Retired as a separate list: its rows are the conversation now. The panel keeps
+              Outputs, Folder, Browser and Git as icon tabs, with Diff inside Git, and gains the
+              terminal. A slim turn index on the thread is optional.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption class="cap">
+      <span class="id">X5</span><b>The dedupe map.</b
+      ><span
+        >Today is the direction D mock; chat first is option C's layout. Folded means a one-line row
+        that opens in place.</span
+      >
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">X6</span>What it does to the hard rules</h3>
+  <div class="bl-prose">
+    <p>
+      One amendment, and it is small: H1 gains a sentence for Send. Everything else the spec guards
+      keeps working as it does today, because the TUI, tmux and the mod's two promises are
+      untouched.
+    </p>
+  </div>
+  <figure class="fig" data-fig="rules">
+    <div class="bl-scroll">
+      <table class="bl-table s-chat-wide">
+        <thead>
+          <tr>
+            <th>Rule</th>
+            <th>Today, in the spec</th>
+            <th>With option C</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>H1</td>
+            <td class="s-chat-quote">
+              "Restore, import and new-session flows never press Enter. Text reaches a pane only as
+              pre-typed literal input (<code>send-keys -l</code>)." (<code>:38</code>)
+            </td>
+            <td>
+              Add H1a: "an Enter reaches a pane only from your own Send in CONTROL's composer, one
+              per gesture, never queued, never scripted; restore, import, new-session and update
+              flows still never press Enter". <code>PreTyped</code> stays as it is; the Enter is a
+              separate <code>TmuxCmd::Submit</code> that only the composer's Send path can build.
+              Without H1a, Send can only pre-type, and you press Enter in the terminal tab.
+            </td>
+            <td><span class="s-chat-badge" data-b="amend">Amend</span></td>
+          </tr>
+          <tr>
+            <td>H4</td>
+            <td class="s-chat-quote">"tmux owns every PTY." (<code>:41</code>)</td>
+            <td>
+              Untouched. The TUI still runs in tmux, and the terminal tab is the same Ghostty
+              surface on <code>ctrl attach</code> (<code>:134</code>). Option B is the one that
+              would break this.
+            </td>
+            <td><span class="s-chat-badge">Keep</span></td>
+          </tr>
+          <tr>
+            <td>H14</td>
+            <td class="s-chat-quote">
+              "The CONTROL mod never calls <code>$.prompt.submit</code>: it may drop a prompt, never
+              send one." (<code>:51</code>)
+            </td>
+            <td>
+              Untouched. The mod only observes, forwarding <code>session.append</code> and
+              <code>turn.step</code>. <code>$.prompt.submit</code> exists
+              (<code>index.d.ts:2835-2847</code>) and stays unused; its origin would read as
+              <code>plugin</code> to the model. Your Send goes through tmux, not the mod.
+            </td>
+            <td><span class="s-chat-badge">Keep</span></td>
+          </tr>
+          <tr>
+            <td>H15</td>
+            <td class="s-chat-quote">
+              "The CONTROL mod never answers <code>tool.check</code> with <code>allow</code>; it may
+              only ask or deny." (<code>:52</code>)
+            </td>
+            <td>
+              Untouched. A card's buttons send the dialog's own keys from your click; the mod allows
+              nothing. If you ever take the channel-relay route instead, H15 needs a sibling rule:
+              "an allow leaves CONTROL only from your own click on that one request".
+            </td>
+            <td><span class="s-chat-badge">Keep</span></td>
+          </tr>
+          <tr>
+            <td>Restore</td>
+            <td class="s-chat-quote">
+              "Claude panes get <code>claude --resume &lt;id&gt; &lt;kept flags&gt;</code> pre-typed
+              (H1)" (§8, <code>:143-150</code>)
+            </td>
+            <td>
+              Unchanged. Restore still pre-types and never presses Enter; the chat backfills from
+              the transcript when you open the session.
+            </td>
+            <td><span class="s-chat-badge">Keep</span></td>
+          </tr>
+          <tr>
+            <td>Update, H11</td>
+            <td class="s-chat-quote">
+              "Update restarts only touch panes verified as Claude" (<code>:48</code>; §9,
+              <code>:152-161</code>)
+            </td>
+            <td>
+              Unchanged: the respawn runs in the same pane as today. Under option A, the dev-channel
+              warning would hold every update restart until you pressed a key.
+            </td>
+            <td><span class="s-chat-badge">Keep</span></td>
+          </tr>
+          <tr>
+            <td>Full lock</td>
+            <td class="s-chat-quote">
+              The mod gates <code>prompt.submit</code> for the origins <code>composer</code> and
+              <code>bridge</code> (<code>register.ts:9</code>, <code>:68-121</code>)
+            </td>
+            <td>
+              Unchanged. Send arrives as an ordinary <code>composer</code> turn, so the gate
+              applies. A channel message would arrive as <code>channel</code> and pass the gate
+              until it learned that origin.
+            </td>
+            <td><span class="s-chat-badge">Keep</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption class="cap">
+      <span class="id">X6</span><b>Hard-rule impact.</b
+      ><span
+        >Line numbers are <code>docs/specs/2026-09-30-control-design.md</code> unless named;
+        <code>register.ts</code> is <code>plugin/hooks/register.ts</code>,
+        <code>index.d.ts</code> is <code>plugin/types/claude-code/index.d.ts</code>.</span
+      >
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">X7</span>Not proven yet</h3>
+  <div class="bl-prose">
+    <p>
+      These decide how far the drawing above can go. None is a design decision; each needs a test or
+      your call.
+    </p>
+  </div>
+  <figure class="fig" data-fig="unproven">
+    <ol class="s-chat-un">
+      <li>
+        <b>Does a bare digit pick and confirm in Claude Code's permission dialog?</b> It decides
+        whether the card's buttons can answer, which is the whole of the later cut in X3. Test it in
+        a throwaway <code>tmux -L ctrltest-&lt;pid&gt; -f /dev/null</code> pane (H8) before building
+        buttons. Until then, the first cut: Answer in terminal.
+      </li>
+      <li>
+        <b>Do <code>thinking</code> blocks reach <code>session.append</code> with their text</b> for
+        the models you use, or redacted? It decides whether <code>thought for 6s ▸</code> can open.
+        Some models return it summarised or empty: render what comes.
+      </li>
+      <li>
+        <b>H1a's wording is your call.</b> Without it, Send can only pre-type, and you press Enter
+        in the terminal tab.
+      </li>
+      <li>
+        <b>Option B's auth note</b> matters only if CONTROL ships beyond your own machine: the Agent
+        SDK docs say third-party products may not offer claude.ai login. Option C uses your own
+        interactive <code>claude</code>, as today.
+      </li>
+      <li>
+        <b>Whether a Pro or Max machine can set <code>allowedChannelPlugins</code> locally</b> is
+        unverified; it is documented as a managed setting for Team and Enterprise. It matters only
+        for option A.
+      </li>
+    </ol>
+    <figcaption class="cap s-chat-close">
+      <span class="id">X7</span><b>Also not built:</b
+      ><span
+        >the mod's forwarding, the daemon's conversation store and backfill, the chat renderer and
+        the composer's Send path. Everything in X1 to X3 is a drawing from the research and the
+        mock's strings.</span
+      >
+    </figcaption>
+  </figure>
+</section>
+<script data-part="chat">
+  (() => {
+    const G = Bloom.gi,
+      L = Bloom.lamp,
+      BAR = Bloom.bar,
+      DUR = Bloom.D,
+      EASE = Bloom.E;
+    /* One 14 s loop. T14's tool events keep v1 TRACE's schedule (0.9 to 8.8 s); the chat adds the RUN, the streamed reply and the
+   fetch row TRACE never showed, so the turn ends at 14 - 2.625 s and folds in the loop's last 437.5 ms. */
+    const LOOP = 14000,
+      SAY_AT = 9400,
+      SAY_TO = 10400,
+      FETCH = 10500,
+      DONE = LOOP - 2625,
+      FOLD = LOOP - DUR.state;
+    /* The windows run T14 a quarter-and-a-half turn ahead of the clock, so the doc's standard shots land on a full turn:
+   ?t=1750 shows the diffs and the error, ?t=5250 the streamed reply and the fetch row. Still a pure function of t. */
+    const PHASE = 5250;
+    const ASK = 1750,
+      CLICK = LOOP / 2;
+    /* Not ours: Obsidian's gem, and the ORBIT website in ORBIT's own palette (inventory §2.4), drawn in the site's own sans */
+    const THEIRS = {
+      gem: ["#a88bfa", "#7c4dde", "#5b2fb5"],
+      paper: "#100f0d",
+      ink: "#ece7da",
+      grey: "#8f897c",
+      line2: "#3a342d",
+    };
+    const PIN = '<span class="pearl xs s-chat-pin" aria-hidden="true"></span>';
+    const pearl = (tint, p) =>
+      `<span class="pearl" data-tint="${tint}" style="--p:${p}px" aria-hidden="true"></span>`;
+
+    /* ---------- the sidebar (inventory 85-96); group pearls as the window section draws them ---------- */
+    const GROUPS = [
+      {
+        name: "THESIS",
+        tint: "mint",
+        rows: [
+          {
+            st: "needs",
+            n: "STATISTICS",
+            sub: "needs you",
+            chip: '<span class="chip on-needs">LOGIN</span>',
+            age: "2m",
+          },
+          { st: "done", n: "LINEAR_ALGEBRA", sub: "done · main", age: "14m" },
+          { st: "idle", n: "SIGNALS_101", sub: "idle · main", age: "3h" },
+        ],
+      },
+      {
+        name: "PROJECTS",
+        tint: "peri",
+        rows: [
+          {
+            st: "working",
+            n: "ORBIT-WEBSITE",
+            sub: "working",
+            env: 1,
+            age: "now",
+            sel: true,
+            me: true,
+            wts: [
+              ["site-v2", "+38 −12", true],
+              ["download-size", "+4 −1"],
+            ],
+          },
+          { st: "working", n: "CONTROL", sub: "working", age: "1m", wts: [["v2", "+212 −40"]] },
+          {
+            st: "working",
+            n: "PORTFOLIO-WEBSITE",
+            sub: "working",
+            chip: '<span class="chip mark">JOB</span>',
+            age: "6m",
+          },
+        ],
+      },
+    ];
+    const LOOSE = [
+      { st: "house", n: "RELAY MAIN", sub: "dreaming", age: "9m" },
+      { st: "idle", n: "INTERNSHIPS", sub: "idle · main", env: 2, age: "1h" },
+      {
+        st: "failed",
+        n: "CV-BUILD",
+        sub: "failed · main",
+        chip: '<span class="chip">EXIT 1</span>',
+        age: "2h",
+      },
+      {
+        st: "outside",
+        n: "INTERNSHIP-SEARCH",
+        sub: "vs code · read-only",
+        chip: '<span class="chip mark">OUTSIDE</span>',
+        age: "4h",
+      },
+    ];
+    /* a row: Bloom.row draws the lamp at the far right, the bead bar before it, the spark, context, tokens and age */
+    const srow = (s, ind) =>
+      Bloom.row({
+        st: s.st,
+        name: s.n,
+        sub: s.sub,
+        age: s.age,
+        sel: s.sel,
+        ind,
+        attrs: s.me ? "data-me" : "",
+        right:
+          (s.chip || "") + (s.env ? `<span class="s-chat-env">${G("mail")}${s.env}</span>` : ""),
+      }) +
+      (s.wts || [])
+        .map(
+          ([n, d, sel]) =>
+            `<div class="wt-row" aria-selected="${!!sel}" style="--indent:${ind}px">${G("wt")}${n}<span class="st">${d}</span></div>`,
+        )
+        .join("");
+    const sidebar = () => `<aside class="s-chat-side">
+  <div class="s-chat-top"><span class="lights"><i></i><i></i><i></i></span><span class="sp"></span><span class="s-chat-ib">${G("side")}</span></div>
+  <div class="s-chat-sh"><span>Sessions</span><span class="sp"></span><span class="s-chat-ib">${G("plus")}</span></div>
+  <div class="s-chat-list">${GROUPS.map((g) => `<div class="group-row s-chat-gr">${pearl(g.tint, 12)}<span class="s-chat-gn">${g.name}</span><span class="n">${g.rows.length}</span>${G("chev-d")}</div>${g.rows.map((s) => srow(s, 24)).join("")}`).join("")}<div class="s-chat-gap"></div>${LOOSE.map((s) => srow(s, 14)).join("")}</div>
+  <div class="s-chat-arh">${G("chev-r")}<span>Archive</span>${Bloom.pearl({ n: 412, p: 18, label: "412 in the archive" })}</div>
+  <div class="s-chat-use"><span class="s-chat-uk">5H</span><span class="s-chat-up">71%</span><span></span><span class="s-chat-ur">01:10</span>${Bloom.usageLine(0.71, { kind: "5h", w: "100%", label: "5 hour usage 71 %" })}
+    <span class="s-chat-uk">7D</span><span class="s-chat-up">22%</span><span></span><span class="s-chat-ur">Sun</span>${Bloom.usageLine(0.22, { kind: "7d", w: "100%", label: "7 day usage 22 %" })}
+    <span class="s-chat-tim">${G("hgf")}<span class="t-num">2h 14m</span> active<i></i>${G("hge")}<span class="t-num">38m</span> quiet</span></div>
+</aside>`;
+
+    /* ---------- the conversation (research/chat.md §4; strings from inventory 147-208) ---------- */
+    const KIND = {
+      read: "READ",
+      write: "WRITE",
+      agent: "AGENT",
+      error: "ERROR",
+      run: "RUN",
+      ask: "ASKED",
+    };
+    const dline = ([k, n, s, c]) =>
+      `<div class="s-chat-dl${k ? " s-chat-" + k : ""}"><span class="s-chat-ln">${n}</span><span class="s-chat-sg">${s}</span><span>${c}</span></div>`;
+    const DIFF = {
+      release: [
+        ["", 10, "", "export const release = {"],
+        ["", 11, "", '  version: "0.2.3",'],
+        ["rem", 12, "−", '  size: <span class="s-chat-wr">"11.2 MB"</span>,'],
+        ["add", 12, "+", '  <span class="s-chat-wa">bytes: 11_743_232</span>,'],
+        ["add", 13, "+", '  size: <span class="s-chat-wa">formatSize(11_743_232)</span>,'],
+      ],
+      download: [
+        ["rem", 41, "−", '&lt;dd&gt;<span class="s-chat-wr">11.2 MB</span>&lt;/dd&gt;'],
+        ["add", 41, "+", '&lt;dd&gt;<span class="s-chat-wa">{release.size}</span>&lt;/dd&gt;'],
+      ],
+    };
+    const nest = (rows) =>
+      `<div class="s-chat-nest">${rows.map(([k, p, m]) => `<div class="s-chat-row"><span class="s-chat-k">${KIND[k]}</span><span class="s-chat-pt">${p}</span><span class="s-chat-m">${m}</span><i></i></div>`).join("")}</div>`;
+    const BODY = {
+      ag: '<div class="s-chat-sub">every other place the size is typed<span class="s-chat-dn">Done (3 reads · 6.1k tokens · 14s)</span></div>',
+      w1: `<div class="s-chat-diff">${DIFF.release.map(dline).join("")}</div>`,
+      w2: `<div class="s-chat-diff">${DIFF.download.map(dline).join("")}</div>`,
+      er: '<div class="s-chat-note">String to replace not found in file.</div>',
+      rn: '<div class="s-chat-note">(no output)</div>',
+      r13: nest([
+        ["read", "app/download/page.tsx", "64 lines"],
+        ["read", "app/admin/page.tsx", "118 lines"],
+      ]),
+      tx: '<div class="s-chat-note">Executed 16 tests, with 0 failures</div>',
+    };
+    const DOT = '<i class="s-chat-ch">⏺</i>',
+      HOOK = '<i class="s-chat-ch s-chat-g">⎿</i>';
+    const tl = (h, cls) => `<div${cls ? ` class="${cls}"` : ""}>${h}</div>`;
+    const call = (c, r) => tl(`${DOT} ${c}`) + (r ? tl(`  ${HOOK}  ${r}`) : "");
+    const tdiff = ([k, n, s, c]) =>
+      tl(
+        `      ${n} ${k === "rem" ? '<i class="s-chat-mr">-</i>' : k === "add" ? '<i class="s-chat-ma">+</i>' : " "} ${c}`,
+        k ? "s-chat-" + k : "",
+      );
+    /* T14's stream: TRACE's events at v1's times, plus the RUN; each carries its terminal lines for the terminal tab */
+    const EV = [
+      {
+        id: "r1",
+        at: 900,
+        k: "read",
+        p: "lib/format.ts",
+        m: "22 lines",
+        tui: () => call("<b>Read</b>(lib/format.ts)", "Read <b>22</b> lines"),
+      },
+      {
+        id: "ag",
+        at: 2200,
+        k: "agent",
+        done: 3000,
+        tui: (p) =>
+          call(
+            "<b>Task</b>(explore: every other place the size is typed)",
+            p >= 3000 ? "Done (3 reads · 6.1k tokens · 14s)" : "",
+          ),
+      },
+      {
+        id: "w1",
+        at: 3600,
+        k: "write",
+        p: "lib/release.ts",
+        m: "+2 −1",
+        open: 3900,
+        tui: () =>
+          call(
+            "<b>Update</b>(lib/release.ts)",
+            "Updated <b>lib/release.ts</b> with <b>2</b> additions and <b>1</b> removal",
+          ) + DIFF.release.map(tdiff).join(""),
+      },
+      {
+        id: "w2",
+        at: 5000,
+        k: "write",
+        p: "app/download/page.tsx",
+        m: "+1 −1",
+        open: 5300,
+        tui: () =>
+          call(
+            "<b>Update</b>(app/download/page.tsx)",
+            "Updated <b>page.tsx</b> with <b>1</b> addition and <b>1</b> removal",
+          ) + DIFF.download.map(tdiff).join(""),
+      },
+      {
+        id: "er",
+        at: 6400,
+        k: "error",
+        p: "app/admin/page.tsx",
+        m: "Edit",
+        tui: () =>
+          call("<b>Update</b>(app/admin/page.tsx)", "Error: String to replace not found in file."),
+      },
+      {
+        id: "r2",
+        at: 7600,
+        k: "read",
+        p: "app/admin/page.tsx",
+        m: "118 lines",
+        tui: () => call("<b>Read</b>(app/admin/page.tsx)", "Read <b>118</b> lines"),
+      },
+      {
+        id: "w3",
+        at: 8800,
+        k: "write",
+        p: "app/admin/page.tsx",
+        m: "+3 −1",
+        tui: () =>
+          call(
+            "<b>Update</b>(app/admin/page.tsx)",
+            "Updated <b>page.tsx</b> with <b>3</b> additions and <b>1</b> removal",
+          ),
+      },
+      {
+        id: "rn",
+        at: 9200,
+        k: "run",
+        p: "bun run typecheck",
+        m: "no output",
+        tui: () =>
+          call("<b>Bash</b>(bun run typecheck)", '<span class="s-chat-g">(no output)</span>'),
+      },
+    ];
+    const SAY = [
+      ["t", "Both pages read "],
+      ["c", "release.size"],
+      ["t", " now. Checking "],
+      ["c", "/download"],
+      ["t", " on the dev server in tab 2."],
+    ];
+    const SAY_LEN = SAY.reduce((a, [, s]) => a + s.length, 0);
+    function sayHTML(n) {
+      let out = "",
+        left = n;
+      for (const [k, s] of SAY) {
+        if (left <= 0) break;
+        const part = s.slice(0, left);
+        left -= part.length;
+        out += k === "c" ? `<code>${part}</code>` : part;
+      }
+      return out;
+    }
+    const TUI_HEAD =
+      tl("&gt; the hero spacing is off on mobile, put it on the 8 pt grid", "s-chat-u") +
+      call("<b>Read</b>(app/page.tsx)", "Read <b>212</b> lines") +
+      call("<b>Read</b>(app/globals.css)", "Read <b>148</b> lines") +
+      call(
+        "<b>Update</b>(app/globals.css)",
+        "Updated <b>globals.css</b> with <b>6</b> additions and <b>6</b> removals",
+      ) +
+      call(
+        "<b>Update</b>(app/page.tsx)",
+        "Updated <b>page.tsx</b> with <b>2</b> additions and <b>2</b> removals",
+      ) +
+      tl(`${DOT} The hero sits on the 8 pt grid now; /download is next.`) +
+      tl("") +
+      tl("&gt; /download says 11.2 MB but the DMG is 11.7", "s-chat-u") +
+      call("<b>Read</b>(app/download/page.tsx)", "Read <b>64</b> lines") +
+      call("<b>Read</b>(app/admin/page.tsx)", "Read <b>118</b> lines") +
+      tl(`${DOT} The DMG grew in 0.2.3 and the label is a hand-typed string`) +
+      tl("  in two places. Neither page reads the file.") +
+      tl("") +
+      tl("&gt; put the release size in one place so /download and /admin", "s-chat-u") +
+      tl("  can't drift", "s-chat-u");
+    const TUI_SAY =
+      tl("") +
+      tl(`${DOT} Both pages read release.size now. Checking /download`) +
+      tl("  on the dev server in tab 2.") +
+      tl("");
+    const TUI_SPIN = tl(
+      '<i class="s-chat-ch">✻</i> Fetching… <span class="s-chat-g">(41s · ↓ 3.1k tokens · esc to interrupt)</span>',
+    );
+
+    /* one card. Rows with more to show are buttons; the pearl sits on the turn's thread */
+    function cardHTML(e, p) {
+      const body = BODY[e.id] || "",
+        open = e.k === "error" || (e.open !== undefined && p >= e.open) || !!e.isOpen;
+      const done = e.k === "agent" && p >= e.done;
+      const path =
+        e.k === "agent"
+          ? done
+            ? "explore · 3 reads, no writes"
+            : "explore: every other place the size is typed"
+          : e.p;
+      const meta = e.k === "agent" ? BAR(done ? "done" : "working", { form: "tip" }) : e.m;
+      const tag = body ? `button type="button" aria-expanded="${open}"` : "div";
+      return (
+        `<div class="s-chat-cw"><div class="s-chat-cwi"><div class="s-chat-card" data-k="${e.k}" data-id="${e.id}"${open ? " data-open" : ""}${done ? " data-done" : ""}>${PIN}` +
+        `<${tag} class="s-chat-row"><span class="s-chat-k">${KIND[e.k]}</span><span class="s-chat-pt">${path}</span><span class="s-chat-m">${meta}</span>${body ? G(open ? "chev-d" : "chev-r", "s-chat-cv") : "<i></i>"}</${body ? "button" : "div"}>` +
+        (body ? `<div class="s-chat-body"><div class="s-chat-bi">${body}</div></div>` : "") +
+        "</div></div></div>"
+      );
+    }
+    const folded = (n, q, meta, last) =>
+      `<div class="s-chat-turn s-chat-folded"><span class="s-chat-tp"><span class="pearl" style="--p:10px" aria-hidden="true"></span></span>` +
+      `<div class="s-chat-card"${""}><${last ? 'button type="button" aria-expanded="false"' : "div"} class="s-chat-row s-chat-frow"><span class="s-chat-tn">${n}</span><span class="s-chat-pt">${q}</span><span class="s-chat-m">${meta}</span>${last ? G("chev-r", "s-chat-cv") : "<i></i>"}</${last ? "button" : "div"}>` +
+      (last
+        ? `<div class="s-chat-body"><div class="s-chat-bi"><p class="s-chat-say s-chat-sayf">${last}</p></div></div>`
+        : "") +
+      "</div></div>";
+    const t13 =
+      () => `<div class="s-chat-turn"><span class="s-chat-tp"><span class="pearl" style="--p:14px" aria-hidden="true"></span></span><div class="s-chat-thread"></div>
+  <p class="s-chat-q">/download says 11.2 MB but the DMG is 11.7</p><div class="s-chat-meta">T13 · 23:38 · 18s · reads only</div>
+  <div class="s-chat-cards">${cardHTML({ id: "r13", k: "read", p: "2 files", m: "" }, 0)}</div>
+  <div class="s-chat-say">${PIN}The DMG grew in 0.2.3 and the label is a hand-typed string in two places. Neither page reads the file.</div></div>`;
+    const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+    /* T14: live in the windows (data-live), or finished at 1:1 in X3 */
+    function t14(live) {
+      const p = live ? 0 : DONE,
+        shown = EV.filter((e) => e.at <= p);
+      const tp = live
+        ? `<span class="bead ramp-flow safe s-chat-marble" style="--b:20px;--tile:1000%;--k:.35" aria-hidden="true"></span><span class="pearl s-chat-still" style="--p:20px;opacity:0" aria-hidden="true"></span>`
+        : '<span class="pearl" style="--p:14px" aria-hidden="true"></span>';
+      return `<div class="s-chat-turn"${live ? " data-live" : ""}><span class="s-chat-tp${live ? " s-chat-big" : ""}">${tp}</span><div class="s-chat-thread">${live ? '<i class="ramp-flow safe"></i>' : ""}</div>
+  <p class="s-chat-q">put the release size in one place so /download and /admin can't drift</p>
+  <div class="s-chat-meta">T14 · <b class="s-chat-ls">${live ? "running" : "done"}</b> · 23:41 · <span class="s-chat-lsec">${live ? 31 : 41}s</span> · <span class="s-chat-lw">${plural(shown.filter((e) => e.k === "write").length, "write")}</span> · <span class="s-chat-lx">${plural(shown.filter((e) => e.k === "error").length, "error")}</span></div>
+  <div class="s-chat-cw s-chat-evs"><div class="s-chat-cwi">
+    <div class="s-chat-cards">${shown.map((e) => cardHTML(e, p)).join("")}</div>
+    <div class="s-chat-cw s-chat-sayw"${live ? ' style="grid-template-rows:0fr;opacity:0"' : ""}><div class="s-chat-cwi"><div class="s-chat-say">${PIN}<span class="s-chat-st">${live ? "" : sayHTML(SAY_LEN)}</span></div></div></div>
+    ${live ? `<div class="s-chat-cw s-chat-tailw"><div class="s-chat-cwi"><div class="s-chat-tail">${PIN}<span class="s-chat-k">…</span><span class="s-chat-pt">waiting for the next tool call</span><span class="s-chat-m"></span></div></div></div>` : ""}
+  </div></div></div>`;
+    }
+    const thumb = () =>
+      `<span class="s-chat-thumb" style="background:${THEIRS.paper}"><i style="background:${THEIRS.ink}"></i></span>`;
+    const composer = () => `<div class="s-chat-comp">
+  <span class="s-chat-att">${thumb()}ctrl-shot-0412.png<span class="s-chat-soft">· button.cta · 212 × 40</span>${G("x")}</span>
+  <div class="s-chat-draft">see @/tmp/ctrl-shot-0412.png (button.cta on /download): still says 11.2 MB<i class="s-chat-caret"></i></div>
+  <div class="s-chat-cbar"><span class="chip">⏵⏵ accept edits</span><span class="chip">opus 5.5</span><span class="sp"></span>
+    <span class="s-chat-stop"><span class="pill ghost sm">${G("stop")}Interrupt</span><span class="kbd theirs">ESC</span></span><span class="pill sm" aria-label="Attach">${G("clip")}</span><span class="pill primary sm">${G("send")}Send</span></div>
+</div><p class="s-chat-hint">Drafts stay drafts until you press Send.</p>`;
+    /* the head says only what the selected sidebar row doesn't: the path, the one full bar and its own controls (no duplicates) */
+    const head = () =>
+      `<div class="s-chat-head"><div class="s-chat-who s-chat-solo" data-me>` +
+      `<span class="s-chat-pth">~/Projects/orbit-website</span>${BAR("working")}</div>` +
+      `<span class="s-chat-ctl"><span class="pill sm">${G("mail")}Loose ends <span class="s-chat-soft">· 1 unsent draft</span></span><span class="pill sm">${G("find")}<span class="kbd">⌘K</span></span><span class="pill sm s-chat-on" aria-label="Panel">${G("panel")}<span class="kbd">⌘⇧G</span></span></span></div>`;
+
+    /* ---------- the right panel ---------- */
+    const gem = () => {
+      const [a, b, c] = THEIRS.gem;
+      return `<svg class="s-chat-gem" viewBox="0 0 11 13" aria-hidden="true"><polygon points="5.5,0 10.5,4 9,11 5.5,13" fill="${a}"/><polygon points="5.5,0 1,5 2,10 5.5,13" fill="${b}"/><polygon points="2,10 5.5,13 9,11 5.5,8" fill="${c}"/></svg>`;
+    };
+    const tabs = () => `<div class="s-chat-tabs" role="tablist" aria-label="Panel">
+  <span class="s-chat-tab s-chat-ico" aria-label="Outputs" title="Outputs">${G("out")}</span><span class="s-chat-tab s-chat-ico" aria-label="Folder" title="Folder">${G("folder")}</span>
+  <button type="button" class="s-chat-tab s-chat-ico" role="tab" data-view="browser" aria-label="Browser" title="Browser">${G("web")}</button>
+  <button type="button" class="s-chat-tab s-chat-ico" role="tab" data-view="git" aria-label="Git" title="Git">${G("git")}</button>
+  <button type="button" class="s-chat-tab s-chat-ico" role="tab" data-view="term" aria-label="Terminal" title="Terminal">${G("term")}</button>
+  <span class="chip guest s-chat-guest">${gem()}Obsidian${G("undock")}</span></div>`;
+    const site = () => {
+      const T = THEIRS;
+      return `<div class="s-chat-site" style="background:${T.paper};color:${T.ink}">
+  <div class="s-chat-snav" style="color:${T.grey}"><b style="color:${T.ink}">ORBIT</b><span>Features</span><span style="color:${T.ink}">Download</span><span>Changelog</span></div>
+  <h4 class="s-chat-sh1">Download ORBIT</h4><p class="s-chat-sp" style="color:${T.grey}">The arming layer for your DAW. One key, every track ready. macOS 14 or later.</p>
+  <span class="s-chat-cta" style="background:${T.ink};color:${T.paper}">Download for macOS · 11.2 MB</span>
+  <div class="s-chat-pickbar">button.cta · 212 × 40<span class="pill primary sm">Add to prompt <span class="kbd">A</span></span><span class="pill sm">Shot <span class="kbd">S</span></span></div>
+  <div class="s-chat-spec">${[
+    ["Size", "11.7 MB"],
+    ["macOS", "14 Sonoma or later"],
+    ["Signed", "Developer ID, notarised"],
+  ]
+    .map(
+      ([a, b]) =>
+        `<div style="background:linear-gradient(${T.line2},${T.line2}) 0 100% / 100% 2px no-repeat"><span style="color:${T.grey}">${a}</span><span>${b}</span></div>`,
+    )
+    .join("")}</div></div>`;
+    };
+    const FILES = [
+      ["C", "M", "lib/release.ts", "+2", "−1"],
+      ["C", "M", "app/download/page.tsx", "+1", "−1"],
+      ["C", "A", "app/admin/page.tsx", "+31", ""],
+      ["", "M", "docs/DESIGN.md", "+4", "−10"],
+    ];
+    const stack = () => `<div class="s-chat-stack" data-v="stack">
+  <div class="pane s-chat-v" data-pv="browser"><div class="s-chat-vh">${G("chev-l")}${G("chev-r")}${G("reload")}<span class="input s-chat-url">localhost:3000/download</span><span class="s-chat-pk" data-on>${G("pick")}</span><span class="s-chat-pk">${G("shot")}</span></div>
+    ${site()}<div class="s-chat-sfoot">Drafts into ORBIT-WEBSITE's composer. Never sent.<span class="t-num">tab 2</span></div></div>
+  <div class="pane s-chat-v" data-pv="git"><div class="s-chat-vh"><b>Git</b><span class="seg sm s-chat-gseg" role="group" aria-label="Git view"><button aria-pressed="false">Graph</button><button aria-pressed="true">Diff</button></span>site-v2 · working tree vs HEAD</div>
+    <div class="s-chat-dsum">4 files <span class="t-num"><span class="s-chat-pn">+38</span> <span class="s-chat-mn">−12</span></span><span class="sp"></span><span class="t-cap">C = Claude's edits, 3 of 4</span></div>
+    ${FILES.map(([c, s, p, a, r]) => `<div class="s-chat-df"><span>${c}</span><span>${s}</span><span>${p}</span><span class="t-num"><span class="s-chat-pn">${a}</span>${r ? ` <span class="s-chat-mn">${r}</span>` : ""}</span></div>`).join("")}
+    <div class="s-chat-dfoot">live · FSEvents · 23:41:07</div></div></div>`;
+    const termView =
+      () => `<div class="pane s-chat-v" data-v="term"><div class="s-chat-vh"><span class="s-chat-tmux">${[
+        ["1", "claude", 1],
+        ["2", "bun dev"],
+        ["3", "zsh"],
+      ]
+        .map(
+          ([i, n, on]) => `<span class="s-chat-tx"${on ? " data-on" : ""}><i>${i}</i>${n}</span>`,
+        )
+        .join(
+          "",
+        )}<span class="s-chat-tx">${G("plus")}</span></span><span class="kbd s-chat-hk">⌃ Tab</span></div>
+  <div class="s-chat-tty"></div><div class="s-chat-pbox">&gt; <i class="s-chat-bcur"></i></div><div class="s-chat-mode">⏵⏵ accept edits on (shift+tab to cycle)</div></div>`;
+    const win =
+      () => `${sidebar()}<div class="s-chat-centre">${head()}<div class="pane s-chat-well"><div class="s-chat-convo">
+  ${folded("T11", "the hero spacing is off on mobile, put it on the 8 pt grid", "22:58 · 6m · 6 reads · 3 writes · 1 agent", "The hero sits on the 8 pt grid now; /download is next.")}
+  ${folded("T12", "tag v0.2.3 and attach the notarised DMG", "23:20 · 2m 10s · 4 reads · 1 write")}
+  ${t13()}${t14(true)}</div>${composer()}</div></div>
+  <div class="s-chat-panel">${tabs()}<div class="s-chat-views">${stack()}${termView()}</div></div>`;
+
+    /* ---------- X3: the question (later cut) and the permission (first cut) ---------- */
+    const askDemo =
+      () => `<div class="s-chat-head"><div class="s-chat-who">${L("working")}<span></span><span class="s-chat-nm">RELAY MAIN</span><span class="s-chat-pth"></span>${BAR("working")}</div></div>
+  <div class="pane s-chat-well"><div class="s-chat-convo s-chat-mconvo"><div class="s-chat-turn"><div class="s-chat-thread"><i class="ramp-flow safe"></i></div>
+    <div class="s-chat-cards">${cardHTML({ id: "tx", k: "run", p: "xcodebuild test -scheme TX2", m: "", isOpen: true }, 0)}
+      <div class="s-chat-cw s-chat-askw" style="grid-template-rows:0fr;opacity:0"><div class="s-chat-cwi"><div class="s-chat-ask" role="group" aria-label="Claude asks">${PIN}
+        <div class="s-chat-askh"><span class="chip on-needs">Question</span>AskUserQuestion<span class="chip mark">later cut</span></div>
+        <p class="s-chat-askq">Which threshold should the rep detector use for curls?</p>
+        <div class="s-chat-opts">${["0.8 g", "0.6 g", "Adaptive"].map((v, i) => `<button type="button" class="pill s-chat-opt${i ? "" : " s-chat-hi"}" data-v="${v}">${v}</button>`).join("")}<span class="input s-chat-type"><span class="ph">Type something.</span></span></div>
+        <p class="s-chat-askf">Your click sends the dialog's own key. Unproven: whether a bare digit picks and confirms (X7).</p></div></div></div>
+      <div class="s-chat-cw s-chat-answ" style="grid-template-rows:0fr;opacity:0"><div class="s-chat-cwi"><div class="s-chat-card" data-k="ask">${PIN}<div class="s-chat-row"><span class="s-chat-k">${KIND.ask}</span><span class="s-chat-pt">Which threshold should the rep detector use for curls?</span><span class="s-chat-m s-chat-ans">0.8 g</span><i></i></div></div></div></div>
+    </div>
+    <div class="s-chat-cw s-chat-tailw"><div class="s-chat-cwi"><div class="s-chat-tail">${PIN}<span class="s-chat-k">…</span><span class="s-chat-pt">waiting for the next tool call</span><span class="s-chat-m"></span></div></div></div>
+  </div></div></div>`;
+    const permDemo =
+      () => `<div class="s-chat-lab">The first cut<span class="chip mark">from the hook payload</span></div><div class="pane s-chat-well s-chat-pwell">
+  <div class="s-chat-pv" data-v="card"><div class="s-chat-ask" role="group" aria-label="Claude asks for permission">
+    <div class="s-chat-askh"><span class="chip on-needs">Permission</span>Bash command<span class="chip mark">first cut</span></div>
+    <code class="s-chat-cmd">git push origin launch-pipeline</code>
+    <p class="s-chat-askq">Do you want to proceed?</p>
+    <ol class="s-chat-ol"><li>Yes</li><li>Yes, and don't ask again for git push commands in <code>~/Projects/orbit</code></li><li>No, and tell Claude what to do differently (esc)</li></ol>
+    <div class="s-chat-opts"><button type="button" class="pill primary" data-act="flip">${G("term")}Answer in terminal</button></div>
+    <p class="s-chat-askf">CONTROL shows this; Claude's own dialog takes the answer.</p></div></div>
+  <div class="s-chat-pv" data-v="tty" hidden><div class="s-chat-flip">${G("term")}Terminal · 1 claude<button type="button" class="pill ghost sm" data-act="back">Back to the chat</button></div>
+    <div class="s-chat-dlg">Bash command
+
+  git push origin launch-pipeline
+
+Do you want to proceed?
+<span class="s-chat-sel">  1. Yes</span>
+  2. Yes, and don't ask again for git push commands in ~/Projects/orbit
+  3. No, and tell Claude what to do differently (esc)</div></div></div>`;
+
+    /* ---------- motion helpers: every change is computed from t, so ?t= shots and Pause are exact ---------- */
+    function setNow(box, st) {
+      // a jump (first paint, seek, a return from off screen): no wipe, no sweep
+      box.querySelectorAll(".lamp").forEach((l) => {
+        l.classList.replace("st-" + l.dataset.st, "st-" + st);
+        l.dataset.st = st;
+        l.querySelectorAll(".sweep, .bloom").forEach((x) => x.remove());
+      });
+      box.querySelectorAll(".sbar").forEach((b) => {
+        b.dataset.st = st;
+        b.querySelectorAll(".sb-old").forEach((x) => x.remove());
+      });
+      if (box.classList.contains("session-row")) box.dataset.st = st;
+      Bloom.preempt(box.closest("[data-region]"));
+    }
+    const setSt = (box, st, jump) => (jump ? setNow(box, st) : Bloom.setState(box, st));
+    function show(w, on, jump, d = DUR.quick) {
+      // a grid wrapper folding open (1fr) or shut (0fr)
+      w.style.gridTemplateRows = on ? "1fr" : "0fr";
+      w.style.opacity = on ? 1 : 0;
+      if (jump) return;
+      const R = Bloom.reduced();
+      Bloom.animate(
+        w,
+        R
+          ? { opacity: on ? [0, 1] : [1, 0] }
+          : {
+              gridTemplateRows: on ? ["0fr", "1fr"] : ["1fr", "0fr"],
+              opacity: on ? [0, 1] : [1, 0],
+            },
+        { duration: R ? DUR.quick : d, easing: R ? EASE.sine : on ? EASE.out : EASE.in },
+      );
+    }
+    function fade(el, on, jump) {
+      el.style.opacity = on ? 1 : 0;
+      if (!jump)
+        Bloom.animate(
+          el,
+          { opacity: on ? [0, 1] : [1, 0] },
+          { duration: Bloom.reduced() ? DUR.quick : DUR.state, easing: EASE.sine },
+        );
+    }
+    function toggle(card, force, jump) {
+      const open = force === undefined ? !card.hasAttribute("data-open") : force;
+      if (open === card.hasAttribute("data-open")) return;
+      card.toggleAttribute("data-open", open);
+      const b = card.querySelector(":scope > .s-chat-row");
+      b.setAttribute("aria-expanded", String(open));
+      const u = b.querySelector(".s-chat-cv use");
+      if (u) u.setAttribute("href", "#g-chev-" + (open ? "d" : "r"));
+      const body = card.querySelector(":scope > .s-chat-body");
+      if (!body || jump) return;
+      const R = Bloom.reduced();
+      if (R) {
+        if (open)
+          Bloom.animate(body, { opacity: [0, 1] }, { duration: DUR.quick, easing: EASE.sine });
+        return;
+      }
+      Bloom.animate(
+        body,
+        { gridTemplateRows: open ? ["0fr", "1fr"] : ["1fr", "0fr"] },
+        { duration: DUR.state, easing: open ? EASE.out : EASE.sine },
+      );
+    }
+    function agentDone(card, done, jump) {
+      card.toggleAttribute("data-done", done);
+      card.querySelector(".s-chat-pt").textContent = done
+        ? "explore · 3 reads, no writes"
+        : "explore: every other place the size is typed";
+      setSt(card, done ? "done" : "working", jump);
+    }
+
+    /* ---------- the live window: one pure function of t ---------- */
+    function makeWin(el) {
+      const q = (s) => el.querySelector(s),
+        turn = q("[data-live]");
+      return {
+        el,
+        cards: turn.querySelector(".s-chat-cards"),
+        evs: turn.querySelector(".s-chat-evs"),
+        sayw: turn.querySelector(".s-chat-sayw"),
+        st: turn.querySelector(".s-chat-st"),
+        tailw: turn.querySelector(".s-chat-tailw"),
+        tailP: turn.querySelector(".s-chat-tail .s-chat-pt"),
+        tailM: turn.querySelector(".s-chat-tail .s-chat-m"),
+        ls: turn.querySelector(".s-chat-ls"),
+        lsec: turn.querySelector(".s-chat-lsec"),
+        lw: turn.querySelector(".s-chat-lw"),
+        lx: turn.querySelector(".s-chat-lx"),
+        marble: turn.querySelector(".s-chat-marble"),
+        still: turn.querySelector(".s-chat-still"),
+        flow: turn.querySelector(".s-chat-thread > .ramp-flow"),
+        who: q(".s-chat-who"),
+        row: q(".session-row[data-me]"),
+        stop: q(".s-chat-stop"),
+        tty: q(".s-chat-tty"),
+        n: -1,
+        sec: -1,
+        chars: -2,
+        tail: null,
+        state: "working",
+        out: null,
+        sig: "",
+        lastP: -1,
+      };
+    }
+    function runWin(w, t, jump) {
+      const p = (t + PHASE) % LOOP;
+      if (p < w.lastP) jump = true; // the 14 s wrap: start the turn again from its first frame
+      const n = EV.filter((e) => e.at <= p).length;
+      if (n !== w.n || jump) {
+        if (jump || n < w.n)
+          w.cards.innerHTML = EV.slice(0, n)
+            .map((e) => cardHTML(e, p))
+            .join("");
+        else
+          for (let i = w.n; i < n; i++) {
+            w.cards.insertAdjacentHTML("beforeend", cardHTML(EV[i], p));
+            show(w.cards.lastElementChild, true, false);
+          }
+        const seen = EV.slice(0, n);
+        w.lw.textContent = plural(seen.filter((e) => e.k === "write").length, "write");
+        w.lx.textContent = plural(seen.filter((e) => e.k === "error").length, "error");
+        w.n = n;
+      }
+      if (!jump)
+        for (const e of EV) {
+          // events crossed while playing: a write opens, the agent finishes
+          const card = () => w.cards.querySelector(`[data-id="${e.id}"]`);
+          if (e.open && w.lastP < e.open && p >= e.open && card()) toggle(card(), true, false);
+          if (e.done && w.lastP < e.done && p >= e.done && card()) agentDone(card(), true, false);
+        }
+      const sec = Math.min(41, 31 + Math.floor(p / 1000));
+      if (sec !== w.sec) {
+        w.lsec.textContent = sec + "s";
+        w.sec = sec;
+      }
+      const chars =
+        p < SAY_AT
+          ? -1
+          : Math.min(SAY_LEN, Math.floor(((p - SAY_AT) / (SAY_TO - SAY_AT)) * SAY_LEN));
+      if (chars !== w.chars || jump) {
+        if (chars >= 0 !== w.chars >= 0 || jump) show(w.sayw, chars >= 0, jump);
+        w.st.innerHTML =
+          chars < 0 ? "" : sayHTML(chars) + (chars < SAY_LEN ? '<i class="s-chat-sc"></i>' : "");
+        w.chars = chars;
+      }
+      const tail = p < SAY_AT ? "wait" : p >= FETCH && p < DONE ? "fetch" : "";
+      if (tail !== w.tail || jump) {
+        if (tail) {
+          w.tailP.textContent =
+            tail === "wait" ? "waiting for the next tool call" : "fetching localhost:3000/download";
+          w.tailM.textContent = tail === "fetch" ? "41s · ↓ 3.1k tokens" : "";
+        }
+        if (!!tail !== !!w.tail || jump) show(w.tailw, !!tail, jump);
+        w.tail = tail;
+      }
+      const state = p < DONE ? "working" : "done";
+      if (state !== w.state || jump) {
+        if (state !== w.state || jump) {
+          setSt(w.who, state, jump);
+          setSt(w.row, state, jump);
+        }
+        const sub = w.row.querySelector(".sr-sub"); // swap only the state words: line 2's worktree count stays
+        sub.firstChild.nodeValue = state + (sub.childNodes.length > 1 ? " · " : "");
+        w.ls.textContent = state === "done" ? "done" : "running";
+        fade(w.marble, state === "working", jump);
+        fade(w.still, state === "done", jump);
+        fade(w.flow, state === "working", jump);
+        fade(w.stop, state === "working", jump);
+        w.state = state;
+      }
+      const out = p >= FOLD;
+      if (out !== w.out || jump) {
+        show(w.evs, !out, jump || w.out === null, DUR.state);
+        w.out = out;
+      }
+      const sig = `${n}|${p >= 3000}|${p >= SAY_TO}|${p >= FETCH && p < DONE}`;
+      if (sig !== w.sig) {
+        // the terminal tab keeps up line for line
+        w.tty.innerHTML =
+          TUI_HEAD +
+          EV.filter((e) => e.at <= p)
+            .map((e) => e.tui(p))
+            .join("") +
+          (p >= SAY_TO ? TUI_SAY : "") +
+          (p >= FETCH && p < DONE ? TUI_SPIN : "");
+        w.sig = sig;
+      }
+      w.lastP = p;
+    }
+    function view(winEl, which, jump) {
+      winEl.querySelectorAll("button.s-chat-tab").forEach((b) => {
+        b.setAttribute("aria-selected", String(b.dataset.view === which));
+        b.toggleAttribute(
+          "data-open",
+          which !== "term" && b.dataset.view !== which && b.dataset.view !== "term",
+        );
+      });
+      const st = winEl.querySelector('[data-v="stack"]'),
+        tv = winEl.querySelector('[data-v="term"]');
+      st.hidden = which === "term";
+      tv.hidden = which !== "term";
+      if (!jump) Bloom.openPanel(which === "term" ? tv : st);
+    }
+
+    /* ---------- X3's question: asked on the beat, answered halfway round (or by your click) ---------- */
+    function makeAsk(el) {
+      return {
+        el,
+        who: el.querySelector(".s-chat-who"),
+        askw: el.querySelector(".s-chat-askw"),
+        answ: el.querySelector(".s-chat-answ"),
+        ans: el.querySelector(".s-chat-ans"),
+        tailw: el.querySelector(".s-chat-tailw"),
+        hi: el.querySelector(".s-chat-hi"),
+        phase: null,
+        manual: null,
+      };
+    }
+    function runAsk(a, t, jump) {
+      const p = t % LOOP,
+        li = Math.floor(t / LOOP),
+        mine = a.manual && a.manual.li === li;
+      const phase = p < ASK ? "pre" : mine || p >= CLICK ? "ans" : "ask";
+      if (phase === a.phase && !jump) return;
+      const st = phase === "ask" ? "needs" : "working";
+      if (st !== (a.phase === "ask" ? "needs" : "working") || jump) setSt(a.who, st, jump);
+      if (phase === "ans") a.ans.textContent = mine ? a.manual.v : "0.8 g";
+      if (phase === "ans" && a.phase === "ask" && !jump && !mine)
+        Bloom.animate(a.hi, { scale: [1, 0.96, 1] }, { duration: DUR.quick, easing: EASE.settle });
+      show(a.askw, phase === "ask", jump, DUR.state);
+      show(a.answ, phase === "ans", jump);
+      show(a.tailw, phase !== "ask", jump);
+      a.phase = phase;
+    }
+
+    Bloom.section("chat", {
+      init(el) {
+        el.querySelectorAll("[data-win]").forEach((h) => {
+          h.innerHTML = win();
+          view(h, h.dataset.win, true);
+        });
+        el.querySelector("[data-x3a]").innerHTML = t13() + t14(false);
+        el.querySelector("[data-ask]").innerHTML = askDemo();
+        el.querySelector("[data-perm]").innerHTML = permDemo();
+        this.wins = [...el.querySelectorAll(".s-chat-win")].map(makeWin);
+        this.ask = makeAsk(el.querySelector("[data-ask]"));
+        this.last = -1;
+        el.addEventListener("click", (e) => {
+          const row = e.target.closest("button.s-chat-row");
+          if (row) {
+            toggle(row.closest(".s-chat-card"), undefined, Bloom.paused());
+            return;
+          }
+          const tab = e.target.closest("button.s-chat-tab");
+          if (tab) {
+            view(tab.closest(".s-chat-win"), tab.dataset.view, false);
+            return;
+          }
+          const opt = e.target.closest(".s-chat-opt");
+          if (opt && this.ask.phase === "ask") {
+            this.ask.manual = { li: Math.floor(Bloom.t() / LOOP), v: opt.dataset.v };
+            runAsk(this.ask, Bloom.t(), Bloom.paused());
+            return;
+          }
+          const act = e.target.closest("[data-act]");
+          if (act) {
+            const box = act.closest("[data-perm]"),
+              to = act.dataset.act === "flip" ? "tty" : "card";
+            box.querySelectorAll(".s-chat-pv").forEach((v) => {
+              v.hidden = v.dataset.v !== to;
+            });
+            const shown = box.querySelector(`.s-chat-pv[data-v="${to}"]`);
+            if (!Bloom.paused())
+              Bloom.animate(shown, { opacity: [0, 1] }, { duration: DUR.quick, easing: EASE.sine });
+            const f = shown.querySelector("button");
+            if (f) f.focus({ preventScroll: true });
+          }
+        });
+      },
+      tick(t) {
+        const jump = Bloom.paused() || this.last < 0 || t < this.last || t - this.last > 500;
+        for (const w of this.wins) runWin(w, t, jump);
+        runAsk(this.ask, t, jump);
+        this.last = t;
+      },
+    });
+  })();
+</script>

@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["ControlComposerEditorModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.controlcomposereditor.ControlComposerEditorModule"]
+  }
+}

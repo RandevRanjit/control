@@ -1,0 +1,353 @@
+<style data-part="_test">
+  .s-test-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 28px;
+  }
+  .s-test-hero {
+    position: relative;
+    height: 420px;
+    border-radius: var(--r-xl);
+  }
+  .s-test-hero .bead {
+    position: absolute;
+  }
+  .s-test-side {
+    width: 272px;
+    padding: 8px 0;
+    background: var(--raised);
+    border-radius: var(--r-l);
+  }
+  .s-test-band {
+    height: 64px;
+    border-radius: var(--r-l);
+  }
+  .s-test-l24 .lamp {
+    --d: 24px;
+  }
+  .s-test-k {
+    font: 400 11px/1 var(--f-mono);
+    color: var(--text-caption);
+    width: 70px;
+    flex: none;
+  }
+  .s-test-two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .s-test-two > div {
+    border-radius: var(--r-xl);
+    padding: 16px;
+    min-width: 0;
+  }
+  @media (max-width: 900px) {
+    .s-test-two {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .s-test-bars {
+    display: grid;
+    grid-template-columns: 70px minmax(0, 1fr) minmax(0, 1fr) 30px;
+    gap: 10px 14px;
+    align-items: center;
+  }
+  .s-test-bars .s-test-k {
+    width: auto;
+  }
+  .s-test-surf {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+  }
+  .s-test-surf > div {
+    border-radius: var(--r-m);
+    padding: 10px;
+    font: 400 11px/1.5 var(--f-mono);
+  }
+  .s-test-surf b {
+    display: block;
+    font-weight: 600;
+    color: var(--text-strong);
+  }
+  .s-test-surf span {
+    color: var(--text-caption);
+  }
+  .s-test-fire {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .s-test-big {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1 1 260px;
+    min-width: 0;
+    max-width: 420px;
+  }
+  .s-test-out {
+    font: 400 11px/1.4 var(--f-mono);
+    color: var(--text-caption);
+  }
+</style>
+<section id="_test" class="bl-sec">
+  <header class="bl-sh">
+    <div class="no">00 <span class="bl-steps"></span></div>
+    <h2>Component check</h2>
+    <p class="meta">Shell test, not part of the doc.</p>
+  </header>
+  <div class="fig" data-fig="hero"><div class="s-test-hero" data-region></div></div>
+  <div class="fig" data-fig="surfaces"><div class="s-test-surf"></div></div>
+  <div class="fig" data-fig="lamps">
+    <div class="s-test-row s-test-l24" data-lamps="24"></div>
+    <div class="s-test-row" data-lamps="10"></div>
+    <div class="s-test-row s-test-l24" data-lamps="still"></div>
+  </div>
+  <div class="fig" data-fig="bars"><div class="s-test-bars"></div></div>
+  <div class="fig" data-fig="both">
+    <div class="s-test-two">
+      <div class="themed" data-theme="field">
+        <div class="s-test-side" data-region data-side="field"></div>
+      </div>
+      <div class="themed" data-theme="night">
+        <div class="s-test-side" data-region data-side="night"></div>
+      </div>
+    </div>
+  </div>
+  <div class="fig" data-fig="fire">
+    <div class="s-test-row" style="align-items: flex-start">
+      <div class="s-test-side" data-region data-side="fire"></div>
+      <div class="s-test-big">
+        <div class="s-test-fire"></div>
+        <span class="sbar" data-st="idle" aria-hidden="true" data-big></span>
+        <span class="sbar band" data-st="idle" aria-hidden="true" data-big></span>
+        <p class="s-test-out">state: idle</p>
+      </div>
+    </div>
+  </div>
+  <div class="fig" data-fig="pearls">
+    <div class="s-test-row" data-pearls="tints"></div>
+    <div class="s-test-row" data-pearls="states"></div>
+    <div class="s-test-row" data-pearls="counts"></div>
+  </div>
+  <div class="fig s-test-row" data-fig="beads"></div>
+  <div class="fig" data-fig="ramps">
+    <div class="ramp-flow x s-test-band" style="--tile: 100%"></div>
+    <div style="height: 12px"></div>
+    <div class="ramp-flow x safe s-test-band"></div>
+  </div>
+  <div class="fig s-test-row" data-fig="chains"></div>
+  <div class="fig s-test-row" data-fig="controls">
+    <button class="pill">Cancel</button
+    ><button class="pill primary">Create <span class="kbd">↩</span></button
+    ><button class="pill primary sm">Lock <span class="kbd">↩</span></button
+    ><button class="pill ghost">Later</button><button class="pill danger">Archive anyway</button
+    ><button class="pill sm">Go to tab</button>
+    <div class="seg" role="group">
+      <button aria-pressed="false">Turns</button><button aria-pressed="true">Diff</button>
+    </div>
+    <button class="toggle" role="switch" aria-checked="true" aria-label="Sound"><i></i></button
+    ><button class="toggle" role="switch" aria-checked="false" aria-label="Banners"><i></i></button>
+    <span class="chip">LOGIN</span><span class="chip on-needs">PERMISSION</span
+    ><span class="chip mark">JOB</span><span class="chip data">+38 −12</span
+    ><span class="chip guest">DOCKED</span> <span class="kbd">⌘K</span
+    ><span class="kbd theirs">⇧TAB</span>
+    <span class="input" style="width: 240px"><span class="ph">name, folder, prompt</span></span>
+  </div>
+  <div class="fig s-test-row" data-fig="rows" style="align-items: flex-start">
+    <div class="s-test-side" data-region data-side="main"></div>
+    <div class="panel" style="width: 320px">
+      <div class="panel-h">Trace</div>
+      <p class="t-small">Raised panel.</p>
+    </div>
+    <div class="panel well" style="width: 240px"><p class="t-mono">sunk well</p></div>
+    <div class="panel deep" style="width: 240px"><p class="t-mono">deep well</p></div>
+    <div class="panel float" style="width: 260px">
+      <div class="panel-h">Float</div>
+      <div class="seam"></div>
+      <p class="t-small">Overlay with navy float shadow.</p>
+    </div>
+    <div class="toast" style="width: 360px">
+      <b>3 selected</b><span class="sp"></span><button class="pill sm">Archive</button
+      ><button class="pill ghost sm">Esc</button>
+    </div>
+    <div class="puffy" style="width: 180px; height: 120px"></div>
+    <div class="puffy" data-hue="rose" style="width: 120px; height: 120px"></div>
+    <div class="puffy sm" data-hue="blue" style="width: 120px; height: 60px"></div>
+  </div>
+  <div class="fig" data-fig="window">
+    <div class="bl-scale" data-w="1512" data-h="945">
+      <div class="window" data-region>
+        <div class="window-band">
+          <span class="lights"><i></i><i></i><i></i></span><span class="name">ORBIT-WEBSITE</span
+          ><span class="path">~/Projects/orbit-website</span
+          ><span class="sbar" data-st="working" aria-hidden="true" style="width: 220px"></span>
+        </div>
+        <div class="window-body">
+          <div></div>
+          <div class="pane"></div>
+          <div class="pane"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<script data-part="_test">
+  Bloom.section("_test", {
+    init(el) {
+      const S = Bloom.STATES;
+      el.querySelectorAll("[data-lamps]").forEach((r) => {
+        const still = r.dataset.lamps === "still";
+        r.innerHTML =
+          '<span class="s-test-k">' +
+          r.dataset.lamps +
+          "</span>" +
+          S.map((s) => Bloom.lamp(s, { still })).join("");
+      });
+      el.querySelector(".s-test-surf").innerHTML = [
+        "deep",
+        "sunken",
+        "field",
+        "raised",
+        "overlay",
+        "selection",
+        "seam",
+      ]
+        .map(
+          (s) =>
+            `<div style="background:var(--${s})"><b>${s}</b><span>${Bloom.token(s)}</span></div>`,
+        )
+        .join("");
+      el.querySelector(".s-test-bars").innerHTML =
+        '<span class="s-test-k">state</span><span class="s-test-k">beads (live)</span><span class="s-test-k">full (still)</span><span class="s-test-k">tip</span>' +
+        S.map(
+          (s) =>
+            `<span class="s-test-k">${s}</span>${Bloom.bar(s, { form: "beads" })}${Bloom.bar(s, { still: true })}${Bloom.bar(s, { form: "tip" })}`,
+        ).join("");
+      el.querySelector('[data-pearls="tints"]').innerHTML =
+        '<span class="s-test-k">tints</span>' +
+        [8, 10, 12, 16, 20]
+          .map((p) =>
+            ["rose", "butter", "sage", "mint", "peri", "lilac"]
+              .map((t) => Bloom.pearl({ tint: t, p, cls: p < 10 ? "xs" : "" }))
+              .join(""),
+          )
+          .join('<span style="width:8px"></span>');
+      el.querySelector('[data-pearls="states"]').innerHTML =
+        '<span class="s-test-k">states</span>' +
+        S.map((s) => Bloom.pearl({ st: s, p: 12 })).join("") +
+        '<span class="s-test-k">tally</span>' +
+        Bloom.tally(["needs", "needs", "failed", "working", "working", "working", "done"]);
+      el.querySelector('[data-pearls="counts"]').innerHTML =
+        '<span class="s-test-k">counts</span>' +
+        Bloom.pearl({ n: 2 }) +
+        Bloom.pearl({ n: 412 }) +
+        Bloom.pearl({ n: 6, p: 14 }) +
+        Bloom.pearl({ n: 12, p: 20 });
+      el.querySelector('[data-fig="beads"]').innerHTML = [
+        "rose-base",
+        "green-base",
+        "blue-base",
+        "cream",
+        "navy",
+        "rose-deep",
+        "amber-base",
+        "bar-blue-d",
+      ]
+        .map(
+          (c, i) =>
+            `<span class="bead" style="--b:${[12, 16, 24, 36, 48, 64, 24, 24][i]}px;--c:var(--${c})"></span>`,
+        )
+        .join("");
+      const hero = el.querySelector(".s-test-hero"),
+        lay = () => {
+          const { beads, w, h } = Bloom.stairBeads({ t: 1, r: 1, a: 1, f: 0.5 }, 0.5),
+            U = Math.min(120, (hero.clientWidth * 0.62) / w),
+            B = 0.5 * U * 1.22;
+          const ox = (hero.clientWidth - w * U) / 2,
+            oy = (420 - h * U) / 2;
+          hero.innerHTML = beads
+            .map(
+              (b) =>
+                `<span class="bead ramp-flow breathe" style="--b:${B}px;left:${ox + b.x * U - B / 2}px;top:${oy + b.y * U - B / 2}px;--k:${b.s.toFixed(4)};--tile:1000%"></span>`,
+            )
+            .join("");
+        };
+      lay();
+      el.querySelector('[data-fig="chains"]').innerHTML =
+        `<span class="s-test-k">5H 71%</span>${Bloom.chainHTML(15, 0.71, "5h")}<span class="s-test-k">7D 22%</span>${Bloom.chainHTML(14, 0.22, "7d")}<span class="s-test-k">5H 86%</span>${Bloom.chainHTML(15, 0.86, "5h")}<span class="s-test-k">bg 3</span>${Bloom.wave(3)}<span class="s-test-k">bg 9</span>${Bloom.wave(9)}<span class="s-test-k">ring</span>${Bloom.ring()}${Bloom.ring({ r: 24, b: 8 })}`;
+      el.querySelector(".input").insertAdjacentHTML("afterbegin", Bloom.gi("find"));
+      Bloom.seg(el.querySelector('[data-fig="controls"] .seg'));
+      const row = (st, n, sub, o = {}) =>
+        Bloom.row({
+          st,
+          name: n,
+          sub,
+          right: o.chip,
+          age: o.age,
+          sel: o.sel,
+          ind: o.ind || 14,
+          bar: o.nobar ? false : undefined,
+        });
+      const side = () =>
+        `<div class="group-row">${Bloom.gi("chev-d")}${Bloom.pearl({ tint: "mint", p: 10 })}THESIS<span class="n">3</span></div>` +
+        row("needs", "STATISTICS", "needs you", {
+          chip: '<span class="chip on-needs">LOGIN</span>',
+          age: "2m",
+          ind: 24,
+        }) +
+        row("done", "LINEAR_ALGEBRA", "done · main", { age: "14m", ind: 24 }) +
+        row("idle", "SIGNALS_101", "idle · main", { age: "3h", ind: 24 }) +
+        `<div class="group-row">${Bloom.gi("chev-d")}${Bloom.pearl({ tint: "peri", p: 10 })}PROJECTS<span class="n">3</span></div>` +
+        row("working", "ORBIT-WEBSITE", "working", { age: "now", ind: 24, sel: true }) +
+        `<div class="wt-row" aria-selected="true" style="--indent:24px">${Bloom.gi("wt")}site-v2<span class="st">+38 −12</span></div>` +
+        row("bg", "CONTROL", "background · 3 tasks", { age: "1m", ind: 24, chip: Bloom.wave(3) }) +
+        row("house", "RELAY MAIN", "dreaming", { age: "9m" }) +
+        row("failed", "CV-BUILD", "failed · main", {
+          chip: '<span class="chip">EXIT 1</span>',
+          age: "2h",
+        }) +
+        row("outside", "INTERNSHIP-SEARCH", "vs code · read-only", {
+          chip: '<span class="chip mark">OUTSIDE</span>',
+          age: "4h",
+        }) +
+        row("choose", "PORTFOLIO-SCROLL", "choose on return", {
+          chip: '<span class="chip">138K</span>',
+          age: "1d",
+        }) +
+        row("gone", "OLD-NOTES", "gone · closed", { age: "2d" }) +
+        `<div class="group-row">${Bloom.gi("chev-r")}${Bloom.pearl({ tint: "butter", p: 10 })}ORBIT · locked until 18:00<span class="lamp-strip">${Bloom.tally(["working", "working", "done"])}</span></div>`;
+      el.querySelectorAll('[data-side="main"], [data-side="field"], [data-side="night"]').forEach(
+        (s) => {
+          s.innerHTML = side();
+        },
+      );
+      const fs = el.querySelector('[data-side="fire"]');
+      fs.innerHTML = row("idle", "STATISTICS", "idle · main", { age: "2m" });
+      const target = fs.querySelector(".session-row"),
+        bigs = el.querySelectorAll("[data-big]"),
+        out = el.querySelector(".s-test-out");
+      el.querySelector(".s-test-fire").innerHTML = S.map(
+        (s) => `<button class="pill sm" data-to="${s}">${s}</button>`,
+      ).join("");
+      el.querySelector(".s-test-fire").addEventListener("click", (e) => {
+        const b = e.target.closest("[data-to]");
+        if (!b) return;
+        Bloom.setState(target, b.dataset.to);
+        bigs.forEach((x) => Bloom.setBar(x, b.dataset.to));
+        out.textContent =
+          "state: " + b.dataset.to + " · region preempt: " + fs.hasAttribute("data-preempt");
+      });
+      this.tickRow = el.querySelector('[data-side="main"] .session-row[data-st="idle"]');
+      new ResizeObserver(lay).observe(hero);
+    },
+    tick(t) {
+      // state from t, so ?t= shots and Pause are exact; touch the DOM only on change
+      const want = t % 7000 < 3500 ? "idle" : "needs";
+      if (this.tickRow.dataset.st !== want) Bloom.setState(this.tickRow, want);
+    },
+  });
+</script>

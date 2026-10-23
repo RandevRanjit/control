@@ -1,0 +1,42 @@
+<style data-part="picks">
+.s-pick-root .s-pick-list { display: grid; gap: 10px; margin-top: var(--s-6); }
+.s-pick-root .s-pick-q { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 6px 18px; padding: 18px 22px; border-radius: var(--r-xl); background: var(--raised); }
+@media (max-width: 720px) { .s-pick-root .s-pick-q { grid-template-columns: minmax(0, 1fr); padding: 16px; } }
+.s-pick-root .s-pick-id { font: 600 15px/24px var(--f-mono); color: var(--text-strong); }
+.s-pick-root .s-pick-t { font: var(--w-med) 16px/24px var(--f-chrome); color: var(--text-strong); }
+.s-pick-root .s-pick-t span { font: var(--w-reg) 12.5px/1 var(--f-mono); color: var(--text-caption); margin-left: 8px; }
+.s-pick-root .s-pick-os { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 720px) { .s-pick-root .s-pick-os { grid-column: 1; } }
+.s-pick-root .s-pick-o { display: inline-flex; align-items: baseline; gap: 8px; padding: 7px 12px; border-radius: var(--r-m); background: var(--sunken); box-shadow: var(--well); font: var(--w-reg) 13px/1.35 var(--f-chrome); color: var(--text-body); max-width: 100%; }
+.s-pick-root .s-pick-o b { font: 600 12px/1 var(--f-mono); color: var(--text-strong); }
+.s-pick-root .s-pick-o[data-rec] { background: var(--overlay); box-shadow: inset 0 1px 0 var(--lip), inset 0 -4px 10px var(--occl); }
+.s-pick-root .s-pick-o[data-rec]::after { content: attr(data-rec); font: 400 10.5px/1 var(--f-mono); color: var(--text-caption); }
+</style>
+<section id="picks" class="bl-sec s-pick-root">
+  <header class="bl-sh">
+    <div class="no">05 <span class="bl-steps"></span></div>
+    <h2>Decisions</h2>
+    <p class="meta">Settled 8 Oct 2026, revised 9 Oct (1.1). Version 1's answer is raised.</p>
+  </header>
+  <p class="bl-lead">Round one asked six questions; D answered them, and the passes after it added three more. Each answer is version 1, drawn in S6 and S7 and written down in <code>design/hybrid/HANDOFF.md</code>, which step 7 builds from.</p>
+  <div class="s-pick-list" data-fig="list"></div>
+</section>
+<script data-part="picks">
+(() => {
+const P = [
+  ['P1', 'The shell', 'S1–S6', [['A', "T3's frame in Bloom's paint"], ['B', "Bloom's frame on T3's engine"], ['C', 'per decision'], ['D', "A's frame, B's panel, C's sidebar pieces", 1]]],
+  ['P2', 'Groups in the sidebar', 'G1–G3', [['G1', 'groups › folders › chats, with three-line cards', 1], ['G2', 'groups › chats, folder on line 2'], ['G3', 'one group at a time']]],
+  ['P3', 'Interrupted', 'ST2', [['I1', 'one bar through the ring, working bar held still', 1], ['I2', 'choose on return (lilac)'], ['I3', 'failed (amber), words say interrupted']]],
+  ['P4', 'Pinned, snoozed and settled are places, not states', 'ST3', [['yes', 'the row moves, lamp and bar keep the run state; archive merged into Settled', 1], ['no', 'each gets its own lamp']]],
+  ['P5', 'Composer controls', 'S2, S6', [['T3', 'model, effort and access always shown', 1], ['Bloom', 'two chips that open menus']]],
+  ['P6', 'Shells', 'S6, S7', [['tab', 'a Terminal icon in the panel', 1], ['drawer', 'under the conversation, ⌘J']]],
+  ['P7', 'Working and compacting lamps', 'ST1', [['bg', "the background lamp for both", 1], ['own', "Bloom's working and housekeeping lamps"]]],
+  ['P8', 'The tool trace', 'S6', [['Simple', 'written like S2\'s log, quiet beads, a lamp per stack', 'version 1.1'], ['Hue', 'a colour per tool, on its name and its bead', 'version 1.0'], ['White', 'white names, a bead coloured only on error'], ['Bead', 'white names, colour on the bead']]],
+  ['P9', 'Removed lines in the diff', 'S6', [['T3', "T3's own red, as S1 draws it", 1], ['Bloom', 'the rose wash']]],
+];
+Bloom.section('picks', { init(el) {
+  el.querySelector('.s-pick-list').innerHTML = P.map(([id, t, from, os]) => `<div class="s-pick-q"><span class="s-pick-id">${id}</span><span class="s-pick-t">${t}<span>${from}</span></span>`
+    + `<div class="s-pick-os">${os.map(([k, d, rec]) => `<span class="s-pick-o"${rec ? ` data-rec="${rec === 1 ? 'version 1' : rec}"` : ''}><b>${k}</b>${d}</span>`).join('')}</div></div>`).join('');
+} });
+})();
+</script>

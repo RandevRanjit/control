@@ -1,0 +1,89 @@
+import {
+  BearerConnectionCredential,
+  BearerConnectionProfile,
+  BearerConnectionRegistration,
+  BearerConnectionTarget,
+} from "@control/client-runtime/connection";
+import {
+  type ConnectionCatalogDocument,
+  EMPTY_CONNECTION_CATALOG_DOCUMENT,
+  registerConnectionInCatalog,
+} from "@control/client-runtime/platform";
+import { EnvironmentId } from "@control/contracts";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
+
+const LegacySavedRemoteConnection = Schema.Struct({
+  environmentId: EnvironmentId,
+  environmentLabel: Schema.String,
+  pairingUrl: Schema.String,
+  displayUrl: Schema.String,
+  httpBaseUrl: Schema.String,
+  wsBaseUrl: Schema.String,
+  bearerToken: Schema.NullOr(Schema.String),
+});
+
+const LegacyConnectionDocument = Schema.Struct({
+  connections: Schema.optionalKey(Schema.Array(LegacySavedRemoteConnection)),
+});
+const decodeLegacyConnectionDocument = Schema.decodeUnknownEffect(LegacyConnectionDocument);
+
+export class LegacyConnectionMigrationError extends Schema.TaggedError<LegacyConnectionMigrationError>()(
+  "LegacyConnectionMigrationError",
+  {
+    message: Schema.String,
+  },
+) {}
+
+function migrateConnection(
+  document: ConnectionCatalogDocument,
+  connection: typeof LegacySavedRemoteConnection.Type,
+): ConnectionCatalogDocument {
+  if (connection.bearerToken === null || connection.bearerToken.trim() === "") {
+    return document;
+  }
+
+  const connectionId = `bearer:${connection.environmentId}`;
+  return registerConnectionInCatalog(
+    document,
+    new BearerConnectionRegistration({
+      target: new BearerConnectionTarget({
+        environmentId: connection.environmentId,
+        label: connection.environmentLabel,
+        connectionId,
+      }),
+      profile: new BearerConnectionProfile({
+        connectionId,
+        environmentId: connection.environmentId,
+        label: connection.environmentLabel,
+        httpBaseUrl: connection.httpBaseUrl,
+        wsBaseUrl: connection.wsBaseUrl,
+      }),
+      credential: new BearerConnectionCredential({
+        token: connection.bearerToken,
+      }),
+    }),
+  );
+}
+
+export const migrateLegacyConnectionCatalog = Effect.fn(
+  "mobile.connectionMigration.migrateCatalog",
+)(function* (raw: string) {
+  const parsed = yield* Effect.try({
+    try: () => JSON.parse(raw) as unknown,
+    catch: (cause) =>
+      new LegacyConnectionMigrationError({
+        message: `Could not parse the legacy mobile connection catalog: ${String(cause)}`,
+      }),
+  });
+  const legacy = yield* decodeLegacyConnectionDocument(parsed).pipe(
+    Effect.mapError(
+      (cause) =>
+        new LegacyConnectionMigrationError({
+          message: `Could not decode the legacy mobile connection catalog: ${String(cause)}`,
+        }),
+    ),
+  );
+
+  return (legacy.connections ?? []).reduce(migrateConnection, EMPTY_CONNECTION_CATALOG_DOCUMENT);
+});

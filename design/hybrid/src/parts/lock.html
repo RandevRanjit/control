@@ -1,0 +1,264 @@
+<style data-part="lock">
+.s-lk-root .bl-prose + .fig, .s-lk-root .bl-sub + .bl-prose + .fig { margin-top: var(--s-6); }
+.s-lk-root .s-lk-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-6) var(--s-7); margin-top: var(--s-6); }
+@media (max-width: 1000px) { .s-lk-root .s-lk-two { grid-template-columns: minmax(0, 1fr); } }
+
+/* L1 the offer: the update note's form, in its slot (two pills, Later then Lock) */
+.s-lk-root .s-lk-offer .pill { margin-left: 0; }
+.s-lk-root .s-lk-offer > span:not(.pill) { margin-right: auto; }
+.s-lk-root .s-lk-note b { font-weight: var(--w-med); }
+
+/* L2 the sheet: the app's dialog backdrop over the window, a float panel at radius 20 */
+.s-lk-root .s-lk-scrim { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding-bottom: 60px; border-radius: inherit;
+  background: color-mix(in srgb, var(--field) 60%, transparent); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.s-lk-root .s-lk-sheet.panel { width: 460px; padding: 18px 20px 18px; border-radius: var(--r-xl); color: var(--text-body); }
+.s-lk-root .s-lk-shh { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font: var(--w-med) 12px/1 var(--f-chrome); color: var(--text-label); }
+.s-lk-root .s-lk-q { font: var(--w-strong) 16px/1.3 var(--f-chrome); color: var(--text-strong); }
+.s-lk-root .s-lk-q .t-num { font-weight: 500; }
+.s-lk-root .s-lk-qs { margin-top: 4px; font: var(--w-reg) 13px/1.45 var(--f-chrome); color: var(--text-secondary); }
+.s-lk-root .s-lk-form { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px 12px; align-items: center; margin-top: 16px; }
+.s-lk-root .s-lk-form > .s-lk-lb { align-self: start; padding-top: 6px; font: var(--w-med) 12px/1 var(--f-chrome); color: var(--text-label); }
+.s-lk-root .s-lk-rw { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.s-lk-root .s-lk-until.input { height: 26px; gap: 6px; padding: 0 10px; font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-caption); }
+.s-lk-root .s-lk-until b { font: 500 12px/1 var(--f-mono); color: var(--text-strong); }
+.s-lk-root .s-lk-cov { display: grid; gap: 7px; padding-top: 5px; }
+.s-lk-root .s-lk-cov > span { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; font: var(--w-reg) 12px/1.3 var(--f-chrome); color: var(--text-caption); }
+.s-lk-root .s-lk-cov b { font-weight: var(--w-med); color: var(--text-strong); }
+.s-lk-root .s-lk-cov code { font: 500 11.5px/1.3 var(--f-mono); color: var(--text-strong); background: none; padding: 0; }
+.s-lk-root .s-lk-gl { display: flex; flex-direction: column; gap: 2px; }
+.s-lk-root .s-lk-gr { display: flex; align-items: center; gap: 10px; min-height: 30px; padding: 0 10px; border-radius: var(--r-m); background: color-mix(in srgb, var(--raised) 55%, transparent); }
+.s-lk-root .s-lk-gr:nth-child(even) { background: transparent; }
+.s-lk-root .s-lk-gr .s-lk-gn { font: var(--w-strong) 11.5px/1 var(--f-chrome); letter-spacing: .02em; color: var(--text-strong); }
+.s-lk-root .s-lk-gr .s-lk-gm { margin-left: auto; font: var(--w-reg) 11.5px/1 var(--f-chrome); color: var(--text-caption); white-space: nowrap; }
+.s-lk-root .s-lk-box { display: inline-grid; place-items: center; width: 16px; height: 16px; flex: none; border-radius: 5px; background: var(--sunken); box-shadow: var(--well); color: var(--field); }
+.s-lk-root .s-lk-box[data-on] { background: var(--ink-1); box-shadow: inset 0 -2px 4px var(--occl-light); }
+.s-lk-root .s-lk-box svg { width: 12px; height: 12px; }
+.s-lk-root .s-lk-promise { margin-top: 16px; font: var(--w-med) 12.5px/1.5 var(--f-chrome); color: var(--text-strong); }
+.s-lk-root .s-lk-shf { display: flex; align-items: center; gap: 8px; margin-top: 18px; }
+
+/* L3 the plate: the window, and nothing in it but the lock, on white in Field and black in Night (owner, 11 Oct) */
+.s-lk-root .t3w.s-lk-plate { display: flex; flex-direction: column; background: white; }
+html[data-theme="night"] .s-lk-root .t3w.s-lk-plate { background: black; }
+.s-lk-root .s-lk-plate .t3-top { flex: none; }
+.s-lk-root .s-lk-pbody { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 92px; text-align: center; }
+/* the sidebar's stair logo, drawn in 5 px cells; a dithered band of shadow crosses it on the 7 s clock */
+.s-lk-root .s-lk-logo { position: relative; width: 340px; height: 200px; margin-bottom: 52px; color: var(--ink-1); }
+.s-lk-root .s-lk-px { position: absolute; width: 5px; height: 5px; background: currentColor; }
+html[data-motion="full"] .s-lk-root .s-lk-px { animation: var(--n) var(--T) step-end var(--dl) infinite; }
+@keyframes s-lk-d0 { 0% { opacity: .22; } 4.37% { opacity: 1; } 95.63% { opacity: .22; } }
+@keyframes s-lk-d1 { 0% { opacity: .22; } 7.62% { opacity: 1; } 92.38% { opacity: .22; } }
+@keyframes s-lk-d2 { 0% { opacity: .22; } 9.91% { opacity: 1; } 90.09% { opacity: .22; } }
+@keyframes s-lk-d3 { 0% { opacity: .22; } 11.80% { opacity: 1; } 88.20% { opacity: .22; } }
+@keyframes s-lk-d4 { 0% { opacity: .22; } 13.47% { opacity: 1; } 86.53% { opacity: .22; } }
+@keyframes s-lk-d5 { 0% { opacity: .22; } 15.01% { opacity: 1; } 84.99% { opacity: .22; } }
+@keyframes s-lk-d6 { 0% { opacity: .22; } 16.44% { opacity: 1; } 83.56% { opacity: .22; } }
+@keyframes s-lk-d7 { 0% { opacity: .22; } 17.79% { opacity: 1; } 82.21% { opacity: .22; } }
+@keyframes s-lk-d8 { 0% { opacity: .22; } 19.10% { opacity: 1; } 80.90% { opacity: .22; } }
+@keyframes s-lk-d9 { 0% { opacity: .22; } 20.36% { opacity: 1; } 79.64% { opacity: .22; } }
+@keyframes s-lk-d10 { 0% { opacity: .22; } 21.59% { opacity: 1; } 78.41% { opacity: .22; } }
+@keyframes s-lk-d11 { 0% { opacity: .22; } 22.80% { opacity: 1; } 77.20% { opacity: .22; } }
+@keyframes s-lk-d12 { 0% { opacity: .22; } 24.00% { opacity: 1; } 76.00% { opacity: .22; } }
+@keyframes s-lk-d13 { 0% { opacity: .22; } 25.20% { opacity: 1; } 74.80% { opacity: .22; } }
+@keyframes s-lk-d14 { 0% { opacity: .22; } 26.39% { opacity: 1; } 73.61% { opacity: .22; } }
+@keyframes s-lk-d15 { 0% { opacity: .22; } 27.60% { opacity: 1; } 72.40% { opacity: .22; } }
+.s-lk-root .s-lk-locked { font: var(--w-strong) 84px/1 var(--f-chrome); letter-spacing: -.015em; color: var(--text-strong); }
+.s-lk-root .s-lk-until2 { margin-top: 10px; font: var(--w-reg) 26px/1.2 var(--f-chrome); color: var(--text-body); }
+.s-lk-root .s-lk-until2 .t-num { font-weight: 500; letter-spacing: -.01em; }
+.s-lk-root .s-lk-count { margin-top: 22px; font: var(--w-med) 13px/1.4 var(--f-chrome); color: var(--text-secondary); }
+.s-lk-root .s-lk-count .t-num { font-size: 12.5px; }
+.s-lk-root .s-lk-pr { margin: 6px auto 0; max-width: 60ch; font: var(--w-reg) 13px/1.5 var(--f-chrome); color: var(--text-caption); }
+
+/* L3b break-through: the window with only what needs you. No search, folds, usage, panel or panel toggles */
+.s-lk-root .t3w.s-lk-bt { grid-template-columns: 256px minmax(0, 1fr); }
+.s-lk-root .s-lk-bt .t3d-panel, .s-lk-root .s-lk-bt .t3-srch, .s-lk-root .s-lk-bt .hy-folds, .s-lk-root .s-lk-bt .hy-use, .s-lk-root .s-lk-bt .t3-foot,
+.s-lk-root .s-lk-bt .t3-tools, .s-lk-root .s-lk-bt .t3-working, .s-lk-root .s-lk-bt .t3-list > :not(.t3-card[data-st="needs"]) { display: none; }
+.s-lk-root .s-lk-bt .t3-tg, .s-lk-root .s-lk-bt .d-set { visibility: hidden; }
+.s-lk-root .s-lk-bt .t3-list .t3d-in { margin-left: 0; }
+.s-lk-root .s-lk-bt .s-lk-note { margin-top: 2px; }
+.s-lk-root .s-lk-bt .t3-ed { display: flex; flex-direction: column; gap: 6px; }
+.s-lk-root .s-lk-apl { font: var(--w-med) 11.5px/1 var(--f-chrome); color: var(--text-strong); }
+.s-lk-root .s-lk-apl span { margin-left: 8px; font-weight: var(--w-reg); color: var(--text-caption); }
+.s-lk-root .s-lk-apc { font: 400 12.5px/18px var(--f-mono); color: var(--text-strong); }
+.s-lk-root .s-lk-bt .s-lk-acts { gap: 6px; }
+
+/* L4 the terminal: Claude Code's own screen, in the owner's terminal */
+.s-lk-root .s-lk-tw { width: 740px; height: 430px; display: flex; flex-direction: column; border-radius: var(--r-l); background: var(--deep); box-shadow: var(--float), inset 0 0 0 1px var(--seam); overflow: hidden; }
+.s-lk-root .s-lk-tb { flex: none; display: flex; align-items: center; gap: 12px; height: 34px; padding: 0 14px; background: var(--raised); font: var(--w-reg) 11.5px/1 var(--f-chrome); color: var(--text-caption); }
+.s-lk-root .s-lk-tb .lights { margin-right: 0; }
+.s-lk-root .s-lk-tb .s-lk-tt { flex: 1; text-align: center; margin-right: 52px; }
+.s-lk-root .s-lk-tty { flex: 1; margin: 0; padding: 14px 16px; overflow: hidden; white-space: pre; font: 400 12px/18px var(--f-mono); color: var(--text-body); }
+.s-lk-root .s-lk-tty .s-lk-dim { color: var(--text-caption); }
+.s-lk-root .s-lk-tty .s-lk-mark { color: var(--text-caption); }
+.s-lk-root .s-lk-tty .s-lk-warn { color: var(--amber-deep); }
+html[data-theme="night"] .s-lk-root .s-lk-tty .s-lk-warn { color: var(--amber-base); }
+.s-lk-root .s-lk-tty .s-lk-rule { color: var(--seam); }
+.s-lk-root .s-lk-tty .s-lk-cur { background: var(--text-strong); color: var(--deep); }
+.s-lk-root .s-lk-tty b { font-weight: 500; color: var(--text-strong); }
+</style>
+<section id="lock" class="bl-sec s-lk-root">
+  <header class="bl-sh">
+    <div class="no">06 <span class="bl-steps"></span></div>
+    <h2>Lock</h2>
+    <p class="meta">The full lock's four surfaces in version 1: the offer, the sheet, the plate and terminal claude's refusal. Drawn 11 Oct 2026 for the owner's approval.</p>
+  </header>
+  <p class="bl-lead">A lock is a commitment device, not security. It ends at a fixed time and nothing lifts it early. A full lock refuses your sends in every chat, from every device, and refuses new prompts in terminal claude; running turns and agents carry on, and a chat that needs you comes through until you've answered it. A group lock does the same for the groups you tick. Bloom drew v1's lock for the menu bar and tmux (design/bloom, section 07); version 1 has neither, so the surfaces move into the window and into Claude Code's own prompt.</p>
+
+  <h3 class="bl-sub"><span class="id">L1</span>The offer</h3>
+  <div class="bl-prose">
+    <p>When nothing has needed you for 10 minutes, a note offers a lock in the update note's slot, under the search. Nothing pops: it waits for your next look, which is the moment it's for. Lock opens the sheet set to Full for 2 h, and only the sheet's Lock commits. Later hides the note until something next needs you. It never shows during a lock. A failed chat doesn't count as needing you; an idle one doesn't stop the offer.</p>
+  </div>
+  <figure class="fig" data-fig="offer"><div data-win="offer"></div><figcaption class="cap"><span class="id">L1</span><b>The offer.</b><span>STATISTICS has been answered, so nothing needs you. The note is the update note's form: 34 high, radius 10, on the overlay tone, the lock glyph (the shut stair) in place of the spark. When both show, the offer sits under the update note.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">L2</span>The lock sheet, ⌘L</h3>
+  <div class="bl-prose">
+    <p>⌘L opens the sheet, and so do the offer's Lock and Lock… in a group's menu, which ticks that group. It is the only way in, so the promise is read at the moment it matters. Full covers the window, every chat and terminal claude. Group covers the groups you tick: they start as the groups with a working chat, less the one you're in. For is 30 min, 1 h or 2 h, or a time typed into Until, at most 12 h ahead; the end is fixed the moment you press Lock.</p>
+    <p>The no-early-unlock sentence is a promise, not a danger, so it is in ink and Lock is the primary. During a lock, ⌘L can only extend it: the presets that would end sooner go, and Lock reads Extend.</p>
+  </div>
+  <figure class="fig" data-fig="sheet"><div data-win="sheet"></div><figcaption class="cap"><span class="id">L2</span><b>Full, from the offer.</b><span>The app's dialog backdrop (the field at 60 % and a 4 px blur) over the window; the sheet is 460 wide, radius 20, on the overlay tone with the float shadow. Esc and Cancel close it; ↩ is Lock.</span></figcaption></figure>
+  <figure class="fig" data-fig="sheet-group"><div data-win="sheet-group"></div><figcaption class="cap"><span class="id">L2b</span><b>Group.</b><span>Each group row is its pearl, its name in the sidebar's caps and what it holds. CONTROL is ticked because it is working and you're in ORBIT.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">L3</span>The lock plate</h3>
+  <div class="bl-prose">
+    <p>During a full lock the window is the plate: the logo, the end time, what is still running and one sentence, on white in Field and black in Night. There is no sidebar, panel or composer to get past, and quitting and relaunching lands on it again. The logo is the sidebar's stair drawn in 5 px cells, and a band of shadow crosses it in a 4 × 4 ordered dither, left to right on the 7 s clock, so most of the logo is lit at any moment and the shadow's cells hold at 22 %. Under Reduce motion it holds still and whole. ⌘L on the plate opens the sheet to extend.</p>
+  </div>
+  <figure class="fig" data-fig="plate"><div data-win="plate"></div><figcaption class="cap"><span class="id">L3</span><b>The plate.</b><span>The window's lights and nothing else. The counts are the chats still running and the finished ones you haven't opened, as on the cards. Bloom's bead stair was tried here first and dropped (owner, 11 Oct).</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">L3b</span>Break-through</h3>
+  <div class="bl-prose">
+    <p>When a chat needs you, the plate steps aside for it. The window comes forward without taking focus, so typing in another app can't answer it, and holds only the chats that need you, under a Locked until note in the offer's slot. The chat is open, and you answer in the composer as always. There is no search, panel, settings, fold or usage. Once nothing needs you, the plate comes back. A failure doesn't come through; a question or an approval does.</p>
+  </div>
+  <figure class="fig" data-fig="through"><div data-win="through"></div><figcaption class="cap"><span class="id">L3b</span><b>Two chats need you during a full lock.</b><span>ORBIT-WEBSITE asks to push. The composer holds the request as the app draws it today (a label, the command, Decline and Approve); a typed send would be refused. The cards keep their place in the list's order, without their groups.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">L4</span>Terminal claude</h3>
+  <div class="bl-prose">
+    <p>Terminal claude learns of the lock from a UserPromptSubmit hook in <code>~/.claude/settings.json</code>, which reads CONTROL's lock file. A refused prompt stays in the box, and Claude Code prints the hook's line in its warning colour. <code>claude -p</code> is refused the same way. CONTROL's own chats pass the hook, because the server already refuses your sends to them and must let agents' messages through. Running turns and permission prompts are untouched: the hook only sees new prompts. Past midnight the time reads <code>10:00 tomorrow</code>.</p>
+  </div>
+  <div class="s-lk-two">
+    <figure class="fig" data-fig="term"><div data-win="term"></div><figcaption class="cap"><span class="id">L4</span><b>Interactive.</b><span>Drawn from Claude Code 2.1.295, run in a sandbox. Claude Code writes the first line and "Original prompt"; CONTROL writes the line between. The prompt stays in the box for after the lock.</span></figcaption></figure>
+    <figure class="fig" data-fig="term-p"><div data-win="term-p"></div><figcaption class="cap"><span class="id">L4b</span><b>claude -p.</b><span>The same words on stdout, in plain ink. The run makes no request to the model.</span></figcaption></figure>
+  </div>
+</section>
+<script data-part="lock">
+(() => {
+const G = Bloom.gi;
+const END = '18:00';
+const chat = n => Hy.CHATS.find(c => c.n === n);
+/* draw with some chats in other states, then put the kit's fixture back */
+function withStates(states, draw) {
+  const keep = Object.keys(states).map(n => [chat(n), { ...chat(n) }]);
+  Object.entries(states).forEach(([n, s]) => Object.assign(chat(n), s));
+  try { return draw(); } finally { keep.forEach(([c, k]) => Object.assign(c, k)); }
+}
+const QUIET = { STATISTICS: { st: 'done', sub: 'done · main' } };
+/* running: a turn, background agents or compaction; done: finished and not yet opened */
+const RUN = ['working', 'bg', 'house'];
+const counts = () => {
+  const live = Hy.CHATS.filter(c => c.place !== 'snoozed');
+  return { all: live.length, run: live.filter(c => RUN.includes(c.st)).length, done: live.filter(c => c.st === 'done').length };
+};
+const OFFER = `<div class="hy-upd s-lk-offer">${G('lock')}<span>Nothing needs you</span><span class="pill ghost sm">Later</span><span class="pill sm">Lock</span></div>`;
+const NOTE = `<div class="hy-upd s-lk-note">${G('lock')}<span>Locked until <b class="t-num">${END}</b></span></div>`;
+const withOffer = html => html.replace(/(<div class="hy-upd">[\s\S]*?<\/div>)/, `$1${OFFER}`);
+const over = (html, inner) => html.replace(/<\/div><\/div>$/, `<div class="s-lk-scrim">${inner}</div></div></div>`);
+const TICK = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.6 6.3l2.2 2.2 4.6-4.9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const seg = (opts, on, label) => `<div class="seg sm" role="group" aria-label="${label}">${opts.map(o => `<button aria-pressed="${o === on}">${o}</button>`).join('')}</div>`;
+const PROMISE = `No early unlock. Nothing lifts it before ${END}: not quitting CONTROL, not restarting, not rebooting. A chat that needs you comes through until you've answered it.`;
+
+function sheet(mode) {
+  const n = counts(), ticked = ['ctrl'];
+  const groups = Hy.GROUPS.map(g => {
+    const rows = Hy.byGroup(g.id), run = rows.filter(c => RUN.includes(c.st)).length;
+    return `<div class="s-lk-gr"><span class="s-lk-box"${ticked.includes(g.id) ? ' data-on' : ''}>${ticked.includes(g.id) ? TICK : ''}</span>${Hy.pearl(g.tint, 12)}<span class="s-lk-gn">${g.name}</span><span class="s-lk-gm">${rows.length} chats${run ? ` · ${run} working` : ''}</span></div>`;
+  }).join('');
+  const q = mode === 'Full'
+    ? `<p class="s-lk-q">Lock everything until <span class="t-num">${END}</span>?</p><p class="s-lk-qs">${n.all} chats, ${n.run} of them working. Their turns run on.</p>`
+    : `<p class="s-lk-q">Lock CONTROL until <span class="t-num">${END}</span>?</p><p class="s-lk-qs">3 chats, all working. THESIS, ORBIT and Loose stay open.</p>`;
+  const what = mode === 'Full'
+    ? `<span class="s-lk-lb">Covers</span><div class="s-lk-cov"><span><b>The window</b>shows the lock plate</span><span><b>Every chat</b>refuses your sends, from every device</span><span><code>claude</code>refuses new prompts in any terminal</span></div>`
+    : `<span class="s-lk-lb">Groups</span><div class="s-lk-gl">${groups}</div>`;
+  return `<div class="panel float s-lk-sheet" role="dialog" aria-label="Lock"><div class="s-lk-shh">Lock<span class="sp"></span><span class="kbd">⌘L</span></div>${q}
+    <div class="s-lk-form"><span class="s-lk-lb">Mode</span><div>${seg(['Group', 'Full'], mode, 'Lock mode')}</div>${what}
+      <span class="s-lk-lb">For</span><div class="s-lk-rw">${seg(['30 min', '1 h', '2 h'], '2 h', 'Lock for')}<span class="input s-lk-until">Until<b>${END}</b></span></div></div>
+    <p class="s-lk-promise">${PROMISE}</p>
+    <div class="s-lk-shf"><span class="sp"></span><button class="pill ghost">Cancel</button><button class="pill primary">Lock <span class="kbd">↩</span></button></div></div>`;
+}
+
+function plate() {
+  const n = counts();
+  return `<div class="bl-scale" data-w="1512" data-h="945"><div class="t3w t3-bloom t3-d s-lk-plate" data-region role="img" aria-label="The window during a full lock: Locked until ${END}">`
+    + `<div class="t3-top"><span class="lights"><i></i><i></i><i></i></span></div><div class="s-lk-pbody"><div class="s-lk-logo" aria-hidden="true"></div>`
+    + `<p class="s-lk-locked">Locked</p><p class="s-lk-until2">until <span class="t-num">${END}</span></p>`
+    + `<p class="s-lk-count"><span class="t-num">${n.run}</span> working · <span class="t-num">${n.done}</span> done</p>`
+    + `<p class="s-lk-pr">No early unlock. A chat that needs you opens here, until you've answered it.</p></div></div></div>`;
+}
+/* the logo's stair (sidebar top row: viewBox 19 x 12, stroke 2, round caps and joins) in 5 px cells at 20 px a unit.
+   A cell is lit while the light (a raised cosine running left to right with a slight lean) is over .6 of the cell's
+   4 x 4 Bayer threshold, so about 70 % of the logo is lit and the rest holds at .22. One keyframe set per threshold, one delay per cell */
+const STAIR = [[2, 10], [2, 8], [5, 8], [5, 5], [8, 5], [8, 2], [11, 2], [11, 5], [14, 5], [14, 8], [17, 8], [17, 10]];
+const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+function dist(px, py, [ax, ay], [bx, by]) {
+  const dx = bx - ax, dy = by - ay, u = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
+  return Math.hypot(px - ax - u * dx, py - ay - u * dy);
+}
+function logo(el) {
+  const U = 20, C = 5, X0 = 1, Y0 = 1, W = 17 * U, H = 10 * U, cells = [];
+  for (let j = 0; j < H / C; j++) for (let i = 0; i < W / C; i++) {
+    const x = X0 + (i + .5) * C / U, y = Y0 + (j + .5) * C / U;
+    if (Math.min(...STAIR.slice(1).map((p, k) => dist(x, y, STAIR[k], p))) > 1) continue;
+    const phase = ((i + j * .5) * C / (W * 1.2) - .5 + 2) % 1;
+    cells.push(`<i class="s-lk-px" style="left:${i * C}px;top:${j * C}px;--n:s-lk-d${BAYER[j % 4][i % 4]};--dl:${((phase - 1) * 7).toFixed(3)}s"></i>`);
+  }
+  el.innerHTML = cells.join('');
+}
+
+/* Claude Code's screen, as 2.1.295 prints a UserPromptSubmit block (captured in a sandbox, 11 Oct) */
+const RULE = '<span class="s-lk-rule">' + '─'.repeat(120) + '</span>';
+const LINE = `CONTROL is locked until ${END}. Nothing lifts it early.`;
+const tw = (title, body, h) => `<div class="bl-scale" data-w="740" data-h="${h}"><div class="s-lk-tw" style="height:${h}px"><div class="s-lk-tb"><span class="lights"><i></i><i></i><i></i></span><span class="s-lk-tt">${title}</span></div><pre class="s-lk-tty">${body}</pre></div></div>`;
+const TERM = [
+  '<span class="s-lk-mark"> ▐▛███▜▌</span>   <b>Claude Code</b> <span class="s-lk-dim">v2.1.295</span>',
+  '<span class="s-lk-mark">▝▜█████▛▘</span>  <span class="s-lk-dim">Opus 5.5 · Claude Max</span>',
+  '<span class="s-lk-mark">  ▘▘ ▝▝</span>    <span class="s-lk-dim">~/Projects/relay</span>',
+  '',
+  '<span class="s-lk-warn">⏺ UserPromptSubmit operation blocked by hook:</span>',
+  `<span class="s-lk-warn">  ${LINE}</span>`,
+  '',
+  '<span class="s-lk-warn">  Original prompt: fix the flaky rep counter test</span>',
+  '', RULE,
+  '❯ fix the flaky rep counter test<span class="s-lk-cur"> </span>',
+  RULE,
+  '<span class="s-lk-dim">  ⏵⏵ auto mode on (shift+tab to cycle)</span>',
+].join('\n');
+const TERMP = [
+  '<span class="s-lk-dim">~/Projects/relay</span> on <b>main</b>',
+  '$ claude -p "summarise yesterday\'s commits"',
+  'UserPromptSubmit operation blocked by hook:',
+  LINE,
+  '',
+  'Original prompt: summarise yesterday\'s commits',
+  '$ <span class="s-lk-cur"> </span>',
+].join('\n');
+
+Bloom.section('lock', { init(el) {
+  const W = {
+    offer: () => withStates(QUIET, () => withOffer(Hy.dWin())),
+    sheet: () => withStates(QUIET, () => over(withOffer(Hy.dWin()), sheet('Full'))),
+    'sheet-group': () => withStates(QUIET, () => over(withOffer(Hy.dWin()), sheet('Group'))),
+    plate: () => withStates(QUIET, plate),
+    through: () => withStates({ 'ORBIT-WEBSITE': { st: 'needs', sub: 'needs you' } }, () => Hy.dWin().replace(/<div class="hy-upd">[\s\S]*?<\/div>/, NOTE)),
+    term: () => tw('~/Projects/relay — claude', TERM, 300),
+    'term-p': () => tw('~/Projects/relay — zsh', TERMP, 300),
+  };
+  el.querySelectorAll('[data-win]').forEach(d => { d.outerHTML = W[d.dataset.win](); });
+  /* version 1.1's Simple trace, as on S6 */
+  el.querySelectorAll('.t3w.t3-d').forEach(w => { w.dataset.tv = 'simple'; });
+  const bt = el.querySelector('[data-fig="through"] .t3w');
+  bt.classList.add('s-lk-bt');
+  bt.querySelector('.t3-ed').innerHTML = '<span class="s-lk-apl">Command approval<span>Bash</span></span><code class="s-lk-apc">git push origin site-v2</code>';
+  bt.querySelector('.t3-cf').innerHTML = `<div class="t3-cl"></div><div class="t3-cr s-lk-acts"><button class="pill ghost sm">Decline</button><button class="pill sm">Approve</button></div>`;
+  el.querySelectorAll('.s-lk-logo').forEach(logo);
+  Hy.wire(el);
+  requestAnimationFrame(() => Hy.dashes(el));
+} });
+})();
+</script>

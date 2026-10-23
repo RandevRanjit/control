@@ -1,0 +1,98 @@
+<style data-part="states">
+.s-st-root .s-st-map td { vertical-align: middle; }
+.s-st-root .bl-prose + .bl-scroll { margin-top: var(--s-6); }
+.s-st-root .s-st-map td:nth-child(3) { white-space: nowrap; }
+.s-st-root .s-st-t3 { display: inline-flex; align-items: center; gap: 4px; font: 500 12px/1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; white-space: nowrap; padding: 6px 9px; border-radius: 8px; background: var(--t3-bg); }
+.s-st-root .s-st-t3 .t3g { width: 14px; height: 14px; }
+.s-st-root .s-st-bl { display: inline-flex; align-items: center; gap: 10px; }
+.s-st-root .s-st-bl .sbar { width: 64px; }
+.s-st-root .s-st-w { font: var(--w-reg) 12px/1.3 var(--f-chrome); color: var(--text-caption); }
+.s-st-root .s-st-new { font: 500 10px/1 var(--f-mono); letter-spacing: .06em; color: var(--text-strong); background: var(--overlay); padding: 3px 6px; border-radius: var(--r-pill); margin-left: 6px; }
+.s-st-root .s-st-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); margin-top: var(--s-6); }
+@media (max-width: 1100px) { .s-st-root .s-st-opts { grid-template-columns: minmax(0, 1fr); } }
+.s-st-root .s-st-opt { display: grid; gap: 14px; align-content: start; padding: 22px 20px 22px; border-radius: var(--r-xl); background: var(--raised); min-width: 0; }
+.s-st-root .s-st-oh { display: flex; align-items: baseline; gap: 10px; }
+.s-st-root .s-st-oh .id { font: 500 11px/1 var(--f-mono); color: var(--ink-2); background: var(--overlay); padding: 5px 8px; border-radius: var(--r-pill); }
+.s-st-root .s-st-oh b { font: var(--w-strong) 16px/1.2 var(--f-chrome); color: var(--text-strong); }
+.s-st-root .s-st-rows { width: 300px; max-width: 100%; margin-left: -6px; }
+.s-st-root .s-st-big { display: flex; align-items: center; gap: 16px; padding: 4px 0 2px; }
+.s-st-root .s-st-big .lamp { --d: 24px; }
+.s-st-root .s-st-big .sbar { width: 180px; }
+.s-st-root .s-st-opt p { font: var(--w-reg) 13px/1.5 var(--f-chrome); color: var(--text-secondary); }
+.s-st-root .s-st-places { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); margin-top: var(--s-6); }
+@media (max-width: 1100px) { .s-st-root .s-st-places { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { .s-st-root .s-st-places { grid-template-columns: minmax(0, 1fr); } }
+.s-st-root .s-st-pl { display: grid; gap: 8px; align-content: start; padding: 18px; border-radius: var(--r-xl); background: var(--raised); }
+.s-st-root .s-st-pl b { font: var(--w-strong) 15px/1.2 var(--f-chrome); color: var(--text-strong); }
+.s-st-root .s-st-pl span { font: var(--w-reg) 13px/1.5 var(--f-chrome); color: var(--text-secondary); }
+.s-st-root .s-st-pl .s-st-from { font: 400 11px/1.4 var(--f-mono); color: var(--text-caption); }
+.s-st-root .s-st-strip { width: 300px; max-width: 100%; margin: var(--s-5) 0 0 -14px; }
+</style>
+<section id="states" class="bl-sec s-st-root">
+  <header class="bl-sh">
+    <div class="no">04 <span class="bl-steps"></span></div>
+    <h2>States</h2>
+    <p class="meta">Every T3 thread state on a Bloom lamp and bead bar. One new state, three places.</p>
+  </header>
+  <p class="bl-lead">T3 says a chat's state in a coloured word with an icon, and none of them move: working is a dashed ring and a ticking time. Bloom says it by shape first, then motion, then colour: a colourless lamp at the end of the row and the state's colour flowing through a bar of beads. The mapping is close to one to one: two of T3's labels fold into a Bloom state each, and four rows have no T3 label at all.</p>
+  <div class="bl-prose">
+    <p>Bloom's motion stays as built: every loop on the 7 s clock, Reduce motion stills them all. T3's "Input" (Claude asked you a question mid-turn) and "Approval" (a tool waits for your yes) both block the turn, so both are needs-you, the one arm on screen. "Limited" is a turn the usage limit stopped; it reads as failed with the reset time in its words. Bloom's choose on return keeps its lilac for a turn that ended on a question or a plan for you to pick from, which T3 marks only in the chat. Housekeeping is Claude compacting its context, which T3 shows only as a shimmer in the chat. Version 1 draws working and compacting on the background lamp, the band rising through a ring, because both are Claude at work; their bars keep their own colours.</p>
+  </div>
+  <div class="bl-scroll" data-fig="map"><table class="bl-table s-st-map"><thead><tr><th>T3 today</th><th>Means</th><th>Version 1</th><th>Row words</th></tr></thead><tbody></tbody></table></div>
+  <p class="cap"><span class="id">ST1</span><b>T3's labels in its own palette, against version 1's lamp and bar, live on the clock.</b><span>The row words are line 2 of the sidebar row after Claude's spark. Two rows are new to CONTROL: interrupted (below) and lent to the CLI, the open ring v1 used for outside chats, which v2 gives to a chat you've handed to your terminal's claude.</span></p>
+
+  <h3 class="bl-sub"><span class="id">ST2</span>Interrupted</h3>
+  <div class="bl-prose">
+    <p>v2 decided that after a crash, a mass kill or a Quit, every chat is resumed by id and a chat that was mid-turn shows interrupted, and nothing is ever sent for you. T3 has no such state: the chat just shows its age, and the turn ends with "You stopped after 41s". Bloom has no form for it either. Three ways to draw it, on SIGNALS_101, the chat that was mid-turn.</p>
+  </div>
+  <div class="s-st-opts" data-fig="intr"></div>
+
+  <h3 class="bl-sub"><span class="id">ST3</span>Places, not states</h3>
+  <div class="bl-prose">
+    <p>T3 treats pinned, snoozed, settled and archived as where a chat sits, not as a state, and Bloom can keep that: the lamp and bar go on saying what the chat is doing, and the row moves. Version 1 merges archive into settled, so Snoozed and Settled fold into one strip at the foot of the list, a pearl with each count: one line instead of three shelves.</p>
+  </div>
+  <div class="s-st-places" data-fig="places"></div>
+  <div class="s-st-strip" data-fig="strip"></div>
+  <p class="cap"><span class="id">ST3</span><b>The fold strip, at the foot of version 1's sidebar.</b><span>A click opens the fold in place of the list; the strip stays put. Woken chats go back to their group with "woke" in their row words until you open them.</span></p>
+</section>
+<script data-part="states">
+(() => {
+const T = Hy.T;
+const ROWS = [
+  ['cdash', 'Working 41s', 'info', 'a turn is running', 'working', 'working'],
+  [null, 'Waiting', 'mfg', 'idle, background agents running', 'bg', 'background · 2 agents'],
+  ['shieldq', 'Approval', 'warn', 'a tool waits for your yes', 'needs', 'needs you'],
+  ['msgq', 'Input', 'indigo', 'Claude asked you mid-turn', 'needs', 'needs you'],
+  [null, '(in the chat only)', 'mfg', 'the turn ended on a question or a plan', 'choose', 'choose on return'],
+  ['calert', 'Failed', 'err', 'the turn errored', 'failed', 'failed · exit 1'],
+  ['calert', 'Limited', 'warn', 'the usage limit stopped it', 'failed', 'limited · resets 01:10'],
+  ['ccheck', 'Done', 'ok', 'finished, not yet opened', 'done', 'done'],
+  [null, '5m', 'mfg', 'finished and read', 'idle', 'idle'],
+  [null, '(a shimmer in the chat)', 'mfg', 'compacting its context', 'house', 'dreaming'],
+  [null, '(nothing: only "You stopped after 41s")', 'mfg', 'cut mid-turn by a crash or a Quit', 'intr', 'interrupted', 'NEW'],
+  [null, '(none)', 'mfg', 'lent to the terminal\'s claude', 'outside', 'lent to the CLI', 'NEW'],
+];
+const LAMP = { working: 'bg', house: 'bg' };   /* version 1: working and compacting wear the background lamp */
+const INTR = [
+  ['I1', 'One bar through the ring, bar held still', 'intr', 'interrupted', 'The ring cut top to bottom by one bar as thick as the ring, in ink like every lamp, and the working bar held still at half strength: the colour says this was work, the stillness says nothing runs. Opening the chat shows the cut turn and a Resume button; nothing restarts on its own.', 1],
+  ['I2', 'Choose on return', 'choose', 'interrupted · resume?', 'The lilac state already means "your call when you come back". It reuses a form you know, at the cost of choose meaning two things: a plan to pick, and a turn to resume.'],
+  ['I3', 'Failed', 'failed', 'interrupted', 'The amber cross: something went wrong. True for a crash, but it puts a Quit you chose next to a turn that errored, and the cross stumbles every 3.5 s for something that may not need you.'],
+];
+const PLACES = [
+  ['Pinned', 'A pin after the state words, and the chat holds the top of its group (or of Loose).', 'T3: the top of the list, no header'],
+  ['Snoozed', 'Folds away with its wake time; at the time it returns to its group with "woke".', 'T3: a shelf with a countdown'],
+  ['Settled', 'You\'ve dealt with it: it folds away under the tick, still alive, one click back. Archive is the same place in version 1.', 'T3: a collapsed shelf, 25 at a time; archive a menu action'],
+];
+Bloom.section('states', { init(el) {
+  el.querySelector('.s-st-map tbody').innerHTML = ROWS.map(([ic, label, col, means, st, words, isNew]) =>
+    `<tr><td><span class="t3-pal s-st-t3" style="color:var(--t3-${col})">${ic ? T(ic) : ''}${label}</span></td><td>${means}</td>`
+    + `<td><span class="s-st-bl">${Bloom.bar(st, { form: 'compact' })}${Bloom.lamp(LAMP[st] || st, { d: 15 })}</span>${isNew ? `<span class="s-st-new">${isNew}</span>` : ''}</td><td class="s-st-w">${words}</td></tr>`).join('');
+  const hw = Hy.CHATS.find(c => c.n === 'SIGNALS_101');
+  el.querySelector('.s-st-opts').innerHTML = INTR.map(([id, t, st, sub, p, rec]) => `<div class="s-st-opt"><div class="s-st-oh"><span class="id">${id}</span><b>${t}${rec ? ' · version 1' : ''}</b></div>`
+    + `<div class="s-st-big">${Bloom.lamp(st, { d: 24 })}${Bloom.bar(st)}</div>`
+    + `<div class="s-st-rows">${Hy.srow({ ...hw, st, sub: sub + ' · main' }, 14)}</div><p>${p}</p></div>`).join('');
+  el.querySelector('.s-st-places').innerHTML = PLACES.map(([t, d, f]) => `<div class="s-st-pl"><b>${t}</b><span>${d}</span><span class="s-st-from">${f}</span></div>`).join('');
+  el.querySelector('.s-st-strip').innerHTML = Hy.dfolds();
+} });
+})();
+</script>

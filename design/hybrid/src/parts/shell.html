@@ -1,0 +1,106 @@
+<style data-part="shell">
+.s-shell-root .bl-prose + .fig, .s-shell-root .bl-sub + .bl-prose + .fig { margin-top: var(--s-6); }
+.s-shell-root .s-shell-axes td:first-child { font-weight: var(--w-med); color: var(--text-strong); white-space: nowrap; }
+.s-shell-root .s-shell-axes td.s-shell-c { color: var(--text-strong); }
+.s-shell-root .s-shell-axes .s-shell-who { font: 500 10px/1 var(--f-mono); letter-spacing: .06em; color: var(--text-caption); margin-right: 6px; }
+.s-shell-root .s-shell-map { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-top: var(--s-4); }
+@media (max-width: 900px) { .s-shell-root .s-shell-map { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.s-shell-root .s-shell-mt { display: grid; gap: 6px; padding: 12px 14px; border-radius: var(--r-l); background: var(--raised); font: var(--w-reg) 12px/1.4 var(--f-chrome); color: var(--text-secondary); }
+.s-shell-root .s-shell-mt .gi { width: 16px; height: 16px; color: var(--text-strong); }
+.s-shell-root .s-shell-mt b { font-weight: var(--w-med); color: var(--text-strong); }
+.s-shell-root .s-shell-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 440px)); gap: 0 var(--s-7); margin-top: var(--s-6); }
+@media (max-width: 1000px) { .s-shell-root .s-shell-tabs { grid-template-columns: minmax(0, 440px); } }
+.s-shell-root .s-shell-mt .s-shell-from { font: 400 10.5px/1.3 var(--f-mono); color: var(--text-caption); }
+</style>
+<section id="shell" class="bl-sec s-shell-root">
+  <header class="bl-sh">
+    <div class="no">02 <span class="bl-steps"></span></div>
+    <h2>Shell</h2>
+    <p class="meta">T3 as it is, three ways to combine it with Bloom, and D, version 1. Every window is 1512 × 945, drawn at 1:1 and scaled to the column.</p>
+  </header>
+  <p class="bl-lead">A window is five decisions: the sidebar, the head of the conversation, the centre, the composer and the panel. T3 and Bloom disagree on all five. A takes T3's answer to each and paints it in Bloom. B takes Bloom's answer to each, the window you confirmed in section 06, and maps T3's features into it. C picks per decision, and the table says which side wins where and why. D is what you built from them over twelve passes, and it is version 1: S6 is the window, S7 its panel tab by tab.</p>
+
+  <h3 class="bl-sub"><span class="id">S1</span>T3 Code as it is</h3>
+  <div class="bl-prose">
+    <p>The baseline, drawn from T3's source at the fork point. The sidebar is one flat list of cards, newest first: the folder on line 1 with a status label at the right, the chat's title on line 2, the branch on line 3. Pinned chats lead the list, snoozed and settled ones drop to shelves at the bottom, and archive is a menu action with no shelf. The head is a breadcrumb, folder / title, with three toggles: details, the shell drawer (⌘J) and the right panel.</p>
+    <p>The centre is the conversation already. Your messages are bubbles on the right; each turn's tool calls are a work log of one-line rows with an icon each, folding to "Worked for 18s" when the turn ends. The composer carries the model, effort and access pickers, and a strip under it holds where the turn runs: this folder or a new worktree, and the branch. The panel holds tabs you open, rename and close. No status label moves: working is a dashed ring and a ticking time.</p>
+  </div>
+  <figure class="fig" data-fig="t3"><div data-win="t3"></div><figcaption class="cap"><span class="id">S1</span><b>T3 Code at the fork point, in its own palette.</b><span>Zinc in Field, neutral-950 with a black sidebar in Night. Titles are the chats' own; CONTROL's session names appear only once Bloom paints them. Status labels: Approval, Working, Input, Waiting, Failed, Done, or the age. SIGNALS_101, the interrupted chat, is not on screen: T3 has no interrupted state, and the chat shows only its age.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">S2</span>A · T3's frame, Bloom's paint</h3>
+  <div class="bl-prose">
+    <p>T3's geometry kept whole and painted with Bloom: Field and Night, Regrade for the chrome and Plex for anything you could paste, the session's name in Plex on line 2, and tone steps where T3 draws its 1 px rules. Where T3 puts a status label, A puts Bloom's state: a bead bar and the colourless lamp at the right of line 1, with the state words joining the branch on line 3.</p>
+    <p>It is the cheapest option to build, because every T3 component keeps its layout and takes new tokens. What it gives up is most of what you confirmed in section 06: the cards become T3's icon rows, your prompt becomes a bubble, the head says the title the selected row already says, and a three-line card holds a chat in 82 px where Bloom's row takes 42.</p>
+  </div>
+  <figure class="fig" data-fig="a"><div data-win="a"></div><figcaption class="cap"><span class="id">S2</span><b>A, the Diff tab open.</b><span>Eight cards fill the sidebar where Bloom's rows fit twelve and their worktrees. The composer and its branch strip are T3's, in Bloom's material; the send button is Interrupt while the turn runs, as in T3.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">S3</span>B · Bloom's frame on T3's engine</h3>
+  <div class="bl-prose">
+    <p>Section 06 as confirmed: the sidebar runs the full height and holds the lights; the head says only the path, over the one full state bar; the centre is the conversation, with every read, write, error and agent as a card; the panel is a strip of icons. T3 brings the engine underneath, so the cards come from T3's own event stream instead of a mod watching a TUI, and Send goes straight to the agent instead of pre-typing into tmux.</p>
+    <p>T3's six panel views land in Bloom's five icons. Files becomes Folder. Diff and Pull request become Git, with Graph | Diff as its mode and the PR as a row at its top. Browser and Terminal keep their names. Device (T3's simulator mirror for mobile work) has no tab: it opens from the command palette when a project has a simulator. Outputs is Bloom's alone: the files a chat produced.</p>
+  </div>
+  <figure class="fig" data-fig="b"><div data-win="b"></div><figcaption class="cap"><span class="id">S3</span><b>B, the Git view open.</b><span>The composer keeps Bloom's two chips. Under T3 they stop being readouts of Claude's TUI and become menus: the chip says the permission mode and the model, a click changes them for the next turn.</span></figcaption></figure>
+  <div class="s-shell-map" data-fig="map"></div>
+  <p class="cap"><span class="id">S3·map</span><b>Where T3's panel views go in B and C.</b><span>One icon per view, the selected one sunk into the well, as in section 06.</span></p>
+
+  <h3 class="bl-sub"><span class="id">S4</span>C · per decision (recommended)</h3>
+  <div class="bl-prose">
+    <p>Bloom's sidebar, head and centre, because you confirmed them and nothing T3 does there is better at a glance. T3 wins three things Bloom never had to solve, because v1 drove Claude's TUI rather than the agent itself.</p>
+    <p><b>The composer's controls.</b> Model, effort, mode and access are now settings CONTROL sends with each turn, so they are real controls in the composer, in Bloom's material, with the context line beside Send. <b>The branch strip.</b> Where the next turn runs, this folder or a new worktree, and on which branch, is T3's strip tucked under the composer; in v1 it lived nowhere, because Claude chose. <b>The shell drawer.</b> T3 puts the app's own shells in a drawer under the conversation (⌘J), so a build log and the chat that caused it are visible at once; the panel keeps Browser and Git for the right-hand side. The sidebar carries the Claude update note and its button, from v2's decisions.</p>
+  </div>
+  <figure class="fig" data-fig="c"><div data-win="c"></div><figcaption class="cap"><span class="id">S4</span><b>C, the browser open.</b><span>The drawer's shells belong to the app and die when you quit from the menu bar; Claude never types into them. The update note says the new Claude version and nothing else: the button updates every idle chat now and queues the working ones.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">S5</span>Who wins where</h3>
+  <div class="bl-scroll"><table class="bl-table s-shell-axes" data-fig="axes">
+    <thead><tr><th>Decision</th><th>T3 (and A)</th><th>Bloom (and B)</th><th>C</th><th>Version 1 (D)</th></tr></thead>
+    <tbody>
+      <tr><td>Sidebar</td><td>One list of three-line cards (folder, title, branch), status label at the right; shelves for pinned, snoozed, settled</td><td>Groups › chats, lamp and bead bar at the right, state words on line 2</td><td class="s-shell-c"><span class="s-shell-who">BLOOM</span>Bloom's rows; groups drawn per section 03</td><td class="s-shell-c"><span class="s-shell-who">A + C</span>A's three-line cards inside groups › folders › chats; lamp and bead bar on line 1, tokens on line 2, state then git, model and effort on line 3; C's update note, fold strip and 5H / 7D</td></tr>
+      <tr><td>Head</td><td>Breadcrumb, folder / title, and three panel toggles</td><td>The path over the one full bar; the row already says the rest</td><td class="s-shell-c"><span class="s-shell-who">BLOOM</span>Bloom's head</td><td class="s-shell-c"><span class="s-shell-who">NEW</span>what the chat loads: hooks, skills, MCP, plugins, agents, with counts</td></tr>
+      <tr><td>Centre</td><td>Messages with a collapsible work log per turn</td><td>Turns on a thread, each tool call a card</td><td class="s-shell-c"><span class="s-shell-who">BLOOM</span>confirmed in section 06</td><td class="s-shell-c"><span class="s-shell-who">NEW</span>a thread: the prompt on a band, tool stacks (last five), the reply, one dashed line in whole dashes</td></tr>
+      <tr><td>Composer</td><td>Model, effort and access pickers; a branch strip under the card</td><td>A field, two chips, Interrupt and Send</td><td class="s-shell-c"><span class="s-shell-who">T3</span>T3's controls and branch strip, in Bloom's material</td><td class="s-shell-c"><span class="s-shell-who">T3</span>A's composer; the strip says Local, New worktree and the context as Chat, Free, Compacts at</td></tr>
+      <tr><td>Panel</td><td>Text tabs you can open, rename and close</td><td>Five fixed icons</td><td class="s-shell-c"><span class="s-shell-who">BLOOM</span>five icons; Browser keeps T3's own page tabs inside</td><td class="s-shell-c"><span class="s-shell-who">BLOOM</span>B's five icons, flat, one thin line against the centre</td></tr>
+      <tr><td>Shells</td><td>A drawer under the thread (⌘J)</td><td>A tab in the panel</td><td class="s-shell-c"><span class="s-shell-who">T3</span>the drawer</td><td class="s-shell-c"><span class="s-shell-who">BLOOM</span>the Terminal tab; no drawer</td></tr>
+    </tbody></table></div>
+
+  <h3 class="bl-sub"><span class="id">S6</span>D · version 1.1</h3>
+  <div class="bl-prose">
+    <p>Started as your scratchpad on A and settled over twelve passes. The sidebar is A's three-line cards inside groups › folders › chats: line 1 the project, the bead bar and the lamp; line 2 the chat and the tokens it has processed; line 3 the state, then git, then the model and a five-bar effort meter. C's update note sits under the search; Snoozed and Settled (archive merged into it) and 5H / 7D sit at the foot; the stair logo is centred beside the settings button.</p>
+    <p>The head says what the chat loads. The centre is a thread: each prompt on a full-width band with →, the tool calls stacked (the last five, click for the rest) one step in and written like S2's work log, each with a quiet bead (dim when done, blinking while it runs, red when it failed) under a lamp for the stack (the working ring, then the tick), and the reply after ↳; one dashed line in whole dashes joins the prompt's arrow to the last reply's. The composer is A's, with the strip under it giving the context as Chat, Free and Compacts at. The panel is B's, flat, with its five tabs live. Every number and rule is in <code>design/hybrid/HANDOFF.md</code>; the CSS is in <code>design/hybrid/v1.2/</code> (1.1 stays in <code>v1.1/</code>, and 1.0, with the Hue trace, in <code>v1/</code>).</p>
+  </div>
+  <figure class="fig" data-fig="d"><div data-win="d"></div><figcaption class="cap"><span class="id">S6</span><b>D, version 1.1, Git open.</b><span>The panel's icons switch it; the stacks open on a click. <code>?shot=shell&amp;fig=d</code>, <code>&amp;tv=</code> for the trace: Simple is 1.1, Hue was 1.0.</span><span class="seg sm" data-tv-pick role="group" aria-label="Trace colour"><button data-v="hue" aria-pressed="false">Hue</button><button data-v="now" aria-pressed="false">Now</button><button data-v="white" aria-pressed="false">White</button><button data-v="bead" aria-pressed="false">Bead</button><button data-v="simple" aria-pressed="true">Simple</button></span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">S7</span>D's right panel, tab by tab</h3>
+  <div class="bl-prose">
+    <p>The rest of the panel, at 1:1 in D's flat panel. Outputs is everything this chat made, newest first, grouped by turn, with the picked one rendered underneath: a Markdown report here (F28, F30). Folder is a plain Finder for the session's worktree with git's marks and a Quick Look of the picked file (F31). Browser is the live dev server, with the pick tool on <code>button.cta</code> and Add putting it in the composer as a draft, never sent (F36, F37). Terminal is the session's own shells, tab 2 running <code>bun dev</code>. Git is S6's.</p>
+  </div>
+  <div class="s-shell-tabs">
+    <figure class="fig" data-fig="p-outputs"><div data-panel="Outputs"></div><figcaption class="cap"><span class="id">S7a</span><b>Outputs.</b><span>F28, F30</span></figcaption></figure>
+    <figure class="fig" data-fig="p-folder"><div data-panel="Folder"></div><figcaption class="cap"><span class="id">S7b</span><b>Folder.</b><span>F31</span></figcaption></figure>
+    <figure class="fig" data-fig="p-browser"><div data-panel="Browser"></div><figcaption class="cap"><span class="id">S7c</span><b>Browser.</b><span>F36, F37</span></figcaption></figure>
+    <figure class="fig" data-fig="p-terminal"><div data-panel="Terminal"></div><figcaption class="cap"><span class="id">S7d</span><b>Terminal.</b><span>tab 2, the dev server</span></figcaption></figure>
+  </div>
+</section>
+<script data-part="shell">
+(() => {
+const MAP = [['files', 'Folder', 'Files'], ['git', 'Git', 'Diff + Pull request'], ['web', 'Browser', 'Browser'], ['term', 'Terminal', 'Terminal (B) · drawer (C)'], ['out', 'Outputs', 'new, from Bloom'], ['find', '⌘K only', 'Device']];
+Bloom.section('shell', { init(el) {
+  const W = {
+    b: () => Hy.win({ side: Hy.bloomSide(), head: Hy.head(), panel: Hy.panel({ tabs: Hy.BLOOM_TABS('Git') }) }),
+    c: () => Hy.win({ side: Hy.bloomSide({ mode: 'flat', update: true }), head: Hy.head(), comp: Hy.composer({ t3: true }), drawer: Hy.drawer(), panel: Hy.panel({ tabs: Hy.BLOOM_TABS('Browser').filter(t => t[1] !== 'Terminal'), view: 'browser' }) }),
+    t3: () => Hy.t3Win('native'),
+    a: () => Hy.t3Win('bloom'),
+    d: () => Hy.dWin(),
+  };
+  el.querySelectorAll('[data-win]').forEach(d => { d.outerHTML = W[d.dataset.win](); });
+  el.querySelectorAll('[data-panel]').forEach(d => { d.outerHTML = Hy.dPanel(d.dataset.panel); });
+  /* trace comparison: Hue is version 1.0 and needs no attribute; the others override it on D's window only. Simple is version 1.1, the default */
+  const dw = el.querySelector('.t3w.t3-d:not(.dp-w)'), tp = el.querySelector('[data-tv-pick]'), tv = new URLSearchParams(location.search).get('tv');
+  const setTv = v => { if (v === 'hue') delete dw.dataset.tv; else dw.dataset.tv = v; tp.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === v))); };
+  setTv(tp.querySelector(`[data-v="${tv}"]`) ? tv : 'simple');
+  Bloom.seg(tp, setTv);
+  el.querySelector('.s-shell-map').innerHTML = MAP.map(([g, to, from]) => `<div class="s-shell-mt">${Bloom.gi(g)}<b>${to}</b><span class="s-shell-from">${from}</span></div>`).join('');
+  Hy.wire(el);
+  requestAnimationFrame(() => Hy.dashes(el));
+} });
+})();
+</script>

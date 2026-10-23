@@ -1,0 +1,189 @@
+<style data-part="menubar">
+.s-mb-root .bl-prose + .fig, .s-mb-root .bl-sub + .bl-prose + .fig { margin-top: var(--s-6); }
+
+/* MB1 the icon: each state at 3x, then 1:1 on a dark and a light bar */
+.s-mb-root .s-mb-icons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-7) var(--s-5); }
+@media (max-width: 860px) { .s-mb-root .s-mb-icons { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.s-mb-root .s-mb-ic { min-width: 0; }
+.s-mb-root .s-mb-big { display: flex; align-items: center; justify-content: center; gap: 12px; height: 96px; border-radius: var(--r-m); background: var(--raised); color: var(--text-strong); }
+.s-mb-root .s-mb-big svg { width: 90px; height: 54px; flex: none; }
+.s-mb-root .s-mb-big .s-mb-cnt { font-size: 39px; }
+.s-mb-root .s-mb-strip { display: flex; align-items: center; justify-content: center; gap: 4px; height: 30px; margin-top: 6px; border-radius: var(--r-s); color: var(--text-strong); }
+.s-mb-root .s-mb-strip svg { width: 30px; height: 18px; flex: none; }
+.s-mb-root .s-mb-cnt { font: var(--w-med) 13px/1 var(--f-chrome); font-variant-numeric: tabular-nums; }
+.s-mb-root .s-mb-icn { margin-top: 10px; font: var(--w-med) 13px/1.3 var(--f-chrome); color: var(--text-strong); }
+.s-mb-root .s-mb-icr { margin-top: 2px; font: var(--w-reg) 12px/1.4 var(--f-chrome); color: var(--text-secondary); }
+
+/* MB2 the panel, each under its icon on a bar of its own theme */
+.s-mb-root .s-mb-cols { display: flex; flex-wrap: wrap; gap: var(--s-6); align-items: flex-start; }
+.s-mb-root .s-mb-col { width: 384px; max-width: 100%; padding: 12px; border-radius: var(--r-l); }
+.s-mb-root .s-mb-tag { margin: 0 0 8px; font: 400 11px/1 var(--f-mono); color: var(--text-caption); }
+.s-mb-root .s-mb-mbar { display: flex; justify-content: center; height: 24px; align-items: center; border-radius: var(--r-s); background: color-mix(in srgb, var(--raised) 70%, transparent); color: var(--text-strong); }
+.s-mb-root .s-mb-item { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 6px; border-radius: 5px; background: color-mix(in srgb, var(--text-strong) 14%, transparent); }
+.s-mb-root .s-mb-item svg { width: 30px; height: 18px; }
+.s-mb-root .t3w.s-mb-host { display: block; width: auto; height: auto; overflow: visible; contain: none; background: none; box-shadow: none; border-radius: 0; }
+.s-mb-root .s-mb-p.panel { margin-top: 6px; padding: 6px; border-radius: var(--r-l); color: var(--text-body); }
+.s-mb-root .s-mb-hd { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 10px 0 12px; }
+.s-mb-root .s-mb-hd .d-logo { color: var(--ink-1); }
+.s-mb-root .s-mb-wm { font: 600 12px/1 var(--f-mono); letter-spacing: .26em; color: var(--ink-1); }
+.s-mb-root .s-mb-ver { font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-caption); }
+.s-mb-root .s-mb-ver b { font: 500 11px/1 var(--f-mono); color: var(--text-secondary); }
+.s-mb-root .s-mb-p .hy-upd { margin: 0 0 6px; }
+.s-mb-root .s-mb-offer .pill, .s-mb-root .s-mb-note .pill { margin-left: 0; }
+.s-mb-root .s-mb-offer > span:not(.pill) { margin-right: auto; }
+.s-mb-root .s-mb-note b { font-weight: var(--w-med); color: var(--text-strong); }
+.s-mb-root .s-mb-sh { display: flex; align-items: center; gap: 8px; height: 28px; padding: 6px 10px 0; font: var(--w-med) 12px/1 var(--f-chrome); color: var(--text-label); }
+.s-mb-root .s-mb-sh .t-num { font: 500 11px/1 var(--f-mono); color: var(--text-caption); }
+.s-mb-root .s-mb-p .t3d-in { margin-left: 0; }
+.s-mb-root .s-mb-p .t3-card[data-hover] { background: var(--hy-card); }
+.s-mb-root .s-mb-empty { padding: 14px 12px 18px; font: var(--w-reg) 13px/1.45 var(--f-chrome); color: var(--text-caption); }
+.s-mb-root .s-mb-empty b { display: block; font-weight: var(--w-med); color: var(--text-secondary); }
+.s-mb-root .s-mb-behind { padding: 4px 10px 10px; font: var(--w-reg) 12px/1.4 var(--f-chrome); color: var(--text-caption); }
+.s-mb-root .s-mb-p .hy-use { margin-top: 6px; padding: 12px 12px 4px; border-top: 1px solid var(--seam); }
+.s-mb-root .s-mb-ft { display: flex; align-items: center; gap: 4px; height: 40px; padding: 0 2px; border-top: 1px solid var(--seam); }
+.s-mb-root .s-mb-until { display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; font: var(--w-med) 12px/1 var(--f-chrome); color: var(--text-strong); }
+.s-mb-root .s-mb-until .gi { width: 11px; height: 11px; }
+.s-mb-root .s-mb-until b { font: 500 11.5px/1 var(--f-mono); }
+
+/* MB3 the Settings row */
+.s-mb-root .s-mb-set.panel { width: 560px; max-width: 100%; padding: 6px; }
+.s-mb-root .s-mb-sr { display: flex; align-items: center; gap: 16px; padding: 12px; border-radius: var(--r-m); background: color-mix(in srgb, var(--deep) 45%, transparent); }
+.s-mb-root .s-mb-sr > div { flex: 1; min-width: 0; }
+.s-mb-root .s-mb-sr b { display: block; font: var(--w-med) 13px/1.3 var(--f-chrome); color: var(--text-strong); }
+.s-mb-root .s-mb-sr span { display: block; margin-top: 2px; font: var(--w-reg) 12px/1.4 var(--f-chrome); color: var(--text-secondary); }
+
+/* MB4 the head: 1:1, and its right end at 2x, at rest and hovered */
+.s-mb-root .t3w.s-mb-head { grid-template-columns: 816px; }
+.s-mb-root .s-mb-zooms { display: flex; flex-wrap: wrap; gap: var(--s-6); margin-top: var(--s-5); }
+.s-mb-root .s-mb-zooms > div { flex: 0 1 340px; }
+.s-mb-root .t3w.s-mb-zm { width: 170px; height: 52px; zoom: 2; grid-template-columns: 170px; }
+.s-mb-root .s-mb-zm .t3-head { justify-content: center; padding: 0; }
+
+</style>
+<section id="menubar" class="bl-sec s-mb-root">
+  <header class="bl-sh">
+    <div class="no">09 <span class="bl-steps"></span></div>
+    <h2>Menu bar</h2>
+    <p class="meta">The menu-bar icon and its panel, and the ⌘K button in the chat's head. Drawn and approved by the owner 16 Oct 2026.</p>
+  </header>
+  <p class="bl-lead">The desktop app is a window and a menu-bar item in one process, and Quit in the menu bar stops the server and every agent (HANDOFF-v2 §4). The icon is the one ambient signal CONTROL has: by its shape alone it says whether anything needs you, is running, or finished while you were away, and nothing pings. A click opens the panel under it, with what needs you, what's running and what's done, your usage, and Lock, Open, Settings and Quit. The phone and the browser have no menu bar, so this is the desktop app's alone.</p>
+
+  <h3 class="bl-sub"><span class="id">MB1</span>The icon</h3>
+  <div class="bl-prose">
+    <p>macOS draws a menu-bar icon as a template: one ink, recoloured for a dark or a light bar, so the icon carries no colour and no motion. It is the sidebar logo's stair at 18 pt, and each state changes its shape. The number beside it is the menu bar's own text, the count of chats in the state it shows, so the app needs one image per state, not one per number. When several states hold, the first of these wins: server off, needs you, full lock, failed, done, working, idle. A chat that needs you shows even during a full lock, because it comes through the lock. The icon changes only once a state has held for 2 s, so a turn that ends and starts again doesn't flicker it.</p>
+  </div>
+  <figure class="fig" data-fig="icons"><div class="s-mb-icons"></div><figcaption class="cap"><span class="id">MB1</span><b>Eight states, at 3× and at 1:1.</b><span>The canvas is 30 × 18 pt. The stair is the logo's line at 1.5×, 2 pt with round caps and joins; the shoulder marks are 1.75 pt. Done and failed share the right shoulder; the update dot takes the left one and sits over any state. The files are in <code>design/hybrid/menubar/</code>.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">MB2</span>The panel</h3>
+  <div class="bl-prose">
+    <p>A click on the icon opens the panel under it; a second click, Esc or a click anywhere else closes it. CONTROL never opens it for you. It is 360 wide and floats like the Loose ends popover. Under the header are the sidebar's notes: the Claude update, and the lock offer once nothing has needed you for 10 minutes. Then three sections of the sidebar's own cards. <b>Needs you</b> holds chats waiting on an answer, including choose on return. <b>Working</b> holds every chat with a turn running. <b>Done</b> holds chats that finished or failed since you last opened them; opening one clears it from here. A click on a card brings the window forward with that chat open. Your usage sits at the foot, as in the sidebar, then Lock, Open, Settings and Quit. Quit is the app's own Quit.</p>
+    <p>During a <b>full lock</b> the panel holds only chats that need you, which come through the lock as they do in the window, and one line says what's behind it, as the plate does. Lock turns into the end time: nothing in the panel ends a lock. A <b>group lock</b> hides that group's chats, as the window does, and a note in the offer's slot names the group and the time.</p>
+  </div>
+  <figure class="fig" data-fig="panel"><div class="s-mb-cols"></div><figcaption class="cap"><span class="id">MB2</span><b>Normal in Field and Night, nothing going on, a full lock and a group lock.</b><span>Each panel hangs 6 px under its icon, which shows pressed while the panel is open. The panel is <code>.panel.float</code>, padded 6, radius 14; cards are the sidebar's at the panel's width, and the hovered one takes the card tone. In the full lock, RELAY MAIN needs you and comes through. In the group lock, ORBIT's three chats are hidden.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">MB3</span>Turning it off</h3>
+  <div class="bl-prose">
+    <p>Settings › General has a <b>Menu bar icon</b> switch, on by default. Off takes the icon and its panel away; the window and the app menu's Quit stay. The row is in the desktop app only.</p>
+  </div>
+  <figure class="fig" data-fig="settings"><div data-win="settings"></div><figcaption class="cap"><span class="id">MB3</span><b>The row.</b><span>Settings' own frame is designed later (§12); this is the row in the models pane's style.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">MB4</span>The ⌘K button</h3>
+  <div class="bl-prose">
+    <p>The palette gets a button in the chat's head, just left of the panel toggles, with their 32 px box, 16 px glyph and hover fill. Its glyph is the ⌘ key, so it doesn't read as the sidebar's search, which finds chats. A click opens the palette, as ⌘K does; its tooltip reads <code>Command palette (⌘K)</code>.</p>
+  </div>
+  <figure class="fig" data-fig="head"><div data-win="head"></div><div class="s-mb-zooms"><div data-win="zoom"></div><div data-win="zoom-hover"></div></div><figcaption class="cap"><span class="id">MB4</span><b>The head at 1:1, then its right end at 2×, at rest and hovered.</b><span>The button sits 8 px from the toggles, so it reads as its own thing. Hovered, it takes the same card-tone fill as the open right-panel toggle beside it.</span></figcaption></figure>
+
+</section>
+<script data-part="menubar">
+(() => {
+const G = Bloom.gi;
+const chat = n => Hy.CHATS.find(c => c.n === n);
+function withStates(states, draw) {
+  const keep = Object.keys(states).map(n => [chat(n), { ...chat(n) }]);
+  Object.entries(states).forEach(([n, s]) => Object.assign(chat(n), s));
+  try { return draw(); } finally { keep.forEach(([c, k]) => Object.assign(c, k)); }
+}
+
+/* MB1: the template glyph. The kit's LOGO stair at 1.5x on a 30 x 18 pt canvas; ink is currentColor on the page and black in the files.
+   Needs you reverses the canvas: a filled block with the stair (and any update dot) cut out by a mask. */
+const STAIR = '3.75,15 3.75,12 8.25,12 8.25,7.5 12.75,7.5 12.75,3 17.25,3 17.25,7.5 21.75,7.5 21.75,12 26.25,12 26.25,15';
+const LN = 'fill="none" stroke-linecap="round" stroke-linejoin="round"';
+let masks = 0;
+function glyph(st, o = {}) {
+  const ink = o.ink || 'currentColor', cut = st === 'needs' ? '#000' : ink;
+  const line = `<${st === 'lock' ? 'polygon' : 'polyline'} points="${STAIR}" ${LN} stroke="${cut}" stroke-width="2"/>`;
+  const marks = (st === 'working' ? `<rect x="12.75" y="3" width="4.5" height="4.5" fill="${cut}"/>` : '')
+    + (st === 'done' ? `<path d="M20.6 3.4L22.6 5.4L26.6 1.4" ${LN} stroke="${cut}" stroke-width="1.75"/>` : '')
+    + (st === 'failed' ? `<path d="M21.3 1.3L25.5 5.5M25.5 1.3L21.3 5.5" ${LN} stroke="${cut}" stroke-width="1.75"/>` : '')
+    + (o.update ? `<circle cx="6.6" cy="3.4" r="2.1" fill="${cut}"/>` : '');
+  const id = o.id || `s-mb-k${++masks}`;
+  const body = st === 'needs'
+    ? `<defs><mask id="${id}"><rect width="30" height="18" rx="4" fill="#fff"/>${line}${marks}</mask></defs><rect width="30" height="18" rx="4" fill="${ink}" mask="url(#${id})"/>`
+    : st === 'off' ? `<g opacity=".45">${line}</g>` : line + marks;   // off wins over everything, the update dot included
+  return `<svg viewBox="0 0 30 18" width="30" height="18"${o.ink ? '' : ' aria-hidden="true"'}>${body}</svg>`;
+}
+const withCount = (st, n, o) => glyph(st, o) + (n ? `<span class="s-mb-cnt">${n}</span>` : '');
+/* [state, options, count, name, what changes] */
+const ICONS = [
+  ['idle', {}, '', 'Idle', 'The stair alone.'],
+  ['working', {}, '3', 'Working', 'The top step filled.'],
+  ['done', {}, '1', 'Done, unseen', 'A tick on the right shoulder.'],
+  ['failed', {}, '1', 'Failed', 'A cross on the right shoulder.'],
+  ['needs', {}, '2', 'Needs you', 'Reversed: a solid block with the stair cut out.'],
+  ['lock', {}, '', 'Full lock', 'The shut stair, as the lock glyph. No count.'],
+  ['working', { update: true }, '3', 'Claude update out', 'A dot on the left shoulder, over any state. Here, over working.'],
+  ['off', {}, '!', 'Server off', 'Faded to 45 %, with ! for the count.'],
+];
+const icons = () => ICONS.map(([st, o, n, name, what]) => `<div class="s-mb-ic"><div class="s-mb-big" role="img" aria-label="${name}">${withCount(st, n, o)}</div>`
+  + `<div class="s-mb-strip themed" data-theme="night" role="img" aria-label="${name}, dark bar">${withCount(st, n, o)}</div>`
+  + `<div class="s-mb-strip themed" data-theme="field" role="img" aria-label="${name}, light bar">${withCount(st, n, o)}</div>`
+  + `<p class="s-mb-icn">${name}</p><p class="s-mb-icr">${what}</p></div>`).join('');
+/* the files: design/hybrid/menubar/<state>[-update].svg, black on clear, for @1x and @2x template PNGs (§19.1) */
+window.MenubarIcons = () => Object.fromEntries(['idle', 'working', 'done', 'failed', 'needs', 'lock', 'off']
+  .flatMap(st => [[st, glyph(st, { ink: '#000', id: 'k' })], ...(st === 'off' ? [] : [[st + '-update', glyph(st, { ink: '#000', id: 'k', update: true })]])]));
+
+/* MB2: the panel. The sidebar's cards, header, notes, usage and footer */
+const card = (n, hover) => Hy.dcard({ ...chat(n), sel: false }).replace('class="t3-card t3d-in"', `class="t3-card t3d-in"${hover ? ' data-hover' : ''}`);
+const sec = (title, names, hover) => names.length ? `<div class="s-mb-sec"><div class="s-mb-sh">${title}<span class="t-num">${names.length}</span></div>${names.map(n => card(n, n === hover)).join('')}</div>` : '';
+const HEAD = `<div class="s-mb-hd">${Hy.LOGO}<span class="s-mb-wm">CONTROL</span><span class="sp"></span><span class="s-mb-ver">Claude <b>2.1.294</b></span></div>`;
+const UPD = `<div class="hy-upd">${G('spark')}<span>Claude <b class="t-num">2.1.295</b> is out</span><span class="pill sm">Update</span></div>`;
+const OFFER = `<div class="hy-upd s-mb-offer">${G('lock')}<span>Nothing needs you</span><span class="pill ghost sm">Later</span><span class="pill sm">Lock</span></div>`;
+const GNOTE = `<div class="hy-upd s-mb-note">${G('lock')}<span><b>ORBIT</b> is locked until <b class="t-num">18:00</b></span></div>`;
+const foot = locked => `<div class="s-mb-ft">${locked ? `<span class="s-mb-until">${G('lock')}until <b>18:00</b></span>` : '<span class="pill ghost sm">Lock</span>'}`
+  + '<span class="pill ghost sm">Open</span><span class="pill ghost sm">Settings</span><span class="sp"></span><span class="pill ghost sm">Quit</span></div>';
+const panel = (inner, locked) => `<div class="t3w t3-bloom t3-d s-mb-host" data-region><div class="panel float s-mb-p" role="dialog" aria-label="CONTROL">${HEAD}${inner}${Hy.usage()}${foot(locked)}</div></div>`;
+const col = (tag, theme, icon, body) => `<div class="s-mb-col themed" data-theme="${theme}"><p class="s-mb-tag">${tag}</p><div class="s-mb-mbar"><span class="s-mb-item">${icon}</span></div>${body}</div>`;
+const normal = () => panel(UPD + sec('Needs you', ['STATISTICS', 'ORBIT-1-MARKET']) + sec('Working', ['ORBIT-WEBSITE', 'CONTROL'], 'ORBIT-WEBSITE') + sec('Done', ['LINEAR_ALGEBRA', 'PORTFOLIO-SCROLL']));
+const quiet = () => panel(OFFER + '<div class="s-mb-empty"><b>Nothing running.</b>No chat needs you, and none has finished since you last looked.</div>');
+const full = () => withStates({ 'RELAY MAIN': { st: 'needs', sub: 'needs you · main' } }, () =>
+  panel(sec('Needs you', ['RELAY MAIN']) + '<p class="s-mb-behind">3 working and 1 done behind the lock.</p>', true));
+const group = () => panel(GNOTE + sec('Needs you', ['STATISTICS']) + sec('Working', ['CONTROL', 'DESIGN-EXPLORATION']) + sec('Done', ['LINEAR_ALGEBRA']));
+const panels = () => col('Normal · Field', 'field', withCount('needs', 2), normal())
+  + col('Normal · Night', 'night', withCount('needs', 2), normal())
+  + col('Nothing going on · Field', 'field', withCount('idle', ''), quiet())
+  + col('Full lock · Night', 'night', withCount('needs', 1), full())
+  + col('ORBIT locked · Field', 'field', withCount('needs', 1), group());
+
+/* MB3: Settings › General's row */
+const settings = () => `<div class="panel s-mb-set"><div class="s-mb-sr"><div><b>Menu bar icon</b><span>CONTROL's state in the menu bar, with the panel under it. On the Mac only.</span></div>`
+  + '<button class="toggle" role="switch" aria-checked="true" aria-label="Menu bar icon"><i></i></button></div></div>';
+
+/* MB4: the window's head, and its right end at 2x */
+const headHtml = () => Hy.dWin().match(/<div class="t3-head">[\s\S]*?<div class="t3-tools">[\s\S]*?<\/div><\/div>/)[0];
+const head = () => `<div class="bl-scale" data-w="816" data-h="52"><div class="t3w t3-bloom t3-d s-mb-head" data-region style="width:816px;height:52px"><div class="t3-main">${headHtml()}</div></div></div>`;
+const zoom = hover => {
+  const tools = headHtml().match(/<div class="t3-tools">[\s\S]*?<\/div>/)[0];
+  return `<div class="bl-scale" data-w="340" data-h="104"><div class="t3w t3-bloom t3-d s-mb-zm" data-region><div class="t3-head">${hover ? tools.replace('class="t3-ib d-cmdk"', 'class="t3-ib d-cmdk" data-hover') : tools}</div></div></div>`;
+};
+
+
+Bloom.section('menubar', { init(el) {
+  el.querySelector('.s-mb-icons').innerHTML = icons();
+  el.querySelector('.s-mb-cols').innerHTML = panels();
+  const W = { settings, head, zoom: () => zoom(false), 'zoom-hover': () => zoom(true) };
+  el.querySelectorAll('[data-win]').forEach(d => { d.outerHTML = W[d.dataset.win](); });
+  el.querySelectorAll('.t3w.t3-d').forEach(w => { w.dataset.tv = 'simple'; });
+  Hy.wire(el);
+} });
+})();
+</script>

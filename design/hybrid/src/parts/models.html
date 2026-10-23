@@ -1,0 +1,266 @@
+<style data-part="models">
+.s-lm-root .bl-prose + .fig, .s-lm-root .bl-sub + .bl-prose + .fig { margin-top: var(--s-6); }
+.s-lm-root .s-lm-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-6) var(--s-7); margin-top: var(--s-6); align-items: start; }
+@media (max-width: 1000px) { .s-lm-root .s-lm-two { grid-template-columns: minmax(0, 1fr); } }
+
+/* M1 the note: the update note's form, one per awake model, under the update note */
+.s-lm-root .s-lm-note > .lamp { --d: 11px; flex: none; }
+.s-lm-root .s-lm-note b { flex: none; white-space: nowrap; font: 500 11.5px/1 var(--f-mono); color: var(--text-strong); }
+.s-lm-root .s-lm-note .s-lm-st { margin-right: auto; color: var(--text-caption); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.s-lm-root .t3w.s-lm-notes { width: 256px; height: 150px; grid-template-columns: 256px; }
+.s-lm-root .s-lm-notes .t3-side { padding-top: 10px; }
+.s-lm-root .s-lm-notes .s-lm-cap { margin: 0 16px 4px; font: 400 10.5px/1 var(--f-mono); color: var(--text-caption); }
+
+/* the centre alone, for the thread's figures */
+.s-lm-root .t3w.s-lm-centre { grid-template-columns: 816px; }
+
+/* M4 the ask: the composer holds the request, as a permission request does */
+.s-lm-root .s-lm-ask .t3-ed { display: flex; flex-direction: column; gap: 6px; }
+.s-lm-root .s-lm-apl { font: var(--w-med) 11.5px/1 var(--f-chrome); color: var(--text-strong); }
+.s-lm-root .s-lm-apl span { margin-left: 8px; font-weight: var(--w-reg); color: var(--text-caption); }
+.s-lm-root .s-lm-apc { font: var(--w-reg) 13px/18px var(--f-chrome); color: var(--text-strong); }
+.s-lm-root .s-lm-apc b { font: 500 12.5px/18px var(--f-mono); }
+.s-lm-root .s-lm-ask .s-lm-acts { gap: 6px; }
+
+/* M2 Settings › Local models: the section's content; Settings' own frame is designed later (§12) */
+.s-lm-root .s-lm-set.panel { width: 760px; padding: 22px 24px 20px; border-radius: var(--r-xl); background: var(--raised); color: var(--text-body); }
+.s-lm-root .s-lm-sh { display: flex; align-items: center; gap: 10px; }
+.s-lm-root .s-lm-sh h4 { margin: 0; font: var(--w-strong) 16px/1.2 var(--f-chrome); color: var(--text-strong); }
+.s-lm-root .s-lm-sd { margin-top: 6px; max-width: 62ch; font: var(--w-reg) 13px/1.45 var(--f-chrome); color: var(--text-secondary); }
+.s-lm-root .s-lm-mem { margin-top: 18px; }
+.s-lm-root .s-lm-mh { display: flex; align-items: baseline; gap: 8px; font: var(--w-med) 12px/1 var(--f-chrome); color: var(--text-label); }
+.s-lm-root .s-lm-mh .t-num { font: 500 11.5px/1 var(--f-mono); color: var(--text-strong); }
+.s-lm-root .s-lm-mh .s-lm-soft { font-weight: var(--w-reg); color: var(--text-caption); }
+.s-lm-root .s-lm-bar { position: relative; display: flex; height: 6px; margin-top: 10px; border-radius: var(--r-pill); background: var(--sunken); box-shadow: var(--well); }
+.s-lm-root .s-lm-bar i { display: block; height: 100%; }
+.s-lm-root .s-lm-bar i:first-child { border-radius: var(--r-pill) 0 0 var(--r-pill); }
+.s-lm-root .s-lm-bar i[data-k="apps"], .s-lm-root .s-lm-leg i[data-k="apps"] { background: var(--ink-3); }
+.s-lm-root .s-lm-bar i[data-k="models"], .s-lm-root .s-lm-leg i[data-k="models"] { background: var(--lilac-deep); }
+.s-lm-root .s-lm-bar .s-lm-keep { position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 1.5px dashed var(--text-secondary); }
+.s-lm-root .s-lm-leg { display: flex; justify-content: space-between; gap: 4px 14px; margin-top: 12px; font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-secondary); }
+.s-lm-root .s-lm-leg > span { display: inline-flex; align-items: center; gap: 6px; }
+.s-lm-root .s-lm-leg b { font: var(--w-med) 12px/1 var(--f-chrome); font-variant-numeric: tabular-nums; color: var(--text-strong); }
+.s-lm-root .s-lm-leg i { width: 7px; height: 7px; border-radius: 50%; }
+.s-lm-root .s-lm-leg i[data-k="free"] { box-shadow: inset 0 0 0 1.25px var(--text-caption); }
+.s-lm-root .s-lm-leg i[data-k="keep"] { width: 10px; height: 0; border-radius: 0; border-top: 1.5px dashed var(--text-secondary); }
+.s-lm-root .s-lm-list { display: flex; flex-direction: column; gap: 4px; margin-top: 20px; }
+.s-lm-root .s-lm-row { display: grid; grid-template-columns: 15px minmax(0, 1fr) auto auto; gap: 0 12px; align-items: center; min-height: 52px; padding: 8px 10px 8px 12px; border-radius: var(--r-m); background: color-mix(in srgb, var(--deep) 45%, transparent); }
+.s-lm-root .s-lm-row[data-on] { background: var(--selection); box-shadow: var(--t3-rowsh); }
+.s-lm-root .s-lm-row > .lamp { --d: 15px; }
+.s-lm-root .s-lm-nm { font: var(--w-med) 13px/18px var(--f-chrome); color: var(--text-strong); }
+.s-lm-root .s-lm-fl { font: 400 11px/16px var(--f-mono); color: var(--text-caption); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-lm-root .s-lm-rs { text-align: right; font: var(--w-reg) 12px/18px var(--f-chrome); color: var(--text-secondary); white-space: nowrap; }
+.s-lm-root .s-lm-rs b { font-weight: var(--w-med); color: var(--text-strong); }
+.s-lm-root .s-lm-rs .s-lm-pid { display: block; font: 400 10.5px/16px var(--f-mono); color: var(--text-caption); }
+.s-lm-root .s-lm-ed { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px 14px; align-items: start; margin: 2px 0 6px; padding: 16px 14px 14px 39px; }
+.s-lm-root .s-lm-lb { padding-top: 7px; font: var(--w-med) 12px/1 var(--f-chrome); color: var(--text-label); }
+.s-lm-root .s-lm-in.input { height: 28px; font: var(--w-reg) 13px/1 var(--f-chrome); color: var(--text-strong); }
+.s-lm-root .s-lm-in.s-lm-short { width: 64px; justify-content: space-between; }
+.s-lm-root .s-lm-in .s-lm-u { color: var(--text-caption); }
+.s-lm-root .s-lm-val { padding-top: 6px; font: 400 11.5px/1.45 var(--f-mono); color: var(--text-strong); overflow-wrap: anywhere; }
+.s-lm-root .s-lm-hint { margin-top: 5px; font: var(--w-reg) 12px/1.45 var(--f-chrome); color: var(--text-caption); }
+.s-lm-root .s-lm-cmd { margin: 0; padding: 9px 11px; border-radius: var(--r-m); background: var(--sunken); box-shadow: var(--well); white-space: pre-wrap; font: 400 11.5px/18px var(--f-mono); color: var(--text-strong); }
+.s-lm-root .s-lm-cmd .s-lm-ours { color: var(--text-caption); }
+.s-lm-root .s-lm-sys { padding: 9px 11px; border-radius: var(--r-m); background: var(--sunken); box-shadow: var(--well); font: var(--w-reg) 13px/1.5 var(--f-chrome); color: var(--text-strong); }
+.s-lm-root .s-lm-edf { grid-column: 2; display: flex; align-items: center; gap: 10px; }
+.s-lm-root .s-lm-edf .s-lm-hint { margin: 0 auto 0 0; }
+.s-lm-root .s-lm-rules { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--seam); font: var(--w-reg) 12.5px/1.5 var(--f-chrome); color: var(--text-secondary); }
+
+/* M3 Add: a float sheet listing the GGUFs found */
+.s-lm-root .s-lm-add.panel { width: 480px; padding: 18px 20px; border-radius: var(--r-xl); color: var(--text-body); }
+.s-lm-root .s-lm-aq { font: var(--w-strong) 16px/1.3 var(--f-chrome); color: var(--text-strong); }
+.s-lm-root .s-lm-as { margin-top: 4px; font: var(--w-reg) 13px/1.45 var(--f-chrome); color: var(--text-secondary); }
+.s-lm-root .s-lm-as code, .s-lm-root .s-lm-rules code { font: 400 11.5px/1 var(--f-mono); background: none; padding: 0; color: var(--text-strong); }
+.s-lm-root .s-lm-found { display: flex; flex-direction: column; gap: 2px; margin-top: 14px; }
+.s-lm-root .s-lm-f { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 2px 12px; align-items: center; padding: 9px 10px; border-radius: var(--r-m); background: color-mix(in srgb, var(--raised) 55%, transparent); }
+.s-lm-root .s-lm-f .s-lm-fn { font: 500 12px/16px var(--f-mono); color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-lm-root .s-lm-f .s-lm-fd { grid-column: 1; font: 400 11px/15px var(--f-mono); color: var(--text-caption); }
+.s-lm-root .s-lm-f .s-lm-fz { grid-row: 1 / 3; grid-column: 2; font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-secondary); white-space: nowrap; }
+.s-lm-root .s-lm-f .pill { grid-row: 1 / 3; grid-column: 3; }
+.s-lm-root .s-lm-af { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+
+/* M6 the phone */
+.s-lm-root .s-lm-ph2 { display: flex; gap: var(--s-7); flex-wrap: wrap; align-items: flex-start; margin-top: var(--s-6); }
+.s-lm-root .s-lm-phone { position: relative; width: 390px; height: 844px; flex: none; overflow: hidden; border-radius: 54px; background: var(--field); box-shadow: var(--float), inset 0 0 0 1px var(--seam); color: var(--text-body); }
+.s-lm-root .s-lm-sb { display: flex; align-items: center; justify-content: space-between; height: 54px; padding: 0 34px 0 44px; font: 600 15px/1 var(--f-chrome); color: var(--text-strong); }
+.s-lm-root .s-lm-sb i { width: 26px; height: 12px; border-radius: 4px; box-shadow: inset 0 0 0 1.5px var(--text-strong); }
+.s-lm-root .s-lm-big { padding: 10px 20px 12px; font: var(--w-strong) 30px/1.1 var(--f-chrome); color: var(--text-strong); }
+.s-lm-root .s-lm-pnote { display: flex; align-items: center; gap: 10px; margin: 0 16px 14px; padding: 10px 10px 10px 14px; border-radius: var(--r-l); background: var(--overlay); box-shadow: inset 0 1px 0 var(--lip); font: var(--w-reg) 14px/1 var(--f-chrome); color: var(--text-secondary); }
+.s-lm-root .s-lm-pnote > .lamp { --d: 14px; flex: none; }
+.s-lm-root .s-lm-pnote b { font: 500 14px/1 var(--f-mono); color: var(--text-strong); }
+.s-lm-root .s-lm-pnote .s-lm-st { margin-right: auto; }
+.s-lm-root .s-lm-pnote .pill.sm, .s-lm-root .s-lm-prow .pill.sm { height: 30px; padding: 0 14px; font-size: 13.5px; }
+.s-lm-root .s-lm-pc { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; margin: 0 16px; padding: 12px 4px; border-top: 1px solid var(--seam); }
+.s-lm-root .s-lm-pc b { font: 600 14.5px/1.2 var(--f-mono); color: var(--text-strong); }
+.s-lm-root .s-lm-pc span { grid-column: 1; font: var(--w-reg) 13px/1.2 var(--f-chrome); color: var(--text-caption); }
+.s-lm-root .s-lm-pc .lamp { grid-row: 1 / 3; grid-column: 2; --d: 15px; }
+.s-lm-root .s-lm-nav { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px; }
+.s-lm-root .s-lm-glass { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: var(--r-pill); background: var(--overlay); box-shadow: var(--float), inset 0 1px 0 var(--lip); color: var(--text-strong); }
+.s-lm-root .s-lm-glass .gi { width: 20px; height: 20px; }
+.s-lm-root .s-lm-nt { flex: 1; text-align: center; margin-right: 54px; font: 600 16px/1.2 var(--f-chrome); color: var(--text-strong); }
+.s-lm-root .s-lm-pmem { margin: 10px 20px 0; font: var(--w-reg) 13.5px/1.4 var(--f-chrome); color: var(--text-secondary); }
+.s-lm-root .s-lm-pmem b { font: 500 13px/1 var(--f-mono); color: var(--text-strong); }
+.s-lm-root .s-lm-pgroup { margin: 14px 16px 0; border-radius: var(--r-l); background: var(--raised); overflow: hidden; }
+.s-lm-root .s-lm-prow { display: grid; grid-template-columns: 15px minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; padding: 13px 14px; }
+.s-lm-root .s-lm-prow + .s-lm-prow { box-shadow: inset 0 1px 0 var(--seam); }
+.s-lm-root .s-lm-prow > .lamp { grid-row: 1 / 3; grid-column: 1; --d: 15px; }
+.s-lm-root .s-lm-prow b { font: var(--w-med) 15px/1.25 var(--f-chrome); color: var(--text-strong); }
+.s-lm-root .s-lm-prow .s-lm-pm { grid-column: 2; font: 400 12px/1.3 var(--f-mono); color: var(--text-caption); }
+.s-lm-root .s-lm-prow .pill { grid-row: 1 / 3; grid-column: 3; }
+.s-lm-root .s-lm-pfoot { margin: 12px 24px 0; font: var(--w-reg) 13px/1.45 var(--f-chrome); color: var(--text-caption); }
+</style>
+<section id="models" class="bl-sec s-lm-root">
+  <header class="bl-sh">
+    <div class="no">08 <span class="bl-steps"></span></div>
+    <h2>Local models</h2>
+    <p class="meta">Models that run on this Mac, woken when needed and put to sleep when idle, for private data that shouldn't reach Claude. Drawn 12 Oct 2026 for the owner's approval.</p>
+  </header>
+  <p class="bl-lead">A local model is a tool, not a provider: Claude is still the only chat. An agent with private files to process hands them to a local model by path, and only the model's answer comes back, so what the files hold never enters Claude's context. CONTROL starts each model as its own <code>llama-server</code> process, keeps its PID, port and memory on record, and puts it to sleep after 10 idle minutes. A model is <b>asleep</b> (not running), <b>waking</b> (loading, then reading its system prompt once so it's cached) or <b>ready</b>. Before a wake, CONTROL checks free memory and keeps 15 GB back, and anything over 40 GB asks you first. Quitting CONTROL puts every model to sleep, and after a crash CONTROL kills the ones it started, so no model is left eating memory with no one watching it.</p>
+
+  <h3 class="bl-sub"><span class="id">M1</span>Awake, in the sidebar</h3>
+  <div class="bl-prose">
+    <p>While a model is awake, a note in the update note's form sits under the update note: its lamp, its name and its state, and Sleep. There's one note per awake model, and none while every model is asleep. A click on the name opens Settings › Local models. Sleep ends the process at once. While a model is still waking, Sleep stops the load.</p>
+    <p>In the thread, a local model is a tool call like any other. The row names the model and what it was given (the count of files, never their contents), and the meta is the time and the answer's length.</p>
+  </div>
+  <figure class="fig" data-fig="win"><div data-win="win"></div><figcaption class="cap"><span class="id">M1</span><b>ORBIT-WEBSITE had crash reports summarised on this Mac.</b><span>The agent woke Qwen 27B, handed it fourteen report files and wrote the summary it got back. The note says Qwen is ready and holds 33 GB. Claude saw only the summary.</span></figcaption></figure>
+  <div class="s-lm-two">
+    <figure class="fig" data-fig="notes"><div data-win="notes"></div><figcaption class="cap"><span class="id">M1b</span><b>The note's three faces.</b><span>Waking wears the background lamp with the time so far. Ready wears the idle ring and the memory it holds. In use wears the background lamp again, with the number of calls running; Settings says which chats. An asleep model has no note; in Settings it wears the open ring. The lamps run on Bloom's clock.</span></figcaption></figure>
+  </div>
+
+  <h3 class="bl-sub"><span class="id">M2</span>Settings › Local models</h3>
+  <div class="bl-prose">
+    <p>The models you've registered, with what each is doing. An awake row shows its PID, port and resident memory, and when it will sleep. The bar is the Mac's memory: other apps, CONTROL's models, what's free, and the 15 GB kept back, with the swap in use at the end. Selecting a row opens its settings. The command line is filled in from the file when you add it (your <code>serve.sh</code> flags here), and you can edit it. CONTROL owns the host and the port, so the model listens on this Mac only. The system prompt is read once at every wake, so each call after it starts warm. A model sleeps after 10 idle minutes unless you change it. Changes apply at its next wake.</p>
+  </div>
+  <figure class="fig" data-fig="settings"><div data-win="settings"></div><figcaption class="cap"><span class="id">M2</span><b>Qwen 27B is ready; the 70B is asleep.</b><span>The 70B is an example of a model over 40 GB, so waking it asks first. Settings' own frame is designed later (§12); this is the section's content, at 760 wide.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">M3</span>Adding a model</h3>
+  <div class="bl-prose">
+    <p>Add looks for GGUF files in <code>~/models</code> and the Hugging Face cache, the format <code>llama-server</code> runs. A vision projector found beside a model is attached to it, not listed on its own. Browse picks any other file. Adding and editing are desktop only, because a model's command runs on the Mac.</p>
+  </div>
+  <figure class="fig" data-fig="add"><div data-win="add"></div><figcaption class="cap"><span class="id">M3</span><b>The first time.</b><span>One model found on this Mac. The size is the file's own; the memory it holds is measured at its first wake.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">M4</span>Waking from a chat</h3>
+  <div class="bl-prose">
+    <p>An agent wakes a model when it calls one that's asleep: the call waits through the wake, then runs. Over 40 GB, the wake asks you first, in that chat, the way a permission request does: the chat needs you until you answer, and only your Approve wakes it. If the wake would leave less than 15 GB free, or the Mac is already using swap, CONTROL refuses it, the agent gets the numbers back, and nothing else is touched. CONTROL doesn't put other models to sleep to make room.</p>
+  </div>
+  <div class="s-lm-two">
+    <figure class="fig" data-fig="ask"><div data-win="ask"></div><figcaption class="cap"><span class="id">M4</span><b>Over 40 GB asks.</b><span>The request holds the composer like any approval: what will load, how much it takes, and what would be left.</span></figcaption></figure>
+    <figure class="fig" data-fig="short"><div data-win="short"></div><figcaption class="cap"><span class="id">M4b</span><b>Not enough memory.</b><span>A refused wake is a failed call: T3's red bead and the numbers as its meta. The agent says what it would need. When the Mac is using swap, the meta reads <code>swap in use · 2.1 GB</code>.</span></figcaption></figure>
+  </div>
+
+  <h3 class="bl-sub"><span class="id">M5</span>The phone</h3>
+  <div class="bl-prose">
+    <p>The phone shows the same note at the top of the chat list while a model is awake, and Settings › Local models lists every model with Wake and Sleep. The same memory check and the same over-40 GB ask apply there. Adding a model and editing its command are on the Mac only.</p>
+  </div>
+  <div class="s-lm-ph2">
+    <figure class="fig" data-fig="phone-home"><div data-win="phone-home"></div><figcaption class="cap"><span class="id">M5</span><b>The chat list.</b></figcaption></figure>
+    <figure class="fig" data-fig="phone-settings"><div data-win="phone-settings"></div><figcaption class="cap"><span class="id">M5b</span><b>Settings › Local models.</b></figcaption></figure>
+  </div>
+</section>
+<script data-part="models">
+(() => {
+const G = Bloom.gi;
+const chat = n => Hy.CHATS.find(c => c.n === n);
+function withStates(states, draw) {
+  const keep = Object.keys(states).map(n => [chat(n), { ...chat(n) }]);
+  Object.entries(states).forEach(([n, s]) => Object.assign(chat(n), s));
+  try { return draw(); } finally { keep.forEach(([c, k]) => Object.assign(c, k)); }
+}
+const DONE = { 'ORBIT-WEBSITE': { st: 'done', sub: 'done' } };
+/* the note: [lamp, state words] for each face */
+const FACE = { waking: ['bg', 'waking · <span class="t-num">0:41</span>'], ready: ['idle', 'ready · <span class="t-num">33 GB</span>'], use: ['bg', 'in use · <span class="t-num">1</span> call'] };
+const note = f => `<div class="hy-upd s-lm-note">${Bloom.lamp(FACE[f][0], { d: 11 })}<b>Qwen 27B</b><span class="s-lm-st">${FACE[f][1]}</span><span class="pill sm">Sleep</span></div>`;
+const withNote = (html, f) => html.replace(/(<div class="hy-upd">[\s\S]*?<\/div>)/, `$1${note(f)}`);
+
+/* the thread: the same parts as the kit's turns (the arrows, a stack, the reply, the totals) */
+const ARW = '<svg class="d-pin" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M1.5 9H16M11.5 4.5L16 9L11.5 13.5"/></svg>';
+const HOOK = '<svg class="d-pin" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M1.5 1V10H16M11.5 5.5L16 10L11.5 14.5"/></svg>';
+const row = ([k, name, t, m], run) => `<div class="d-row" data-k="${k}"${run ? ' data-run' : ''}><span class="pearl xs" aria-hidden="true"></span><span class="d-k">${name.toUpperCase()}</span><span class="d-kt">${name}</span><span class="d-pt">${t}</span><span class="d-m">${m}</span></div>`;
+const stack = (head, rows, live) => `<div class="d-grp"${live ? ' data-live' : ''}><button type="button" class="d-gh">${Bloom.pearl({ st: live ? 'working' : 'done', p: 10 })}${Bloom.lamp(live ? 'bg' : 'done', { d: 10 })}<span>${head}</span><span class="d-n">${rows.length} call${rows.length === 1 ? '' : 's'}</span>${G('chev-d', 'd-cv')}</button>`
+  + `<div class="d-rows">${rows.map((r, i) => row(r, live && i === rows.length - 1)).join('')}</div></div>`;
+const turn = (q, parts) => `<div class="d-turn"><i class="d-line" aria-hidden="true"></i><div class="d-q">${ARW}<span class="d-qt">${q}</span></div>${parts}</div>`;
+const say = t => `<div class="d-say">${HOOK}${t}</div>`;
+const tot = t => `<div class="d-tot">${t}</div>`;
+const withTurn = (html, t, draft) => html.replace(/(<div class="t3-col d-col">)[\s\S]*?<div class="t3-working">[\s\S]*?<\/div>/, `$1${t}`)
+  .replace('see the shot of button.cta on /download: still says 11.2 MB', draft || '');
+const SUMMARY = turn('summarise the beta crash reports in reports/crash, but keep the testers\' details off your side',
+  stack('Worked for 1m 41s', [['agent', 'Local model', 'wake qwen-27b', 'ready in 52s'], ['agent', 'Local model', 'run qwen-27b · 14 files', '38s · 1.9k out'], ['write', 'Write', 'docs/crash-summary.md', '<span class="d-pa">+41</span> <span class="d-ma">−0</span>']])
+  + say('Qwen 27B read the fourteen reports on this Mac and sent back a summary with names, emails and home folders taken out; I never saw the reports. Nine are the same crash: <code>audioDevice</code> is null when the Mac wakes from sleep. The summary is in <code>docs/crash-summary.md</code>.')
+  + tot('1m 41s · ↑ 3.2k · ↓ 1.1k · 1 file'));
+const ASK = turn('anonymise the support inbox export in ~/Downloads/inbox.mbox with the 70B',
+  stack('Working for 4s', [['agent', 'Local model', 'wake llama-70b', '']], true));
+const SHORT = turn('anonymise the support inbox export in ~/Downloads/inbox.mbox with the 70B',
+  stack('Worked for 2s', [['error', 'Local model', 'wake llama-70b', 'needs 42 GB · 31 GB to spare']])
+  + say('The 70B needs 42 GB, and with 15 GB kept back there\'s 31 GB to spare, so CONTROL didn\'t load it. Qwen 27B is awake already. Shall I use it instead?')
+  + tot('2s · ↑ 1.4k · ↓ 120 · no changes'));
+/* the centre alone, as tall as the figure needs */
+const centre = (t, h, draft) => {
+  const w = withTurn(Hy.dWin(), t, draft), main = w.slice(w.indexOf('</aside>') + 8, w.indexOf('<div class="t3d-panel">'));
+  return `<div class="bl-scale" data-w="816" data-h="${h}"><div class="t3w t3-bloom t3-d s-lm-centre" data-region style="width:816px;height:${h}px">${main}</div></div>`;
+};
+const notes = () => `<div class="bl-scale" data-w="256" data-h="150"><div class="t3w t3-bloom t3-d s-lm-notes" data-region><aside class="t3-side">${note('waking')}${note('ready')}${note('use')}</aside></div></div>`;
+
+/* M2: Settings › Local models */
+const GB = 128, APPS = 41, MODELS = 33.4, KEEP = 15;
+const pct = n => (n / GB * 100).toFixed(2) + '%';
+const CMD = 'llama-server -m &lt;file&gt; --mmproj &lt;projector&gt;\n  -c 262144 -ngl 999 --jinja --reasoning-format deepseek\n  --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --cache-ram 32768\n  <span class="s-lm-ours">--host 127.0.0.1 --port &lt;set by CONTROL&gt;</span>';
+const SYS = 'You process private files on the owner\'s Mac. Answer only what you\'re asked, and leave out anything that identifies a person: names, emails, phone numbers, addresses, account numbers and home folders.';
+const settings = () => `<div class="panel s-lm-set" role="region" aria-label="Local models"><div class="s-lm-sh"><h4>Local models</h4><span class="sp"></span><button class="pill sm">Add</button></div>
+  <p class="s-lm-sd">Models that run on this Mac. You and your agents wake them; an agent hands one files by path, and only its answer comes back to Claude.</p>
+  <div class="s-lm-mem"><div class="s-lm-mh">Memory<span class="t-num">${GB} GB</span><span class="s-lm-soft">on this Mac</span></div>
+    <div class="s-lm-bar"><i data-k="apps" style="width:${pct(APPS)}"></i><i data-k="models" style="width:${pct(MODELS)}"></i><span class="s-lm-keep" style="left:${pct(GB - KEEP)}"></span></div>
+    <div class="s-lm-leg"><span><i data-k="apps"></i>Apps <b>${APPS} GB</b></span><span><i data-k="models"></i>Models <b>${MODELS} GB</b></span><span><i data-k="free"></i>Free <b>${(GB - APPS - MODELS).toFixed(1)} GB</b></span><span><i data-k="keep"></i>Kept back <b>${KEEP} GB</b></span><span>Swap <b>0 GB</b></span></div></div>
+  <div class="s-lm-list">
+    <div class="s-lm-row" data-on>${Bloom.lamp('idle')}<div><div class="s-lm-nm">Qwen 27B</div><div class="s-lm-fl">~/models/qwen3.8-27b-uncensored-gguf/Qwen3.8-27B-Uncensored-Q4_K_M.gguf</div></div>
+      <div class="s-lm-rs"><b>ready</b> · 33.4 GB · sleeps 23:41<span class="s-lm-pid">PID 48213 · :51732</span></div><span class="pill sm">Sleep</span></div>
+    <div class="s-lm-ed">
+      <span class="s-lm-lb">Name</span><div><span class="input s-lm-in">Qwen 27B</span></div>
+      <span class="s-lm-lb">File</span><div><div class="s-lm-val">Qwen3.8-27B-Uncensored-Q4_K_M.gguf</div><div class="s-lm-hint">16.8 GB, with its vision projector (0.9 GB) beside it.</div></div>
+      <span class="s-lm-lb">Command</span><div><pre class="s-lm-cmd">${CMD}</pre><div class="s-lm-hint">From your serve.sh. CONTROL sets the host and port, so it listens on this Mac only.</div></div>
+      <span class="s-lm-lb">System prompt</span><div><div class="s-lm-sys">${SYS}</div><div class="s-lm-hint">Read once at every wake, so each call starts warm.</div></div>
+      <span class="s-lm-lb">Sleeps after</span><div><span class="input s-lm-in s-lm-short">10<span class="s-lm-u">min</span></span><div class="s-lm-hint">idle, with no call running.</div></div>
+      <span class="s-lm-lb">Memory</span><div><div class="s-lm-val">33.4 GB</div><div class="s-lm-hint">Measured at its last wake. Before the first, CONTROL estimates it from the file and the context length.</div></div>
+      <div class="s-lm-edf"><span class="s-lm-hint">Changes apply at its next wake.</span><button class="pill ghost sm">Remove</button></div>
+    </div>
+    <div class="s-lm-row">${Bloom.lamp('outside')}<div><div class="s-lm-nm">Llama 3.3 70B</div><div class="s-lm-fl">~/models/llama-3.3-70b/Llama-3.3-70B-Instruct-Q4_K_M.gguf</div></div>
+      <div class="s-lm-rs">asleep · 42 GB<span class="s-lm-pid">asks first: over 40 GB</span></div><span class="pill sm">Wake</span></div>
+  </div>
+  <p class="s-lm-rules">Anything over 40 GB asks before it wakes. A wake is refused if it would leave less than 15 GB free, or if the Mac is using swap. Quitting CONTROL puts every model to sleep, and after a crash CONTROL kills the models it started, and only those.</p></div>`;
+const add = () => `<div class="panel float s-lm-add" role="dialog" aria-label="Add a local model"><p class="s-lm-aq">Add a local model</p><p class="s-lm-as">GGUF files in <code>~/models</code> and the Hugging Face cache.</p>
+  <div class="s-lm-found"><div class="s-lm-f"><span class="s-lm-fn">Qwen3.8-27B-Uncensored-Q4_K_M.gguf</span><span class="s-lm-fd">~/models/qwen3.8-27b-uncensored-gguf · vision</span><span class="s-lm-fz">16.8 GB</span><span class="pill sm">Add</span></div></div>
+  <div class="s-lm-af"><button class="pill ghost">Browse</button><span class="sp"></span><button class="pill ghost">Cancel</button></div></div>`;
+
+/* M5: the phone */
+const phone = inner => `<div class="bl-scale" data-w="390" data-h="844" style="max-width:390px"><div class="s-lm-phone"><div class="s-lm-sb"><span class="t-num">21:47</span><i></i></div>${inner}</div></div>`;
+const PCHATS = [['ORBIT-WEBSITE', 'done · site-v2', 'done'], ['STATISTICS', 'needs you · main', 'needs'], ['CONTROL', 'working · v2', 'bg'], ['LINEAR_ALGEBRA', 'done · main', 'done'], ['RELAY MAIN', 'idle · main', 'idle']];
+const phoneHome = () => phone(`<div class="s-lm-big">Chats</div><div class="s-lm-pnote">${Bloom.lamp('idle', { d: 14 })}<b>Qwen 27B</b><span class="s-lm-st">ready · 33 GB</span><span class="pill sm">Sleep</span></div>`
+  + PCHATS.map(([n, s, l]) => `<div class="s-lm-pc"><b>${n}</b><span>${s}</span>${Bloom.lamp(l)}</div>`).join(''));
+const phoneSettings = () => phone(`<div class="s-lm-nav"><span class="s-lm-glass">${G('chev-l')}</span><span class="s-lm-nt">Local models</span></div>`
+  + `<p class="s-lm-pmem"><b>${(GB - APPS - MODELS).toFixed(1)} GB</b> free of <b>${GB} GB</b>, with <b>${KEEP} GB</b> kept back and no swap.</p>`
+  + `<div class="s-lm-pgroup"><div class="s-lm-prow">${Bloom.lamp('idle')}<b>Qwen 27B</b><span class="s-lm-pm">ready · 33.4 GB · PID 48213</span><span class="pill sm">Sleep</span></div>`
+  + `<div class="s-lm-prow">${Bloom.lamp('outside')}<b>Llama 3.3 70B</b><span class="s-lm-pm">asleep · 42 GB · asks first</span><span class="pill sm">Wake</span></div></div>`
+  + `<p class="s-lm-pfoot">Adding a model and editing its command are on the Mac.</p>`);
+
+Bloom.section('models', { init(el) {
+  const W = {
+    win: () => withStates(DONE, () => withNote(withTurn(Hy.dWin(), SUMMARY, 'fix the audioDevice crash on wake'), 'ready')),
+    notes,
+    settings: () => `<div class="bl-scale" data-w="760" data-h="893" style="max-width:760px">${settings()}</div>`,
+    add: () => `<div class="bl-scale" data-w="480" data-h="189" style="max-width:480px">${add()}</div>`,
+    ask: () => withStates({ 'ORBIT-WEBSITE': { st: 'needs', sub: 'needs you' } }, () => centre(ASK, 520)),
+    short: () => withStates(DONE, () => centre(SHORT, 520, 'yes, use Qwen')),
+    'phone-home': phoneHome,
+    'phone-settings': phoneSettings,
+  };
+  el.querySelectorAll('[data-win]').forEach(d => { d.outerHTML = W[d.dataset.win](); });
+  el.querySelectorAll('.t3w.t3-d').forEach(w => { w.dataset.tv = 'simple'; });
+  /* M4: the composer holds the request */
+  const ask = el.querySelector('[data-fig="ask"] .t3w');
+  ask.classList.add('s-lm-ask');
+  ask.querySelector('.t3-ed').innerHTML = '<span class="s-lm-apl">Wake a local model<span>over 40 GB</span></span><span class="s-lm-apc"><b>Llama 3.3 70B</b> takes 42 GB and leaves 45 GB free.</span>';
+  ask.querySelector('.t3-cf').innerHTML = '<div class="t3-cl"></div><div class="t3-cr s-lm-acts"><button class="pill ghost sm">Decline</button><button class="pill sm">Approve</button></div>';
+  Hy.wire(el);
+  requestAnimationFrame(() => Hy.dashes(el));
+} });
+})();
+</script>

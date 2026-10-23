@@ -1,0 +1,56 @@
+{
+  "name": "@control/server",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RandevRanjit/control",
+    "directory": "apps/server"
+  },
+  "bin": {
+    "ctrl": "./dist/bin.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/bin.ts",
+    "build:bundle": "vp pack",
+    "build:exe": "node scripts/cli.ts build-exe",
+    "start": "node dist/bin.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vp test run",
+    "test:fast": "vp test run --fileParallelism --exclude src/serverSettings.test.ts && vp test run src/serverSettings.test.ts",
+    "record:claude-replay": "bun scripts/record-claude-agent-sdk-replay-fixture.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.276",
+    "@effect/platform-node": "catalog:",
+    "@effect/platform-node-shared": "catalog:",
+    "@ff-labs/fff-node": "0.9.4",
+    "diff": "8.0.3",
+    "effect": "catalog:",
+    "node-pty": "^1.2.0-beta.15",
+    "playwright-core": "1.60.0",
+    "stream-chain": "^4.2.5",
+    "stream-json": "3.6.0",
+    "yaml": "catalog:",
+    "yauzl": "^3.4.0"
+  },
+  "devDependencies": {
+    "@control/contracts": "workspace:*",
+    "@control/shared": "workspace:*",
+    "@control/ssh": "workspace:*",
+    "@control/tailscale": "workspace:*",
+    "@control/web": "workspace:*",
+    "@effect/vitest": "catalog:",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "@types/node": "catalog:",
+    "@types/yauzl": "^3.4.0",
+    "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": "^22.16 || ^23.11 || >=24.10"
+  }
+}

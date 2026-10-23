@@ -1,0 +1,2365 @@
+<style data-part="form">
+  /* ================= Form and type (prefix .s-form-) ================= */
+  .s-form-root {
+    --s-form-plate: color-mix(in srgb, var(--raised) 50%, transparent);
+  }
+  .s-form-root .s-form-k {
+    font: 400 11px/1.3 var(--f-mono);
+    color: var(--text-caption);
+    font-variant-numeric: tabular-nums;
+  }
+  .s-form-root .s-form-h4 {
+    font: var(--w-med) 13px/1.3 var(--f-chrome);
+    color: var(--text-label);
+    margin: 0 0 var(--s-3);
+  }
+  .s-form-root .s-form-note {
+    font: var(--w-reg) 14px/1.55 var(--f-chrome);
+    color: var(--text-secondary);
+    max-width: 62ch;
+  }
+  .s-form-root .s-form-note b {
+    color: var(--text-strong);
+  }
+  .s-form-root .bl-prose + .fig {
+    margin-top: var(--s-5);
+  }
+
+  /* ---------- F1 radius ---------- */
+  .s-form-rad {
+    display: grid;
+    grid-template-columns: 252px minmax(0, 1fr);
+    gap: var(--s-7);
+    align-items: start;
+  }
+  .s-form-fan {
+    position: sticky;
+    top: 96px;
+  }
+  .s-form-fan svg {
+    display: block;
+    width: 100%;
+    max-width: 252px;
+    height: auto;
+    overflow: visible;
+  }
+  .s-form-fan .s-form-fancap {
+    margin-top: var(--s-3);
+    max-width: 30ch;
+    font: var(--w-reg) 12.5px/1.45 var(--f-chrome);
+    color: var(--text-caption);
+  }
+  .s-form-radgrid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-6) var(--s-5);
+  }
+  .s-form-rc {
+    min-width: 0;
+  }
+  .s-form-stage {
+    height: 168px;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px;
+    border-radius: var(--r-xl);
+    background: var(--s-form-plate);
+    overflow: hidden;
+  }
+  .s-form-rv {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: var(--s-4);
+  }
+  .s-form-rv b {
+    font: 500 26px/1 var(--f-mono);
+    color: var(--text-strong);
+    font-variant-numeric: tabular-nums;
+  }
+  .s-form-rv .s-form-k {
+    font-size: 11.5px;
+  }
+  .s-form-ru {
+    font: var(--w-reg) 13px/1.45 var(--f-chrome);
+    color: var(--text-secondary);
+    margin-top: 6px;
+  }
+  .s-form-codeln {
+    display: block;
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: var(--r-xs);
+    background: var(--diff-add-wash);
+    font: 400 11.5px/17px var(--f-mono);
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .s-form-codeln i {
+    font-style: normal;
+    color: var(--text-caption);
+    margin-right: 8px;
+  }
+  .s-form-codeln em {
+    font-style: normal;
+    color: var(--diff-add-mark);
+    margin-right: 6px;
+  }
+  .s-form-codeln mark {
+    background: var(--diff-add-word);
+    color: inherit;
+    border-radius: var(--r-xs);
+    padding: 1px 3px;
+  }
+  .s-form-root .s-form-stage code {
+    font-size: 11.5px;
+  }
+  .s-form-sw {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--r-s);
+    flex: none;
+  }
+  .s-form-stage .session-row {
+    width: 100%;
+    margin: 0;
+  }
+  .s-form-stage .input {
+    width: 100%;
+  }
+  .s-form-stage .panel {
+    width: 100%;
+    padding: 6px 12px 12px;
+  }
+  .s-form-tline {
+    font: 400 11px/16px var(--f-mono);
+    color: var(--text-body);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-form-tline + .s-form-tline {
+    margin-top: 4px;
+  }
+  .s-form-kind {
+    font: 500 9.5px/1 var(--f-mono);
+    letter-spacing: 0.06em;
+    color: var(--trace-write);
+    margin-right: 8px;
+  }
+  .s-form-miniwin {
+    width: 100%;
+    height: 118px;
+    border-radius: var(--r-win);
+    background: var(--raised);
+    box-shadow:
+      var(--float),
+      inset 0 1px 0 var(--lip);
+    display: grid;
+    grid-template-rows: 30px minmax(0, 1fr);
+    overflow: hidden;
+  }
+  .s-form-miniwin .s-form-band {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+  }
+  .s-form-miniwin .lights {
+    gap: 6px;
+    margin-right: 2px;
+  }
+  .s-form-miniwin .lights i {
+    width: 9px;
+    height: 9px;
+  }
+  .s-form-miniwin .s-form-band b {
+    font: 600 10.5px/1 var(--f-mono);
+    letter-spacing: 0.04em;
+    color: var(--text-strong);
+  }
+  .s-form-miniwin .s-form-mb {
+    display: grid;
+    grid-template-columns: 30% minmax(0, 1fr);
+    gap: 6px;
+    padding: 0 6px 6px 0;
+  }
+  .s-form-miniwin .pane {
+    padding: 8px 10px;
+  }
+  .s-form-sheet {
+    width: 100%;
+    border-radius: var(--r-xl);
+    padding: 14px 14px 12px 16px;
+    background: var(--overlay);
+    box-shadow:
+      var(--float),
+      inset 0 1px 0 var(--lip);
+  }
+  .s-form-sheet .s-form-st {
+    font: var(--w-strong) 14px/1.2 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-form-sheet .s-form-sbtn {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .s-form-stage .puffy {
+    width: 150px;
+    height: 96px;
+  }
+
+  /* ---------- F2 edges ---------- */
+  .s-form-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-6) var(--s-5);
+  }
+  .s-form-pair > div {
+    min-width: 0;
+  }
+  .s-form-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: var(--s-3);
+    font: var(--w-med) 13px/1 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-form-tag .s-form-k {
+    font-size: 11px;
+  }
+  .s-form-frag {
+    position: relative;
+    width: 660px;
+    height: 270px;
+    display: grid;
+    grid-template-columns: 236px minmax(0, 1fr) 168px;
+    overflow: hidden;
+  }
+  .s-form-frag .s-form-rel,
+  .s-form-frag .s-form-col,
+  .s-form-fb .seam {
+    position: relative;
+  }
+  .s-form-frag .s-form-col {
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+  }
+  .s-form-frag .s-form-tc,
+  .s-form-frag .s-form-pc {
+    grid-template-rows: 34px minmax(0, 1fr);
+  }
+  .s-form-frag .s-form-sc {
+    align-content: start;
+  }
+  .s-form-fl {
+    font: 400 12px/17px var(--f-mono);
+    white-space: pre;
+    overflow: hidden;
+  }
+  /* Bloom half */
+  .s-form-fb {
+    background: var(--raised);
+    border-radius: var(--r-win);
+    gap: 6px;
+    padding: 6px 6px 6px 0;
+    grid-template-columns: 252px minmax(0, 1fr) 168px;
+  } /* a row 240 wide: whole beads and the line-2 figures fit */
+  .s-form-fb .s-form-head {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 34px;
+    padding: 0 8px 0 18px;
+    font: var(--w-med) 12.5px/1 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-form-fb .s-form-ib {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: var(--r-m);
+    color: var(--text-caption);
+    font-size: 13px;
+  }
+  .s-form-fb .seam {
+    margin: 2px 12px 4px;
+  }
+  .s-form-fb .group-row {
+    margin-top: 0;
+  }
+  .s-form-fb .s-form-env {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--text-caption);
+  }
+  .s-form-fb .s-form-tabs {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    padding-left: 0;
+  }
+  .s-form-fb .s-form-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: var(--r-m) var(--r-m) 0 0;
+    font: 400 11.5px/1 var(--f-mono);
+    color: var(--text-caption);
+    white-space: nowrap;
+  }
+  .s-form-fb .s-form-tab i {
+    font-style: normal;
+    color: var(--text-caption);
+  }
+  .s-form-fb .s-form-tab.on {
+    background: var(--deep);
+    color: var(--text-strong);
+  }
+  .s-form-fb .s-form-ptab {
+    font: var(--w-med) 12px/1 var(--f-chrome);
+  }
+  .s-form-fb .s-form-ptab.open {
+    background: none;
+    color: var(--text-body);
+  }
+  .s-form-fb .s-form-pane {
+    background: var(--deep);
+    border-radius: 0 var(--r-l) var(--r-l) var(--r-l);
+    padding: 8px 10px;
+    color: var(--text-body);
+    min-height: 0;
+    overflow: hidden;
+  }
+  .s-form-fb .s-form-fl.s-form-dim {
+    color: var(--text-caption);
+  }
+  .s-form-fb .s-form-fl b {
+    font-weight: 400;
+    color: var(--text-strong);
+  }
+  .s-form-fb .s-form-kd {
+    font: 500 9.5px/1 var(--f-mono);
+    letter-spacing: 0.06em;
+  }
+  /* D half: D's own palette, set from JS data (the one place literal colours belong) */
+  .s-form-fd {
+    background: var(--s-form-d-paper2);
+    gap: 4px;
+    padding: 0 4px 4px 0;
+    color: var(--s-form-d-ink);
+    font-family: var(--f-mono);
+  }
+  .s-form-fd .s-form-head {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 34px;
+    padding: 0 8px 0 14px;
+    font: 500 11px/1 var(--f-mono);
+    letter-spacing: 0.04em;
+    color: var(--s-form-d-grey);
+    box-shadow: inset 0 -1px 0 var(--s-form-d-line);
+  }
+  .s-form-fd .s-form-ib {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    color: var(--s-form-d-grey);
+    font-size: 13px;
+  }
+  .s-form-fd .s-form-grp {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 28px;
+    margin-top: 6px;
+    padding: 0 10px 0 14px;
+    font: 500 11px/1 var(--f-mono);
+    letter-spacing: 0.04em;
+    color: var(--s-form-d-dim);
+  }
+  .s-form-fd .s-form-grp .gi {
+    width: 10px;
+    height: 10px;
+  }
+  .s-form-fd .s-form-grp span {
+    margin-left: auto;
+    font-size: 10.5px;
+  }
+  .s-form-fd .s-form-row {
+    display: grid;
+    grid-template-columns: 8px minmax(0, 1fr) auto;
+    grid-template-rows: 17px 14px;
+    column-gap: 10px;
+    row-gap: 1px;
+    align-items: center;
+    height: 40px;
+    padding: 4px 10px 4px 24px;
+  }
+  .s-form-fd .s-form-row.sel {
+    background: var(--s-form-d-paper);
+  }
+  .s-form-fd .s-form-sq {
+    width: 8px;
+    height: 8px;
+    background: var(--s-form-d-ink2);
+  }
+  .s-form-fd .s-form-nm {
+    font: 400 12.5px/17px var(--f-mono);
+    color: var(--s-form-d-ink);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .s-form-fd .s-form-rt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font: 400 10.5px/1 var(--f-mono);
+    color: var(--s-form-d-dim);
+  }
+  .s-form-fd .s-form-env {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 14px;
+    padding: 0 4px;
+    box-shadow: inset 0 0 0 1px var(--s-form-d-line2);
+    color: var(--s-form-d-grey);
+  }
+  .s-form-fd .s-form-l2 {
+    grid-column: 2 / 4;
+    font: 400 10.5px/14px var(--f-mono);
+    color: var(--s-form-d-grey);
+  }
+  .s-form-fd .s-form-wt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 22px;
+    padding: 0 10px 0 42px;
+    font: 400 11.5px/1 var(--f-mono);
+    color: var(--s-form-d-ink);
+  }
+  .s-form-fd .s-form-wt .gi {
+    width: 12px;
+    height: 12px;
+    color: var(--s-form-d-ink2);
+  }
+  .s-form-fd .s-form-wt span {
+    margin-left: auto;
+    font-size: 10.5px;
+    color: var(--s-form-d-dim);
+  }
+  .s-form-fd .s-form-tabs {
+    display: flex;
+    align-items: stretch;
+    box-shadow: inset 0 -1px 0 var(--s-form-d-line);
+  }
+  .s-form-fd .s-form-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    font: 400 11.5px/1 var(--f-mono);
+    color: var(--s-form-d-grey);
+    box-shadow: inset -1px 0 0 var(--s-form-d-line);
+    white-space: nowrap;
+  }
+  .s-form-fd .s-form-tab i {
+    font-style: normal;
+    color: var(--s-form-d-dim);
+  }
+  .s-form-fd .s-form-tab.on {
+    background: var(--s-form-d-paper);
+    color: var(--s-form-d-ink);
+    box-shadow: inset -1px 0 0 var(--s-form-d-line);
+  }
+  .s-form-fd .s-form-ptabs {
+    gap: 4px;
+    align-items: center;
+    padding-left: 6px;
+  }
+  .s-form-fd .s-form-ptab {
+    height: 22px;
+    padding: 0 7px;
+    font: 400 11px/1 var(--f-mono);
+    letter-spacing: 0.04em;
+    color: var(--s-form-d-dim);
+    box-shadow: inset 0 0 0 1px var(--s-form-d-line2);
+  }
+  .s-form-fd .s-form-ptab.on {
+    background: var(--s-form-d-paper);
+    color: var(--s-form-d-ink);
+  }
+  .s-form-fd .s-form-ptab.open {
+    background: var(--s-form-d-paper3);
+    color: var(--s-form-d-ink2);
+  }
+  .s-form-fd .s-form-pane {
+    background: var(--s-form-d-paper);
+    padding: 8px 10px;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .s-form-fd .s-form-fl.s-form-dim {
+    color: var(--s-form-d-grey);
+  }
+  .s-form-fd .s-form-fl b {
+    font-weight: 400;
+    color: var(--s-form-d-ink);
+  }
+  .s-form-fd .s-form-kd {
+    font: 500 9.5px/1 var(--f-mono);
+    letter-spacing: 0.06em;
+    color: var(--s-form-d-grey);
+  }
+  /* annotation markers (doc layer, not part of either mock) */
+  .s-form-mk {
+    position: absolute;
+    z-index: 2;
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--focus);
+    color: var(--field);
+    font: 600 10px/1 var(--f-mono);
+  }
+  .s-form-legend {
+    list-style: none;
+    padding: 0;
+    margin: var(--s-4) 0 0;
+    display: grid;
+    gap: 8px;
+  }
+  .s-form-legend li {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 10px;
+    align-items: baseline;
+    font: var(--w-reg) 13px/1.45 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-form-legend .s-form-mk {
+    position: static;
+    transform: translateY(3px);
+  }
+  /* surface steps */
+  .s-form-steps {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-5);
+    margin-top: var(--s-7);
+  }
+  .s-form-stepset {
+    border-radius: var(--r-xl);
+    padding: 20px;
+    min-width: 0;
+  }
+  .s-form-stepset .s-form-tag {
+    color: var(--text-label);
+  }
+  .s-form-tiles {
+    display: grid;
+    grid-template-columns: repeat(var(--s-form-n, 6), minmax(0, 1fr));
+    gap: 6px;
+  }
+  .s-form-tile {
+    height: 92px;
+    border-radius: var(--r-l);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 3px;
+    min-width: 0;
+  }
+  .s-form-tile b {
+    font: 500 15px/1 var(--f-mono);
+    color: var(--text-strong);
+    font-variant-numeric: tabular-nums;
+  }
+  .s-form-tile span {
+    font: var(--w-reg) 11.5px/1.2 var(--f-chrome);
+    color: var(--text-caption);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s-form-tile.s-form-isfield {
+    box-shadow: inset 0 0 0 2px var(--seam);
+  }
+  .s-form-tile.s-form-isdeep {
+    box-shadow: var(--well);
+  }
+  /* lost and found */
+  .s-form-lf {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: var(--s-6);
+    align-items: center;
+    margin-top: var(--s-5);
+  }
+  .s-form-lfplate {
+    border-radius: var(--r-xl);
+    padding: 28px 24px 22px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .s-form-lfcell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    text-align: center;
+    min-width: 0;
+  }
+  .s-form-disc {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: var(--c);
+    flex: none;
+  }
+  .s-form-lfcell .bead {
+    --b: 88px;
+  }
+  .s-form-lfcell span {
+    font: var(--w-reg) 12.5px/1.4 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-form-lfcell span b {
+    display: block;
+    color: var(--text-strong);
+    font-weight: var(--w-med);
+  }
+
+  /* ---------- F3 material ---------- */
+  .s-form-mat {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-5);
+  }
+  .s-form-matcol {
+    border-radius: var(--r-xl);
+    padding: 28px 28px 24px;
+    min-width: 0;
+  }
+  .s-form-matcol.s-form-onfield {
+    box-shadow: inset 0 0 0 2px var(--seam);
+  }
+  .s-form-build {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .s-form-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+    text-align: center;
+  }
+  .s-form-step span {
+    font: var(--w-reg) 12px/1.35 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-form-step span b {
+    display: block;
+    font-weight: var(--w-med);
+    color: var(--text-strong);
+  }
+  .s-form-ly {
+    --b: 96px;
+    position: relative;
+    width: var(--b);
+    height: var(--b);
+    border-radius: 50%;
+    background: var(--c);
+    overflow: hidden;
+    isolation: isolate;
+    flex: none;
+  }
+  .s-form-ly::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+  }
+  .s-form-ly.s-form-l2::after {
+    background: radial-gradient(
+      62% 62% at 50% 38%,
+      transparent 58%,
+      color-mix(in srgb, var(--occlusion) 85%, transparent) 100%
+    );
+  }
+  .s-form-ly.s-form-l3::after {
+    background:
+      radial-gradient(40% 28% at 50% 24%, var(--lift), transparent),
+      radial-gradient(
+        62% 62% at 50% 38%,
+        transparent 58%,
+        color-mix(in srgb, var(--occlusion) 85%, transparent) 100%
+      );
+  }
+  .s-form-build .bead {
+    --b: 96px;
+  }
+  .s-form-plus {
+    align-self: center;
+    margin-top: -40px;
+    color: var(--text-disabled);
+    font-size: 14px;
+    flex: none;
+  }
+  .s-form-rim {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: var(--s-6);
+    padding-top: var(--s-5);
+  }
+  .s-form-rimc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+    padding: 14px 6px 12px;
+    border-radius: var(--r-l);
+  }
+  .s-form-rimc.on {
+    background: color-mix(in srgb, var(--raised) 70%, transparent);
+  }
+  .s-form-rimc .bead {
+    --b: 56px;
+  }
+  .s-form-rimc b {
+    font: 500 15px/1 var(--f-mono);
+    color: var(--text-strong);
+    font-variant-numeric: tabular-nums;
+  }
+  .s-form-rimc span {
+    font: var(--w-reg) 12px/1.35 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-form-rimc .s-form-k {
+    color: var(--text-caption);
+  }
+  .s-form-grades {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-5);
+    margin-top: var(--s-7);
+  }
+  .s-form-grade {
+    min-width: 0;
+  }
+  .s-form-grade .s-form-stage {
+    height: 150px;
+  }
+  .s-form-grade p {
+    font: var(--w-reg) 13px/1.45 var(--f-chrome);
+    color: var(--text-secondary);
+    margin-top: var(--s-3);
+  }
+  .s-form-grade p b {
+    color: var(--text-strong);
+  }
+  .s-form-flat {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 38% minmax(0, 1fr);
+    gap: 6px;
+    padding: 6px 6px 6px 0;
+    border-radius: var(--r-l);
+    background: var(--raised);
+  }
+  .s-form-flat > div {
+    border-radius: var(--r-m);
+  }
+  .s-form-flat .s-form-fside {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 0 0 6px;
+  }
+  .s-form-flat .s-form-fside .input {
+    height: 24px;
+    color: var(--text-caption);
+  }
+  .s-form-flat .s-form-fside i {
+    height: 22px;
+    border-radius: var(--r-m);
+    background: color-mix(in srgb, var(--overlay) 60%, transparent);
+  }
+  .s-form-flat .s-form-fside i.on {
+    background: var(--selection);
+  }
+  .s-form-flat .pane {
+    border-radius: var(--r-l);
+    padding: 10px 12px;
+  }
+  .s-form-grade .bead {
+    --b: 56px;
+  }
+  .s-form-grade .puffy {
+    width: 120px;
+    height: 84px;
+  }
+  .s-form-law {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-5);
+    margin-top: var(--s-6);
+  }
+  .s-form-law .s-form-stage {
+    height: 160px;
+  }
+  .s-form-law .s-form-lawp {
+    width: min(260px, 100%);
+    border-radius: var(--r-l);
+    padding: 14px 16px;
+    background: var(--overlay);
+  }
+  .s-form-law .s-form-lawp.do {
+    box-shadow:
+      var(--float),
+      inset 0 1px 0 var(--lip);
+  }
+  .s-form-lawp .s-form-st {
+    font: var(--w-strong) 13px/1.2 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-form-lawp .input {
+    margin-top: 10px;
+  }
+  .s-form-verdict {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: var(--s-3);
+    font: var(--w-reg) 13px/1.45 var(--f-chrome);
+    color: var(--text-secondary);
+  }
+  .s-form-verdict b {
+    font: var(--w-strong) 13px/1 var(--f-chrome);
+    color: var(--text-strong);
+  }
+  .s-form-verdict.dont b {
+    color: var(--danger);
+  }
+  .s-form-tab-i {
+    margin-top: var(--s-6);
+  }
+  .s-form-sw-i {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    vertical-align: -1px;
+    margin-right: 8px;
+  }
+
+  /* pearl grade (F3) */
+  .s-form-pgrade {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+  }
+  .s-form-pgrade .group-row {
+    margin: 0;
+    background: var(--raised);
+  }
+  .s-form-pgrade .s-form-pline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  /* ---------- F3 pearls at app size ---------- */
+  .s-form-pearls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-5);
+  }
+  .s-form-pl {
+    border-radius: var(--r-xl);
+    padding: 24px 24px 20px;
+    min-width: 0;
+    display: grid;
+    gap: 18px;
+    align-content: start;
+  }
+  .s-form-pl.s-form-onfield {
+    box-shadow: inset 0 0 0 2px var(--seam);
+  }
+  .s-form-pl .s-form-tag {
+    margin-bottom: 0;
+  }
+  .s-form-ptop {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 112px;
+    gap: 18px;
+    align-items: center;
+  }
+  .s-form-pgrid {
+    display: grid;
+    grid-template-columns: 52px repeat(5, minmax(0, 1fr));
+    align-items: center;
+    justify-items: center;
+    row-gap: 10px;
+  }
+  .s-form-pgrid > .s-form-k {
+    justify-self: start;
+  }
+  .s-form-pgrid > .s-form-k.s-form-sz {
+    justify-self: center;
+  }
+  .s-form-pbig {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+  }
+  .s-form-pbig .s-form-k {
+    max-width: 14ch;
+  }
+  .s-form-prow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    min-width: 0;
+  }
+  .s-form-prow > .s-form-k {
+    min-width: 52px;
+  }
+  .s-form-prow .s-form-gapx {
+    width: 10px;
+  }
+  .s-form-pchrome {
+    border-radius: var(--r-l);
+    background: var(--raised);
+    padding: 2px 0 8px;
+  }
+  .s-form-pchrome .group-row {
+    margin-top: 6px;
+  }
+  .s-form-pnotes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-5);
+    margin-top: var(--s-5);
+  }
+
+  /* ---------- F5 the lamp set, ink only ---------- */
+  .s-form-lampset {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: var(--s-6);
+  }
+  .s-form-lc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    padding: 26px 4px 12px;
+    border-radius: var(--r-l);
+    background: var(--s-form-plate);
+    min-width: 0;
+    text-align: center;
+  }
+  .s-form-lc.on {
+    background: var(--raised);
+    box-shadow: inset 0 0 0 2px var(--seam);
+  }
+  .s-form-lc .s-form-k {
+    font-size: 10.5px;
+  }
+  .s-form-lnote {
+    margin-top: var(--s-4);
+  }
+
+  /* ---------- F4 type ---------- */
+  .s-form-type {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: var(--s-5);
+    row-gap: 0;
+  }
+  .s-form-face {
+    display: grid;
+    grid-row: span 8;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+    min-width: 0;
+    padding: 28px 28px 8px;
+    border-radius: var(--r-xl);
+    background: var(--s-form-plate);
+    color: var(--text-body);
+  }
+  .s-form-face > div {
+    padding-bottom: 22px;
+    min-width: 0;
+  }
+  .s-form-fr {
+    --f-chrome: var(--f-rounded);
+    --w-reg: 500;
+    --w-med: 620;
+    --w-strong: 760;
+    font-family: var(--f-rounded);
+  }
+  .s-form-fg {
+    --f-chrome: var(--f-regrade);
+    --w-reg: 400;
+    --w-med: 520;
+    --w-strong: 640;
+    font-family: var(--f-regrade);
+  }
+  .s-form-fp {
+    --f-chrome: var(--f-mono);
+    --w-reg: 400;
+    --w-med: 500;
+    --w-strong: 600;
+    font-family: var(--f-mono);
+  }
+  .s-form-fname {
+    font-weight: var(--w-strong);
+    font-size: 24px;
+    line-height: 1.1;
+    color: var(--text-strong);
+  }
+  .s-form-face .s-form-k {
+    margin-top: 8px;
+  }
+  .s-form-abc {
+    font-weight: var(--w-reg);
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
+  }
+  .s-form-disp {
+    font-weight: var(--w-strong);
+    font-size: 34px;
+    line-height: 1.08;
+    letter-spacing: -0.012em;
+    color: var(--text-strong);
+  }
+  .s-form-fp .s-form-disp {
+    font-size: 27px;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .s-form-sec {
+    font-weight: var(--w-reg);
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--text-secondary);
+  }
+  .s-form-labs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    font-weight: var(--w-med);
+    font-size: 12.5px;
+    line-height: 1.3;
+    color: var(--text-label);
+  }
+  .s-form-wts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    font-size: 17px;
+    line-height: 1.3;
+    color: var(--text-strong);
+  }
+  .s-form-wts i {
+    font: 400 10px/1 var(--f-mono);
+    font-style: normal;
+    color: var(--text-caption);
+    margin-left: 5px;
+  }
+  .s-form-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .s-form-body {
+    font-weight: var(--w-reg);
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text-body);
+  }
+  .s-form-face .s-form-rowlab {
+    display: block;
+    font: 400 10px/1 var(--f-mono);
+    letter-spacing: 0.04em;
+    color: var(--text-caption);
+    margin-bottom: 10px;
+  }
+  .s-form-stays {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 12px 20px;
+    align-items: center;
+  }
+  .s-form-stays > span {
+    font: var(--w-med) 12px/1.3 var(--f-chrome);
+    color: var(--text-label);
+  }
+  .s-form-stays > div {
+    font: 400 12.5px/1.5 var(--f-mono);
+    color: var(--text-body);
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+  .s-form-stays .s-form-gap {
+    display: inline-block;
+    width: 2ch;
+  }
+  .s-form-stays .s-form-add {
+    display: inline-block;
+    padding: 2px 10px 2px 8px;
+    border-radius: var(--r-xs);
+    background: var(--diff-add-wash);
+    color: var(--text-strong);
+  }
+  .s-form-stays .s-form-add em {
+    font-style: normal;
+    color: var(--diff-add-mark);
+  }
+  .s-form-stays .s-form-add i {
+    font-style: normal;
+    color: var(--text-caption);
+  }
+  .s-form-stays .use-line {
+    margin: 0 8px;
+  }
+  .s-form-c {
+    color: var(--text-caption);
+  }
+  .s-form-tmid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--s-5);
+    margin-top: var(--s-5);
+    align-items: start;
+  }
+  .s-form-tmid .bl-table td:first-child {
+    width: 40%;
+  }
+  .s-form-stayp {
+    padding: 22px 26px 24px;
+    border-radius: var(--r-xl);
+    background: var(--s-form-plate);
+    min-width: 0;
+  }
+  .s-form-tnotes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--s-6);
+    margin-top: var(--s-6);
+    align-items: start;
+  }
+  .s-form-tnotes p + p {
+    margin-top: 12px;
+  }
+  .s-form-sfr {
+    margin-top: var(--s-4);
+    padding: 16px 18px;
+    border-radius: var(--r-l);
+    background: var(--s-form-plate);
+  }
+  .s-form-sfr .s-form-ui {
+    font-family: ui-rounded, system-ui;
+    font-weight: 600;
+    font-size: 22px;
+    line-height: 1.2;
+    color: var(--text-strong);
+  }
+  .s-form-sfr .s-form-k {
+    margin-top: 8px;
+  }
+
+  /* ---------- F5 glyphs and the mark ---------- */
+  .s-form-gl {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .s-form-gc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 4px 12px;
+    border-radius: var(--r-l);
+    background: var(--s-form-plate);
+    color: var(--ink-2);
+    min-width: 0;
+  }
+  .s-form-gc .s-form-g32 {
+    font-size: 32px;
+    display: block;
+  }
+  .s-form-gc .s-form-g16 {
+    font-size: 16px;
+    display: block;
+    color: var(--text-secondary);
+  }
+  .s-form-gc .s-form-k {
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .s-form-cmp {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-5);
+    margin-top: var(--s-6);
+  }
+  .s-form-cmpc {
+    border-radius: var(--r-xl);
+    background: var(--s-form-plate);
+    padding: 18px 16px 14px;
+    min-width: 0;
+  }
+  .s-form-cmpc .s-form-two {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 8px;
+  }
+  .s-form-cmpc .s-form-two > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .s-form-cmpc svg {
+    width: 72px;
+    height: 72px;
+    color: var(--ink-1);
+    overflow: visible;
+  }
+  .s-form-cmpc .s-form-k {
+    text-align: center;
+  }
+  .s-form-cmpc .s-form-k.s-form-gn {
+    margin-top: 12px;
+    color: var(--text-label);
+  }
+  .s-form-marks {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: var(--s-5);
+    margin-top: var(--s-6);
+  }
+  .s-form-markc {
+    border-radius: var(--r-xl);
+    background: var(--s-form-plate);
+    padding: 20px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .s-form-markc .s-form-mstage {
+    flex: 1;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    color: var(--ink-1);
+  }
+  .s-form-lock {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--ink-1);
+  }
+  .s-form-lock span {
+    font: 600 12px/1 var(--f-mono);
+    letter-spacing: 0.26em;
+  }
+  .s-form-lock.s-form-big {
+    gap: 12px;
+  }
+  .s-form-lock.s-form-big span {
+    font-size: 15px;
+  }
+  .s-form-lock.s-form-dlock {
+    color: var(--text-secondary);
+  }
+  .s-form-bstair {
+    position: relative;
+  }
+  .s-form-bstair .bead {
+    position: absolute;
+  }
+
+  /* ---------- F6 space ---------- */
+  .s-form-space {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-5);
+  }
+  .s-form-spc p {
+    margin-top: var(--s-3);
+    font: var(--w-reg) 14px/1.55 var(--f-chrome);
+    color: var(--text-secondary);
+    max-width: 52ch;
+  }
+  .s-form-spc p b {
+    color: var(--text-strong);
+  }
+  .s-form-doc {
+    aspect-ratio: 16 / 9;
+    border-radius: var(--r-xl);
+    background: var(--s-form-plate);
+    display: grid;
+    place-items: center;
+  }
+  .s-form-doc .puffy {
+    width: 40%;
+    height: 44%;
+  }
+  .s-form-app {
+    aspect-ratio: 16 / 9;
+    border-radius: var(--r-win);
+    background: var(--raised);
+    display: grid;
+    grid-template-rows: 8% minmax(0, 1fr);
+    overflow: hidden;
+  }
+  .s-form-app .s-form-ab {
+    display: grid;
+    grid-template-columns: 272fr 800fr 440fr;
+    gap: 1%;
+    padding: 0 1% 1% 0;
+    min-height: 0;
+  }
+  .s-form-app .s-form-ab > div {
+    border-radius: var(--r-m);
+    min-height: 0;
+  }
+  .s-form-app .s-form-sbar {
+    display: flex;
+    flex-direction: column;
+    gap: 4%;
+    padding: 6% 8%;
+  }
+  .s-form-app .s-form-sbar i {
+    height: 7%;
+    border-radius: var(--r-pill);
+    background: var(--seam);
+    opacity: 0.7;
+  }
+  .s-form-app .s-form-sbar i:nth-child(3n) {
+    width: 70%;
+  }
+  .s-form-app .s-form-tp {
+    background: var(--deep);
+  }
+
+  @media (max-width: 1180px) {
+    .s-form-rad {
+      grid-template-columns: 1fr;
+    }
+    .s-form-fan {
+      position: static;
+      display: grid;
+      grid-template-columns: 200px minmax(0, 1fr);
+      gap: var(--s-5);
+      align-items: end;
+    }
+    .s-form-radgrid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .s-form-gl {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    .s-form-cmp {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .s-form-marks {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .s-form-marks > :last-child {
+      grid-column: 1 / -1;
+    }
+    .s-form-grades {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .s-form-lampset {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 1000px) {
+    .s-form-type {
+      grid-template-columns: 1fr;
+    }
+    .s-form-pearls,
+    .s-form-pnotes {
+      grid-template-columns: 1fr;
+    }
+    .s-form-face {
+      margin-bottom: var(--s-5);
+    }
+    .s-form-pair,
+    .s-form-steps,
+    .s-form-mat,
+    .s-form-lf,
+    .s-form-tnotes,
+    .s-form-tmid,
+    .s-form-law,
+    .s-form-space {
+      grid-template-columns: 1fr;
+    }
+    .s-form-grades {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 640px) {
+    .s-form-fan {
+      grid-template-columns: 1fr;
+    }
+    .s-form-fan svg {
+      max-width: 200px;
+    }
+    .s-form-radgrid {
+      grid-template-columns: 1fr;
+    }
+    .s-form-tiles {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .s-form-lfplate {
+      padding: 20px 12px;
+      gap: 8px;
+    }
+    .s-form-disc,
+    .s-form-lfcell .bead {
+      --b: 64px;
+      width: 64px;
+      height: 64px;
+    }
+    .s-form-ly,
+    .s-form-build .bead {
+      --b: 52px;
+    }
+    .s-form-plus {
+      margin-top: -30px;
+      font-size: 11px;
+    }
+    .s-form-matcol {
+      padding: 20px 14px 16px;
+    }
+    .s-form-step span {
+      font-size: 11px;
+    }
+    .s-form-rimc .bead {
+      --b: 44px;
+    }
+    .s-form-rimc b {
+      font-size: 12.5px;
+    }
+    .s-form-face {
+      padding: 22px 18px 4px;
+    }
+    .s-form-disp {
+      font-size: 29px;
+    }
+    .s-form-fp .s-form-disp {
+      font-size: 22px;
+    }
+    .s-form-stays {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+    .s-form-stays > span {
+      margin-top: 10px;
+    }
+    .s-form-gl {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+    .s-form-cmp {
+      gap: 8px;
+    }
+    .s-form-cmpc {
+      padding: 14px 8px 12px;
+    }
+    .s-form-cmpc svg {
+      width: 52px;
+      height: 52px;
+    }
+    .s-form-marks {
+      grid-template-columns: 1fr;
+    }
+    .s-form-pl {
+      padding: 18px 14px 16px;
+    }
+    .s-form-ptop {
+      grid-template-columns: 1fr;
+    }
+    .s-form-pgrid {
+      grid-template-columns: 44px repeat(5, minmax(0, 1fr));
+    }
+    .s-form-lampset {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>
+<section id="form" class="bl-sec s-form-root">
+  <header class="bl-sh">
+    <div class="no">04 <span class="bl-steps"></span></div>
+    <h2>Form and type</h2>
+    <p class="meta">Soft forms, no hairlines, Neue Regrade for the chrome.</p>
+  </header>
+  <p class="bl-lead">
+    Edges come from temperature and tone, not strokes. A raised thing separates from its ground by a
+    small step in lightness and a warm lip; a sunk thing by a cool navy shadow on its top edge.
+    Nothing is outlined, and nothing casts a grey shadow.
+  </p>
+
+  <h3 class="bl-sub"><span class="id">F1</span>The softness scale</h3>
+  <div class="bl-prose">
+    <p>
+      Eight radii, and each belongs to one kind of object. The smaller the thing, the tighter its
+      corner, so a keycap still looks exact beside a pane and a row still lines up with the
+      terminal. Anything you press or switch is a pill. The 28 px corner exists only for showcase
+      objects on this sheet and never reaches the app.
+    </p>
+  </div>
+  <figure class="fig" data-fig="radius">
+    <div class="s-form-rad">
+      <div class="s-form-fan" data-slot="fan"></div>
+      <div class="s-form-radgrid" data-slot="radgrid"></div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">F1</span><b>Eight radii on the objects that use them.</b
+      ><span
+        >AppKit draws every one with continuous corners (<code>cornerCurve = .continuous</code>), so
+        the curve eases into the straight edge instead of meeting it at a joint. The browser draws
+        circular arcs, so this page is a shade harder than the app will be.</span
+      >
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">F2</span>Edges without lines</h3>
+  <div class="bl-prose">
+    <p>
+      Direction D parted regions with 1 px rules and square corners. Bloom parts them with tone: the
+      chrome is one small step lighter than the field, wells one step darker, and regions sit apart
+      on 6 pt gutters. In Night the field, the chrome and the wells are one neutral grey: the chrome
+      steps up from <code>#2F2E2E</code>, the wells step down to <code>#1B1A1A</code>, and nothing
+      carries a blue cast, so the field stays out of the way of the state colours. Where two things
+      share a tone and still need parting, a 2 pt rounded seam does it. That seam is the only line
+      in the window.
+    </p>
+  </div>
+  <figure class="fig" data-fig="edges">
+    <div class="s-form-pair" data-slot="frags"></div>
+    <div class="s-form-steps" data-slot="steps"></div>
+    <div class="s-form-lf">
+      <div class="s-form-lfplate themed" data-theme="field" data-slot="lf"></div>
+      <div class="s-form-note">
+        <p>
+          <b>Lost and found edges.</b> On Bloom Field, the reel's plateau cream sits at almost the
+          field's own lightness (L 0.890 against 0.899), so its edge all but dissolves: an edge
+          between equal lightnesses reads by temperature, not value. Give the same cream the navy
+          occlusion and the edge is found again; a cobalt object never loses it.
+        </p>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">F2</span><b>The same fragment twice.</b
+      ><span
+        >Left as D: warm paper <code>#100f0d</code> / <code>#1a1815</code> / <code>#211e1a</code>,
+        ink <code>#ece7da</code>, 1 px <code>#2c2823</code> rules, zero radius. Right as Bloom, in
+        the theme you have on. Under them, every surface against its field: Night 1.14–1.63:1 around
+        the grey <code>#2F2E2E</code>, with the deep well <code>#1B1A1A</code> 1.28:1 below it;
+        Field 1.07–1.32:1.</span
+      >
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">F3</span>The inflated material</h3>
+  <div class="bl-prose">
+    <p>
+      Bloom shades its objects toward navy, never grey. On the light field that gives a dark
+      silhouette for free. On Night's grey field, <code>#2F2E2E</code>, the navy shading lands close
+      to the field's own value and the edge goes soft. A cream rim at the silhouette brings it back.
+      v1's 0.45 now reaches only 2.31–2.69:1 against the field. At 0.60 it reaches 3.44–3.80:1 on
+      the field and 3.01–3.33:1 on raised chrome, so 0.60 is not taste: it is the smallest rim that
+      gives every silhouette the 3:1 graphics need, field and chrome alike. Inside a well it reaches
+      4.41–4.87:1. Field keeps 0.30, which softens its edge.
+    </p>
+  </div>
+  <figure class="fig" data-fig="material">
+    <div class="s-form-mat" data-slot="mat"></div>
+    <div class="s-form-grades" data-slot="grades"></div>
+    <div class="s-form-law" data-slot="law"></div>
+    <div class="bl-scroll s-form-tab-i" data-slot="rimtable"></div>
+    <figcaption class="cap">
+      <span class="id">F3</span><b>One bead built up in four layers, in both themes.</b
+      ><span
+        >Body, then navy occlusion toward the lower edge, then a soft lift on top, then the cream
+        rim. The bead is the hero ramp's cobalt. Night's ranges cover eight bead bodies, from cobalt
+        to arm; Field's cover the hero's cobalt, raspberry and grass. Four grades: flat for
+        surfaces, soft for controls, pearls for small things in chrome, inflated for showcase
+        objects only.</span
+      >
+    </figcaption>
+  </figure>
+
+  <div class="bl-prose">
+    <p>
+      The pearl is the same material made for chrome, at 8 to 20 px: one still element, no
+      pseudo-element, so a sidebar of them costs nothing. It carries a group's identity beside its
+      name, a session's state in a tally, and a count. Under 10 px it drops the lift and keeps the
+      rim and the occlusion, so it stays crisp. A pearl never carries text, except the neutral count
+      pearl.
+    </p>
+  </div>
+  <figure class="fig" data-fig="pearls">
+    <div class="s-form-pearls" data-slot="pearls"></div>
+    <div class="s-form-pnotes">
+      <p class="s-form-note">
+        <b>Identity.</b> Six tints at one lightness and chroma, so no group outranks another:
+        6.05–6.58:1 against Night's field, 2.57–2.83:1 against Field's. They are decorative and
+        redundant with the name. The closest pair, rose and lilac, sits 0.068 apart in Night and
+        0.076 in Field.
+      </p>
+      <p class="s-form-note">
+        <b>State.</b> A state pearl takes its state's single colour. A tally gives every session its
+        own pearl, so arm marks only a session that needs you, and a needs pearl stays 12 px or
+        smaller.
+      </p>
+      <p class="s-form-note">
+        <b>Counts.</b> A neutral pill with Plex digits, 16 px tall or more: ink-1 on the pearl body
+        measures 8.67:1 in Night and 10.91:1 in Field. Below 16 px a count is plain Plex text.
+      </p>
+    </div>
+    <figcaption class="cap">
+      <span class="id">F3</span><b>Pearls at app size.</b
+      ><span
+        >Each tint at 8, 10, 12, 16 and 20 px, one magnified four times, the ten state pearls at 12
+        px, a tally, two counts, and two group rows as the sidebar uses them. Night's rim is 0.60,
+        Field's 0.30.</span
+      >
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">F4</span>Two chrome faces and Plex</h3>
+  <div class="bl-prose">
+    <p>
+      Chrome is set in Neue Regrade, your pick, and content stays in Plex. Rounded (Nunito, standing
+      in for SF Pro Rounded) stays in the first column only as the comparison it lost. Plex keeps
+      everything you could paste into a shell. The three columns below stay fixed whatever the nav
+      says; the nav's Regrade | Rounded toggle still swaps every chrome string on the page if you
+      want to look again.
+    </p>
+  </div>
+  <figure class="fig" data-fig="type">
+    <div class="s-form-type" data-slot="faces"></div>
+    <div class="s-form-tmid">
+      <div class="s-form-stayp">
+        <div class="s-form-h4">What stays Plex</div>
+        <div class="s-form-stays" data-slot="stays"></div>
+      </div>
+      <div>
+        <table class="bl-table">
+          <thead>
+            <tr>
+              <th>Chrome face</th>
+              <th>Plex</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Headings, prose, labels, buttons, menus, sheets, state words</td>
+              <td>
+                Terminal, diffs, code, paths, session and branch names, numbers, keys, chips, the
+                wordmark
+              </td>
+            </tr>
+            <tr>
+              <td>Sessions · Archive · Trace · Go to tab</td>
+              <td>
+                <code>ORBIT-WEBSITE</code> · <code>~/Projects/orbit-website</code> ·
+                <code>+38 −12</code> · <code>⌘K</code>
+              </td>
+            </tr>
+            <tr>
+              <td>needs you · working · done</td>
+              <td><code>LOGIN</code> · <code>EXIT 1</code> · <code>5H 71%</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="s-form-tnotes">
+      <div class="s-form-note">
+        <p>
+          <b>Weight.</b> Nunito runs light, so the chrome sits about 100 heavier for the same colour
+          on the page: 500, 620 and 760 for regular, medium and strong. Regrade's are 400, 520 and
+          640.
+        </p>
+
+        <div class="s-form-sfr">
+          <div class="s-form-ui">Nothing needs you. Lock for 2h?</div>
+          <div class="s-form-k" data-slot="uir">
+            SF Pro Rounded, if your browser exposes it (Safari does)
+          </div>
+        </div>
+      </div>
+      <div class="s-form-note">
+        <p>
+          <b>Glyphs.</b> Neither chrome face has ⌘ ⌥ ⇧ or →; they fall back to the system font.
+          Regrade also lacks …, which falls back to Rounded, and has no tabular figures, one more
+          reason every number is Plex. ⌃ is drawn as a path wherever it matters, as in the
+          terminal's <span class="kbd">⌃ Tab</span> hint.
+        </p>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">F4</span><b>The same strings in all three faces.</b
+      ><span
+        >At display and app sizes. Each column sets its face and weights directly, so the toggle
+        does not move them.</span
+      >
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">F5</span>Glyphs and the mark</h3>
+  <div class="bl-prose">
+    <p>
+      D drew its glyphs on a 16 grid with square caps and mitred joins, ORBIT's orthogonal law.
+      Bloom keeps the grid and the paths and rounds every cap and join, so the set matches the soft
+      forms without changing what any glyph says. Five glyphs are new, for a centre without a
+      terminal: term, send, stop, clip and diff. A sixth, spark, is Claude's own mark: it stands in
+      for the word claude on every session row. The stair mark gets the same treatment.
+    </p>
+    <p>
+      The lamps are glyphs too, and in Bloom 2 they are ink only: shape and motion say the state,
+      and the bead bar just before them carries the colour. Done is a tick and it holds still;
+      failed is a cross that stumbles. The half-moon is gone: v1 set a dot in the ring's corner, and
+      at row size that read as a crescent.
+    </p>
+  </div>
+  <figure class="fig" data-fig="glyphs">
+    <div class="s-form-gl" data-slot="gl"></div>
+    <div class="s-form-lampset" data-slot="lampset"></div>
+    <div class="s-form-cmp" data-slot="cmp"></div>
+    <div class="s-form-marks" data-slot="marks"></div>
+    <figcaption class="cap">
+      <span class="id">F5</span><b>The 16-grid set at 32 and 16 px.</b
+      ><span
+        >The ten lamps in ink, still, at 24 px and at the row's 15 px; done's core is 44 % of the
+        lamp. Four glyphs drawn large, as D drew them and as Bloom draws them. The stair at nav size
+        (t r a 3, f 2, stroke 2), at lockup size (t r a 6, f 3, stroke 4), and as 21 still beads
+        carrying one frame of the hero ramp.</span
+      >
+    </figcaption>
+  </figure>
+
+  <h3 class="bl-sub"><span class="id">F6</span>Space</h3>
+  <figure class="fig" data-fig="space">
+    <div class="s-form-space">
+      <div class="s-form-spc">
+        <div class="s-form-doc"><div class="puffy" data-hue="cream"></div></div>
+        <p>
+          <b>The sheet breathes.</b> About 70 % of the field stays empty around a hero object, close
+          to the reel's 75 %.
+        </p>
+      </div>
+      <div class="s-form-spc">
+        <div class="s-form-app" data-slot="app"></div>
+        <p>
+          <b>The app stays dense.</b> Rows 42, sidebar 272, panel 440: the centre needs the width,
+          terminal or conversation, so softness comes from radius and tone, never from extra
+          padding.
+        </p>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <span class="id">F6</span><b>Two densities.</b
+      ><span>Generous on the sheet, unchanged in the window.</span>
+    </figcaption>
+  </figure>
+</section>
+<script data-part="form">
+  (() => {
+    /* Literal colours live here, as data, and only where the brief allows them. */
+    const DATA = {
+      /* inventory.md line 10-11: D's palette (F2's comparison only) */
+      d: {
+        paper: "#100f0d",
+        paper2: "#1a1815",
+        paper3: "#211e1a",
+        line: "#2c2823",
+        line2: "#3a342d",
+        ink: "#ece7da",
+        ink2: "#cfc9bc",
+        grey: "#8f897c",
+        dim: "#6b665d",
+      },
+      /* the hero ramp's cobalt plateau per theme (tokens --ramp stops): the bead F3 builds up */
+      cobalt: { night: "#4765e8", field: "#3d5ad9" },
+      /* rimmed edge vs the field. Night: colour2/out2.md §I, over eight bodies on #2F2E2E (BRIEF-2 §11.6).
+     Field: colour.md Appendix I over the hero's three beads (BRIEF.md §9, still valid) */
+      rims: {
+        night: {
+          mixes: ["0.45", "0.55", "0.60"],
+          used: "0.60",
+          v: ["2.31–2.69", "3.03–3.39", "3.44–3.80"],
+          words: ["under 3:1", "under 3:1 on raised", "clears 3:1"],
+        },
+        field: {
+          mixes: ["0", "0.30", "0.45"],
+          used: "0.30",
+          v: ["8.35–9.22", "4.34–4.69", "3.19–3.38"],
+          words: ["hard", "softened", "softer still"],
+        },
+      },
+      /* colour2/out2.md §I: Night rim mix against the field, raised chrome and a well (round 3's neutral #1B1A1A) */
+      rimTable: [
+        ["0.45", "2.31–2.69", "2.02–2.36", "2.96–3.45"],
+        ["0.55", "3.03–3.39", "2.66–2.97", "3.89–4.35"],
+        ["0.60", "3.44–3.80", "3.01–3.33", "4.41–4.87"],
+      ],
+      /* bloom.md §1 (BRIEF §6.2 C1): the plateau cream, at the field's lightness */
+      plateauCream: "#ecd6c6",
+      /* the "don't" in F3's shadow law: a neutral grey drop shadow (never shipped) */
+      greyShadow: "0 20px 36px -8px rgb(72 72 72 / .62), 0 2px 8px rgb(72 72 72 / .45)",
+      /* surface steps against the field: Night colour2/out2.md §A (on #2F2E2E; round 3's neutral deep and sunken), Field BRIEF §9 */
+      steps: {
+        night: [
+          ["deep", "1.28"],
+          ["sunken", "1.16"],
+          ["field", "1.00"],
+          ["raised", "1.14"],
+          ["selection", "1.31"],
+          ["overlay", "1.33"],
+          ["seam", "1.63"],
+        ],
+        field: [
+          ["sunken", "1.07"],
+          ["field", "1.00"],
+          ["raised", "1.11"],
+          ["selection", "1.16"],
+          ["overlay", "1.19"],
+          ["seam", "1.32"],
+        ],
+      },
+    };
+
+    const gi = Bloom.gi;
+    const $ = (el, s) => el.querySelector(`[data-slot="${s}"]`);
+
+    /* ---------- F1 ---------- */
+    function fan() {
+      const S = 200,
+        k = 6,
+        R = [4, 6, 10, 14, 16, 20, 28];
+      const shapes = R.map((r) => r * k);
+      const n = shapes.length;
+      const path = (r) => `M0,${S} V${r} A${r},${r} 0 0 1 ${r},0 H${S} V${S} Z`;
+      const fill = (i) =>
+        `color-mix(in srgb, var(--seam) ${Math.round(100 - (i * 100) / (n - 1))}%, var(--sunken))`;
+      const labels = R.map(String);
+      return `<svg viewBox="-2 -34 ${S + 4} ${S + 36}" role="img" aria-label="Every corner radius drawn at six times, nested">
+    ${shapes.map((r, i) => `<path d="${path(r)}" style="fill:${fill(i)}"/>`).join("")}
+    ${shapes.map((r, i) => `<text x="${r}" y="${i % 2 ? -20 : -8}" text-anchor="middle" style="font:400 10px var(--f-mono);fill:var(--text-caption)">${labels[i]}</text>`).join("")}
+  </svg><p class="s-form-fancap">Every corner at 6×, nested back to front from 4 to 28. Each band is a tone step; nothing here is drawn with a line.</p>`;
+    }
+    function radGrid() {
+      const row = Bloom.row({
+        st: "working",
+        name: "ORBIT-WEBSITE",
+        sub: "working",
+        age: "now",
+        sel: true,
+        ind: 12,
+      });
+      const cells = [
+        [
+          4,
+          "--r-xs",
+          "Code spans, diff word marks",
+          `<span class="s-form-codeln"><i>13</i><em>+</em>size: <mark>formatSize(11_743_232)</mark>,</span><code>release.size</code>`,
+        ],
+        [
+          6,
+          "--r-s",
+          "Keycaps, small swatches",
+          `<span class="kbd">⌘K</span><span class="kbd">⌘B</span><span class="kbd theirs">⇧TAB</span><span class="kbd theirs">ESC</span>
+       <span style="flex-basis:100%;height:0"></span>${["rose", "butter", "sage", "mint", "peri", "lilac"].map((c) => `<span class="s-form-sw" style="background:var(--id-${c})"></span>`).join("")}`,
+        ],
+        [
+          10,
+          "--r-m",
+          "Rows, inputs, square buttons",
+          `${row}<span class="input">${gi("find")}<span class="ph">name, folder, prompt</span></span>`,
+        ],
+        [
+          14,
+          "--r-l",
+          "Panes, viewers, panels, popovers, the menu-bar panel",
+          `<div class="panel"><div class="panel-h">Trace</div><div class="s-form-tline"><span class="s-form-kind">WRITE</span>lib/release.ts</div><div class="s-form-tline"><span class="s-form-kind" style="color:var(--trace-read)">READ</span>lib/format.ts</div></div>`,
+        ],
+        [
+          16,
+          "--r-win",
+          "The window frame",
+          `<div class="s-form-miniwin"><div class="s-form-band"><span class="lights"><i></i><i></i><i></i></span><b>ORBIT-WEBSITE</b></div><div class="s-form-mb"><div></div><div class="pane"><div class="s-form-tline">&gt; put the release size in one place</div></div></div></div>`,
+        ],
+        [
+          20,
+          "--r-xl",
+          "Sheets, and this sheet’s cards",
+          `<div class="s-form-sheet"><div class="s-form-st">New session</div><div class="s-form-sbtn"><button class="pill ghost sm">Cancel</button><button class="pill sm">Create <span class="kbd">↩</span></button></div></div>`,
+        ],
+        [28, "--r-puffy", "Showcase objects on this sheet only", `<div class="puffy"></div>`],
+        [
+          "pill",
+          "--r-pill",
+          "Buttons, segmented controls, toggles, chips, chains",
+          `<button class="pill">Go to tab</button><span class="chip">LOGIN</span><span style="flex-basis:100%;height:0"></span><div class="seg sm" role="group" aria-label="Mode"><button aria-pressed="true">Turns</button><button aria-pressed="false">Diff</button></div><button class="toggle" role="switch" aria-checked="true" aria-label="Sound"><i></i></button>`,
+        ],
+      ];
+      return cells
+        .map(
+          ([v, tok, use, obj]) => `<div class="s-form-rc"><div class="s-form-stage">${obj}</div>
+    <div class="s-form-rv"><b>${v}</b><span class="s-form-k">${v === "pill" ? "" : "px · "}${tok}</span></div><div class="s-form-ru">${use}</div></div>`,
+        )
+        .join("");
+    }
+
+    /* ---------- F2 ---------- */
+    const TERM = [
+      ["&gt; the hero spacing is off on mobile, put it on the 8 pt grid", "b"],
+      ["⏺ Read(app/page.tsx)", ""],
+      ["  ⎿ Read 212 lines", "dim"],
+      ["⏺ Read(app/globals.css)", ""],
+      ["  ⎿ Read 148 lines", "dim"],
+      ["⏺ Update(app/globals.css)", ""],
+      ["  ⎿ Updated globals.css with 6 additions and 6 removals", "dim"],
+      ["⏺ Update(app/page.tsx)", ""],
+      ["  ⎿ Updated page.tsx with 2 additions and 2 removals", "dim"],
+    ];
+    const termLines = () =>
+      TERM.map(([s, k]) =>
+        k === "b"
+          ? `<div class="s-form-fl"><b>${s}</b></div>`
+          : `<div class="s-form-fl${k ? " s-form-dim" : ""}">${s}</div>`,
+      ).join("");
+    const traceLines = (
+      rd,
+      wr,
+    ) => `<div class="s-form-fl"><b>T14</b> put the release size</div><div class="s-form-fl s-form-dim">running · 23:41</div><div style="height:8px"></div>
+  <div class="s-form-fl"><span class="s-form-kd" style="${rd}">READ </span> lib/format.ts</div><div class="s-form-fl"><span class="s-form-kd" style="${wr}">WRITE</span> lib/release.ts</div>`;
+    const mk = (n, pos) => `<span class="s-form-mk" style="${pos}">${n}</span>`;
+    function fragD() {
+      const row = (name, sub, right, sel) =>
+        `<div class="s-form-row s-form-rel${sel ? " sel" : ""}">${sel ? mk(2, "left:8px;bottom:-9px") : ""}<i class="s-form-sq"></i><span class="s-form-nm">${name}</span><span class="s-form-rt">${right}</span><span class="s-form-l2">${sub}</span></div>`;
+      return `<div class="s-form-frag s-form-fd" data-d>
+    <div class="s-form-col s-form-sc">
+      <div class="s-form-head s-form-rel">SESSIONS<span class="sp"></span><span class="s-form-ib">${gi("plus")}</span><span class="s-form-ib">${gi("side")}</span>${mk(1, "left:108px;bottom:-9px")}</div>
+      <div class="s-form-grp s-form-rel">${gi("chev-d")}PROJECTS<span>3</span>${mk(4, "right:34px;top:5px")}</div>
+      ${row("ORBIT-WEBSITE", "working · claude", `<span class="s-form-env">${gi("mail")}1</span>now`, true)}
+      <div class="s-form-wt">${gi("wt")}site-v2<span>+38 −12</span></div>
+      ${row("CONTROL", "working · claude", "1m", false)}
+    </div>
+    <div class="s-form-col s-form-tc">
+      <div class="s-form-tabs"><span class="s-form-tab on"><i>1</i>claude</span><span class="s-form-tab"><i>2</i>bun dev</span><span class="s-form-tab"><i>3</i>zsh</span></div>
+      <div class="s-form-pane">${termLines()}</div>${mk(3, "right:10px;top:25px")}
+    </div>
+    <div class="s-form-col s-form-pc">
+      <div class="s-form-tabs s-form-ptabs" style="box-shadow:none"><span class="s-form-ptab on" style="display:inline-flex;align-items:center">TRACE</span><span class="s-form-ptab open" style="display:inline-flex;align-items:center">OUTPUTS</span><span class="s-form-ptab" style="display:inline-flex;align-items:center">FOLDER</span></div>
+      <div class="s-form-pane">${traceLines("", "")}</div>
+    </div>
+  </div>`;
+    }
+    function fragB() {
+      const row = (st, name, sub, right, age, sel) =>
+        Bloom.row({
+          st,
+          name,
+          sub,
+          right,
+          age,
+          sel,
+          ind: 24,
+          extra: sel ? mk(2, "left:-3px;bottom:-9px") : "",
+        });
+      return `<div class="s-form-frag s-form-fb">
+    <div class="s-form-col s-form-sc">
+      <div class="s-form-head">Sessions<span class="sp"></span><span class="s-form-ib">${gi("plus")}</span><span class="s-form-ib">${gi("side")}</span></div>
+      <div class="seam">${mk(4, "right:24px;top:-8px")}</div>
+      <div class="group-row">${gi("chev-d")}${Bloom.pearl({ tint: "peri", p: 10 })}PROJECTS<span class="n">3</span></div>
+      ${row("working", "ORBIT-WEBSITE", "working", `<span class="s-form-env">${gi("mail")}1</span>`, "now", true)}
+      <div class="wt-row" aria-selected="true" style="--indent:24px">${gi("wt")}site-v2<span class="st">+38 −12</span></div>
+      ${row("working", "CONTROL", "working", "", "1m", false)}
+    </div>
+    <div class="s-form-col s-form-tc">
+      <div class="s-form-tabs"><span class="s-form-tab on"><i>1</i>claude</span><span class="s-form-tab"><i>2</i>bun dev</span><span class="s-form-tab"><i>3</i>zsh</span></div>
+      <div class="s-form-pane">${termLines()}</div>${mk(1, "left:-12px;bottom:34px")}
+    </div>
+    <div class="s-form-col s-form-pc">${mk(3, "left:-12px;bottom:84px")}
+      <div class="s-form-tabs"><span class="s-form-tab s-form-ptab on">Trace</span><span class="s-form-tab s-form-ptab open">Outputs</span><span class="s-form-tab s-form-ptab">Folder</span></div>
+      <div class="s-form-pane">${traceLines("color:var(--trace-read)", "color:var(--trace-write)")}</div>
+    </div>
+  </div>`;
+    }
+    function frags() {
+      const legend = (items) =>
+        `<ol class="s-form-legend">${items.map((t, i) => `<li><span class="s-form-mk">${i + 1}</span><span>${t}</span></li>`).join("")}</ol>`;
+      return `<div><div class="s-form-tag">As D <span class="s-form-k">direction D, warm paper</span></div>
+      <div class="bl-scale" data-w="660" data-h="270">${fragD()}</div>
+      ${legend(["A 1 px rule under every head and between tabs.", "Zero radius: the selected row is a hard-edged slab that butts into the terminal.", "Tabs drawn as boxes: the terminal’s with rules, the panel’s as keycap cells.", "Labels set in upper-case Plex, the same face as the content."])}</div>
+    <div><div class="s-form-tag">As Bloom <span class="s-form-k">the theme you have on</span></div>
+      <div class="bl-scale" data-w="660" data-h="270">${fragB()}</div>
+      ${legend(["The sidebar is chrome, one tone step above the field (Night 1.14:1, Field 1.11:1). The terminal is a well: neutral grey <code>#1B1A1A</code> in Night, 1.28:1 below the field; the field itself in Field.", "Rows and the selected worktree are rounded rects (radius 10); selection rises in both themes. Each row carries its bead bar at the right before the lamp, and the group its pearl.", "Panes sit on 6 pt gutters with radius 14. The active tab is the pane’s own tone and joins it.", "The one 2 pt seam: the head and the list share a tone, so nothing else could part them."])}</div>`;
+    }
+    function steps() {
+      const set = (
+        th,
+      ) => `<div class="s-form-stepset themed" data-theme="${th}"><div class="s-form-tag">${th === "night" ? "Night" : "Field"} <span class="s-form-k">against the field · ${th === "night" ? "1.14–1.63:1 · deep 1.28:1 below" : "1.07–1.32:1"}</span></div>
+    <div class="s-form-tiles" style="--s-form-n:${DATA.steps[th].length}">${DATA.steps[th].map(([n, v]) => `<div class="s-form-tile${n === "field" ? " s-form-isfield" : ""}${n === "deep" ? " s-form-isdeep" : ""}" style="background:var(--${n})"><b>${v}</b><span>${n}</span></div>`).join("")}</div></div>`;
+      return set("night") + set("field");
+    }
+    function lostFound() {
+      const c = DATA.plateauCream;
+      return `<div class="s-form-lfcell"><span class="s-form-disc" style="--c:${c}"></span><span><b>Lost</b>plateau cream, flat</span></div>
+    <div class="s-form-lfcell"><span class="bead" style="--c:${c}"></span><span><b>Found</b>the same cream, occluded</span></div>
+    <div class="s-form-lfcell"><span class="s-form-disc" style="--c:var(--blue-base)"></span><span><b>Found</b>cobalt, by value</span></div>`;
+    }
+
+    /* ---------- F3 ---------- */
+    function material() {
+      const col = (th) => {
+        const { mixes, used, v, words } = DATA.rims[th],
+          cob = DATA.cobalt[th];
+        return `<div class="s-form-matcol themed${th === "field" ? "" : ""}" data-theme="${th}">
+      <div class="s-form-tag">${th === "night" ? "Night" : "Field"} <span class="s-form-k">rim ${used}</span></div>
+      <div class="s-form-build">
+        <div class="s-form-step"><span class="s-form-ly" style="--c:${cob}"></span><span><b>Body</b>cobalt</span></div>
+        <span class="s-form-plus">${gi("plus")}</span>
+        <div class="s-form-step"><span class="s-form-ly s-form-l2" style="--c:${cob}"></span><span><b>Occlusion</b>navy, low edge</span></div>
+        <span class="s-form-plus">${gi("plus")}</span>
+        <div class="s-form-step"><span class="s-form-ly s-form-l3" style="--c:${cob}"></span><span><b>Lift</b>soft, on top</span></div>
+        <span class="s-form-plus">${gi("plus")}</span>
+        <div class="s-form-step"><span class="bead" style="--c:${cob}"></span><span><b>Rim</b>cream, ${used}</span></div>
+      </div>
+      <div class="s-form-rim">${mixes
+        .map(
+          (
+            r,
+            i,
+          ) => `<div class="s-form-rimc${r === used ? " on" : ""}"><span class="bead" style="--c:${cob};--rim-mix:${r}"></span>
+        <span class="s-form-k">rim ${r}${r === used ? " · in use" : ""}</span><b>${v[i]}:1</b><span>${words[i]}</span></div>`,
+        )
+        .join("")}</div>
+    </div>`;
+      };
+      return col("night") + col("field");
+    }
+    function grades() {
+      return `<div class="s-form-grade"><div class="s-form-stage"><div class="s-form-flat"><div class="s-form-fside"><span class="input">${gi("find")}</span><i></i><i class="on"></i><i></i></div><div class="pane"><div class="s-form-tline">&gt; put the release size</div><div class="s-form-tline" style="color:var(--text-caption)">⏺ Read(lib/format.ts)</div></div></div></div>
+      <p><b>Flat: surfaces.</b> Chrome, panes and wells. Tone steps only; the well gets a navy inset on its top edge.</p></div>
+    <div class="s-form-grade"><div class="s-form-stage"><button class="pill">Restore</button><button class="toggle" role="switch" aria-checked="false" aria-label="Sound"><i></i></button><span style="flex-basis:100%;height:0"></span><div class="seg" role="group" aria-label="Sort"><button aria-pressed="true">Recent</button><button aria-pressed="false">Name</button><button aria-pressed="false">Folder</button></div></div>
+      <p><b>Soft: controls.</b> Pills, segments and toggles carry a light lip on top and navy occlusion underneath. No gloss, no white. Press one: it squashes to .96.</p></div>
+    <div class="s-form-grade"><div class="s-form-stage"><div class="s-form-pgrade">
+        <div class="group-row">${gi("chev-d")}${Bloom.pearl({ tint: "mint", p: 10 })}THESIS<span class="n">3</span></div>
+        <div class="s-form-pline">${["rose", "sage", "peri"].map((t, i) => Bloom.pearl({ tint: t, p: [12, 16, 20][i] })).join("")}${Bloom.tally(["needs", "failed", "working", "done"])}${Bloom.pearl({ n: 412 })}</div></div></div>
+      <p><b>Pearl: small things in chrome.</b> The bead at 8–20 px, still: a group's identity, a tally, a count. Never text on a tint.</p></div>
+    <div class="s-form-grade"><div class="s-form-stage"><span class="bead" style="--c:var(--green-base)"></span><div class="puffy sm"></div></div>
+      <p><b>Inflated: showcase only.</b> Beads and puffy objects larger than any pearl, on this sheet, the lock plate and the app icon. Never app chrome.</p></div>`;
+    }
+    function law() {
+      const panel = (cls) =>
+        `<div class="s-form-lawp ${cls}"><div class="s-form-st">Find</div><span class="input">${gi("find")}<span class="ph">name, folder, prompt</span></span></div>`;
+      return `<div><div class="s-form-stage">${panel("do")}</div><div class="s-form-verdict"><b>Do</b>Navy occlusion, and a soft navy shadow only under things that float.</div></div>
+    <div><div class="s-form-stage">${panel("dont")}</div><div class="s-form-verdict dont"><b>Don’t</b>A grey drop shadow: a dirty halo on a blue field.</div></div>`;
+    }
+    function rimTable() {
+      return `<table class="bl-table"><thead><tr><th>Night rim mix</th><th>Against the field <code>#2F2E2E</code></th><th>Against raised chrome</th><th>Inside a well <code>#1B1A1A</code></th></tr></thead><tbody>
+    ${DATA.rimTable.map(([m, f, r, d]) => `<tr><td class="num">${m}${m === "0.60" ? " · in use" : ""}</td><td class="num">${f}</td><td class="num">${r}</td><td class="num">${d}</td></tr>`).join("")}
+  </tbody></table><p class="s-form-k" style="margin-top:8px">A fully occluded bead edge with cream mixed over it, as a contrast ratio, over eight bodies: cobalt, raspberry, grass, id-butter, id-peri, amber, the working bar's deep step and arm. Field keeps 0.30: 3.99–4.69:1 against its field.</p>`;
+    }
+    function pearls() {
+      const T = ["rose", "butter", "sage", "mint", "peri", "lilac"],
+        P = [8, 10, 12, 16, 20];
+      const plate = (
+        th,
+      ) => `<div class="s-form-pl themed${th === "field" ? " s-form-onfield" : ""}" data-theme="${th}">
+    <div class="s-form-tag">${th === "night" ? "Night" : "Field"} <span class="s-form-k">rim ${th === "night" ? "0.60" : "0.30"}</span></div>
+    <div class="s-form-ptop">
+      <div class="s-form-pgrid"><span></span>${P.map((p) => `<span class="s-form-k s-form-sz">${p}</span>`).join("")}
+        ${T.map((t) => `<span class="s-form-k">${t}</span>${P.map((p) => Bloom.pearl({ tint: t, p, cls: p < 10 ? "xs" : "" })).join("")}`).join("")}</div>
+      <div class="s-form-pbig">${Bloom.pearl({ tint: "mint", p: 80 })}<span class="s-form-k">mint at 20 px, four times</span></div>
+    </div>
+    <div class="s-form-prow"><span class="s-form-k">states</span>${Bloom.STATES.map((st) => Bloom.pearl({ st, p: 12 })).join("")}</div>
+    <div class="s-form-prow"><span class="s-form-k">tally</span>${Bloom.tally(["needs", "failed", "working", "working", "working", "done"])}<span class="s-form-gapx"></span><span class="s-form-k">counts</span>${Bloom.pearl({ n: 2 })}${Bloom.pearl({ n: 412 })}</div>
+    <div class="s-form-pchrome">
+      <div class="group-row">${gi("chev-d")}${Bloom.pearl({ tint: "mint", p: 10 })}THESIS<span class="n">3</span></div>
+      <div class="group-row">${gi("chev-r")}${Bloom.pearl({ tint: "butter", p: 10 })}ORBIT · locked until 18:00<span class="lamp-strip">${Bloom.tally(["working", "working", "done"])}</span></div>
+    </div>
+  </div>`;
+      return plate("night") + plate("field");
+    }
+    function lampset() {
+      const W = [
+        ["needs", "needs you"],
+        ["failed", "failed"],
+        ["done", "done"],
+        ["working", "working"],
+        ["bg", "background"],
+        ["choose", "choose on return"],
+        ["house", "housekeeping"],
+        ["outside", "outside"],
+        ["idle", "idle"],
+        ["gone", "gone"],
+      ];
+      return W.map(
+        ([st, w]) =>
+          `<div class="s-form-lc${st === "done" ? " on" : ""}">${Bloom.lamp(st, { d: 24, still: true, label: w })}${Bloom.lamp(st, { d: 15, still: true, label: w })}<span class="s-form-k">${w}</span></div>`,
+      ).join("");
+    }
+
+    /* ---------- F4 ---------- */
+    const FACES = [
+      [
+        "s-form-fr",
+        "Rounded",
+        "Nunito · wght 200–1000 · stands in for SF Pro Rounded",
+        [
+          ["Regular", "reg", 500],
+          ["Medium", "med", 620],
+          ["Strong", "strong", 760],
+        ],
+      ],
+      [
+        "s-form-fg",
+        "Neue Regrade",
+        "wght 300–800 · your pick",
+        [
+          ["Regular", "reg", 400],
+          ["Medium", "med", 520],
+          ["Strong", "strong", 640],
+        ],
+      ],
+      [
+        "s-form-fp",
+        "IBM Plex Mono",
+        "400 / 500 / 600 · content, and all of D",
+        [
+          ["Regular", "reg", 400],
+          ["Medium", "med", 500],
+          ["Semibold", "strong", 600],
+        ],
+      ],
+    ];
+    function faces() {
+      return FACES.map(
+        ([cls, name, sub, wts]) => `<div class="s-form-face ${cls}">
+    <div><div class="s-form-fname">${name}</div><div class="s-form-k">${sub}</div></div>
+    <div class="s-form-abc">ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789</div>
+    <div><span class="s-form-rowlab">WEIGHTS</span><div class="s-form-wts">${wts.map(([n, v, w]) => `<span style="font-weight:var(--w-${v})">${n}<i>${w}</i></span>`).join("")}</div></div>
+    <div><span class="s-form-rowlab">DISPLAY</span><div class="s-form-disp">Nothing needs you. Lock for 2h?</div></div>
+    <div><span class="s-form-rowlab">SECONDARY</span><div class="s-form-sec">Quiet since 15:50 · 4 working · 1 done</div></div>
+    <div><span class="s-form-rowlab">LABELS</span><div class="s-form-labs"><span>Sessions</span><span>Archive</span><span>Trace</span></div></div>
+    <div><span class="s-form-rowlab">BUTTONS</span><div class="s-form-btns"><button class="pill">Restore</button><button class="pill">Lock</button><button class="pill sm">Go to tab</button></div></div>
+    <div><span class="s-form-rowlab">BODY</span><div class="s-form-body">No early unlock. Until 18:00 nothing lifts it: not quitting CONTROL, not restarting the daemon, not rebooting.</div></div>
+  </div>`,
+      ).join("");
+    }
+    function stays() {
+      return `<span>Session row</span><div>ORBIT-WEBSITE<span class="s-form-gap"></span><span class="s-form-c">~/Projects/orbit-website</span><span class="s-form-gap"></span>+38 −12<span class="s-form-gap"></span>96k<span class="s-form-gap"></span><span class="s-form-c">now</span></div>
+    <span>Turn</span><div>T14 put the release size in one place so /download and /admin can’t drift</div>
+    <span>Diff line</span><div><span class="s-form-add"><i>12</i> <em>+</em> bytes: 11_743_232,</span></div>
+    <span>Usage</span><div>5H${Bloom.chainHTML(15, 0.71, "5h")}71% <span class="s-form-c">01:10</span><span class="s-form-gap"></span>·<span class="s-form-gap"></span>7D${Bloom.chainHTML(14, 0.22, "7d")}22% <span class="s-form-c">Sun</span></div>`;
+    }
+
+    /* ---------- F5 ---------- */
+    const GLYPHS = [
+      "ctrl",
+      "wt",
+      "spin",
+      "chev-r",
+      "chev-l",
+      "chev-d",
+      "hgf",
+      "hge",
+      "plus",
+      "x",
+      "set",
+      "side",
+      "panel",
+      "find",
+      "trace",
+      "out",
+      "folder",
+      "file",
+      "web",
+      "git",
+      "undock",
+      "pick",
+      "shot",
+      "reload",
+      "mail",
+      "sess",
+      "chat",
+      "lock",
+      "play",
+      "pause",
+      "term",
+      "send",
+      "stop",
+      "clip",
+      "diff",
+      "spark",
+    ];
+    /* D's versions of four sprite glyphs: same paths, square caps and mitred joins (inventory §6) */
+    const DG = {
+      trace: [
+        `<path d="M4.5 2 V14 M4.5 4.5 H12.5 M4.5 8 H10 M4.5 11.5 H12.5" stroke-width="1.3"/>`,
+        "trace",
+      ],
+      wt: [`<path d="M1.5 4.5 H14.5 M6.5 4.5 V11.5 H14.5" stroke-width="1.5"/>`, "wt"],
+      pick: [
+        `<path d="M2.5 6 V2.5 H6 M10 2.5 H13.5 V6 M13.5 10 V13.5 H10 M6 13.5 H2.5 V10 M8 5.5 V10.5 M5.5 8 H10.5" stroke-width="1.3"/>`,
+        "pick",
+      ],
+      out: [
+        `<path d="M3.5 2.5 H9.5 L12.5 5.5 V13.5 H3.5 Z M5.5 8.5 H10.5 M5.5 11 H10.5" stroke-width="1.3"/>`,
+        "out",
+      ],
+    };
+    function glyphGrid() {
+      return GLYPHS.map(
+        (g) =>
+          `<div class="s-form-gc"><span class="s-form-g32">${gi(g)}</span><span class="s-form-g16">${gi(g)}</span><span class="s-form-k">${g}</span></div>`,
+      ).join("");
+    }
+    function cmp() {
+      return Object.entries(DG)
+        .map(
+          ([k, [p, name]]) => `<div class="s-form-cmpc"><div class="s-form-two">
+      <div><svg viewBox="0 0 16 16" aria-label="${name} as D drew it"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter">${p}</g></svg><span class="s-form-k">D</span></div>
+      <div>${gi(k).replace('class="gi ', 'class="gi s-form-big ')}<span class="s-form-k">Bloom</span></div>
+    </div><div class="s-form-k s-form-gn">${name}</div></div>`,
+        )
+        .join("");
+    }
+    function marks() {
+      const nav = Bloom.stairSVG({ t: 3, r: 3, a: 3, f: 2 }, 2);
+      const lock = Bloom.stairSVG({ t: 6, r: 6, a: 6, f: 3 }, 4);
+      const dlock = Bloom.stairSVG({ t: 6, r: 6, a: 6, f: 3 }, 4).replace(
+        'stroke-linecap="round" stroke-linejoin="round"',
+        'stroke-linecap="square" stroke-linejoin="miter"',
+      );
+      return `<div class="s-form-markc"><div class="s-form-tag">Nav and panel header</div><div class="s-form-mstage"><span class="s-form-lock">${nav}<span>CONTROL</span></span></div><div class="s-form-k">t r a 3 · f 2 · stroke 2</div></div>
+    <div class="s-form-markc"><div class="s-form-tag">Lockup</div><div class="s-form-mstage"><span class="s-form-lock s-form-big s-form-dlock">${dlock}<span>CONTROL</span></span><span class="s-form-lock s-form-big">${lock}<span>CONTROL</span></span></div><div class="s-form-k">t r a 6 · f 3 · stroke 4 · D above, Bloom below</div></div>
+    <div class="s-form-markc"><div class="s-form-tag">As beads</div><div class="s-form-mstage"><div class="s-form-bstair" data-slot="bstair"></div></div><div class="s-form-k">21 beads: a small, still copy of the masthead's stair</div></div>`;
+    }
+    function beadStair(host) {
+      const U = 52,
+        { beads, w, h } = Bloom.stairBeads({ t: 1, r: 1, a: 1, f: 0.5 }, 0.5),
+        B = 1.3 * 0.5 * U;
+      host.style.width = w * U + B + "px";
+      host.style.height = h * U + B + "px";
+      host.innerHTML = beads
+        .map(
+          (b) =>
+            `<span class="bead ramp-flow still" style="--b:${B.toFixed(2)}px;left:${(b.x * U).toFixed(2)}px;top:${(b.y * U).toFixed(2)}px;--k:${b.s.toFixed(4)};--tile:1000%"></span>`,
+        )
+        .join("");
+    }
+
+    /* ---------- F6 ---------- */
+    const appWire = () =>
+      `<div></div><div class="s-form-ab"><div class="s-form-sbar">${"<i></i>".repeat(9)}</div><div class="s-form-tp"></div><div class="s-form-tp"></div></div>`;
+
+    Bloom.section("form", {
+      init(el) {
+        $(el, "fan").innerHTML = fan();
+        $(el, "radgrid").innerHTML = radGrid();
+        $(el, "frags").innerHTML = frags();
+        el.querySelectorAll("[data-d]").forEach((f) => {
+          for (const [k, v] of Object.entries(DATA.d)) f.style.setProperty("--s-form-d-" + k, v);
+        });
+        $(el, "steps").innerHTML = steps();
+        $(el, "lf").innerHTML = lostFound();
+        $(el, "mat").innerHTML = material();
+        $(el, "grades").innerHTML = grades();
+        $(el, "law").innerHTML = law();
+        el.querySelector(".s-form-lawp.dont").style.boxShadow = DATA.greyShadow;
+        $(el, "rimtable").innerHTML = rimTable();
+        $(el, "pearls").innerHTML = pearls();
+        $(el, "lampset").innerHTML = lampset();
+        $(el, "faces").innerHTML = faces();
+        $(el, "stays").innerHTML = stays();
+        $(el, "gl").innerHTML = glyphGrid();
+        $(el, "cmp").innerHTML = cmp();
+        $(el, "marks").innerHTML = marks();
+        beadStair($(el, "bstair"));
+        $(el, "app").innerHTML = appWire();
+        el.querySelectorAll(".seg").forEach((s) => Bloom.seg(s));
+        el.querySelectorAll(".toggle").forEach((t) =>
+          t.addEventListener("click", () =>
+            t.setAttribute("aria-checked", String(t.getAttribute("aria-checked") !== "true")),
+          ),
+        );
+        /* say plainly when the ui-rounded line is not really SF Pro Rounded */
+        const probe = (f) => {
+          const s = document.createElement("span");
+          s.style.cssText = `position:absolute;visibility:hidden;font:40px ${f};white-space:nowrap`;
+          s.textContent = "Nothing needs you";
+          el.append(s);
+          const w = s.offsetWidth;
+          s.remove();
+          return w;
+        };
+        if (probe("ui-rounded, monospace") === probe("monospace"))
+          $(el, "uir").textContent =
+            "SF Pro Rounded, if your browser exposes it (Safari does). This one does not, so the line above is the system face.";
+        Bloom.fit(el);
+      },
+    });
+  })();
+</script>

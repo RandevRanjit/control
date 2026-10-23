@@ -1,0 +1,130 @@
+import { describe, expect, it } from "vite-plus/test";
+import { ProviderDriverKind } from "@control/contracts";
+
+import { DRIVER_OPTION_BY_VALUE } from "./providerDriverMeta";
+import {
+  deriveProviderSettingsFields,
+  nextProviderConfigWithFieldValue,
+} from "./ProviderSettingsForm";
+
+describe("ProviderSettingsForm helpers", () => {
+  it("derives visible provider config fields from the client definition schema", () => {
+    const claude = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("claudeAgent")];
+
+    expect(claude).toBeDefined();
+    expect(deriveProviderSettingsFields(claude!).map((field) => field.key)).toEqual([
+      "binaryPath",
+      "homePath",
+      "autoCompactWindow",
+      "launchArgs",
+    ]);
+  });
+
+  it("sources labels and descriptions from schema annotations", () => {
+    const claude = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("claudeAgent")];
+    expect(claude).toBeDefined();
+
+    const homePath = deriveProviderSettingsFields(claude!).find(
+      (field) => field.key === "homePath",
+    );
+
+    expect(homePath).toMatchObject({
+      label: "CLAUDE_CONFIG_DIR path",
+      description:
+        "Custom Claude home and config directory. Keeps .claude.json and .claude separate.",
+    });
+  });
+
+  it("shows the auto-compaction threshold for Claude providers", () => {
+    const claude = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("claudeAgent")];
+    expect(claude).toBeDefined();
+
+    expect(deriveProviderSettingsFields(claude!).map((field) => field.key)).toEqual([
+      "binaryPath",
+      "homePath",
+      "autoCompactWindow",
+      "launchArgs",
+    ]);
+  });
+
+  it("preserves unknown config keys while omitting empty configurable fields", () => {
+    const claude = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("claudeAgent")];
+    expect(claude).toBeDefined();
+
+    const homePath = deriveProviderSettingsFields(claude!).find(
+      (field) => field.key === "homePath",
+    );
+    expect(homePath).toBeDefined();
+
+    const next = nextProviderConfigWithFieldValue(
+      { forkOwned: 1, homePath: "~/.claude-work" },
+      homePath!,
+      "",
+    );
+
+    expect(next).toEqual({ forkOwned: 1 });
+  });
+
+  it("omits false boolean fields when clearWhenEmpty is omit", () => {
+    const next = nextProviderConfigWithFieldValue(
+      { forkOwned: 1, experimental: true },
+      {
+        key: "experimental",
+        control: "switch",
+        label: "Experimental",
+        clearWhenEmpty: "omit",
+        defaultBooleanValue: false,
+      },
+      false,
+    );
+
+    expect(next).toEqual({ forkOwned: 1 });
+  });
+
+  it("omits true boolean fields when true is the default", () => {
+    const next = nextProviderConfigWithFieldValue(
+      { forkOwned: 1, experimental: false },
+      {
+        key: "experimental",
+        control: "switch",
+        label: "Experimental",
+        clearWhenEmpty: "omit",
+        defaultBooleanValue: true,
+      },
+      true,
+    );
+
+    expect(next).toEqual({ forkOwned: 1 });
+  });
+
+  it("stores false boolean fields when true is the default", () => {
+    const next = nextProviderConfigWithFieldValue(
+      undefined,
+      {
+        key: "experimental",
+        control: "switch",
+        label: "Experimental",
+        clearWhenEmpty: "omit",
+        defaultBooleanValue: true,
+      },
+      false,
+    );
+
+    expect(next).toEqual({ experimental: false });
+  });
+
+  it("preserves false boolean fields when clearWhenEmpty is persist", () => {
+    const next = nextProviderConfigWithFieldValue(
+      undefined,
+      {
+        key: "experimental",
+        control: "switch",
+        label: "Experimental",
+        clearWhenEmpty: "persist",
+      },
+      false,
+    );
+
+    expect(next).toEqual({ experimental: false });
+  });
+});

@@ -1,0 +1,36 @@
+/* CONTROL's menu-bar panel (design/hybrid/HANDOFF.md §19.2, §19.3). A straight port of the MB2 rules in the <style>
+   block of design/hybrid/src/parts/menubar.html, less the page's columns, bar and margin-top (the desktop app hangs the
+   window 6 px under the item) and the offer's rules (the panel shows the sidebar's offer, which lock.css styles).
+   [data-hover] is the drawing's stand-in for :hover. Edit the source, then re-copy. The rules after the port are the
+   app's own. */
+
+.s-mb-root .t3w.s-mb-host { display: block; width: auto; height: auto; overflow: visible; contain: none; background: none; box-shadow: none; border-radius: 0; }
+.s-mb-root .s-mb-p.panel { padding: 6px; border-radius: var(--r-l); color: var(--text-body); }
+.s-mb-root .s-mb-hd { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 10px 0 12px; }
+.s-mb-root .s-mb-hd .d-logo { color: var(--ink-1); }
+.s-mb-root .s-mb-wm { font: 600 12px/1 var(--f-mono); letter-spacing: .26em; color: var(--ink-1); }
+.s-mb-root .s-mb-ver { font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-caption); }
+.s-mb-root .s-mb-ver b { font: 500 11px/1 var(--f-mono); color: var(--text-secondary); }
+.s-mb-root .s-mb-p .hy-upd { margin: 0 0 6px; }
+.s-mb-root .s-mb-note b { font-weight: var(--w-med); color: var(--text-strong); }
+.s-mb-root .s-mb-sh { display: flex; align-items: center; gap: 8px; height: 28px; padding: 6px 10px 0; font: var(--w-med) 12px/1 var(--f-chrome); color: var(--text-label); }
+.s-mb-root .s-mb-sh .t-num { font: 500 11px/1 var(--f-mono); color: var(--text-caption); }
+.s-mb-root .s-mb-p .t3d-in { margin-left: 0; }
+.s-mb-root .s-mb-p .t3-card:hover { background: var(--hy-card); }
+.s-mb-root .s-mb-empty { padding: 14px 12px 18px; font: var(--w-reg) 13px/1.45 var(--f-chrome); color: var(--text-caption); }
+.s-mb-root .s-mb-empty b { display: block; font-weight: var(--w-med); color: var(--text-secondary); }
+.s-mb-root .s-mb-behind { padding: 4px 10px 10px; font: var(--w-reg) 12px/1.4 var(--f-chrome); color: var(--text-caption); }
+.s-mb-root .s-mb-p .hy-use { margin-top: 6px; padding: 12px 12px 4px; border-top: 1px solid var(--seam); }
+.s-mb-root .s-mb-ft { display: flex; align-items: center; gap: 4px; height: 40px; padding: 0 2px; border-top: 1px solid var(--seam); }
+.s-mb-root .s-mb-until { display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; font: var(--w-med) 12px/1 var(--f-chrome); color: var(--text-strong); }
+.s-mb-root .s-mb-until .gi { width: 11px; height: 11px; }
+.s-mb-root .s-mb-until b { font: 500 11.5px/1 var(--f-mono); }
+
+/* The window: clear around the panel, which fills it. Past the screen's visible height less 40 the sections scroll
+   under a 28 px fade, and the header, notes, usage and footer stay put (§19.2). */
+html:has(.s-mb-root), html:has(.s-mb-root) body { background: transparent !important; }
+.s-mb-root .s-mb-p { display: flex; flex-direction: column; max-height: 100vh; }
+.s-mb-root .s-mb-p > * { flex: none; }
+.s-mb-root .s-mb-p > .s-mb-secs { flex: 0 1 auto; min-height: 0; overflow-y: auto; }
+.s-mb-root .s-mb-secs[data-overflow] { mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); }
+.s-mb-root .s-mb-p .t3-card { cursor: pointer; }

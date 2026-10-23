@@ -1,0 +1,120 @@
+/* ==================================================================
+   BLOOM BASE: fonts, page, nav, section frame, figures, tables, shots.
+   Paths are relative to design/bloom/index.html.
+   ================================================================== */
+@font-face { font-family: 'BloomRounded'; src: url('../bloom/fonts/Nunito-Variable.ttf') format('truetype'); font-weight: 200 1000; font-style: normal; font-display: block; }
+@font-face { font-family: 'BloomRegrade'; src: url('../bloom/fonts/NeueRegrade-Variable.ttf') format('truetype'); font-weight: 300 800; font-style: normal; font-display: block; }
+@font-face { font-family: 'BloomPlex'; src: url('../mock/fonts/IBMPlexMono-Regular.otf') format('opentype'); font-weight: 400; font-display: block; }
+@font-face { font-family: 'BloomPlex'; src: url('../mock/fonts/IBMPlexMono-Medium.otf') format('opentype'); font-weight: 500; font-display: block; }
+@font-face { font-family: 'BloomPlex'; src: url('../mock/fonts/IBMPlexMono-SemiBold.otf') format('opentype'); font-weight: 600; font-display: block; }
+
+@font-face { font-family: 'Departure'; src: url('fonts/DepartureMono-Regular.woff2') format('woff2'); font-weight: 400; font-display: block; }   /* OFL, fonts/DepartureMono-LICENSE.txt */
+:root { --f-departure: 'Departure', var(--f-mono); }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--field); -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--field); color: var(--text-body); font: var(--w-reg) 15px/1.6 var(--f-chrome);
+  -webkit-font-smoothing: antialiased; font-synthesis: none; overflow-x: hidden; }
+h1, h2, h3, h4, p, figure, ul, ol { margin: 0; }
+h1, h2, h3, h4 { font-weight: var(--w-strong); color: var(--text-strong); }
+b, strong { font-weight: var(--w-med); color: var(--text-strong); }
+a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+button { font: inherit; color: inherit; }
+::selection { background: var(--selection); color: var(--text-strong); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+code, kbd, samp, .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+code { font-size: .86em; color: var(--text-strong); background: var(--raised); padding: .12em .45em; border-radius: var(--r-xs); }
+.gi { width: 1em; height: 1em; flex: none; vertical-align: -.14em; overflow: visible; }
+.sp { flex: 1; }
+.themed { background: var(--field); color: var(--text-body); }   /* use on any element that sets its own data-theme */
+
+/* ---------- type classes (chrome face unless noted; never set content in the chrome face) ---------- */
+.t-display { font: var(--w-strong) clamp(44px, 6.2vw, 80px)/1.0 var(--f-chrome); letter-spacing: -.015em; color: var(--text-strong); }
+.t-h2 { font: var(--w-strong) clamp(30px, 3.6vw, 44px)/1.08 var(--f-chrome); letter-spacing: -.01em; color: var(--text-strong); }
+.t-h3 { font: var(--w-strong) 22px/1.25 var(--f-chrome); color: var(--text-strong); }
+.t-lead { font: var(--w-reg) 18px/1.6 var(--f-chrome); color: var(--text-body); }
+.t-body { font: var(--w-reg) 15px/1.6 var(--f-chrome); color: var(--text-body); }
+.t-small { font: var(--w-reg) 13px/1.5 var(--f-chrome); color: var(--text-secondary); }
+.t-label { font: var(--w-med) 12px/1.35 var(--f-chrome); color: var(--text-label); }
+.t-cap { font: var(--w-reg) 12px/1.45 var(--f-chrome); color: var(--text-caption); }
+.t-mono { font: 400 12.5px/1.5 var(--f-mono); color: var(--text-body); font-variant-numeric: tabular-nums; }
+.t-mono-s { font: 400 11px/1.45 var(--f-mono); color: var(--text-caption); font-variant-numeric: tabular-nums; }
+.t-num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+
+/* ---------- nav ---------- */
+.bl-nav { position: sticky; top: 0; z-index: 50; background: var(--field); }
+.bl-nav::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 24px; pointer-events: none;
+  background: linear-gradient(var(--field), transparent); }
+.bl-nav-in { max-width: 1440px; margin: 0 auto; padding: 0 40px; min-height: 60px; display: flex; align-items: center; gap: 16px; }   /* eight sections: one row from 1440 */
+.bl-wm { display: flex; align-items: center; gap: 10px; color: var(--ink-1); text-decoration: none; white-space: nowrap;
+  font: 600 12px/1 var(--f-mono); letter-spacing: .26em; }
+.bl-wm em { font: var(--w-med) 13px/1 var(--f-chrome); letter-spacing: 0; color: var(--ink-4); font-style: normal; }
+.bl-links { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
+.bl-links::-webkit-scrollbar { display: none; }
+.bl-links a { font: var(--w-med) 13px/1 var(--f-chrome); color: var(--ink-3); text-decoration: none; padding: 9px 10px; border-radius: var(--r-pill);
+  white-space: nowrap; transition: background-color var(--d-tap) var(--e-settle), color var(--d-tap) var(--e-settle); }
+.bl-links a:hover, .bl-links a[aria-current="true"] { background: var(--raised); color: var(--ink-1); }
+.bl-ctrls { display: flex; align-items: center; gap: 8px; flex: none; }
+.bl-still { display: inline-flex; align-items: center; gap: 7px; }
+.bl-clock { font: 400 11px/1 var(--f-mono); color: var(--ink-4); min-width: 6.2em; text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 1439px) {   /* the seven section links need ~570 px beside the controls: one row only fits from 1440 */
+  .bl-nav-in { flex-wrap: wrap; padding: 8px 16px; gap: 6px 10px; }
+  .bl-links { order: 3; flex-basis: 100%; }
+  .bl-ctrls { flex: 1 1 100%; flex-wrap: wrap; order: 2; }
+}
+@media (max-width: 520px) { .bl-clock, .bl-ctrls .seg[data-bind="rate"] { display: none; } }
+
+/* ---------- sheet and sections ---------- */
+.bl-sheet { max-width: 1440px; margin: 0 auto; padding: 0 48px 160px; }
+@media (max-width: 720px) { .bl-sheet { padding: 0 16px 96px; } }
+.bl-sec { padding-top: var(--s-10); scroll-margin-top: 64px; }
+.bl-sec > :last-child { margin-bottom: 0; }   /* a trailing figure's margin would add 64 px to the 144 between sections */
+.bl-sh { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 12px 32px; margin-bottom: var(--s-5); }
+.bl-sh .no { display: flex; align-items: center; gap: 12px; font: 500 12px/1 var(--f-mono); color: var(--ink-4); margin-bottom: 14px; grid-column: 1 / -1; }
+.bl-sh h2 { font: var(--w-strong) clamp(30px, 3.6vw, 44px)/1.08 var(--f-chrome); letter-spacing: -.01em; color: var(--text-strong); }
+.bl-sh .meta { font: var(--w-reg) 13px/1.45 var(--f-chrome); color: var(--text-caption); text-align: right; max-width: 34ch; }
+@media (max-width: 720px) { .bl-sh { grid-template-columns: 1fr; } .bl-sh .meta { text-align: left; } }
+.bl-lead { font: var(--w-reg) 18px/1.6 var(--f-chrome); color: var(--text-body); max-width: 68ch; margin-bottom: var(--s-8); }
+.bl-sub { font: var(--w-strong) 22px/1.25 var(--f-chrome); color: var(--text-strong); margin: var(--s-9) 0 var(--s-2); display: flex; align-items: baseline; gap: 12px; }
+.bl-sub .id { font: 500 11px/1 var(--f-mono); color: var(--ink-3); background: var(--raised); padding: 6px 9px; border-radius: var(--r-pill); transform: translateY(-3px); }
+.bl-prose { max-width: 68ch; }
+.bl-prose p + p { margin-top: 12px; }
+.bl-prose p { color: var(--text-body); }
+.bl-steps { display: inline-flex; gap: 4px; }
+.bl-steps i { width: 6px; height: 6px; border-radius: 50%; background: var(--seam); }
+.bl-steps i.on { background: var(--ink-3); }
+
+/* ---------- figures, captions, cards ---------- */
+.fig { margin: 0 0 var(--s-8); min-width: 0; }
+.card { background: var(--raised); border-radius: var(--r-xl); padding: var(--s-6); }
+.card.sunk { background: var(--sunken); box-shadow: var(--well); }
+.cap { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-top: var(--s-3); font: var(--w-reg) 13px/1.45 var(--f-chrome); color: var(--text-caption); max-width: 100ch; }
+.cap .id { font: 500 11px/1 var(--f-mono); color: var(--ink-2); background: var(--raised); padding: 5px 8px; border-radius: var(--r-pill); }
+.cap b { font-weight: var(--w-med); color: var(--text-secondary); }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-5); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); }
+@media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+/* ---------- tables: rows separated by tone, never by rules ---------- */
+.bl-table { width: 100%; border-collapse: separate; border-spacing: 0 2px; font: var(--w-reg) 13px/1.45 var(--f-chrome); color: var(--text-body); }
+.bl-table th { font: var(--w-med) 12px/1.3 var(--f-chrome); color: var(--text-caption); text-align: left; padding: 6px 12px; vertical-align: bottom; }
+.bl-table td { padding: 8px 12px; vertical-align: top; background: color-mix(in srgb, var(--raised) 55%, transparent); }
+.bl-table tr:nth-child(even) td { background: transparent; }
+.bl-table td:first-child { border-radius: var(--r-m) 0 0 var(--r-m); }
+.bl-table td:last-child { border-radius: 0 var(--r-m) var(--r-m) 0; }
+.bl-table .num, .bl-table code, .bl-table .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: 12px; }
+.bl-scroll { overflow-x: auto; scrollbar-width: thin; }
+
+/* ---------- scaled window figures (runtime fits them to the column) ---------- */
+.bl-scale { position: relative; width: 100%; }   /* not overflow:hidden: the window's navy float shadow must show */
+.bl-scale > * { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+
+/* ---------- footer ---------- */
+.bl-foot { max-width: 1440px; margin: 0 auto; padding: var(--s-8) 48px var(--s-9); color: var(--text-caption); font-size: 13px; }
+@media (max-width: 720px) { .bl-foot { padding: var(--s-7) 16px; } }
+
+/* ---------- shot mode (?shot=<section-id>[&fig=<fig-id>]) ---------- */
+body.shot .bl-nav, body.shot .bl-foot { display: none; }
+body.shot .bl-sheet { max-width: none; padding: 24px; }
+body.shot .bl-sec { padding-top: 0; }
+.bl-shot-hide { display: none !important; }

@@ -19,10 +19,8 @@ app updates itself from the same page.
 
 The desktop app includes the `ctrl` command-line tool. To run it from any
 terminal, open **Settings → General → About** and choose **Install** next to
-**ctrl command**. On macOS and Linux it adds a `ctrl` link to a folder on your
-`PATH`; on Windows it adds the app's command folder to your `PATH`. Open a new
-terminal afterwards. **Remove** takes it off again. If you already have `ctrl`
-from npm, it stays as it is.
+**ctrl command**. It adds a `ctrl` link to a folder on your `PATH`. Open a new
+terminal afterwards. **Remove** takes it off again.
 
 ### Open a project from a terminal
 
@@ -52,8 +50,8 @@ A server run this way doesn't update itself; update it with `git pull` and a reb
 
 ## Mobile app
 
-The iPhone app isn't on the App Store. Build `apps/mobile` in Xcode with your own
-Apple developer account. The phone connects to a server on another machine; follow
+The iPhone app isn't on the App Store. Build it with your own Apple developer account,
+following [apps/mobile/README.md](../../apps/mobile/README.md). The phone connects to a server on another machine; follow
 [remote access](./remote-access.md) to link it with a pairing URL.
 
 If the app crashes during launch, open Settings → Diagnostics on the next launch

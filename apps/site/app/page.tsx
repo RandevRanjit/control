@@ -15,7 +15,7 @@ const FEATURES = [
   },
   {
     title: "Nothing gets lost",
-    body: "Chats keep running when the window is closed. After a crash every chat comes back, and the ones that were mid-turn say so. Control never sends a message for you.",
+    body: "Chats keep running when the window is closed. After a crash every chat comes back, and the ones that were mid-turn say so. Restarting never sends a message for you.",
   },
   {
     title: "Usage you can see",
@@ -237,11 +237,15 @@ export default function Home() {
           </p>
           <h3>Phone</h3>
           <p>
-            The iPhone app isn't on the App Store yet. Build it from <code>apps/mobile</code> in
-            Xcode with your own Apple developer account, then pair it from{" "}
-            <b>Settings → Connections</b> on your Mac.
+            The iPhone app isn't on the App Store yet. Build it yourself with your own Apple
+            developer account, following{" "}
+            <a href={`${REPO_URL}/blob/main/apps/mobile/README.md`}>apps/mobile/README.md</a>, then
+            pair it from <b>Settings → Connections</b> on your Mac.
           </p>
           <h3>From source</h3>
+          <p>
+            Needs Node 24 and <a href={`${REPO_URL}#build-from-source`}>Vite+&apos;s vp</a>.
+          </p>
           <pre>
             <code>{`git clone ${REPO_URL}
 cd control && vp i && vp run build:desktop`}</code>

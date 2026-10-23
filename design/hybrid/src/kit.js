@@ -20,14 +20,14 @@ const PROJECTS = {
   orbit: { name: 'orbit-website', path: '~/Projects/orbit-website', mono: 'OR' },
   port: { name: 'portfolio', path: '~/Projects/websites/portfolio', mono: 'PO' },
   ctrl: { name: 'control', path: '~/Projects/control', mono: 'CO' },
-  relay: { name: 'relay', path: '~/Projects/relay', mono: 'TX' },
+  relay: { name: 'relay', path: '~/Projects/relay', mono: 'RE' },
   scratch: { name: 'scratch', path: '~/.control/scratch', mono: '··' },
 };
 /* st: a Bloom state, plus 'intr' (interrupted: a turn cut by a crash or a quit). place: where T3 would file it. */
 const CHATS = [
-  { n: 'STATISTICS', title: 'Systems eng week 6 notes', g: 'thesis', p: 'thesis', st: 'needs', sub: 'needs you', chip: 'BASH', age: '2m', diff: '' },
-  { n: 'LINEAR_ALGEBRA', title: 'Digital computing past paper', g: 'thesis', p: 'thesis', st: 'done', sub: 'done · main', age: '14m' },
-  { n: 'SIGNALS_101', title: 'Hardware fundamentals H4', g: 'thesis', p: 'thesis', st: 'intr', sub: 'interrupted · main', age: '3h' },
+  { n: 'STATISTICS', title: 'Statistics week 6 notes', g: 'thesis', p: 'thesis', st: 'needs', sub: 'needs you', chip: 'BASH', age: '2m', diff: '' },
+  { n: 'LINEAR_ALGEBRA', title: 'Linear algebra past paper', g: 'thesis', p: 'thesis', st: 'done', sub: 'done · main', age: '14m' },
+  { n: 'SIGNALS_101', title: 'Signals problem set 4', g: 'thesis', p: 'thesis', st: 'intr', sub: 'interrupted · main', age: '3h' },
   { n: 'INTERNSHIPS', title: 'Internship applications', g: 'thesis', p: 'scratch', st: 'idle', sub: 'idle', age: '1d', place: 'snoozed', wake: 'Mon 09:00' },
   { n: 'ORBIT-WEBSITE', title: 'Release size in one place', g: 'orbit', p: 'orbit', st: 'working', sub: 'working', wt: 2, age: 'now', sel: true, diff: '+42 −13',
     wts: [['site-v2', '+38 −12', true], ['download-size', '+4 −1']] },
@@ -37,7 +37,7 @@ const CHATS = [
   { n: 'DESIGN-EXPLORATION', title: 'T3 x Bloom hybrid', g: 'ctrl', p: 'ctrl', st: 'bg', sub: 'background · 2 agents', age: '4m' },
   { n: 'DEPS-AUDIT', title: 'Dependency audit', g: 'ctrl', p: 'ctrl', st: 'house', sub: 'dreaming', age: '9m' },
   { n: 'RELAY MAIN', title: 'Rep counter on the watch', g: null, p: 'relay', st: 'idle', sub: 'idle · main', age: '5h', pin: true },
-  { n: 'CV-BUILD', title: 'Forze CV build', g: null, p: 'scratch', st: 'outside', sub: 'lent to the CLI', age: '1h' },
+  { n: 'CV-BUILD', title: 'CV build', g: null, p: 'scratch', st: 'outside', sub: 'lent to the CLI', age: '1h' },
 ];
 const byGroup = id => CHATS.filter(c => c.g === id && c.place !== 'snoozed');
 const loose = () => CHATS.filter(c => !c.g && c.place !== 'snoozed');

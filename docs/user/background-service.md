@@ -5,7 +5,7 @@ to keep a terminal open.
 
 ## Manage the service
 
-Install the `ctrl` CLI first ([Install CONTROL](./install.md#command-line)), then
+Install the `ctrl` CLI first ([The `ctrl` command](./install.md#the-ctrl-command)), then
 run these commands on the machine that will host CONTROL:
 
 | Task                            | Command                  |

@@ -11,7 +11,7 @@ Control v2 is a hard fork of [T3 Code](https://github.com/pingdotgg/t3code) (MIT
 Download the DMG from [the latest release](https://github.com/RandevRanjit/control/releases/latest)
 and drag Control to Applications. It needs macOS on Apple silicon and
 [Claude Code](https://claude.com/product/claude-code), installed and signed in (`claude auth login`).
-The phone app isn't on the App Store; build `apps/mobile` in Xcode.
+The phone app isn't on the App Store; build it by following [apps/mobile/README.md](./apps/mobile/README.md).
 
 ## Build from source
 

@@ -749,6 +749,31 @@ describe("DesktopWindow", () => {
     }),
   );
 
+  // Quitting mid-scroll destroys the window before its contents stop sending
+  // input, and Electron throws on any read of a destroyed window's webContents.
+  it.effect("drops a trackpad release that arrives after the window is destroyed", () =>
+    Effect.gen(function* () {
+      const fakeWindow = makeFakeBrowserWindow();
+      const createCount = yield* Ref.make(0);
+      const mainWindow = yield* Ref.make<Option.Option<Electron.BrowserWindow>>(Option.none());
+      const layer = layerTest({ window: fakeWindow.window, createCount, mainWindow });
+
+      yield* Effect.gen(function* () {
+        const desktopWindow = yield* DesktopWindow.DesktopWindow;
+        yield* desktopWindow.handleBackendReady(new URL("http://127.0.0.1:3773"));
+        const onInput = fakeWindow.webContentsListeners.get("input-event");
+        if (!onInput) return yield* Effect.die("input-event listener was not registered");
+        fakeWindow.isDestroyed.mockReturnValue(true);
+        Object.defineProperty(fakeWindow.window, "webContents", {
+          get: () => {
+            throw new TypeError("Object has been destroyed");
+          },
+        });
+        assert.doesNotThrow(() => onInput({}, { type: "gestureScrollEnd" }));
+      }).pipe(Effect.provide(layer));
+    }),
+  );
+
   // Chromium hands the main window's zoom level down to embedded preview
   // guests, so every app zoom has to put the preview browser back at its own
   // zoom or zooming the UI drags the previewed page with it.

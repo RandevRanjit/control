@@ -668,7 +668,9 @@ export const make = Effect.gen(function* () {
       }
     });
     window.webContents.on("input-event", (_event, input) => {
-      if (input.type === "gestureScrollEnd") window.webContents.send(TRACKPAD_SCROLL_END_CHANNEL);
+      if (input.type === "gestureScrollEnd" && !window.isDestroyed()) {
+        window.webContents.send(TRACKPAD_SCROLL_END_CHANNEL);
+      }
     });
 
     window.on("page-title-updated", (event) => {

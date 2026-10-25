@@ -11,8 +11,8 @@ approvals aren't loose ends. Each chat has its own list.
 ## See and close them
 
 The mail icon in the chat's head, left of the command palette button, shows how many are open in
-this chat. Click it, or press `mod+e`, to open the list under it; `mod+e` again or `Esc` closes
-it. Customize `looseEnds.toggle` in **Settings → Keybindings**.
+this chat. Click it, or press `mod+e`, to open the list under it; `mod+e` again, `Esc` or a click
+anywhere else closes it. Customize `looseEnds.toggle` in **Settings → Keybindings**.
 
 Each item has the agent's line, its reason, and the turn it was filed in; click the turn to
 scroll the chat there. An item can carry one action: **Open** a link, **Reveal** a file, or

@@ -5,7 +5,7 @@ import type {
   OrchestrationV2ThreadProjection,
   ScopedThreadRef,
 } from "@control/contracts";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon, ChevronRightIcon, MailIcon, XIcon } from "lucide-react";
 import { create } from "zustand";
 
@@ -82,8 +82,18 @@ type PopoverProps = {
 export function LooseEndsHeadIcon(props: PopoverProps) {
   const open = useLooseEndsOpen(props.threadRef);
   const count = (props.projection?.looseEnds ?? []).filter((item) => item.status === "open").length;
+  const rootRef = useRef<HTMLSpanElement>(null);
+  // A press anywhere else puts it away, as every other popover does; the icon's own click toggles.
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) closeLooseEnds();
+    };
+    window.addEventListener("pointerdown", onPointerDown, true);
+    return () => window.removeEventListener("pointerdown", onPointerDown, true);
+  }, [open]);
   return (
-    <span className="s-le-root relative flex shrink-0 items-center">
+    <span ref={rootRef} className="s-le-root relative flex shrink-0 items-center">
       <Tooltip>
         <TooltipTrigger
           render={

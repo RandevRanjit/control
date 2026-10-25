@@ -2257,6 +2257,12 @@ code {
   max-width: calc(var(--chat-content-max-width) - 44px);
 }
 
+/* Floating panels wear the menus' glass and follow the Glass opacity setting (owner, 25 Oct), over the design's
+   solid .panel.float. The menu-bar panel is its own transparent window with nothing behind it to blur. */
+.panel.float:not(.s-mb-p) {
+  @apply dropdown-glass;
+}
+
 :root[data-diff-color-scheme="blue-orange"] {
   --diff-addition: light-dark(var(--color-blue-600), var(--color-blue-400));
   --diff-deletion: light-dark(var(--color-orange-600), var(--color-orange-400));

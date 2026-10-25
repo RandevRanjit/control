@@ -412,7 +412,10 @@ the safe ramp, so the needs-you bar is the only red on screen (Bloom colour §4.
 - **Failed is amber** as a state (lamp and bar). In the trace, ERROR is rose (§4.5); the two jobs are separate.
 - **Selection** is the one blue fill in the chrome: the selected card.
 - **Identity tints** (mint, rose, peri, butter, sage, lilac) belong to groups and projects: the pearls and the project
-  marks.
+  marks. Every surface draws a project as the card does: its monogram on its tint.
+- **Floating panels** (`.panel.float`: popovers, sheets, the head pills' lists) wear the menus' glass and follow
+  Settings › Glass opacity, as menus and selects do (owner, 25 Oct). The menu-bar panel stays solid: it is its own
+  window, with nothing behind it to blur.
 
 ---
 
@@ -729,7 +732,7 @@ toast and never breaks through a lock. The count is the only signal.
   width auto, padding 0 8, gap 4). With nothing open it is as 1.1 draws it: caption ink, no number. While its popover
   is up it is held in the open fill.
 - **Opening it.** The icon opens a popover under itself. **⌘E** opens and closes it
-  (`looseEnds.toggle`; ⌘⇧E is effort). A click on a card's mark opens that chat with the popover up. Esc closes it.
+  (`looseEnds.toggle`; ⌘⇧E is effort). A click on a card's mark opens that chat with the popover up. Esc or a press outside it closes it.
 - **The popover:** `.panel.float`, 372 wide, radius 14, padding 6, 6 under the icon with its right edge on the icon's, as
   the head pills' lists hang; a long list scrolls inside it, 8 short of the window's foot.
   - The head is 30 high: `Loose ends`, then `3 open`, then the `⌘E` key.

@@ -11,7 +11,7 @@ import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 export interface PanelLayoutControlsProps {
   showThreadPanelControl?: boolean;
   showRightPanelControl?: boolean;
-  /** The chat's Loose ends icon (HANDOFF §17.2), first in the row; absent elsewhere. */
+  /** The chat's Loose ends icon (HANDOFF §17.2), last in the row; absent elsewhere. */
   looseEnds?: ReactNode;
   threadPanelOpen: boolean;
   threadPanelPresentation: ThreadPanelPresentation;
@@ -72,7 +72,6 @@ export const PanelLayoutControls = memo(function PanelLayoutControls({
 
   return (
     <div className="t3-tools [-webkit-app-region:no-drag]" data-panel-layout-controls>
-      {looseEnds}
       {onOpenCommandPalette ? (
         <Tooltip>
           <TooltipTrigger
@@ -121,6 +120,7 @@ export const PanelLayoutControls = memo(function PanelLayoutControls({
           </TooltipPopup>
         </Tooltip>
       ) : null}
+      {looseEnds}
     </div>
   );
 });

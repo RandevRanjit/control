@@ -161,8 +161,9 @@ pill radius.
 - **Agents** counts the subagents and workflows this chat started, not the agent types it loads (owner, 21 Oct). While
   any runs, its icon and count take `--st-working`. Its list: **Running** (name; elapsed, or `workflow`), then **Done**
   (name; `done`, `failed` or `stopped`, and how long), newest first.
-- At the right: the **Loose ends** icon (§17.2), the **⌘K button** (§19.5), then two panel toggles, 32 × 32: details
-  and right. The bottom toggle (the terminal drawer) is gone (owner, 22 Oct); its keybinding still opens the drawer.
+- At the right: the **⌘K button** (§19.5), two panel toggles, 32 × 32: details and right, then the **Loose ends** icon
+  (§17.2), last (owner, 26 Oct). The bottom toggle (the terminal drawer) is gone (owner, 22 Oct); its keybinding still
+  opens the drawer.
 
 ### 4.2 Canvas and column
 

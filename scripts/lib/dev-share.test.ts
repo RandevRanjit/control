@@ -163,7 +163,7 @@ describe("shareDevServer", () => {
             off: { exitCode: 0 },
             serve: {
               exitCode: 1,
-              stderr: "permission denied for tskey-auth-secret-token-value",
+              stderr: "permission denied for ts-auth-secret-from-cli",
             },
           }),
         ),
@@ -174,7 +174,7 @@ describe("shareDevServer", () => {
       assert.equal(error.stage, "serve");
       assert.include(error.message, "permission denied");
       assert.include(error.message, "elevated privileges");
-      assert.notInclude(error.message, "tskey-auth-secret-token-value");
+      assert.notInclude(error.message, "ts-auth-secret-from-cli");
     }),
   );
 

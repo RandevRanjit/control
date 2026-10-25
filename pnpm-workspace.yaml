@@ -42,9 +42,9 @@ catalog:
   lightningcss: 1.33.0
   tailwindcss: 4.3.3
   typescript: 7.0.2
-  undici: 8.11.2
-  vite: npm:@voidzero-dev/vite-plus-core@1.0.0
-  vite-plus: 1.0.0
+  undici: 8.12.3
+  vite: npm:@voidzero-dev/vite-plus-core@1.3.0
+  vite-plus: 1.3.0
   ws: 8.22.0
   yaml: ^2.9.0
 
@@ -93,7 +93,7 @@ minimumReleaseAgeExclude:
   - expo-sharing@58.0.13
   - expo-sqlite@58.0.8
   - expo-symbols@58.0.3
-  - electron@44.4.2
+  - electron@44.9.3
   - "@anthropic-ai/claude-agent-sdk@0.3.276"
   - "@shadcn/lint@0.1.5"
   - cn@0.3.2
@@ -125,6 +125,25 @@ minimumReleaseAgeExclude:
   - expo-image-loader@58.0.3
 
 overrides:
+  # Security floors for transitive dependencies (GitHub Dependabot alerts).
+  "@modelcontextprotocol/sdk@<1.32.2": 1.32.2
+  "body-parser@>=2 <2.4.0": ^2.4.0
+  "compression@<1.8.2": ^1.8.2
+  "dompurify@<3.4.17": ^3.4.17
+  "fast-uri@>=3 <3.1.9": ^3.1.9
+  "hono@<4.13.11": ^4.13.11
+  "ip-address@<10.7.4": ^10.7.4
+  "mermaid>katex": ^0.18.2
+  "proxy-addr@<2.0.8": ^2.0.8
+  "seroval@<1.6.3": ^1.6.3
+  "shell-quote@<1.11.0": ^1.11.0
+  "smol-toml@<1.9.0": ^1.9.0
+  "source-map-js@<1.2.2": ^1.2.2
+  "undici@^6": ^6.29.1
+  "undici@^7": ^7.30.1
+  "uuid@<11.1.1": ^11.1.1
+  "xml2js@<0.5.0": ^0.6.2
+  "zod@^4 <4.6.6": ^4.6.6
   # Keep jsdom's optional peer consistent so Vite+ has one test-runner instance.
   "@exodus/bytes>@noble/hashes": "1.8.0"
   # Earlier React Navigation declarations create a circular type alias in TypeScript 7.

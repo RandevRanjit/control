@@ -31,6 +31,8 @@
 html:has(.s-mb-root), html:has(.s-mb-root) body { background: transparent !important; }
 .s-mb-root .s-mb-p { display: flex; flex-direction: column; max-height: 100vh; }
 .s-mb-root .s-mb-p > * { flex: none; }
-.s-mb-root .s-mb-p > .s-mb-secs { flex: 0 1 auto; min-height: 0; overflow-y: auto; }
+/* No scrollbar: the app's 6 px one takes width, re-wraps the cards and changes the height the window is sized to,
+   so the panel and its window chased each other. The fade says there's more. */
+.s-mb-root .s-mb-p > .s-mb-secs { flex: 0 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: none; }
 .s-mb-root .s-mb-secs[data-overflow] { mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); }
 .s-mb-root .s-mb-p .t3-card { cursor: pointer; }

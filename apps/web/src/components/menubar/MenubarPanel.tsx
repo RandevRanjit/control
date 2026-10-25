@@ -213,7 +213,9 @@ function useSettledIcon(icon: ReturnType<typeof menubarIcon>) {
 
 /**
  * Sizes the window to the panel: its natural height, which the desktop app caps at the screen's
- * visible height less 40. Past that the sections scroll under the fade.
+ * visible height less 40. Past that the sections scroll under the fade. The panel is capped at
+ * the window, so a part that grows or arrives late (the usage strip, a note) changes no size but
+ * its own: every part is watched, and what spills past the panel counts.
  */
 function useFitWindow() {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -227,13 +229,23 @@ function useFitWindow() {
     if (!panel || !sections || !content) return;
     const measure = () => {
       const hidden = content.offsetHeight - sections.clientHeight;
+      const spilled = panel.scrollHeight - panel.clientHeight;
       setOverflowing(hidden > 0);
-      void window.desktopBridge?.menubar?.resize(Math.ceil(panel.offsetHeight + hidden));
+      void window.desktopBridge?.menubar?.resize(Math.ceil(panel.offsetHeight + spilled + hidden));
     };
     const observer = new ResizeObserver(measure);
-    observer.observe(panel);
-    observer.observe(content);
-    return () => observer.disconnect();
+    const watch = () => {
+      observer.disconnect();
+      observer.observe(content);
+      for (const part of panel.children) observer.observe(part);
+    };
+    const parts = new MutationObserver(watch);
+    parts.observe(panel, { childList: true });
+    watch();
+    return () => {
+      parts.disconnect();
+      observer.disconnect();
+    };
   }, []);
   return { panelRef, sectionsRef, contentRef, overflowing };
 }

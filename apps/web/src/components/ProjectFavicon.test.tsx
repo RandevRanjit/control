@@ -66,13 +66,19 @@ vi.mock("../state/assets", () => ({
   },
 }));
 
+import { renderToStaticMarkup } from "react-dom/server";
+import { projectTint } from "./control/cardState";
 import { ProjectFavicon, type ProjectFaviconProject } from "./ProjectFavicon";
 
 function makeProject(
   overrides: Partial<ProjectFaviconProject> &
     Pick<ProjectFaviconProject, "workspaceRoot" | "title">,
 ): ProjectFaviconProject {
-  return { environmentId: "environment-test" as EnvironmentId, ...overrides };
+  return {
+    id: "project-test" as ProjectFaviconProject["id"],
+    environmentId: "environment-test" as EnvironmentId,
+    ...overrides,
+  };
 }
 
 type ProjectFaviconImageProps = {
@@ -122,16 +128,20 @@ describe("ProjectFavicon", () => {
     testState.faviconUrl = "https://environment.test/api/assets/token-a/v1-20-favicon.svg";
   });
 
-  it("shows the project monogram when no favicon exists", () => {
+  // The sidebar card draws the mark itself (.t3-fav); every other surface must show the same one.
+  it("shows the sidebar card's mark when no favicon exists", () => {
     testState.faviconUrl = `https://environment.test/api/assets/token/${PROJECT_FAVICON_FALLBACK_MARKER}`;
+    const markup = (project: ProjectFaviconProject) =>
+      renderToStaticMarkup(<ProjectFavicon project={project} />);
+    const bench = makeProject({
+      id: "project-bench" as ProjectFaviconProject["id"],
+      workspaceRoot: "/w/bench",
+      title: "bench",
+    });
 
-    const element = ProjectFavicon({
-      project: makeProject({ workspaceRoot: "/workspace/analytics-db", title: "analytics-db" }),
-    }) as ReactElement<{
-      readonly projectName?: string;
-    }>;
-
-    expect(element.props.projectName).toBe("analytics-db");
+    expect(markup(bench)).toContain(">BE</text>");
+    expect(markup(bench)).toContain(`var(--id-${projectTint("project-bench")})`);
+    expect(markup({ ...bench, tint: "lilac" })).toContain("var(--id-lilac)");
   });
 
   it("uses the same monogram fallback for every project category", () => {
@@ -140,10 +150,10 @@ describe("ProjectFavicon", () => {
     const element = ProjectFavicon({
       project: makeProject({ workspaceRoot: "/workspace/agent-runtime", title: "agent-runtime" }),
     }) as ReactElement<{
-      readonly projectName?: string;
+      readonly project?: ProjectFaviconProject;
     }>;
 
-    expect(element.props.projectName).toBe("agent-runtime");
+    expect(element.props.project?.title).toBe("agent-runtime");
   });
 
   it("renders a saved Lucide icon and color ahead of an uploaded favicon", () => {

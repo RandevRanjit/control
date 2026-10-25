@@ -9,8 +9,8 @@ import type { ComponentType } from "react";
 import { lazy, Suspense, useState } from "react";
 import { useAtomValue } from "@effect/atom-react";
 import { projectFaviconUrlAtom } from "../state/assets";
-import { deriveProjectIdentity } from "../projectIdentity";
 import { projectIconColorClassName } from "../projectIconColors";
+import { projectMonogram, projectTint } from "./control/cardState";
 import { ProjectMonogram } from "./ProjectMonogram";
 import { cn } from "~/lib/utils";
 
@@ -28,7 +28,7 @@ function DynamicProjectIconFallback() {
 // changes the automatic icon, which is how the command palette drifted once.
 export type ProjectFaviconProject = Pick<
   EnvironmentProject,
-  "environmentId" | "workspaceRoot" | "title" | "faviconPath" | "projectIcon"
+  "id" | "environmentId" | "workspaceRoot" | "title" | "faviconPath" | "projectIcon" | "tint"
 >;
 export function ProjectFavicon(input: {
   project: ProjectFaviconProject;
@@ -84,11 +84,7 @@ export function ProjectFavicon(input: {
 
   if (!src || isProjectFaviconFallbackUrl(src)) {
     return (
-      <ProjectFaviconFallback
-        className={input.className}
-        icon={FallbackIcon}
-        projectName={project.title}
-      />
+      <ProjectFaviconFallback className={input.className} icon={FallbackIcon} project={project} />
     );
   }
 
@@ -104,8 +100,42 @@ export function ProjectFavicon(input: {
       src={src}
       className={input.className}
       fallbackIcon={FallbackIcon}
-      fallbackProjectName={project.title}
+      fallbackProject={project}
     />
+  );
+}
+
+// The sidebar card's project mark (.t3-fav): the monogram on the project's identity
+// tint, scaled to whatever slot the surface gives it.
+function ProjectMark({
+  project,
+  className,
+}: {
+  readonly project: ProjectFaviconProject;
+  readonly className?: string | undefined;
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn("inline-flex size-4 shrink-0 items-center justify-center", className)}
+    >
+      <svg
+        viewBox="0 0 16 16"
+        className="size-full rounded-[25%] select-none"
+        style={{ background: `var(--id-${project.tint ?? projectTint(project.id)})` }}
+      >
+        <text
+          x="8"
+          y="10.7"
+          textAnchor="middle"
+          fontSize="7.5"
+          fontWeight="600"
+          style={{ fill: "var(--raised)", fontFamily: "var(--f-mono)" }}
+        >
+          {projectMonogram(project.title)}
+        </text>
+      </svg>
+    </span>
   );
 }
 
@@ -113,18 +143,15 @@ function ProjectFaviconFallback({
   className,
   icon: Icon,
   emoji,
-  projectName,
+  project,
 }: {
   readonly className?: string | undefined;
   readonly icon: ComponentType<{ className?: string }>;
   readonly emoji?: string | undefined;
-  readonly projectName?: string | undefined;
+  readonly project?: ProjectFaviconProject | undefined;
 }) {
-  if (projectName && projectName.trim().length > 0) {
-    const identity = deriveProjectIdentity(projectName);
-    return (
-      <ProjectMonogram text={identity.monogram} color={identity.color} className={className} />
-    );
+  if (project && project.title.trim().length > 0) {
+    return <ProjectMark project={project} className={className} />;
   }
 
   if (emoji) {
@@ -148,12 +175,12 @@ function ProjectFaviconImage({
   src,
   className,
   fallbackIcon: FallbackIcon,
-  fallbackProjectName,
+  fallbackProject,
 }: {
   readonly src: string;
   readonly className?: string | undefined;
   readonly fallbackIcon: ComponentType<{ className?: string }>;
-  readonly fallbackProjectName?: string | undefined;
+  readonly fallbackProject?: ProjectFaviconProject | undefined;
 }) {
   const [displayedSrc, setDisplayedSrc] = useState<string | null>(() =>
     src.startsWith("data:image/") ? src : null,
@@ -169,7 +196,7 @@ function ProjectFaviconImage({
         <ProjectFaviconFallback
           className={className}
           icon={FallbackIcon}
-          projectName={fallbackProjectName}
+          project={fallbackProject}
         />
       ) : null}
       {displayedSrc ? (

@@ -76,6 +76,7 @@ jobs:
       # electron-builder notarises the app inside but leaves the DMG unsigned.
       - name: Sign, notarise and staple the DMG
         run: |
+          trap 'echo "::error::Failed: $BASH_COMMAND"' ERR
           keychain="$RUNNER_TEMP/signing.keychain-db"
           keychain_password="$(openssl rand -hex 16)"
           echo "::add-mask::$keychain_password"
@@ -83,6 +84,8 @@ jobs:
           security create-keychain -p "$keychain_password" "$keychain"
           security set-keychain-settings -lut 3600 "$keychain"
           security unlock-keychain -p "$keychain_password" "$keychain"
+          # codesign finds the identity only in a keychain on the search list, as electron-builder's does.
+          security list-keychains -d user -s "$keychain"
           security import "$RUNNER_TEMP/signing.p12" -k "$keychain" -P "$CSC_KEY_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k "$keychain_password" "$keychain" >/dev/null
           identity="$(security find-identity -v -p codesigning "$keychain" | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -n 1)"

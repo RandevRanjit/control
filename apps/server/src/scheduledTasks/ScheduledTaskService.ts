@@ -38,9 +38,11 @@ import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as SqlClient from "effect/sql/SqlClient";
 
+import * as GitWorkflowService from "../git/GitWorkflowService.ts";
 import * as ThreadLaunchService from "../orchestration-v2/ThreadLaunchService.ts";
 import * as Metrics from "../observability/Metrics.ts";
 import * as ThreadManagementService from "../orchestration-v2/ThreadManagementService.ts";
+import * as ProjectService from "../project/ProjectService.ts";
 import * as SecretRequests from "../secrets/SecretRequests.ts";
 import * as Scheduler from "../scheduling/Scheduler.ts";
 import { isMissedFixedTimeRun, isSameSchedule, nextScheduledRunAt } from "./Schedule.ts";
@@ -353,6 +355,27 @@ export const layer = Layer.effect(
     const threadManagement = yield* ThreadManagementService.ThreadManagementService;
     const secretRequests = yield* SecretRequests.SecretRequests;
     const scheduler = yield* Scheduler.Scheduler;
+    const projects = yield* ProjectService.ProjectService;
+    const gitWorkflow = yield* GitWorkflowService.GitWorkflowService;
+
+    // An unbound run's stored default is a fresh worktree (OrchestratorMcpService), which needs a
+    // repository. Elsewhere the run starts at the project root, where Scratch gives each run a
+    // folder of its own. A failed probe keeps the stored strategy, and its launch reports why.
+    const runWorkspaceStrategy = (task: ScheduledTask) =>
+      task.workspaceStrategy.type !== "worktree"
+        ? Effect.succeed(task.workspaceStrategy)
+        : projects.getById(task.projectId).pipe(
+            Effect.flatMap(
+              Option.match({
+                onNone: () => Effect.succeed(true),
+                onSome: (project) => gitWorkflow.isRepository(project.workspaceRoot),
+              }),
+            ),
+            Effect.map((isRepository) =>
+              isRepository ? task.workspaceStrategy : { type: "root" as const },
+            ),
+            Effect.orElseSucceed(() => task.workspaceStrategy),
+          );
     // Webhook deliveries for one task dispatch in arrival order rather than
     // being dropped while an earlier delivery is still dispatching.
     const webhookPermits = yield* Ref.make<ReadonlyMap<ScheduledTaskId, Semaphore.Semaphore>>(
@@ -750,23 +773,27 @@ export const layer = Layer.effect(
         const result =
           active.threadId === null
             ? yield* Effect.exit(
-                threadLaunch.launch({
-                  commandId,
-                  projectId: active.projectId,
-                  title: active.title,
-                  modelSelection: active.modelSelection,
-                  runtimeMode: active.runtimeMode,
-                  interactionMode: active.interactionMode,
-                  workspaceStrategy: active.workspaceStrategy,
-                  initialMessage: {
-                    messageId,
-                    scheduledTaskId: active.id,
-                    text: prompt,
-                    attachments: [],
-                  },
-                  createdBy: active.createdBy,
-                  creationSource: active.creationSource,
-                }),
+                runWorkspaceStrategy(active).pipe(
+                  Effect.flatMap((workspaceStrategy) =>
+                    threadLaunch.launch({
+                      commandId,
+                      projectId: active.projectId,
+                      title: active.title,
+                      modelSelection: active.modelSelection,
+                      runtimeMode: active.runtimeMode,
+                      interactionMode: active.interactionMode,
+                      workspaceStrategy,
+                      initialMessage: {
+                        messageId,
+                        scheduledTaskId: active.id,
+                        text: prompt,
+                        attachments: [],
+                      },
+                      createdBy: active.createdBy,
+                      creationSource: active.creationSource,
+                    }),
+                  ),
+                ),
               )
             : yield* Effect.exit(
                 threadManagement.sendToThread({

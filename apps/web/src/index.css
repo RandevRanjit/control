@@ -2247,6 +2247,16 @@ code {
   --chat-content-max-width: 100%;
 }
 
+/* Design v1 caps the composer card at the comfortable lane (736 px) and its strip
+   22 px in either side; both follow the setting so they stay one centred piece. */
+:root[data-chat-width] .t3-comp {
+  max-width: var(--chat-content-max-width);
+}
+
+:root[data-chat-width] .t3-strip {
+  max-width: calc(var(--chat-content-max-width) - 44px);
+}
+
 :root[data-diff-color-scheme="blue-orange"] {
   --diff-addition: light-dark(var(--color-blue-600), var(--color-blue-400));
   --diff-deletion: light-dark(var(--color-orange-600), var(--color-orange-400));

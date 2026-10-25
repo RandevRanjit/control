@@ -71,7 +71,6 @@ apps/mobile/modules/control-composer-editor/android/src/main/java/expo/modules/c
 apps/mobile/modules/control-composer-editor/ios/ControlComposerEditorView.swift	data-t3-context-fragment
 apps/mobile/modules/control-composer-editor/ios/ControlComposerEditorView.swift	t3
 apps/mobile/modules/control-terminal/THIRD_PARTY_NOTICES.md	https://github.com/Yash-Singh1/ghostty/tree/t3code/custom-io-ordered-feed
-apps/mobile/package.json	file:deps/react-native-screens-5.0.0-t3.7.tgz
 apps/mobile/plugins/withWidgetLogoAsset.cjs	T3Mark.imageset
 apps/mobile/plugins/withWidgetLogoAsset.cjs	T3Mark.svg
 apps/mobile/src/lib/composerAttachmentFiles.test.ts	/Documents/t3-composer-attachments/
@@ -1566,7 +1565,6 @@ design/hybrid/v1/measure.md	.t3-working
 docs/BACKLOG.md	pingdotgg/t3code
 docs/internals/composer-context-references.md	application/x-t3-context-fragment
 docs/internals/composer-context-references.md	t3-context:
-docs/operations/mobile-screens-fork.md	/absolute/path/to/t3code/apps/mobile/deps
 docs/operations/mobile-screens-fork.md	/tmp/t3-screens-fork
 docs/operations/mobile-screens-fork.md	5.0.0-t3.N
 docs/operations/mobile-screens-fork.md	T3

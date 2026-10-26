@@ -183,7 +183,8 @@ One `.d-turn`, padded `6 0 16 34`. The 34 px left gutter holds the arrows and th
    - The **→ arrow** (18 × 18) sits in the gutter, 8 px from the pane's content edge and 8 px from the text.
 2. **Tool stacks**, one per run of tool calls, inset 22 from the text edge (§4.5).
 3. **The reply.**
-   - Regrade 14 / 22, weight 400, **`--text-strong`**, the same ink as the prompt. At most 620 wide.
+   - Regrade 14 / 22, weight 400, **`--text-strong`**, the same ink as the prompt. At most 620 wide in the Comfortable chat
+     width; Wide and Full let it fill the lane, as the prompt band does (owner, 26 Oct).
    - The **↳ arrow** (18 × 18) sits in the gutter at the same x as →.
    - Inline code is Plex 12.5 on the card tone, radius 4.
 4. **The turn's totals**, Plex 10.5 on an 11 px line, in caption ink: `18s · ↑ 2.1k · ↓ 640 · no changes`. The whole-pixel

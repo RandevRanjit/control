@@ -59,6 +59,14 @@
 .t3-d .d-ld[data-popup-open] {
   background: var(--hy-card);
 }
+/* A head too narrow for the pills scrolls them sideways under a fade, so they never run
+   under the panel toggles (owner, 26 Oct). The end padding lets the last pill scroll clear. */
+.t3-d .d-loads {
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-right: 24px;
+  mask-image: linear-gradient(to left, transparent, #000 24px);
+}
 /* Agents while any runs: the icon and count take the working blue (HeadLoads.tsx). */
 .t3-d .d-ld[data-running] :is(.t3g, b) {
   color: var(--st-working);

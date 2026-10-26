@@ -2,6 +2,7 @@ import { HTML_RENDER_DEFAULT_FONTS, htmlRenderTheme } from "@control/shared/html
 import { useMemo, useSyncExternalStore } from "react";
 
 import { appearanceFontStack } from "../appearanceFonts";
+import { withLiveDesign } from "./htmlRenderLiveTheme";
 import {
   getStandardThemeColors,
   getThemeColorsForMode,
@@ -40,10 +41,12 @@ export function useHtmlRenderTheme() {
   const mono = useClientSettings((settings) => settings.fontFamilyCode);
   return useMemo(
     () =>
-      htmlRenderTheme(colors, resolvedTheme, {
-        sans: appearanceFontStack(sans, HTML_RENDER_DEFAULT_FONTS.sans),
-        mono: appearanceFontStack(mono, HTML_RENDER_DEFAULT_FONTS.mono),
-      }),
+      withLiveDesign(
+        htmlRenderTheme(colors, resolvedTheme, {
+          sans: appearanceFontStack(sans, HTML_RENDER_DEFAULT_FONTS.sans),
+          mono: appearanceFontStack(mono, HTML_RENDER_DEFAULT_FONTS.mono),
+        }),
+      ),
     [colors, resolvedTheme, sans, mono],
   );
 }

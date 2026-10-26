@@ -1,3 +1,5 @@
+import * as NodeVM from "node:vm";
+
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -11,6 +13,7 @@ import {
   readHtmlRenderContentHeight,
   readHtmlRenderLinkRequest,
   readHtmlRenderReference,
+  type HtmlRenderTheme,
 } from "./htmlRender.ts";
 import { CONTROL_DARK_THEME_COLORS, CONTROL_LIGHT_THEME_COLORS } from "./themePalettes.ts";
 import { htmlRenderFromToolItem } from "./toolOutput.ts";
@@ -129,6 +132,47 @@ describe("htmlRenderThemeMessage", () => {
       method: "ui/notifications/host-context-changed",
       params: { theme: "dark", styles: { variables: theme.variables } },
     });
+  });
+});
+
+describe("the bootstrap's theme", () => {
+  /** Runs the injected script as a framed page would, with the theme in its URL fragment. */
+  function runBootstrap(theme: HtmlRenderTheme) {
+    const injected = injectHtmlRenderBootstrap("<html><head></head><body></body></html>");
+    const script = /<script>([\s\S]*?)<\/script>/.exec(injected)![1]!;
+    const style = { textContent: "" };
+    const target = { addEventListener: () => {}, postMessage: () => {} };
+    const window = { ...target, parent: target };
+    NodeVM.runInNewContext(script, {
+      window,
+      document: { getElementById: () => style, addEventListener: () => {} },
+      location: { hash: htmlRenderThemeFragment(theme), pathname: "/render", search: "" },
+      history: { state: null, replaceState: () => {} },
+    });
+    return style.textContent;
+  }
+
+  it("loads the client's font faces, and only well-formed ones", () => {
+    const css = runBootstrap({
+      ...htmlRenderTheme(CONTROL_DARK_THEME_COLORS, "dark"),
+      fontFaces: [
+        {
+          family: "BloomRegrade",
+          url: "https://app.test/assets/NeueRegrade.ttf",
+          format: "truetype",
+          weight: "300 800",
+          style: "normal",
+        },
+        { family: 'x"}body{display:none', url: "https://app.test/a.ttf" },
+        { family: "Evil", url: 'javascript:alert(1)")' },
+      ],
+    });
+    expect(css).toContain(
+      '@font-face{font-family:"BloomRegrade";src:url("https://app.test/assets/NeueRegrade.ttf") format("truetype");font-weight:300 800;font-style:normal;font-display:block}',
+    );
+    expect(css).not.toContain('font-family:"x');
+    expect(css).not.toContain("Evil");
+    expect(css).toContain("--background:");
   });
 });
 

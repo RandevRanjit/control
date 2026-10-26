@@ -302,11 +302,13 @@ export function showContextMenuFallback<T extends string>(
       menu.style.top = `${preferredTop}px`;
       menu.dataset.level = String(level);
 
+      // As tall as the window allows: clampMenuPosition lifts the menu to fit, so a
+      // chat card's full menu shows without scrolling its last items out of view.
       const inner = document.createElement("div");
       inner.className =
-        "max-h-[min(24rem,70vh)] min-w-0 max-w-sm overflow-y-auto overflow-x-hidden p-1";
+        "max-h-[calc(100vh-8px)] min-w-0 max-w-sm overflow-y-auto overflow-x-hidden p-1";
       inner.style.cssText =
-        "max-height:min(24rem,70vh);min-width:0;max-width:24rem;overflow-x:hidden;overflow-y:auto;padding:0.25rem;";
+        "max-height:calc(100vh - 8px);min-width:0;max-width:24rem;overflow-x:hidden;overflow-y:auto;padding:0.25rem;";
 
       for (const item of entries) {
         if (item.separatorBefore === true && inner.children.length > 0) {

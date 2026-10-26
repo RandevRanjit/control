@@ -935,13 +935,60 @@ const make = Effect.gen(function* () {
     return dispatched;
   });
 
-  const scheduleRetriedPreparation = (
+  /**
+   * A worktree needs a repository. Retried in a folder without one (a schedule's default in
+   * Scratch), the run takes the folder an earlier attempt bound, else the chat's own Scratch
+   * folder, else the project root. A failed probe keeps the stored strategy, which reports why.
+   */
+  const strategyOutsideRepository = (
+    projection: OrchestrationV2ThreadProjection,
+    workspacePreparation: ThreadLaunchWorkspaceStrategy,
+    text: string,
+  ) =>
+    Effect.gen(function* () {
+      if (workspacePreparation.type !== "worktree") return workspacePreparation;
+      const isRepository = yield* projects.getById(projection.thread.projectId).pipe(
+        Effect.flatMap(
+          Option.match({
+            onNone: () => Effect.succeed(true),
+            onSome: (project) => git.isRepository(project.workspaceRoot),
+          }),
+        ),
+        Effect.orElseSucceed(() => true),
+      );
+      if (isRepository) return workspacePreparation;
+      if (projection.thread.worktreePath !== null) {
+        return {
+          type: "existing_worktree" as const,
+          worktreePath: projection.thread.worktreePath,
+        };
+      }
+      const folder = yield* managedFolders.folderForThread({
+        projectId: projection.thread.projectId,
+        threadId: projection.thread.id,
+        text,
+      });
+      return Option.match(folder, {
+        onNone: (): ThreadLaunchWorkspaceStrategy => ({ type: "root" }),
+        onSome: (worktreePath): ThreadLaunchWorkspaceStrategy => ({
+          type: "existing_worktree",
+          worktreePath,
+        }),
+      });
+    });
+
+  const scheduleRetriedPreparation = Effect.fnUntraced(function* (
     input: ThreadLaunchRetryInput,
     projection: OrchestrationV2ThreadProjection,
     run: OrchestrationV2ThreadProjection["runs"][number],
-    workspacePreparation: ThreadLaunchWorkspaceStrategy,
-  ) => {
+    storedPreparation: ThreadLaunchWorkspaceStrategy,
+  ) {
     const message = projection.messages.find((candidate) => candidate.id === run.userMessageId);
+    const workspacePreparation = yield* strategyOutsideRepository(
+      projection,
+      storedPreparation,
+      message?.text ?? projection.thread.title,
+    );
     // A worktree the failed attempt already created is reused, not created again.
     const reuse =
       workspacePreparation.type === "worktree" &&
@@ -956,7 +1003,7 @@ const make = Effect.gen(function* () {
             reusedWorktree: { baseRef: workspacePreparation.baseRef },
           }
         : null;
-    return schedulePreparation(
+    return yield* schedulePreparation(
       {
         commandId: input.commandId,
         projectId: projection.thread.projectId,
@@ -975,7 +1022,7 @@ const make = Effect.gen(function* () {
       input.threadId,
       run.id,
     );
-  };
+  });
 
   return ThreadLaunchService.of({ launch, retryPreparation });
 });

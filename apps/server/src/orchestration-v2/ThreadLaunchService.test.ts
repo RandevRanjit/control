@@ -100,6 +100,7 @@ interface HarnessOptions {
   readonly managedFolders?: Layer.Layer<ManagedProjectFolders.ManagedProjectFolders>;
   readonly createWorktree?: GitWorkflow.GitWorkflowService["Service"]["createWorktree"];
   readonly fetchRemote?: GitWorkflow.GitWorkflowService["Service"]["fetchRemote"];
+  readonly isRepository?: GitWorkflow.GitWorkflowService["Service"]["isRepository"];
   readonly hasCommit?: GitWorkflow.GitWorkflowService["Service"]["hasCommit"];
   readonly renameBranch?: GitWorkflow.GitWorkflowService["Service"]["renameBranch"];
   readonly runSetup?: ProjectSetupScriptRunner.ProjectSetupScriptRunner["Service"]["runForThread"];
@@ -169,6 +170,7 @@ function makeHarness(options: HarnessOptions = {}) {
       createWorktree,
       renameBranch,
       fetchRemote: options.fetchRemote ?? (() => Effect.void),
+      isRepository: options.isRepository ?? (() => Effect.succeed(true)),
       hasCommit: options.hasCommit ?? (() => Effect.succeed(false)),
       remoteExists: () => Effect.succeed(true),
       remoteBranchExists: () => Effect.succeed(true),
@@ -1422,6 +1424,66 @@ it.effect("retries a failed workspace preparation on the same run", () => {
     assert.equal(rejected._tag, "OrchestratorDispatchError");
   }).pipe(Effect.provide(harness.layer));
 });
+
+it.effect(
+  "a retry outside a git repository runs in the chat's Scratch folder, not a worktree",
+  () => {
+    let fetchFailures = 1;
+    const harness = makeHarness({
+      // The first attempt fails as a worktree in a folder with no repository does.
+      fetchRemote: () =>
+        fetchFailures-- > 0
+          ? Effect.fail(
+              new GitCommandError({
+                operation: "GitWorkflowService.remoteExists",
+                command: "vcs-route",
+                cwd: project.workspaceRoot,
+                detail: "Failed to resolve the VCS driver for this Git command.",
+              }),
+            )
+          : Effect.void,
+      isRepository: () => Effect.succeed(false),
+      managedFolders: Layer.mock(ManagedProjectFolders.ManagedProjectFolders)({
+        namedProjectsRoot: "/projects",
+        folderForThread: () => Effect.succeed(Option.some("/scratch/2026-10-26-housekeeping")),
+      }),
+    });
+    return Effect.gen(function* () {
+      const launches = yield* ThreadLaunch.ThreadLaunchService;
+      const outbox = yield* EffectOutbox.EffectOutboxV2;
+      const threads = yield* ThreadManagement.ThreadManagementService;
+      const launched = yield* launches.launch(
+        launchInput({
+          command: "command:launch:scratch-retry",
+          thread: "thread:launch:scratch-retry",
+          message: "Weekly housekeeping",
+          workspace: { type: "worktree", baseRef: "main", startFromOrigin: true },
+        }),
+      );
+      yield* waitUntil(() =>
+        threads
+          .getThreadProjection(launched.threadId)
+          .pipe(Effect.map((projection) => projection.runs[0]?.status === "failed")),
+      );
+      const runId = (yield* threads.getThreadProjection(launched.threadId)).runs[0]!.id;
+
+      yield* launches.retryPreparation({
+        commandId: CommandId.make("command:launch:scratch-retry:1"),
+        threadId: launched.threadId,
+        runId,
+      });
+      yield* waitUntil(() =>
+        outbox
+          .listByCommandId(CommandId.make("command:launch:scratch-retry:1:release"))
+          .pipe(Effect.map((effects) => effects.length === 1)),
+      );
+      const retried = yield* threads.getThreadProjection(launched.threadId);
+      assert.equal(retried.runs[0]?.status, "starting");
+      assert.equal(retried.thread.worktreePath, "/scratch/2026-10-26-housekeeping");
+      assert.equal(harness.createWorktree.mock.calls.length, 0);
+    }).pipe(Effect.provide(harness.layer));
+  },
+);
 
 it.effect("a retry reuses a recorded worktree without undoing its branch rename", () => {
   let setupFailures = 1;

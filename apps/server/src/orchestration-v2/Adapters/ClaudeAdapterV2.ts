@@ -3358,6 +3358,9 @@ export function makeClaudeAdapterV2(
         // call can be projected while the root is idle and its task_started
         // only in the continuation turn, so these outlive a turn too.
         const pendingSubagentLaunchesByToolUseId = new Map<string, PendingClaudeSubagentLaunch>();
+        // Each Agent call's input until its result. A launch a hook refuses
+        // starts no task, so its error result is named from here, not "tool".
+        const agentCallInputsByToolUseId = new Map<string, ClaudeNativeToolInput>();
         // The turn that settled last on each native thread. While the root is
         // idle, a running subagent's frames are projected through it at once
         // instead of waiting in the wake buffer for a continuation run.
@@ -6725,6 +6728,7 @@ export function makeClaudeAdapterV2(
           for (const toolUse of claudeToolUseBlocksFromAssistantMessage(message)) {
             const nativeToolInput = claudeNativeToolInputFromUnknown(toolUse.input);
             if (toolUse.name === "Agent") {
+              agentCallInputsByToolUseId.set(toolUse.id, nativeToolInput);
               rememberClaudeSubagentLaunch(
                 context,
                 pendingSubagentLaunchesByToolUseId,
@@ -6767,6 +6771,8 @@ export function makeClaudeAdapterV2(
           }
 
           for (const { toolResult, output } of claudeToolResultEntriesFromMessage(message)) {
+            const agentCallInput = agentCallInputsByToolUseId.get(toolResult.tool_use_id);
+            agentCallInputsByToolUseId.delete(toolResult.tool_use_id);
             // Session scope: while the root is idle, this context is the turn
             // that settled last, which never saw a subagent an earlier turn
             // launched (a nested one whose Agent call returns now).
@@ -6802,8 +6808,9 @@ export function makeClaudeAdapterV2(
               (yield* ensureToolCallStarted({
                 context,
                 nativeItemId: toolResult.tool_use_id,
-                toolName: toolNameFromClaudeToolResult(toolResult),
-                toolInput: EMPTY_CLAUDE_NATIVE_TOOL_INPUT,
+                toolName:
+                  agentCallInput === undefined ? toolNameFromClaudeToolResult(toolResult) : "Agent",
+                toolInput: agentCallInput ?? EMPTY_CLAUDE_NATIVE_TOOL_INPUT,
                 parentToolUseId,
               }));
             const completedAt = yield* DateTime.now;
@@ -7455,6 +7462,7 @@ export function makeClaudeAdapterV2(
           // ExitPlanMode plan) in whichever run it is released to.
           const heldForEcho = context.heldRootFrames.length > 0;
           if (toolName === "Agent") {
+            agentCallInputsByToolUseId.set(nativeRequestId, nativeToolInput);
             rememberClaudeSubagentLaunch(
               context,
               pendingSubagentLaunchesByToolUseId,

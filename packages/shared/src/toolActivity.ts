@@ -34,6 +34,8 @@ export function dynamicToolTitle(
   input: unknown,
 ): string | undefined {
   if (toolName === "cua_repl.js") return asTrimmedString(asRecord(input)?.title);
+  // An Agent call reaches here only when no subagent started (a hook refused it).
+  if (toolName === "Agent") return asTrimmedString(asRecord(input)?.description);
   const skill = claudeSkillInvocation(toolName, input);
   return skill === undefined ? undefined : `Skill: ${skill.name}`;
 }

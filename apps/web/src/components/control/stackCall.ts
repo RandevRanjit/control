@@ -76,7 +76,9 @@ export function resolveStackCall(
   const family = resolveToolKind({
     action: toolGroupAction(entry),
     isSkill: skill !== undefined,
-    isSubagent: entry.itemType === "subagent",
+    // An Agent call is a tool row only when no subagent started (a hook refused it).
+    isSubagent:
+      entry.itemType === "subagent" || (item?.type === "dynamic_tool" && item.toolName === "Agent"),
   });
   const failed = workEntryDisplayIndicatesToolFailure(entry);
   const running = entry.toolLifecycleStatus === "inProgress";

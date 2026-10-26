@@ -2459,6 +2459,68 @@ describe("MessagesTimeline", () => {
     expect(markup).not.toContain("mcp__control__thread_read");
   });
 
+  it("names an Agent call a hook refused Agent, by its description", async () => {
+    activityTestState.expanded = true;
+    const { MessagesTimeline } = await import("./MessagesTimeline");
+    const item = {
+      id: "tool-denied-agent",
+      threadId: "thread-source",
+      runId: null,
+      nodeId: null,
+      providerThreadId: null,
+      providerTurnId: null,
+      nativeItemRef: null,
+      parentItemId: null,
+      ordinal: 0,
+      status: "failed",
+      title: "Gather open backlog items",
+      startedAt: null,
+      completedAt: null,
+      updatedAt: {},
+      type: "dynamic_tool",
+      toolName: "Agent",
+      input: { description: "Gather open backlog items", prompt: "Read the plans." },
+      output: "PreToolUse:Agent hook error: not allowed",
+    } as const;
+    const projectedItem = {
+      position: 0,
+      visibility: "local",
+      sourceThreadId: "thread-source",
+      sourceItemId: item.id,
+      item,
+    } as const;
+    const markup = renderToStaticMarkup(
+      <MessagesTimeline
+        {...buildProps()}
+        timelineEntries={
+          [
+            {
+              id: item.id,
+              kind: "work",
+              createdAt: MESSAGE_CREATED_AT,
+              entry: {
+                id: item.id,
+                createdAt: MESSAGE_CREATED_AT,
+                runId: null,
+                label: item.title,
+                tone: "tool",
+                itemType: item.type,
+                toolTitle: item.title,
+                toolLifecycleStatus: "failed",
+                toolData: { input: item.input, output: item.output },
+                structuredPayload: item,
+                projectedItem,
+              },
+            },
+          ] as never
+        }
+      />,
+    );
+
+    expect(markup).toContain('<span class="d-kt">Agent</span>');
+    expect(markup).toContain("Gather open backlog items");
+  });
+
   it("formats changed file paths from the workspace root", async () => {
     activityTestState.expanded = true;
     const { MessagesTimeline } = await import("./MessagesTimeline");

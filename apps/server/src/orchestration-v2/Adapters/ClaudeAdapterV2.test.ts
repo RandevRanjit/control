@@ -3039,6 +3039,86 @@ describe("ClaudeAdapterV2 background wake turns", () => {
       ),
   );
 
+  it.effect("keeps a hook-denied Agent call's name and description", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const harness = yield* makeWakeHarness;
+        yield* harness.runtime.startTurn(
+          makeClaudeTestTurnInput({
+            threadId: harness.threadId,
+            providerThread: harness.providerThread,
+            now: yield* DateTime.now,
+            attemptId: RunAttemptId.make("attempt-denied-agent"),
+            text: "Gather the backlog.",
+            attachments: [],
+          }),
+        );
+        // A PreToolUse hook refuses the launch: no task starts, so the result
+        // is the only frame that names the call.
+        yield* Queue.offer(
+          harness.sdkMessages,
+          claudeSdkFrame({
+            type: "assistant",
+            message: {
+              model: "claude-opus-5-5",
+              id: "msg_denied_agent",
+              type: "message",
+              role: "assistant",
+              content: [
+                {
+                  type: "tool_use",
+                  id: "toolu_denied_agent",
+                  name: "Agent",
+                  input: { description: "Gather open backlog items", prompt: "Read the plans." },
+                },
+              ],
+            },
+            parent_tool_use_id: null,
+            uuid: "00000000-0000-4000-8000-000000000901",
+            session_id: WAKE_NATIVE_SESSION,
+          }),
+        );
+        yield* harness.offerAndWait(
+          claudeSdkFrame({
+            type: "user",
+            uuid: "00000000-0000-4000-8000-000000000902",
+            session_id: WAKE_NATIVE_SESSION,
+            parent_tool_use_id: null,
+            message: {
+              role: "user",
+              content: [
+                {
+                  type: "tool_result",
+                  tool_use_id: "toolu_denied_agent",
+                  is_error: true,
+                  content: "PreToolUse:Agent hook error: not allowed",
+                },
+              ],
+            },
+            tool_result_meta: [{ id: "toolu_denied_agent", non_execution_kind: "permission-rule" }],
+          }),
+        );
+        yield* Queue.offer(
+          harness.sdkMessages,
+          makeResultFrame({ uuid: "00000000-0000-4000-8000-000000000903", result: "Done" }),
+        );
+        yield* Queue.take(harness.terminalReceipts);
+        const denied = harness.events.findLast(
+          (event) =>
+            event.type === "turn_item.updated" &&
+            event.turnItem.nativeItemRef?.nativeId === "toolu_denied_agent",
+        );
+        const item =
+          denied?.type === "turn_item.updated" && denied.turnItem.type === "dynamic_tool"
+            ? denied.turnItem
+            : undefined;
+        assert.equal(item?.toolName, "Agent");
+        assert.equal(item?.title, "Gather open backlog items");
+        assert.equal(item?.status, "failed");
+      }).pipe(Effect.provide(Layer.merge(IdAllocator.layer, NodeServices.layer))),
+    ),
+  );
+
   it.effect.each(
     (["aborted_tools", "aborted_streaming"] as const).flatMap((terminalReason) =>
       [true, false].map((steered) => ({ terminalReason, steered })),

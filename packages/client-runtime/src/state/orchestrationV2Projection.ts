@@ -286,5 +286,10 @@ export function applyOrchestrationV2ProjectionEvent(
     // Not chat activity, as on the server: skip the updatedAt bump.
     case "loose-end.updated":
       return { ...projection, looseEnds: upsertEntity(projection.looseEnds ?? [], event.payload) };
+    case "loose-end.removed":
+      return {
+        ...projection,
+        looseEnds: (projection.looseEnds ?? []).filter((item) => item.id !== event.payload.id),
+      };
   }
 }

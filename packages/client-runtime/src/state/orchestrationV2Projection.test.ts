@@ -196,6 +196,16 @@ describe("applyOrchestrationV2ProjectionEvent", () => {
     expect(filed?.looseEnds).toEqual([open]);
     expect(ticked?.looseEnds).toEqual([done(open)]);
     expect(ticked?.updatedAt).toEqual(now);
+
+    const cleared = applyOrchestrationV2ProjectionEvent(ticked!, {
+      id: "event-removed",
+      type: "loose-end.removed",
+      threadId,
+      occurredAt: later,
+      payload: { id: open.id },
+    } as OrchestrationV2DomainEvent);
+    expect(cleared?.looseEnds).toEqual([]);
+    expect(cleared?.updatedAt).toEqual(now);
   });
 
   it("ignores events for another thread", () => {

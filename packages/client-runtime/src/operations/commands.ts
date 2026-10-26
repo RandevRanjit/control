@@ -593,6 +593,17 @@ export const closeLooseEnd = Effect.fn("EnvironmentCommands.closeLooseEnd")(func
   });
 });
 
+/** Clear in the Done fold: the chat's closed loose ends leave it. */
+export const clearLooseEnds = Effect.fn("EnvironmentCommands.clearLooseEnds")(function* (
+  input: ThreadCommandInput,
+) {
+  return yield* dispatch({
+    type: "loose-end.clear",
+    commandId: yield* allocateCommandId(input),
+    threadId: input.threadId,
+  });
+});
+
 /** Undo from the Done fold. */
 export const reopenLooseEnd = Effect.fn("EnvironmentCommands.reopenLooseEnd")(function* (
   input: ReopenLooseEndInput,

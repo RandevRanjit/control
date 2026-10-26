@@ -179,6 +179,7 @@ function commandThreadIds(command: OrchestrationV2Command): ReadonlyArray<Thread
     case "provider.switch":
     case "loose-end.close":
     case "loose-end.reopen":
+    case "loose-end.clear":
       return [command.threadId];
     case "delegated_task.request":
     case "delegated_task.wake-policy":

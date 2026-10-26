@@ -188,6 +188,53 @@ it.layer(layerTest)("loose ends", (it) => {
     }),
   );
 
+  it.effect("clear removes the closed ones, keeps the open, and survives a rebuild", () =>
+    Effect.gen(function* () {
+      const orchestrator = yield* Orchestrator.OrchestratorV2;
+      const projections = yield* ProjectionStore.ProjectionStoreV2;
+      const maintenance = yield* ProjectionMaintenance.ProjectionMaintenanceV2;
+      const threadId = ThreadId.make("thread:loose-ends-clear");
+      yield* createThread(threadId);
+      const createdAt = (yield* projections.getThreadProjection(threadId)).thread.updatedAt;
+      yield* TestClock.adjust("1 minute");
+      yield* file(threadId, "ticked", "Install the nightly");
+      yield* file(threadId, "dismissed", "Rename the branch");
+      yield* file(threadId, "open", "Say which forums to post on");
+      for (const [id, outcome] of [
+        ["ticked", "done"],
+        ["dismissed", "dismissed"],
+      ] as const) {
+        yield* orchestrator.dispatch({
+          type: "loose-end.close",
+          commandId: CommandId.make(`close:${id}`),
+          threadId,
+          looseEndId: LooseEndId.make(id),
+          outcome,
+        });
+      }
+
+      yield* orchestrator.dispatch({
+        type: "loose-end.clear",
+        commandId: CommandId.make("clear:loose-ends"),
+        threadId,
+      });
+
+      const ids = projections
+        .getThreadProjection(threadId)
+        .pipe(Effect.map((projection) => (projection.looseEnds ?? []).map((item) => item.id)));
+      assert.deepEqual(yield* ids, ["open"]);
+      assert.equal(yield* openCount(threadId), 1);
+      // Not chat activity: clearing leaves the chat's place in the list.
+      assert.deepEqual(
+        (yield* projections.getThreadProjection(threadId)).thread.updatedAt,
+        createdAt,
+      );
+
+      assert.isTrue((yield* maintenance.rebuild).valid);
+      assert.deepEqual(yield* ids, ["open"]);
+    }),
+  );
+
   it.effect("rebuild from the event log to the same state", () =>
     Effect.gen(function* () {
       const projections = yield* ProjectionStore.ProjectionStoreV2;

@@ -76,7 +76,7 @@ type PopoverProps = {
 };
 
 /**
- * The chat head's mail icon (HANDOFF §17.2), first in its tools: the open count, and the
+ * The chat head's mail icon (HANDOFF §17.2), last in its tools: the open count, and the
  * popover (LE1) hung under it with this chat's open loose ends, then the Done fold.
  */
 export function LooseEndsHeadIcon(props: PopoverProps) {
@@ -132,6 +132,10 @@ function Popover(props: PopoverProps) {
   const reopen = useOrchestrationCommand(
     threadEnvironment.reopenLooseEnd,
     "Failed to reopen the loose end",
+  );
+  const clear = useOrchestrationCommand(
+    threadEnvironment.clearLooseEnds,
+    "Failed to clear the done loose ends",
   );
   const openInEditor = useAtomCommand(shellEnvironment.openInEditor, "Failed to reveal the file");
   const openLink = useOpenLink(threadRef);
@@ -268,16 +272,29 @@ function Popover(props: PopoverProps) {
         )}
         {closed.length === 0 ? null : (
           <>
-            <button
-              type="button"
-              className="s-le-fold w-full"
-              aria-expanded={doneOpen}
-              onClick={toggleDone}
-            >
-              {doneOpen ? <ChevronDownIcon className="gi" /> : <ChevronRightIcon className="gi" />}
-              Done
-              <span className="pearl count">{closed.length}</span>
-            </button>
+            <div className="s-le-fold">
+              <button
+                type="button"
+                className="s-le-fl"
+                aria-expanded={doneOpen}
+                onClick={toggleDone}
+              >
+                {doneOpen ? (
+                  <ChevronDownIcon className="gi" />
+                ) : (
+                  <ChevronRightIcon className="gi" />
+                )}
+                Done
+                <span className="pearl count">{closed.length}</span>
+              </button>
+              <button
+                type="button"
+                className="pill ghost sm"
+                onClick={() => void clear({ ...target, input: { threadId: threadRef.threadId } })}
+              >
+                Clear
+              </button>
+            </div>
             {doneOpen ? (
               <div className="s-le-list">
                 {closed.map((item) => (

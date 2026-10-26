@@ -462,6 +462,7 @@ function commandThreadId(command: OrchestrationV2ServerCommand): ThreadId {
     case "loose-end.close":
     case "loose-end.agent-close":
     case "loose-end.reopen":
+    case "loose-end.clear":
       return command.threadId;
     case "delegated_task.request":
     case "delegated_task.wake-policy":
@@ -7658,6 +7659,39 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       });
     });
 
+  /** The owner clears a chat's closed loose ends: each leaves the chat; the open ones stay. */
+  const dispatchLooseEndClear = (
+    command: Extract<OrchestrationV2Command, { readonly type: "loose-end.clear" }>,
+    events: Ref.Ref<Array<OrchestrationV2DomainEvent>>,
+  ) =>
+    Effect.gen(function* () {
+      const records = yield* projectionStore
+        .getThreadRecords(command.threadId, ["looseEnds"])
+        .pipe(
+          Effect.mapError(() => new OrchestratorProjectionError({ threadId: command.threadId })),
+        );
+      if (records.thread.deletedAt !== null) {
+        return yield* new OrchestratorDispatchError({
+          commandId: command.commandId,
+          commandType: command.type,
+          cause: `Thread ${command.threadId} is deleted.`,
+        });
+      }
+      const now = yield* DateTime.now;
+      for (const item of records.looseEnds ?? []) {
+        if (item.status === "open") continue;
+        yield* emit(
+          events,
+          command,
+        )({
+          type: "loose-end.removed",
+          threadId: command.threadId,
+          occurredAt: now,
+          payload: { id: item.id },
+        });
+      }
+    });
+
   const dispatchQueuedRunCancel = (
     command: Extract<OrchestrationV2Command, { readonly type: "queued-run.cancel" }>,
     events: Ref.Ref<Array<OrchestrationV2DomainEvent>>,
@@ -10482,6 +10516,9 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       case "loose-end.agent-close":
       case "loose-end.reopen":
         yield* dispatchLooseEnd(command, events);
+        break;
+      case "loose-end.clear":
+        yield* dispatchLooseEndClear(command, events);
         break;
       case "queued-run.edit":
         yield* dispatchQueuedRunEdit(command, events);

@@ -1844,6 +1844,12 @@ export const OrchestrationV2DomainEvent = Schema.Union([
     type: Schema.Literal("loose-end.updated"),
     payload: OrchestrationV2LooseEnd,
   }),
+  /** The owner cleared a closed loose end; it leaves the chat. Older clients skip it. */
+  Schema.Struct({
+    ...OrchestrationV2EventBase.fields,
+    type: Schema.Literal("loose-end.removed"),
+    payload: Schema.Struct({ id: LooseEndId }),
+  }),
   Schema.Struct({
     ...OrchestrationV2EventBase.fields,
     type: Schema.Literal("checkpoint-scope.created"),
@@ -2707,6 +2713,11 @@ export const OrchestrationV2DomainEventJson = Schema.Union([
   }),
   Schema.Struct({
     ...OrchestrationV2JsonEventBaseFields,
+    type: Schema.Literal("loose-end.removed"),
+    payload: Schema.Struct({ id: LooseEndId }),
+  }),
+  Schema.Struct({
+    ...OrchestrationV2JsonEventBaseFields,
     type: Schema.Literal("checkpoint-scope.created"),
     payload: OrchestrationV2CheckpointScopeJson,
   }),
@@ -3209,6 +3220,12 @@ export const OrchestrationV2Command = Schema.Union([
     commandId: CommandId,
     threadId: ThreadId,
     looseEndId: LooseEndId,
+  }),
+  /** The owner clears the chat's closed loose ends, done and dismissed. */
+  Schema.Struct({
+    type: Schema.Literal("loose-end.clear"),
+    commandId: CommandId,
+    threadId: ThreadId,
   }),
 ]);
 export type OrchestrationV2Command = typeof OrchestrationV2Command.Type;

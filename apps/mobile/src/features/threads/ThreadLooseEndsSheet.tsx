@@ -34,6 +34,7 @@ export function ThreadLooseEndsSheet({ route }: StaticScreenProps<LooseEndsTarge
   const savePreferences = useAtomSet(updateMobilePreferencesAtom);
   const close = useAtomCommand(threadEnvironment.closeLooseEnd, "close the loose end");
   const reopen = useAtomCommand(threadEnvironment.reopenLooseEnd, "reopen the loose end");
+  const clear = useAtomCommand(threadEnvironment.clearLooseEnds, "clear the done loose ends");
   const [nowMs] = useState(() => Date.now());
   const doneOpen = AsyncResult.isSuccess(preferences)
     ? preferences.value.looseEndsDoneExpanded === true
@@ -126,22 +127,36 @@ export function ThreadLooseEndsSheet({ route }: StaticScreenProps<LooseEndsTarge
       )}
       {closed.length === 0 ? null : (
         <>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ expanded: doneOpen }}
-            onPress={() => savePreferences({ looseEndsDoneExpanded: !doneOpen })}
-            className="mt-1 h-10 flex-row items-center gap-1.5 border-t border-border px-2.5"
-          >
-            <SymbolView
-              name={doneOpen ? "chevron.down" : "chevron.right"}
-              size={12}
-              tintColorClassName="accent-icon-muted"
-            />
-            <Text className="text-[14px] font-medium text-foreground-secondary">Done</Text>
-            <View className="h-4 min-w-4 items-center justify-center rounded-full bg-subtle px-1">
-              <Text className="text-[10px] font-semibold text-foreground">{closed.length}</Text>
-            </View>
-          </Pressable>
+          <View className="mt-1 h-10 flex-row items-center border-t border-border pr-1">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: doneOpen }}
+              onPress={() => savePreferences({ looseEndsDoneExpanded: !doneOpen })}
+              className="h-full flex-1 flex-row items-center gap-1.5 px-2.5"
+            >
+              <SymbolView
+                name={doneOpen ? "chevron.down" : "chevron.right"}
+                size={12}
+                tintColorClassName="accent-icon-muted"
+              />
+              <Text className="text-[14px] font-medium text-foreground-secondary">Done</Text>
+              <View className="h-4 min-w-4 items-center justify-center rounded-full bg-subtle px-1">
+                <Text className="text-[10px] font-semibold text-foreground">{closed.length}</Text>
+              </View>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() =>
+                void clear({
+                  environmentId: target.environmentId,
+                  input: { threadId: target.threadId },
+                })
+              }
+              className="h-[30px] justify-center rounded-full px-3 active:bg-subtle"
+            >
+              <Text className="text-[13.5px] text-foreground-secondary">Clear</Text>
+            </Pressable>
+          </View>
           {doneOpen
             ? closed.map((item) => (
                 <View key={item.id} className="flex-row items-start gap-2.5 px-2.5 py-3">

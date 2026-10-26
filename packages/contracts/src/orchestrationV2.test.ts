@@ -1245,7 +1245,28 @@ describe("orchestration V2 contracts", () => {
     expect(DateTime.formatIso(item.event.payload.closedAt!)).toBe(DateTime.formatIso(now));
   });
 
-  it("lets a client close or reopen a loose end but never file or close one as the agent", () => {
+  it("carries a cleared loose end on the thread stream", () => {
+    const decodeWireItems = Schema.decodeUnknownSync(
+      Schema.toCodecJson(Schema.Array(OrchestrationV2RpcSchemas.subscribeThread.output)),
+    );
+    const [item] = decodeWireItems([
+      {
+        kind: "event",
+        sequence: 2,
+        event: {
+          id: "event-2",
+          type: "loose-end.removed",
+          threadId: "thread-1",
+          occurredAt: DateTime.formatIso(now),
+          payload: { id: "loose-end-1" },
+        },
+      },
+    ]);
+
+    expect(item?.kind === "event" && item.event.type === "loose-end.removed").toBe(true);
+  });
+
+  it("lets a client close, reopen or clear loose ends but never file or close one as the agent", () => {
     const base = { commandId: "command-1", threadId: "thread-1", looseEndId: "loose-end-1" };
 
     expect(
@@ -1254,6 +1275,13 @@ describe("orchestration V2 contracts", () => {
     expect(decodeOrchestrationV2Command({ ...base, type: "loose-end.reopen" }).type).toBe(
       "loose-end.reopen",
     );
+    expect(
+      decodeOrchestrationV2Command({
+        commandId: "command-2",
+        threadId: "thread-1",
+        type: "loose-end.clear",
+      }).type,
+    ).toBe("loose-end.clear");
     expect(() =>
       decodeOrchestrationV2Command({
         ...base,

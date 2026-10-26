@@ -40,6 +40,7 @@ import { v2Now, v2Projection, v2ThreadId } from "../state/orchestrationV2TestFix
 import {
   archiveThread,
   cancelQueuedRun,
+  clearLooseEnds,
   closeLooseEnd,
   createProject,
   dismissThreadUserInput,
@@ -939,6 +940,10 @@ describe("V2 environment commands", () => {
         threadId,
         looseEndId,
       }).pipe(Effect.provideService(EnvironmentSupervisor.EnvironmentSupervisor, supervisor));
+      yield* clearLooseEnds({
+        commandId: CommandId.make("clear-command"),
+        threadId,
+      }).pipe(Effect.provideService(EnvironmentSupervisor.EnvironmentSupervisor, supervisor));
 
       expect(dispatched).toEqual([
         {
@@ -954,6 +959,7 @@ describe("V2 environment commands", () => {
           threadId: "thread-1",
           looseEndId: "loose-end-1",
         },
+        { type: "loose-end.clear", commandId: "clear-command", threadId: "thread-1" },
       ]);
     }).pipe(Effect.provide(layerTestCrypto)),
   );

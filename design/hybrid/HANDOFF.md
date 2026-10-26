@@ -744,8 +744,9 @@ toast and never breaks through a lock. The count is the only signal.
     - the reason, Regrade 12 / 17, secondary;
     - the turn, Plex 10.5 in caption ink, 5 px under the reason. A click on it scrolls the thread to that turn;
     - the action as a ghost `.pill.sm`, and a 22 px round × (Dismiss) that shows on hover.
-- **The Done fold** is 30 high, with a seam line above it: a chevron, `Done` and a 16 px count pearl. Opened, it lists
-  closed items newest first, each with:
+- **The Done fold** is 30 high, with a seam line above it: a chevron, `Done` and a 16 px count pearl, and at its right a
+  ghost `.pill.sm` **Clear**, which removes the chat's closed items for good (owner, 26 Oct). Opened, it lists closed
+  items newest first, each with:
   - the line struck through, regular weight, in caption ink;
   - how it closed: `Done by you · 21:40`, `Dismissed by you · …` or `Closed by the agent · T13`;
   - **Undo**.
@@ -775,7 +776,8 @@ toast and never breaks through a lock. The count is the only signal.
 
 - The chat header's right items gain **`envelope`** (an SF Symbol) beside `list.bullet`, with the count as a badge while
   anything is open.
-- It opens a native sheet at the medium detent, which drags to large. It holds the same list, Done fold and actions.
+- It opens a native sheet at the medium detent, which drags to large. It holds the same list, Done fold (with Clear)
+  and actions.
 - Rows are touch size: a 22 px round box, a 15 / 21 line, a 13.5 reason and 30 high buttons.
 - A file's action is **Copy** (its path) on the phone, because the file is on the Mac.
 - The phone's reskin isn't designed yet (§12), so the header stays native; only the sheet is CONTROL's drawing.

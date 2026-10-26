@@ -842,6 +842,11 @@ export function applyToProjection(
         ...projection,
         looseEnds: upsertById(projection.looseEnds ?? [], event.payload),
       };
+    case "loose-end.removed":
+      return {
+        ...projection,
+        looseEnds: (projection.looseEnds ?? []).filter((item) => item.id !== event.payload.id),
+      };
   }
 }
 
@@ -2668,6 +2673,13 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             `;
             break;
           }
+          case "loose-end.removed": {
+            yield* sql`
+              DELETE FROM orchestration_v2_projection_loose_ends
+              WHERE loose_end_id = ${event.payload.id}
+            `;
+            break;
+          }
         }
 
         if (
@@ -2691,7 +2703,8 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
           event.type !== "thread.interaction-mode-updated" &&
           event.type !== "thread.model-selection-updated" &&
           event.type !== "thread.provider-switched" &&
-          event.type !== "loose-end.updated"
+          event.type !== "loose-end.updated" &&
+          event.type !== "loose-end.removed"
         ) {
           // Only the activity timestamp changes. This runs for every streamed
           // run, node and turn-item event, so the thread row is patched in place

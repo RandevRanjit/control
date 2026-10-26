@@ -60,3 +60,7 @@
 /* The popover hangs 6 under the icon with its right edge on the icon's, as the head pills' lists hang under theirs, and
    over the composer (z 20). A long list scrolls inside it, stopping 8 above the window's foot. */
 .s-le-root .s-le-pop.panel { z-index: 30; top: calc(100% + 6px); right: 0; max-height: calc(100vh - 56px); overflow-y: auto; }
+/* Clear (owner, 26 Oct) sits at the Done fold's right and removes the chat's closed items; the rest of the row opens
+   and closes the fold */
+.s-le-root .s-le-fold { padding-right: 4px; }
+.s-le-root .s-le-fl { display: flex; flex: 1; align-items: center; gap: 6px; height: 100%; font: inherit; color: inherit; }

@@ -59,6 +59,7 @@ import {
   markThreadUnread,
   mergeThreadBack,
   promoteQueuedRun,
+  clearLooseEnds,
   closeLooseEnd,
   reopenLooseEnd,
   reorderQueuedRun,
@@ -242,6 +243,12 @@ export function createThreadEnvironmentAtoms<R, E>(
     reopenLooseEnd: createEnvironmentCommand(runtime, {
       label: "environment-data:commands:thread:reopen-loose-end",
       execute: (input: ReopenLooseEndInput) => reopenLooseEnd(input),
+      scheduler,
+      concurrency,
+    }),
+    clearLooseEnds: createEnvironmentCommand(runtime, {
+      label: "environment-data:commands:thread:clear-loose-ends",
+      execute: (input: ThreadCommandInput) => clearLooseEnds(input),
       scheduler,
       concurrency,
     }),

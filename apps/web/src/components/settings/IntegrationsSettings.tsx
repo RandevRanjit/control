@@ -1537,7 +1537,7 @@ export function IntegrationsSettingsPanel() {
       {/* Server-authoritative agent access is scoped by the header selection;
           the preview defaults below are device-local and ignore it. */}
       <ProjectDefaultsSettings category="integrations" />
-      <SettingsSection id="browser" title="Browser">
+      <SettingsSection id="browser" title="Browser on this device">
         {previewDefaultsDisabled ? (
           <SettingsUnavailableGroup message="Only available in the desktop app.">
             {previewDefaults}

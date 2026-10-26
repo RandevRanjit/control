@@ -34,6 +34,10 @@ Tool names may include a harness-normalized MCP prefix, such as \`mcp__control__
 ### Showing visuals
 
 When a chart, table, diagram, image collage, or mockup would say more than prose, build a self-contained HTML page, check it with \`html_preview\`, then publish it with \`html_render\` before your final reply. The reader sees the page above that reply, so don't announce or restate it; add only what it doesn't say.
+
+### Background commands
+
+The user follows a background command from Control's Show button, which tails its output as it is written. Let a background command print as it runs: don't end it with \`| tail\`, send its output to \`/dev/null\`, or filter it with a \`grep\` that lacks \`--line-buffered\`, or Show stays blank until it exits.
 `;
 
 const CONTROL_BROWSER_TOOL_INSTRUCTIONS = `

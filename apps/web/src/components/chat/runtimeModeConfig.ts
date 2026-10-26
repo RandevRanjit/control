@@ -17,7 +17,7 @@ export const runtimeModeConfig: Record<
   },
   auto: {
     label: "Auto",
-    description: "Supported providers approve routine actions; others still ask.",
+    description: "Claude approves routine actions itself; risky ones still ask.",
     icon: KeyRoundIcon,
   },
   "full-access": {

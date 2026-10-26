@@ -1356,7 +1356,7 @@ function OpenCommandPaletteDialog(props: {
           };
           return (
             <span className="flex min-w-0 items-center gap-1">
-              <span className="inline-flex min-w-0 items-center gap-1">
+              <span className="inline-flex shrink-0 items-center gap-1">
                 {location.kind === "remote" ? (
                   <EnvironmentMachineIcon
                     aria-hidden
@@ -3641,7 +3641,7 @@ function ProjectSearchDescription(props: {
   if (!props.grouped) {
     return (
       <span className="flex min-w-0 items-center gap-1">
-        <span className="inline-flex min-w-0 items-center gap-1">
+        <span className="inline-flex shrink-0 items-center gap-1">
           {props.location.kind === "remote" ? (
             <EnvironmentMachineIcon
               aria-hidden

@@ -1174,11 +1174,14 @@ exported with `extract.cjs v1.2 simple`. Everything in the window that changed s
 The places the window opens, drawn as D on the page (`#screens`, SC1–SC6) and approved by the owner on 27 Oct. They are
 in the 1.2 export: `v1.2/index.html` renders them after the panels, and `control-v1.css` carries their rules.
 
-1. **Git holds the pull request (SC1).** PR is Git's third mode after Graph and Diff. It shows this thread's pull request
-   (state, title, branches, description, checks, review, watching, Merge or Ready or Reopen, files, activity), the pull
-   requests linked to the thread, and the repository's other open ones; a click on any shows it here. The foot links one
-   by its link or number, and ⌘K's Link pull request opens this field. The Pull Requests page and the panel's separate
-   pull-request surfaces go.
+1. **Git holds the pull request (SC1–SC1d).** PR is Git's third mode after Graph and Diff (the app shows Diff | PR until
+   Graph lands). It lists the thread's own pull requests in the card tone, then the pull requests of this repository or
+   of every project, grouped as the Pull Requests page grouped them (review requested, yours, others), with that page's
+   row, search, filters, sort and Shift-sweep close: the page folds in here and goes (owner, 27 Oct). Under 600 px the
+   filters sit behind one icon with a count; wider (drag the panel's edge or maximise) they come out as pickers and rows
+   show their labels. A click on any pull request shows it (SC1: state, title, branches, description, checks, review,
+   watching, Merge or Ready or Reopen, files, activity) in the list's place, with a back arrow. The foot links one by its
+   link or number. The panel's separate pull-request chips go.
 2. **Settings (SC2)** takes the sidebar's place under the held gear: a search field, then the pages. Every page is a
    column of groups, a row a label with its line and its control at the right; the layers mark says a project can
    override it. Providers is **Claude**, with Claude's mark; Integrations takes a puzzle piece and Source control a fork.

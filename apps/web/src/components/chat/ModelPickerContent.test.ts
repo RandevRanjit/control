@@ -2,7 +2,12 @@ import { ProviderDriverKind, ProviderInstanceId, type ServerProvider } from "@co
 import { describe, expect, it } from "vite-plus/test";
 
 import { deriveProviderInstanceEntries } from "../../providerInstances";
-import { adjacentModelPickerProvider, shouldOfferModelPickerSetup } from "./ModelPickerContent";
+import {
+  adjacentModelPickerProvider,
+  modelPickerSectionModels,
+  modelPickerShowsSource,
+  shouldOfferModelPickerSetup,
+} from "./ModelPickerContent";
 
 const INTEGRATED_SETUP = { canAuthenticate: true, canInstall: true };
 
@@ -165,5 +170,50 @@ describe("adjacentModelPickerProvider", () => {
         direction: -1,
       }),
     ).toBe(claude.instanceId);
+  });
+});
+
+describe("the Local section", () => {
+  const claudeId = ProviderInstanceId.make("claudeAgent");
+  const model = (slug: string, isLocal?: boolean) => ({
+    slug,
+    name: slug,
+    instanceId: claudeId,
+    driverKind: ProviderDriverKind.make("claudeAgent"),
+    instanceDisplayName: "Claude",
+    ...(isLocal ? { isLocal: true } : {}),
+  });
+  const opus = model("opus");
+  const qwen = model("qwen-local", true);
+
+  it("holds the local models, and Claude's section holds the rest", () => {
+    expect(modelPickerSectionModels([opus, qwen], "local")).toEqual([qwen]);
+    expect(modelPickerSectionModels([opus, qwen], claudeId)).toEqual([opus]);
+  });
+
+  it("names a row's source only when the list mixes Claude and local models", () => {
+    expect(modelPickerShowsSource([opus, model("sonnet")])).toBe(false);
+    expect(modelPickerShowsSource([qwen])).toBe(false);
+    expect(modelPickerShowsSource([opus, qwen])).toBe(true);
+  });
+
+  it("joins the rail's keyboard cycle after the providers when local models exist", () => {
+    const claude = entry("ready", "claudeAgent");
+    const input = {
+      entries: [claude],
+      disabledInstanceIds: undefined,
+      selectableUnavailableInstanceIds: undefined,
+      includeLocal: true,
+    };
+    expect(
+      adjacentModelPickerProvider({
+        ...input,
+        selectedInstanceId: claude.instanceId,
+        direction: 1,
+      }),
+    ).toBe("local");
+    expect(
+      adjacentModelPickerProvider({ ...input, selectedInstanceId: "local", direction: 1 }),
+    ).toBe("favorites");
   });
 });

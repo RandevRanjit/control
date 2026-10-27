@@ -9,7 +9,7 @@ import { LegendList, type LegendListRef } from "@legendapp/list/react";
 import { memo, useMemo, useState, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { ChevronRightIcon } from "lucide-react";
 import { ModelListRow } from "./ModelListRow";
-import { ModelPickerSidebar } from "./ModelPickerSidebar";
+import { ModelPickerSidebar, type ModelPickerSection } from "./ModelPickerSidebar";
 import { getProviderStatusMessage, hasProviderSetup } from "./ProviderStatusBanner";
 import {
   modelPickerLegacySectionKey,
@@ -86,12 +86,14 @@ export function shouldOfferModelPickerSetup(
 
 export function adjacentModelPickerProvider(input: {
   entries: ReadonlyArray<ProviderInstanceEntry>;
-  selectedInstanceId: ProviderInstanceId | "favorites";
+  selectedInstanceId: ModelPickerSection;
   direction: 1 | -1;
   disabledInstanceIds: ReadonlySet<ProviderInstanceId> | undefined;
   selectableUnavailableInstanceIds: ReadonlySet<ProviderInstanceId> | undefined;
+  /** The Local section follows the providers while local models exist. */
+  includeLocal?: boolean;
 }) {
-  const providers: Array<ProviderInstanceId | "favorites"> = [
+  const providers: Array<ModelPickerSection> = [
     "favorites",
     ...input.entries
       .filter(
@@ -101,6 +103,7 @@ export function adjacentModelPickerProvider(input: {
             input.selectableUnavailableInstanceIds?.has(entry.instanceId)),
       )
       .map((entry) => entry.instanceId),
+    ...(input.includeLocal ? ["local" as const] : []),
   ];
   const index = providers.indexOf(input.selectedInstanceId);
   return providers[
@@ -110,6 +113,23 @@ export function adjacentModelPickerProvider(input: {
         : providers.length - 1
       : (index + input.direction + providers.length) % providers.length
   ]!;
+}
+
+/** The models a rail section lists: Local holds the local models, a provider's section the rest of its own. */
+export function modelPickerSectionModels<T extends Pick<ModelPickerItem, "instanceId" | "isLocal">>(
+  models: ReadonlyArray<T>,
+  section: ProviderInstanceId | "local",
+): T[] {
+  return section === "local"
+    ? models.filter((model) => model.isLocal)
+    : models.filter((model) => model.instanceId === section && !model.isLocal);
+}
+
+/** A row names its source (Claude, Local) only when the list mixes them. */
+export function modelPickerShowsSource(
+  models: ReadonlyArray<Pick<ModelPickerItem, "instanceId" | "isLocal">>,
+): boolean {
+  return new Set(models.map((model) => (model.isLocal ? "local" : model.instanceId))).size > 1;
 }
 
 const EMPTY_MODEL_JUMP_LABELS = new Map<string, string>();
@@ -203,15 +223,19 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
       activeEntry,
       modelOptionsByInstance.get(props.activeInstanceId) ?? [],
     );
-  const [selectedInstanceId, setSelectedInstanceId] = useState<ProviderInstanceId | "favorites">(
-    () => {
-      if (props.lockedProvider !== null || activeInstanceNeedsSetup) {
-        // Keep the active instance visible when it is locked or needs setup.
-        return props.activeInstanceId;
-      }
-      return favorites.length > 0 ? "favorites" : props.activeInstanceId;
-    },
-  );
+  const activeModelIsLocal =
+    modelOptionsByInstance
+      .get(props.activeInstanceId)
+      ?.some((model) => model.slug === activeModelSlug && model.isLocal) ?? false;
+  const [selectedInstanceId, setSelectedInstanceId] = useState<ModelPickerSection>(() => {
+    // A local model lives in the Local section, not its provider's.
+    const activeSection = activeModelIsLocal ? "local" : props.activeInstanceId;
+    if (props.lockedProvider !== null || activeInstanceNeedsSetup) {
+      // Keep the active instance visible when it is locked or needs setup.
+      return activeSection;
+    }
+    return favorites.length > 0 ? "favorites" : activeSection;
+  });
   const [expandedLegacyInstances, setExpandedLegacyInstances] = useState(
     () =>
       new Set<ProviderInstanceId>(
@@ -231,7 +255,7 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
   }, []);
 
   const handleSelectInstance = useCallback(
-    (instanceId: ProviderInstanceId | "favorites") => {
+    (instanceId: ModelPickerSection) => {
       setSelectedInstanceId(instanceId);
       window.requestAnimationFrame(() => {
         focusSearchInput();
@@ -335,6 +359,7 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
     return out;
   }, [modelOptionsByInstance, entryByInstanceId, props.activeInstanceId, activeModelSlug]);
 
+  const hasLocalModels = flatModels.some((model) => model.isLocal);
   const isLocked = props.lockedProvider !== null;
   const isSearching = searchQuery.trim().length > 0;
   const lockedDisabledInstanceIds = useMemo(() => {
@@ -454,12 +479,12 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
       if (selectedInstanceId === "favorites") {
         result = result.filter((m) => favoritesSet.has(providerModelKey(m.instanceId, m.slug)));
       } else {
-        result = result.filter((m) => m.instanceId === selectedInstanceId);
+        result = modelPickerSectionModels(result, selectedInstanceId);
       }
     } else if (selectedInstanceId === "favorites") {
       result = result.filter((m) => favoritesSet.has(providerModelKey(m.instanceId, m.slug)));
     } else {
-      result = result.filter((m) => m.instanceId === selectedInstanceId);
+      result = modelPickerSectionModels(result, selectedInstanceId);
     }
 
     return sortProviderModelItems(result, {
@@ -478,7 +503,7 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
   ]);
 
   const legacySection = useMemo(() => {
-    if (isSearching || selectedInstanceId === "favorites") {
+    if (isSearching || selectedInstanceId === "favorites" || selectedInstanceId === "local") {
       return null;
     }
     const currentModels = filteredModels.filter((model) => !model.isLegacy);
@@ -503,9 +528,12 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
       ...(legacySection.isExpanded ? legacySection.legacyModels : []),
     ];
   }, [filteredModels, legacySection]);
+  const showSource = modelPickerShowsSource(visibleModels);
 
   const selectedEntry =
-    selectedInstanceId === "favorites" ? undefined : entryByInstanceId.get(selectedInstanceId);
+    selectedInstanceId === "favorites" || selectedInstanceId === "local"
+      ? undefined
+      : entryByInstanceId.get(selectedInstanceId);
   const providerSetupEntries =
     !isSearching && props.onOpenProviderSetup
       ? instanceEntries.filter(
@@ -704,6 +732,7 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
           direction: command === "modelPicker.nextProvider" ? 1 : -1,
           disabledInstanceIds: lockedDisabledInstanceIds,
           selectableUnavailableInstanceIds,
+          includeLocal: hasLocalModels,
         });
         setSearchQuery("");
         handleSelectInstance(next);
@@ -735,6 +764,7 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
   }, [
     handleModelSelect,
     handleSelectInstance,
+    hasLocalModels,
     keybindings,
     lockedDisabledInstanceIds,
     modelJumpModelKeys,
@@ -775,6 +805,7 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
             onFocusSearch={focusSearchInput}
             instanceEntries={sidebarInstanceEntries}
             showFavorites
+            showLocal={hasLocalModels}
             {...(selectableUnavailableInstanceIds ? { selectableUnavailableInstanceIds } : {})}
             {...(lockedDisabledInstanceIds
               ? {
@@ -955,7 +986,7 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
                             : modelKey === activeModelKey
                         }
                         showSelection={selectedModelKeys !== undefined}
-                        showProvider
+                        showProvider={showSource}
                         preferShortName={!isLocked}
                         useTriggerLabel={false}
                         showNewBadge={model.badge === "new"}

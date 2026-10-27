@@ -1,7 +1,7 @@
 import { Toolbar } from "@base-ui/react/toolbar";
 import { type ProviderInstanceId } from "@control/contracts";
 import { memo, useLayoutEffect, useRef, useState } from "react";
-import { SparklesIcon, StarIcon } from "lucide-react";
+import { CpuIcon, SparklesIcon, StarIcon } from "lucide-react";
 import { ProviderInstanceIcon } from "./ProviderInstanceIcon";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { cn } from "~/lib/utils";
@@ -40,9 +40,12 @@ const NEW_BADGE_CLASS = `${BADGE_BASE_CLASS} text-update-foreground `;
 const PICKER_TOOLTIP_SIDE = "left" as const;
 const PICKER_TOOLTIP_SIDE_OFFSET = 8;
 
+/** A rail entry: favourites, a provider instance, or the local models on this machine. */
+export type ModelPickerSection = ProviderInstanceId | "favorites" | "local";
+
 export const ModelPickerSidebar = memo(function ModelPickerSidebar(props: {
-  selectedInstanceId: ProviderInstanceId | "favorites";
-  onSelectInstance: (instanceId: ProviderInstanceId | "favorites") => void;
+  selectedInstanceId: ModelPickerSection;
+  onSelectInstance: (instanceId: ModelPickerSection) => void;
   onFocusSearch: () => void;
   /**
    * Instance entries to render as rail buttons. Each entry becomes one icon
@@ -53,6 +56,8 @@ export const ModelPickerSidebar = memo(function ModelPickerSidebar(props: {
   instanceEntries: ReadonlyArray<ProviderInstanceEntry>;
   /** Render the favorites rail entry. Hidden for locked-provider instance switching. */
   showFavorites?: boolean;
+  /** Render the Local rail entry, after the providers, while local models exist. */
+  showLocal?: boolean;
   /** Instance ids shown in the rail but unavailable for the current picker context. */
   disabledInstanceIds?: ReadonlySet<ProviderInstanceId>;
   /** Non-ready instances whose selected unavailable model remains reachable. */
@@ -65,7 +70,7 @@ export const ModelPickerSidebar = memo(function ModelPickerSidebar(props: {
    */
   newBadgeInstanceIds?: ReadonlySet<ProviderInstanceId>;
 }) {
-  const handleSelect = (instanceId: ProviderInstanceId | "favorites") => {
+  const handleSelect = (instanceId: ModelPickerSection) => {
     props.onSelectInstance(instanceId);
   };
   const showFavorites = props.showFavorites ?? true;
@@ -85,7 +90,7 @@ export const ModelPickerSidebar = memo(function ModelPickerSidebar(props: {
       return;
     }
     setSelectedIndicatorTop(selectedItem.offsetTop + selectedItem.offsetHeight / 2 - 10);
-  }, [props.instanceEntries, props.selectedInstanceId, showFavorites]);
+  }, [props.instanceEntries, props.selectedInstanceId, props.showLocal, showFavorites]);
 
   return (
     <Toolbar.Root
@@ -245,6 +250,33 @@ export const ModelPickerSidebar = memo(function ModelPickerSidebar(props: {
               </div>
             );
           })}
+
+          {props.showLocal ? (
+            <div className="relative w-full" data-model-picker-provider="local">
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Toolbar.Button
+                      className="relative isolate flex w-full cursor-pointer aspect-square items-center justify-center rounded-md transition-colors hover:bg-foreground/10 focus-visible:bg-foreground/10 focus-visible:outline-none"
+                      onClick={() => handleSelect("local")}
+                      type="button"
+                      aria-label="Local models"
+                      aria-pressed={props.selectedInstanceId === "local"}
+                    >
+                      <CpuIcon className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+                    </Toolbar.Button>
+                  }
+                />
+                <TooltipPopup
+                  side={PICKER_TOOLTIP_SIDE}
+                  sideOffset={PICKER_TOOLTIP_SIDE_OFFSET}
+                  align="center"
+                >
+                  Local models
+                </TooltipPopup>
+              </Tooltip>
+            </div>
+          ) : null}
         </div>
       </div>
     </Toolbar.Root>

@@ -174,6 +174,13 @@ const selectorDiagnosticsFromInput = (
   return {};
 };
 
+/**
+ * The host runs the operation on the same `timeoutMs`, so its own timeout reply
+ * lands just after that deadline. Waiting this much longer lets it arrive before
+ * the broker treats the host as unreachable and disconnects every thread's tabs.
+ */
+const HOST_REPLY_GRACE_MS = 5_000;
+
 const hostAssignmentKey = (scope: McpInvocationContext.McpThreadInvocationScope): string =>
   `${scope.environmentId}\u0000${scope.thread.providerSessionId}`;
 
@@ -651,7 +658,10 @@ export const make = Effect.gen(function* PreviewAutomationBrokerMake() {
         }
         return yield* new PreviewAutomationRequestQueueClosedError(requestContext);
       }
-      const result = yield* Deferred.await(deferred).pipe(Effect.timeoutOption(timeoutMs));
+      // A background metadata read never disconnects, so it keeps its short budget.
+      const deadline =
+        input.updateCurrentTab === false ? timeoutMs : timeoutMs + HOST_REPLY_GRACE_MS;
+      const result = yield* Deferred.await(deferred).pipe(Effect.timeoutOption(deadline));
       return yield* Option.match(result, {
         onNone: () =>
           Effect.gen(function* () {

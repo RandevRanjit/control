@@ -1352,7 +1352,8 @@ it.effect("discards buffered actions before completing an evicted host stream", 
         })
         .pipe(Effect.flip, Effect.forkScoped);
       yield* Deferred.await(actionRouted);
-      yield* TestClock.adjust(1_000);
+      // Past the snapshot's budget and the grace the broker gives the host's own reply.
+      yield* TestClock.adjust(6_000);
       expect(yield* Fiber.join(timedOut)).toMatchObject({ _tag: "PreviewAutomationTimeoutError" });
       expect(yield* Fiber.join(buffered)).toMatchObject({
         _tag: "PreviewAutomationClientDisconnectedError",
@@ -1414,7 +1415,8 @@ it.effect("rejects a routed action when its generation is evicted before deliver
           Effect.forkScoped,
         );
       yield* Deferred.await(actionRouted);
-      yield* TestClock.adjust(1_000);
+      // Past the snapshot's budget and the grace the broker gives the host's own reply.
+      yield* TestClock.adjust(6_000);
       expect(yield* Fiber.join(timedOut)).toMatchObject({ _tag: "PreviewAutomationTimeoutError" });
       expect(Exit.isSuccess(yield* Fiber.await(consumer))).toBe(true);
 
@@ -1452,6 +1454,42 @@ it.effect("keeps a host that responds with an operation timeout", () =>
       expect(
         yield* broker.invoke<void>({ scope, operation: "waitFor", input: {} }).pipe(Effect.flip),
       ).toMatchObject({ _tag: "PreviewAutomationTimeoutError" });
+      expect(yield* broker.invoke({ scope, operation: "status", input: {} })).toBe("responsive");
+    }),
+  ),
+);
+
+it.effect("waits for the host's own timeout reply that lands just after the deadline", () =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const broker = yield* makeBroker;
+      const requests = requestsFrom(yield* broker.connect(makeHost()));
+      // Playwright on the host times out on the same budget, so its reply arrives just after it.
+      yield* Stream.runForEach(requests, (request) =>
+        broker
+          .respond({
+            clientId: "client-1",
+            connectionId: request.connectionId,
+            requestId: request.requestId,
+            ...(request.operation === "click"
+              ? {
+                  ok: false,
+                  error: { _tag: "PreviewAutomationTimeoutError", message: "Timeout exceeded" },
+                }
+              : { ok: true, result: "responsive" }),
+          })
+          .pipe(Effect.delay(request.operation === "click" ? 3_100 : 0)),
+      ).pipe(Effect.forkScoped);
+      yield* Effect.yieldNow;
+
+      const click = yield* broker
+        .invoke<void>({ scope, operation: "click", input: {}, timeoutMs: 3_000 })
+        .pipe(Effect.flip, Effect.forkScoped);
+      yield* TestClock.adjust(3_100);
+      expect(yield* Fiber.join(click)).toMatchObject({
+        _tag: "PreviewAutomationTimeoutError",
+        remoteTag: "PreviewAutomationTimeoutError",
+      });
       expect(yield* broker.invoke({ scope, operation: "status", input: {} })).toBe("responsive");
     }),
   ),

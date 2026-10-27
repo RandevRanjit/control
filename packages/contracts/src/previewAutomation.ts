@@ -1015,6 +1015,24 @@ export class PreviewAutomationInvalidSelectorError extends Schema.TaggedError<Pr
   }
 }
 
+/** Playwright's strict locators refuse to act when a locator matches more than one element. */
+export class PreviewAutomationAmbiguousLocatorError extends Schema.TaggedError<PreviewAutomationAmbiguousLocatorError>()(
+  "PreviewAutomationAmbiguousLocatorError",
+  {
+    ...PreviewAutomationRequestErrorFields,
+    ...PreviewAutomationRemoteDiagnosticFields,
+    matchCount: Schema.optional(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))),
+    /** The first few matches by role and name, such as `link "config.json"`. */
+    matches: Schema.optional(Schema.Array(Schema.String)),
+  },
+) {
+  override get message(): string {
+    const count = this.matchCount === undefined ? "several" : String(this.matchCount);
+    const named = this.matches?.length ? `: ${this.matches.join(", ")}` : "";
+    return `Preview automation ${this.operation} matched ${count} elements${named}. Narrow the locator with a role, \`>> visible=true\` or \`>> nth=0\`.`;
+  }
+}
+
 export class PreviewAutomationTargetNotEditableError extends Schema.TaggedError<PreviewAutomationTargetNotEditableError>()(
   "PreviewAutomationTargetNotEditableError",
   {
@@ -1143,6 +1161,7 @@ export const PreviewAutomationError = Schema.Union([
   PreviewAutomationControlInterruptedError,
   PreviewAutomationExecutionError,
   PreviewAutomationInvalidSelectorError,
+  PreviewAutomationAmbiguousLocatorError,
   PreviewAutomationTargetNotEditableError,
   PreviewAutomationResultTooLargeError,
   PreviewAutomationClientDisconnectedError,

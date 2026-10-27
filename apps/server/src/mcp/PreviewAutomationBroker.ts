@@ -1,5 +1,6 @@
 import {
   PREVIEW_AUTOMATION_V1_OPERATIONS,
+  PreviewAutomationAmbiguousLocatorError,
   PreviewAutomationClientDisconnectedError,
   PreviewAutomationControlInterruptedError,
   PreviewAutomationControlReason,
@@ -287,6 +288,31 @@ const classifyResponseError = (
         ...context,
         ...remoteDiagnostics,
         ...(staleRef ? { staleRef } : {}),
+      });
+    }
+    case "PreviewAutomationAmbiguousLocatorError": {
+      const detail =
+        typeof error.detail === "object" && error.detail !== null ? error.detail : undefined;
+      const matchCount =
+        detail &&
+        "matchCount" in detail &&
+        typeof detail.matchCount === "number" &&
+        Number.isInteger(detail.matchCount) &&
+        detail.matchCount >= 0
+          ? detail.matchCount
+          : undefined;
+      const matches =
+        detail && "matches" in detail && Array.isArray(detail.matches)
+          ? detail.matches
+              .filter((match): match is string => typeof match === "string")
+              .slice(0, 3)
+              .map((match) => match.slice(0, 120))
+          : undefined;
+      return new PreviewAutomationAmbiguousLocatorError({
+        ...context,
+        ...remoteDiagnostics,
+        ...(matchCount === undefined ? {} : { matchCount }),
+        ...(matches === undefined ? {} : { matches }),
       });
     }
     case "PreviewAutomationTargetNotEditableError": {

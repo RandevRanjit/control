@@ -52,9 +52,19 @@ export const toOperationError = (cause: unknown): ServerBrowserOperationError =>
   if (cause instanceof Error && cause.name === "TimeoutError") {
     return new ServerBrowserOperationError("PreviewAutomationTimeoutError", firstLine);
   }
-  if (
-    /while parsing selector|Unknown engine|Unexpected token|strict mode violation/i.test(message)
-  ) {
+  const strict = /strict mode violation: .* resolved to (\d+) elements/.exec(firstLine);
+  if (strict) {
+    // Playwright lists each match as `N) <html> aka getByRole('link', { name: 'x' })`.
+    const matches = Array.from(message.matchAll(/^\s*\d+\) (.*?)(?: aka (.*))?$/gm), (match) => {
+      const role = /^getByRole\('([^']+)', \{ name: '((?:\\.|[^'\\])*)'/.exec(match[2] ?? "");
+      return role ? `${role[1]} "${role[2]!.replace(/\\(.)/g, "$1")}"` : match[1]!.slice(0, 80);
+    }).slice(0, 3);
+    return new ServerBrowserOperationError("PreviewAutomationAmbiguousLocatorError", firstLine, {
+      matchCount: Number(strict[1]),
+      matches,
+    });
+  }
+  if (/while parsing selector|Unknown engine|Unexpected token/i.test(message)) {
     return new ServerBrowserOperationError("PreviewAutomationInvalidSelectorError", firstLine);
   }
   if (/not an <input>|not editable|not an editable/i.test(message)) {

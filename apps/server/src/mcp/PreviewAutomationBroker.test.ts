@@ -470,6 +470,41 @@ it.effect("classifies a remote non-editable target without collapsing it to exec
   );
 });
 
+it.effect("names the matches of an ambiguous locator for the agent", () =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const broker = yield* makeBroker;
+      const requests = requestsFrom(yield* broker.connect(makeHost()));
+      yield* Stream.runForEach(requests, (request) =>
+        broker.respond({
+          clientId: "client-1",
+          connectionId: request.connectionId,
+          requestId: request.requestId,
+          ok: false,
+          error: {
+            _tag: "PreviewAutomationAmbiguousLocatorError",
+            message: "strict mode violation",
+            detail: { matchCount: 2, matches: ['link "config.json"', 'link "config.json"'] },
+          },
+        }),
+      ).pipe(Effect.forkScoped);
+      yield* Effect.yieldNow;
+
+      const error = yield* broker
+        .invoke<void>({ scope, operation: "click", input: { locator: "text=config.json" } })
+        .pipe(Effect.flip);
+
+      expect(error).toMatchObject({
+        _tag: "PreviewAutomationAmbiguousLocatorError",
+        matchCount: 2,
+      });
+      expect(error.message).toBe(
+        'Preview automation click matched 2 elements: link "config.json", link "config.json". Narrow the locator with a role, `>> visible=true` or `>> nth=0`.',
+      );
+    }),
+  ),
+);
+
 it.effect.each([
   "PreviewAutomationRecordingTransferError",
   "PreviewAutomationRecordingDesktopUpdateRequiredError",

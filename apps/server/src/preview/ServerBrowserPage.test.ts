@@ -215,6 +215,28 @@ describe("server browser element refs", () => {
     ).rejects.toMatchObject({ tag: "PreviewAutomationTargetNotEditableError" });
   });
 
+  it("names the first matches when a locator matches several elements", async () => {
+    await page.setContent(`
+      <a href="#one">config.json</a><a href="#two">config.json</a>
+      <div onclick="1">config.json</div><button>it's config.json</button>`);
+    await expect(
+      ServerBrowserPage.click(page, { locator: "text=config.json", timeoutMs: 2_000 }),
+    ).rejects.toSatisfy((cause) => {
+      expect(ServerBrowserPage.toOperationError(cause)).toMatchObject({
+        tag: "PreviewAutomationAmbiguousLocatorError",
+        detail: {
+          matchCount: 4,
+          matches: [
+            'link "config.json"',
+            'link "config.json"',
+            '<div onclick="1">config.json</div>',
+          ],
+        },
+      });
+      return true;
+    });
+  });
+
   it("shows the agent's pointer at each target before the action reaches the page", async () => {
     await page.setContent(`
       <button id="go" style="position:absolute;left:100px;top:40px;width:80px;height:20px">go</button>

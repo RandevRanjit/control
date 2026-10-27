@@ -8,6 +8,8 @@ import {
   DEFAULT_RESOLVED_KEYBINDINGS,
 } from "@control/shared/keybindings";
 
+import type { PanelTab } from "~/rightPanelStore";
+
 import { RightPanelTabs } from "./RightPanelTabs";
 
 vi.mock("~/hooks/useTheme", () => ({ useTheme: () => ({ resolvedTheme: "light" }) }));
@@ -15,7 +17,8 @@ vi.mock("~/browser/browserDefaults", () => ({ useBrowserDefaults: () => ({ profi
 
 let root: Root;
 let container: HTMLDivElement;
-const addFiles = vi.fn();
+const addBrowser = vi.fn();
+const addTerminal = vi.fn();
 const noop = () => undefined;
 
 beforeEach(() => {
@@ -33,8 +36,13 @@ beforeEach(() => {
     configurable: true,
     value: () => [],
   });
+  Object.defineProperty(Element.prototype, "scrollIntoView", {
+    configurable: true,
+    value: () => undefined,
+  });
   vi.spyOn(navigator, "platform", "get").mockReturnValue("MacIntel");
-  addFiles.mockClear();
+  addBrowser.mockClear();
+  addTerminal.mockClear();
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -48,7 +56,20 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 
-async function renderPanel(overrides: Partial<ComponentProps<typeof RightPanelTabs>> = {}) {
+const browserA = { id: "browser:a" as const, kind: "preview" as const, resourceId: "a" };
+const browserB = { id: "browser:b" as const, kind: "preview" as const, resourceId: "b" };
+const terminal = {
+  id: "terminal:term-1" as const,
+  kind: "terminal" as const,
+  resourceId: "term-1",
+  terminalIds: ["term-1"],
+  activeTerminalId: "term-1",
+};
+
+async function renderPanel(
+  overrides: Partial<ComponentProps<typeof RightPanelTabs>> = {},
+  selected: PanelTab = "git",
+) {
   await act(() =>
     root.render(
       <RightPanelTabs
@@ -76,21 +97,18 @@ async function renderPanel(overrides: Partial<ComponentProps<typeof RightPanelTa
         onCloseSurfacesToRight={noop}
         onCloseAllSurfaces={noop}
         onCopyFilePath={noop}
-        onAddBrowser={noop}
+        onAddBrowser={addBrowser}
         onAddBrowserInProfile={noop}
-        onAddTerminal={noop}
-        onAddDiff={noop}
-        onAddFiles={addFiles}
+        onAddTerminal={addTerminal}
         onAddPullRequest={noop}
         onAddPullRequests={noop}
         onAddDevice={noop}
-        browserAvailable={false}
-        terminalAvailable={false}
-        diffAvailable={false}
-        filesAvailable
+        browserAvailable
+        terminalAvailable
         pullRequestAvailable={false}
         pullRequestsAvailable={false}
         deviceAvailable={false}
+        tabs={{ selected, unavailable: {}, onSelect: noop }}
         {...overrides}
       >
         content
@@ -109,40 +127,37 @@ async function press(key: string, options: KeyboardEventInit = {}) {
   return event;
 }
 
-describe("right panel new-tab shortcut", () => {
-  it.each(["MacIntel", "Win32", "Linux x86_64"])(
-    "opens the menu on %s and chooses a tab",
-    async (platform) => {
-      vi.spyOn(navigator, "platform", "get").mockReturnValue(platform);
-      await renderPanel();
-      const event = await press(
-        "t",
-        platform === "MacIntel" ? { metaKey: true } : { ctrlKey: true },
-      );
-      expect(event.defaultPrevented).toBe(true);
-      expect(document.querySelector('[role="menu"]')?.textContent).toContain(
-        "Linked pull requests",
-      );
-      expect(document.activeElement?.closest('[role="menu"]')).not.toBeNull();
-      expect(
-        (
-          await press("t", {
-            metaKey: platform === "MacIntel",
-            ctrlKey: platform !== "MacIntel",
-            repeat: true,
-          })
-        ).defaultPrevented,
-      ).toBe(true);
-      await press("f");
-      expect(addFiles).toHaveBeenCalledOnce();
-      expect(document.querySelector('[role="menu"]:not([data-closed])')).toBeNull();
-    },
+const chipTitles = () =>
+  [...container.querySelectorAll("[data-right-panel-subtabs] [role='tab']")].map(
+    (chip) => chip.textContent,
   );
+
+describe("right panel new-tab shortcut", () => {
+  it.each(["MacIntel", "Win32", "Linux x86_64"])("opens a page on %s", async (platform) => {
+    vi.spyOn(navigator, "platform", "get").mockReturnValue(platform);
+    await renderPanel();
+    const event = await press("t", platform === "MacIntel" ? { metaKey: true } : { ctrlKey: true });
+    expect(event.defaultPrevented).toBe(true);
+    expect(addBrowser).toHaveBeenCalledOnce();
+    await press("t", {
+      metaKey: platform === "MacIntel",
+      ctrlKey: platform !== "MacIntel",
+      repeat: true,
+    });
+    expect(addBrowser).toHaveBeenCalledOnce();
+  });
+
+  it("opens a shell while Terminal is on show", async () => {
+    await renderPanel({ surfaces: [terminal], activeSurfaceId: terminal.id }, "terminal");
+    await press("t", { metaKey: true });
+    expect(addTerminal).toHaveBeenCalledOnce();
+    expect(addBrowser).not.toHaveBeenCalled();
+  });
 
   it("leaves the shortcut alone while the mounted panel is closed", async () => {
     await renderPanel({ open: false });
     expect((await press("t", { metaKey: true })).defaultPrevented).toBe(false);
-    expect(document.querySelector('[role="menu"]:not([data-closed])')).toBeNull();
+    expect(addBrowser).not.toHaveBeenCalled();
   });
 
   it.each(["Win32", "Linux x86_64"])(
@@ -159,63 +174,56 @@ describe("right panel new-tab shortcut", () => {
           isDesktop: false,
         }),
       });
-      const terminal = document.createElement("textarea");
+      const shell = document.createElement("textarea");
       const onKeyDown = vi.fn();
-      terminal.addEventListener("keydown", onKeyDown);
-      container.append(terminal);
-      await act(() => terminal.focus());
+      shell.addEventListener("keydown", onKeyDown);
+      container.append(shell);
+      await act(() => shell.focus());
       const event = await press("t", { ctrlKey: true });
       expect(event.defaultPrevented).toBe(false);
       expect(onKeyDown).toHaveBeenCalledWith(event);
-      expect(document.querySelector('[role="menu"]:not([data-closed])')).toBeNull();
+      expect(addBrowser).not.toHaveBeenCalled();
     },
   );
 
-  it("uses a custom binding from a text field and closes on Escape", async () => {
-    const input = document.createElement("input");
+  it("follows a custom binding", async () => {
     await renderPanel({
       keybindings: compileResolvedKeybindingsConfig([{ key: "mod+y", command: "rightPanel.new" }]),
     });
-    document.body.append(input);
-    input.focus();
     expect((await press("t", { metaKey: true })).defaultPrevented).toBe(false);
     await press("y", { metaKey: true });
-    expect(document.querySelector('[role="menu"]')).not.toBeNull();
-    await press("Escape");
-    expect(document.querySelector('[role="menu"]:not([data-closed])')).toBeNull();
-    expect(document.activeElement).toBe(
-      container.querySelector('[aria-label="Add panel surface"]'),
-    );
-    input.remove();
+    expect(addBrowser).toHaveBeenCalledOnce();
   });
 
-  it("does not open over another popup or during text composition", async () => {
+  it("does not act over another popup or during text composition", async () => {
     await renderPanel();
     expect((await press("t", { metaKey: true, isComposing: true })).defaultPrevented).toBe(false);
     const dialog = document.createElement("div");
     dialog.dataset.slot = "dialog-popup";
     container.append(dialog);
     expect((await press("t", { metaKey: true })).defaultPrevented).toBe(false);
-    expect(document.querySelector('[role="menu"]')).toBeNull();
+    expect(addBrowser).not.toHaveBeenCalled();
+  });
+});
+
+describe("right panel tabs", () => {
+  it("shows a tab's views as chips only once it holds more than one", async () => {
+    await renderPanel({ surfaces: [terminal, browserA], activeSurfaceId: terminal.id }, "terminal");
+    expect(container.querySelector("[data-right-panel-subtabs]")).toBeNull();
+    await renderPanel(
+      {
+        surfaces: [terminal, browserA, browserB],
+        activeSurfaceId: browserA.id,
+        deviceAvailable: false,
+        browserAvailable: false,
+      },
+      "browser",
+    );
+    expect(chipTitles()).toEqual(["Browser", "Browser"]);
   });
 
-  it("supports arrow keys with an existing tab in sheet mode and clears the menu on close", async () => {
-    const panel = {
-      mode: "sheet" as const,
-      surfaces: [{ id: "files" as const, kind: "files" as const }],
-    };
-    await renderPanel(panel);
-    await press("t", { metaKey: true });
-    await press("ArrowDown");
-    await press("ArrowDown");
-    await press("ArrowDown");
-    expect(document.activeElement?.textContent).toContain("Files");
-    await press("Enter");
-    expect(addFiles).toHaveBeenCalledOnce();
-    await press("t", { metaKey: true });
-    await renderPanel({ ...panel, open: false });
-    expect(document.querySelector('[role="menu"]:not([data-closed])')).toBeNull();
-    await renderPanel(panel);
-    expect(document.querySelector('[role="menu"]:not([data-closed])')).toBeNull();
+  it("offers a new page from the Browser tab's chips", async () => {
+    await renderPanel({ surfaces: [browserA], activeSurfaceId: browserA.id }, "browser");
+    expect(container.querySelector('[aria-label="Add to Browser"]')).not.toBeNull();
   });
 });

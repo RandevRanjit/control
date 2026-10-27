@@ -22,6 +22,7 @@ import type { ThreadPanelPresentation } from "./rightPanelLayout";
 import type { ChatFileAttachment } from "./types";
 
 const RIGHT_PANEL_KINDS = [
+  "outputs",
   "diff",
   "files",
   "file",
@@ -32,6 +33,28 @@ const RIGHT_PANEL_KINDS = [
   "pull-requests",
 ] as const;
 export type RightPanelKind = (typeof RIGHT_PANEL_KINDS)[number];
+
+/** The panel's five icon tabs (design §5.1). Every surface kind lives under one. */
+export type PanelTab = "outputs" | "folder" | "browser" | "git" | "terminal";
+
+export function panelTabOf(kind: RightPanelKind): PanelTab {
+  switch (kind) {
+    case "outputs":
+      return "outputs";
+    case "files":
+    case "file":
+      return "folder";
+    case "preview":
+    case "device":
+      return "browser";
+    case "diff":
+    case "pull-request":
+    case "pull-requests":
+      return "git";
+    case "terminal":
+      return "terminal";
+  }
+}
 
 export interface DeviceTabTarget {
   hostId: string;
@@ -52,6 +75,7 @@ export type RightPanelSurface =
       activeTerminalId: string;
       splitDirection?: "horizontal" | "vertical";
     }
+  | { id: "outputs"; kind: "outputs" }
   | { id: "diff"; kind: "diff" }
   | { id: "files"; kind: "files" }
   | {
@@ -122,6 +146,8 @@ export interface ThreadPanelVisibility {
 interface RightPanelStoreState {
   byThreadKey: Record<string, ThreadRightPanelState>;
   threadPanelVisibilityByThreadKey: Record<string, ThreadPanelVisibility>;
+  /** Session-only: the surface each tab last showed, so a tab click returns to it. */
+  tabSurfaceIdsByThreadKey: Record<string, Partial<Record<PanelTab, string>>>;
   /** Session-only count of user panel choices per thread. Automatic updates do not advance it. */
   userActionRevisionByThreadKey: Record<string, number>;
   closeRevisionByThreadKey: Record<string, number>;
@@ -165,6 +191,8 @@ interface RightPanelStoreState {
   activateTerminal: (ref: ScopedThreadRef, surfaceId: string, terminalId: string) => void;
   closeTerminal: (ref: ScopedThreadRef, surfaceId: string, terminalId: string) => void;
   activateSurface: (ref: ScopedThreadRef, surfaceId: string) => void;
+  /** Shows the tab's last surface, or its newest; false when the tab holds none. */
+  activateTab: (ref: ScopedThreadRef, tab: PanelTab) => boolean;
   closeSurface: (ref: ScopedThreadRef, surfaceId: string) => void;
   closeOtherSurfaces: (ref: ScopedThreadRef, surfaceId: string) => void;
   closeSurfacesToRight: (ref: ScopedThreadRef, surfaceId: string) => void;
@@ -207,6 +235,8 @@ const singletonSurface = (
   kind: Exclude<RightPanelKind, "file" | "preview" | "terminal" | "pull-request">,
 ): RightPanelSurface => {
   switch (kind) {
+    case "outputs":
+      return { id: "outputs", kind };
     case "diff":
       return { id: "diff", kind };
     case "files":
@@ -341,7 +371,7 @@ const updateThreadPanelVisibilityMap = (
 
 type RightPanelStoreData = Pick<
   RightPanelStoreState,
-  "byThreadKey" | "threadPanelVisibilityByThreadKey"
+  "byThreadKey" | "threadPanelVisibilityByThreadKey" | "tabSurfaceIdsByThreadKey"
 >;
 
 /**
@@ -376,7 +406,17 @@ const updateThread = (
     );
   }
 
-  return { byThreadKey, threadPanelVisibilityByThreadKey };
+  const shown = next.surfaces.find((surface) => surface.id === next.activeSurfaceId);
+  const memory = state.tabSurfaceIdsByThreadKey[threadKey];
+  const tabSurfaceIdsByThreadKey =
+    shown === undefined || memory?.[panelTabOf(shown.kind)] === shown.id
+      ? state.tabSurfaceIdsByThreadKey
+      : {
+          ...state.tabSurfaceIdsByThreadKey,
+          [threadKey]: { ...memory, [panelTabOf(shown.kind)]: shown.id },
+        };
+
+  return { byThreadKey, threadPanelVisibilityByThreadKey, tabSurfaceIdsByThreadKey };
 };
 
 // Every store action is a user choice unless it goes through `automaticUpdate`.
@@ -433,6 +473,20 @@ const closeAction = (
   threadKey: string,
   updater: (current: ThreadRightPanelState) => ThreadRightPanelState,
 ): Partial<RightPanelStoreState> => userAction(state, threadKey, updater, true);
+
+/** What shows after the surface at `index` closes: another in its tab first, then its neighbour. */
+function closeFallback(
+  before: readonly RightPanelSurface[],
+  index: number,
+  after: readonly RightPanelSurface[],
+): RightPanelSurface | null {
+  const tab = panelTabOf(before[index]!.kind);
+  return (
+    after.findLast((surface) => panelTabOf(surface.kind) === tab) ??
+    after[Math.min(index, after.length - 1)] ??
+    null
+  );
+}
 
 function normalizeRevealLine(line: number | undefined): number | null {
   if (line === undefined || !Number.isFinite(line)) return null;
@@ -592,6 +646,7 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
     (set, get) => ({
       byThreadKey: {},
       threadPanelVisibilityByThreadKey: {},
+      tabSurfaceIdsByThreadKey: {},
       userActionRevisionByThreadKey: {},
       closeRevisionByThreadKey: {},
       getUserActionRevision: (ref) =>
@@ -786,7 +841,7 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
             if (terminalIds.length === 0) {
               const index = current.surfaces.findIndex((entry) => entry.id === surfaceId);
               const surfaces = current.surfaces.filter((entry) => entry.id !== surfaceId);
-              const fallback = surfaces[Math.min(index, surfaces.length - 1)] ?? null;
+              const fallback = closeFallback(current.surfaces, index, surfaces);
               return {
                 ...current,
                 isOpen: surfaces.length > 0 && current.isOpen,
@@ -822,6 +877,18 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
               : current,
           ),
         ),
+      activateTab: (ref, tab) => {
+        const threadKey = scopedThreadKey(ref);
+        const state = get();
+        const surfaces = selectThreadRightPanelState(state.byThreadKey, ref).surfaces.filter(
+          (surface) => panelTabOf(surface.kind) === tab,
+        );
+        if (surfaces.length === 0) return false;
+        const remembered = state.tabSurfaceIdsByThreadKey[threadKey]?.[tab];
+        const target = surfaces.find((surface) => surface.id === remembered) ?? surfaces.at(-1)!;
+        get().activateSurface(ref, target.id);
+        return true;
+      },
       closeSurface: (ref, surfaceId) =>
         set((state) =>
           closeAction(state, scopedThreadKey(ref), (current) => {
@@ -836,7 +903,7 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
             if (current.activeSurfaceId !== surfaceId) {
               return next;
             }
-            const fallback = surfaces[Math.min(index, surfaces.length - 1)] ?? null;
+            const fallback = closeFallback(current.surfaces, index, surfaces);
             return {
               ...next,
               activeSurfaceId: fallback?.id ?? null,
@@ -996,7 +1063,8 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
             !(threadKey in state.byThreadKey) &&
             !(threadKey in state.threadPanelVisibilityByThreadKey) &&
             !(threadKey in state.userActionRevisionByThreadKey) &&
-            !(threadKey in state.closeRevisionByThreadKey)
+            !(threadKey in state.closeRevisionByThreadKey) &&
+            !(threadKey in state.tabSurfaceIdsByThreadKey)
           ) {
             return state;
           }
@@ -1007,11 +1075,14 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
             state.userActionRevisionByThreadKey;
           const { [threadKey]: _closeRevision, ...closeRevisionByThreadKey } =
             state.closeRevisionByThreadKey;
+          const { [threadKey]: _tabs, ...tabSurfaceIdsByThreadKey } =
+            state.tabSurfaceIdsByThreadKey;
           return {
             byThreadKey,
             threadPanelVisibilityByThreadKey,
             userActionRevisionByThreadKey,
             closeRevisionByThreadKey,
+            tabSurfaceIdsByThreadKey,
           };
         }),
     }),

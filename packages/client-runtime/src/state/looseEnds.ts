@@ -23,7 +23,7 @@ export function splitLooseEnds(items: ReadonlyArray<OrchestrationV2LooseEnd>) {
 }
 
 /** `now` in the first minute, the clock the same day, the date before. */
-function whenLabel(atMs: number, nowMs: number): string {
+export function whenLabel(atMs: number, nowMs: number): string {
   if (nowMs - atMs < 60_000) return "now";
   const at = DateTime.toDate(DateTime.makeUnsafe(atMs));
   if (at.toDateString() !== DateTime.toDate(DateTime.makeUnsafe(nowMs)).toDateString())

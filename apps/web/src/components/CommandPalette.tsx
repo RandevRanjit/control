@@ -53,10 +53,14 @@ import {
   CheckIcon,
   ChevronRightIcon,
   CornerLeftUpIcon,
+  FileDiffIcon,
+  FileOutputIcon,
   FileSearchIcon,
+  FilesIcon,
   FolderGit2Icon,
   FolderIcon,
   FolderPlusIcon,
+  GlobeIcon,
   MessageSquareDashedIcon,
   LinkIcon,
   MessageSquareIcon,
@@ -133,7 +137,9 @@ import { onOpenCommandPalette } from "../commandPaletteBus";
 import { isPreviewFocused } from "../lib/previewFocus";
 import { isTerminalFocused } from "../lib/terminalFocus";
 import {
+  type PanelTab,
   PULL_REQUESTS_PANEL_REF,
+  type RightPanelKind,
   selectActiveRightPanel,
   useRightPanelStore,
 } from "../rightPanelStore";
@@ -2003,6 +2009,38 @@ function OpenCommandPaletteDialog(props: {
         icon: <PullRequestGlyph.link className={ITEM_ICON_CLASS} />,
         run: async () => {
           useRightPanelStore.getState().open(threadRef, "pull-requests");
+        },
+      });
+    }
+  }
+
+  if (activeThread !== null) {
+    // The panel's tabs (design §5.1): back to what a tab last showed, else its view. Terminal is
+    // ⌘J's, which starts a shell.
+    const threadRef = scopeThreadRef(activeThread.environmentId, activeThread.id);
+    const panelTabs: ReadonlyArray<
+      readonly [
+        PanelTab,
+        Exclude<RightPanelKind, "file" | "terminal" | "pull-request">,
+        string,
+        ReactNode,
+      ]
+    > = [
+      ["outputs", "outputs", "Show outputs", <FileOutputIcon className={ITEM_ICON_CLASS} />],
+      ["folder", "files", "Show folder", <FilesIcon className={ITEM_ICON_CLASS} />],
+      ["browser", "preview", "Show browser", <GlobeIcon className={ITEM_ICON_CLASS} />],
+      ["git", "diff", "Show Git", <FileDiffIcon className={ITEM_ICON_CLASS} />],
+    ];
+    for (const [tab, kind, title, icon] of panelTabs) {
+      actionItems.push({
+        kind: "action",
+        value: `action:panel-${tab}`,
+        searchTerms: ["panel", tab, kind],
+        title,
+        icon,
+        run: async () => {
+          const store = useRightPanelStore.getState();
+          if (!store.activateTab(threadRef, tab)) store.open(threadRef, kind);
         },
       });
     }

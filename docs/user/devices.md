@@ -7,7 +7,7 @@ yourself. Agents get the same device through `device_*` tools and the
 
 ## Open a device
 
-Open the right panel in a project thread and choose **Device**. On first use,
+Open the right panel in a project thread, choose its **Browser** tab, then **+ → Device**. On first use,
 the panel walks through three steps: starting the device hub, checking iOS and
 Android support, and choosing whether agents may control devices. Opening the
 panel alone does not download or start anything. If the hub is already
@@ -15,8 +15,8 @@ installed, the setup screen says so and reuses it.
 
 Choose a running device to watch it, or choose **Start** next to a stopped
 device to boot it. The panel shows when you or an agent starts a device.
-Each device opens in its own tab. Use **+ → Device** to open another, and
-double-click a tab name or choose **Rename** from its context menu to rename it.
+Each device opens beside the Browser tab's pages. Use **+ → Device** to open another, and
+double-click its name or choose **Rename** from its context menu to rename it.
 Only the visible tab streams video; switching tabs keeps both devices running.
 Choose **Float device over chat** in the toolbar to keep watching and tapping the
 device in a small window while the right panel shows something else; drag the

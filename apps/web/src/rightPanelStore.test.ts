@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from "vite-plus/test";
 import { useClosedViewStore } from "./closedViewStore";
 import {
   migratePersistedRightPanelState,
+  panelTabOf,
   pullRequestSurface,
   pullRequestSurfaceId,
   selectActiveRightPanel,
@@ -26,6 +27,7 @@ beforeEach(() => {
     threadPanelVisibilityByThreadKey: {},
     userActionRevisionByThreadKey: {},
     closeRevisionByThreadKey: {},
+    tabSurfaceIdsByThreadKey: {},
   });
 });
 
@@ -907,6 +909,89 @@ describe("rightPanelStore", () => {
   it("close on never-opened thread is a no-op", () => {
     useRightPanelStore.getState().close(refA);
     expect(useRightPanelStore.getState().byThreadKey).toEqual({});
+  });
+
+  it("maps every surface kind onto one of the five panel tabs", () => {
+    expect(
+      (
+        [
+          "outputs",
+          "files",
+          "file",
+          "preview",
+          "device",
+          "diff",
+          "pull-request",
+          "pull-requests",
+          "terminal",
+        ] as const
+      ).map(panelTabOf),
+    ).toEqual([
+      "outputs",
+      "folder",
+      "folder",
+      "browser",
+      "browser",
+      "git",
+      "git",
+      "git",
+      "terminal",
+    ]);
+  });
+
+  it("keeps outputs as a singleton surface", () => {
+    useRightPanelStore.getState().open(refA, "outputs");
+    useRightPanelStore.getState().open(refA, "diff");
+    useRightPanelStore.getState().open(refA, "outputs");
+    const state = selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA);
+    expect(state.surfaces).toEqual([
+      { id: "outputs", kind: "outputs" },
+      { id: "diff", kind: "diff" },
+    ]);
+    expect(state.activeSurfaceId).toBe("outputs");
+  });
+
+  it("returns a tab to the surface it last showed", () => {
+    const store = useRightPanelStore.getState();
+    store.openBrowser(refA, "tab-a");
+    store.openBrowser(refA, "tab-b");
+    store.activateSurface(refA, "browser:tab-a");
+    store.open(refA, "diff");
+    expect(store.activateTab(refA, "browser")).toBe(true);
+    expect(
+      selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA).activeSurfaceId,
+    ).toBe("browser:tab-a");
+  });
+
+  it("falls back to a tab's newest surface when it has no memory", () => {
+    const store = useRightPanelStore.getState();
+    store.openTerminal(refA, "term-1");
+    store.openTerminal(refA, "term-2");
+    useRightPanelStore.setState({ tabSurfaceIdsByThreadKey: {} });
+    store.open(refA, "diff");
+    expect(store.activateTab(refA, "terminal")).toBe(true);
+    expect(
+      selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA).activeSurfaceId,
+    ).toBe("terminal:term-2");
+  });
+
+  it("reports an empty tab without changing the panel", () => {
+    const store = useRightPanelStore.getState();
+    store.open(refA, "diff");
+    const before = useRightPanelStore.getState().byThreadKey;
+    expect(store.activateTab(refA, "terminal")).toBe(false);
+    expect(useRightPanelStore.getState().byThreadKey).toBe(before);
+  });
+
+  it("closing a surface falls back to another in its own tab", () => {
+    const store = useRightPanelStore.getState();
+    store.openTerminal(refA, "term-1");
+    store.open(refA, "diff");
+    store.openTerminal(refA, "term-2");
+    store.closeSurface(refA, "terminal:term-2");
+    expect(
+      selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA).activeSurfaceId,
+    ).toBe("terminal:term-1");
   });
 
   it("tracks one surface per browser session", () => {

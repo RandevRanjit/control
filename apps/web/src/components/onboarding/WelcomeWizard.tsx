@@ -65,7 +65,7 @@ import { getProviderSummary } from "../settings/providerStatus";
 import { getDriverOption } from "../settings/providerDriverMeta";
 import { TerminalViewport } from "../ThreadTerminalDrawer";
 import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
-import { ControlMark } from "../ControlMark";
+import { StairLogo } from "../control/bloom";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Button } from "../ui/button";
 import { CommandBlock } from "../CommandBlock";
@@ -213,19 +213,7 @@ export function WelcomeWizard({
         showCloseButton={false}
         initialFocus={() => document.getElementById("onboarding-pairing-url") ?? true}
       >
-        <WizardHeader
-          title="Set up Control"
-          identity={
-            <div
-              className="hy-wordmark flex items-center gap-2.5 text-foreground"
-              role="img"
-              aria-label="Control"
-            >
-              <ControlMark className="h-3 w-auto shrink-0" aria-hidden />
-              CONTROL
-            </div>
-          }
-        >
+        <WizardHeader title="Set up Control" identity={<StairLogo />}>
           <WizardSteps
             steps={ONBOARDING_STAGES}
             currentStep={stageIndex}
@@ -238,28 +226,30 @@ export function WelcomeWizard({
         </WizardHeader>
 
         <WizardPanel holdHeight={isLoadingProjects}>
-          {step === "connection" ? (
-            <ConnectionStep
-              expandPairingInitially={!localAvailable}
-              selectedIds={selectedIds}
-              onSelectionChange={setSelection}
-              onContinue={() =>
-                startSetup(resolveOnboardingSetup(environments, selectedIds).environmentIds)
-              }
-              onPaired={(environmentId) => {
-                setSelection(new Set([...selectedIds, environmentId]));
-              }}
-            />
-          ) : step === "agents" ? (
-            <AgentsStep environmentIds={setupIds} onContinue={() => setStep("import")} />
-          ) : (
-            <ImportStep
-              scans={scans}
-              isImporting={isImporting}
-              setIsImporting={setIsImporting}
-              onDone={finish}
-            />
-          )}
+          <div className="s-sc-root">
+            {step === "connection" ? (
+              <ConnectionStep
+                expandPairingInitially={!localAvailable}
+                selectedIds={selectedIds}
+                onSelectionChange={setSelection}
+                onContinue={() =>
+                  startSetup(resolveOnboardingSetup(environments, selectedIds).environmentIds)
+                }
+                onPaired={(environmentId) => {
+                  setSelection(new Set([...selectedIds, environmentId]));
+                }}
+              />
+            ) : step === "agents" ? (
+              <AgentsStep environmentIds={setupIds} onContinue={() => setStep("import")} />
+            ) : (
+              <ImportStep
+                scans={scans}
+                isImporting={isImporting}
+                setIsImporting={setIsImporting}
+                onDone={finish}
+              />
+            )}
+          </div>
         </WizardPanel>
       </WizardPopup>
     </Dialog>
@@ -300,19 +290,18 @@ function ConnectionStep({
   }, [ready]);
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-        Connect your computers
-      </h1>
-      <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
+      <h1 className="s-sc-wt">Connect your computers</h1>
+      <p className="s-sc-ws">
         Choose one or more computers. We’ll set up agents and projects on each.
       </p>
       {environments.length > 0 ? (
-        <fieldset className="mt-5 space-y-2">
+        <fieldset className="s-sc-pcs mt-4">
           <legend className="sr-only">Computers to set up</legend>
           {environments.map((environment) => (
             <label
               key={environment.environmentId}
-              className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-background px-3 py-3"
+              className="s-sc-pc2 cursor-pointer"
+              data-on={selectedIds.has(environment.environmentId) ? "" : undefined}
             >
               <Checkbox
                 checked={selectedIds.has(environment.environmentId)}
@@ -323,28 +312,20 @@ function ConnectionStep({
                   onSelectionChange(next);
                 }}
               />
-              <MonitorIcon className="size-4 shrink-0 text-muted-foreground" />
-              <span className="min-w-0 flex-1">
-                <span className="flex items-baseline justify-between gap-3">
-                  <span className="min-w-0 text-sm font-medium break-words">
-                    {environment.label}
-                  </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {connectionButtonLabel(environment.connection)}
-                  </span>
-                </span>
+              <MonitorIcon />
+              <span className="min-w-0">
+                <b className="break-words">{environment.label}</b>
                 {environment.displayUrl ? (
-                  <span className="mt-0.5 block text-xs break-all text-muted-foreground">
-                    {environment.displayUrl}
-                  </span>
+                  <em className="break-all">{environment.displayUrl}</em>
                 ) : null}
               </span>
+              <span className="s-sc-r">{connectionButtonLabel(environment.connection)}</span>
             </label>
           ))}
         </fieldset>
       ) : null}
       <div className="mt-4 space-y-2">
-        <div className="rounded-lg border border-border bg-background">
+        <div className="s-sc-add">
           <Collapsible open={pairingOpen} onOpenChange={setPairingOpen}>
             <CollapsibleTrigger
               disabled={isPairing}

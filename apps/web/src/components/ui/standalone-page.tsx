@@ -7,6 +7,8 @@ const backdropClassNames = {
     "absolute inset-x-0 top-0 h-44 bg-[radial-gradient(44rem_16rem_at_top,color-mix(in_srgb,var(--color-red-500)_16%,transparent),transparent)]",
   brand:
     "absolute inset-x-0 top-0 h-72 bg-[radial-gradient(48rem_20rem_at_top,color-mix(in_srgb,var(--color-blue-500)_12%,transparent),transparent)]",
+  /** The design's field with nothing behind the card (design §22, SC5). */
+  plain: "",
 };
 
 /** Shared page and card geometry for entry points outside the app shell. */
@@ -36,7 +38,11 @@ export function StandalonePage({
       </div>
 
       <section
-        className={`relative w-full max-w-xl rounded-2xl border border-border/80 shadow-2xl shadow-black/20 backdrop-blur-md ${tone === "brand" ? "overflow-hidden bg-card/94" : "bg-card/90"}`}
+        className={
+          tone === "plain"
+            ? "relative w-full max-w-lg overflow-hidden rounded-[var(--r-xl)] bg-[var(--raised)] shadow-[var(--float),inset_0_1px_0_var(--lip)]"
+            : `relative w-full max-w-xl rounded-2xl border border-border/80 shadow-2xl shadow-black/20 backdrop-blur-md ${tone === "brand" ? "overflow-hidden bg-card/94" : "bg-card/90"}`
+        }
       >
         {masthead}
         <div className="p-6 sm:p-8">{children}</div>

@@ -15,7 +15,6 @@ import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { PrimaryEnvironmentHttpClient } from "~/environments/primary/httpClient";
 import { runPrimaryHttp } from "~/lib/runtime";
-import { cn } from "~/lib/utils";
 import { runtimeModeConfig } from "../chat/runtimeModeConfig";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Button } from "../ui/button";
@@ -193,7 +192,7 @@ export function ConnectAgentSurface() {
           </>
         }
       />
-      <p className="mt-2 text-xs text-muted-foreground">
+      <p className="s-sc-fine">
         {redirectsToThisComputer(details.redirectHost) ? (
           <>
             The name is chosen by the agent. Approval returns to {details.redirectHost} on the
@@ -216,18 +215,20 @@ export function ConnectAgentSurface() {
         }}
       >
         <div className="space-y-2">
-          <span id="connect-agent-access-label" className="text-sm font-medium">
+          <span id="connect-agent-access-label" className="s-sc-lb">
             What it may do
           </span>
-          <RadioGroup
-            aria-labelledby="connect-agent-access-label"
-            value={access}
-            onValueChange={(value) => setAccess(value as AuthMcpClientAccess)}
-          >
-            {AuthMcpClientAccess.literals.map((option) => (
-              <AccessOption key={option} access={option} selected={option === access} />
-            ))}
-          </RadioGroup>
+          <div className="s-sc-acc">
+            <RadioGroup
+              aria-labelledby="connect-agent-access-label"
+              value={access}
+              onValueChange={(value) => setAccess(value as AuthMcpClientAccess)}
+            >
+              {AuthMcpClientAccess.literals.map((option) => (
+                <AccessOption key={option} access={option} selected={option === access} />
+              ))}
+            </RadioGroup>
+          </div>
           <p className="text-xs text-muted-foreground">
             Beyond read only, it can start, message and stop threads, and none of them can run with
             more than the mode you pick.
@@ -272,7 +273,7 @@ export function ConnectAgentSurface() {
             disabled={pending !== null}
             onClick={() => void decide("deny")}
             type="button"
-            variant="outline"
+            variant="ghost"
           >
             {pending === "deny" ? "Denying…" : "Deny"}
           </Button>
@@ -291,9 +292,9 @@ function ConnectAgentHeading({
 }) {
   return (
     <>
-      <p className="text-3xs font-semibold tracking-widest text-primary uppercase">Agent sign-in</p>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+      <p className="s-sc-eb">Agent sign-in</p>
+      <h1 className="s-sc-wt">{title}</h1>
+      <p className="s-sc-ws">{description}</p>
     </>
   );
 }
@@ -309,25 +310,12 @@ function AccessOption({
   return (
     <RadioPrimitive.Root
       value={access}
-      className={cn(
-        "flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-left outline-none transition-[background-color,border-color,box-shadow]",
-        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-        selected
-          ? "border-primary bg-background ring-2 ring-primary/25 dark:border-transparent dark:bg-primary/10 dark:ring-1 dark:ring-primary/30"
-          : "border-border bg-background hover:bg-muted/50 dark:border-transparent dark:bg-white/[0.035] dark:hover:bg-accent",
-      )}
+      data-on={selected ? "" : undefined}
+      className="s-sc-ac cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <Icon
-        aria-hidden
-        className={cn(
-          "mt-0.5 size-4 shrink-0",
-          selected ? "text-primary" : "text-muted-foreground",
-        )}
-      />
-      <span className="min-w-0">
-        <span className="block text-sm font-medium text-foreground">{label}</span>
-        <span className="block text-xs text-muted-foreground">{description}</span>
-      </span>
+      <Icon aria-hidden />
+      <b>{label}</b>
+      <span>{description}</span>
     </RadioPrimitive.Root>
   );
 }

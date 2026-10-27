@@ -528,8 +528,6 @@ The third column gives likely homes, read from file names at the fork point. Con
 
 ## 12. Not in version 1's design yet
 
-- **Statistics** (the chart in the sidebar foot) and **Settings** (the gear in the top row): their screens come later,
-  at the owner's word (*"we can worry about the statistics section and settings section later"*).
 - **Git's Graph mode** (F33). Only Diff is drawn.
 - A locked group's rows in the sidebar (the full lock is §16), the update queue in motion, needs-you cards in the thread (permission, question, plan),
   thinking blocks, PDF viewing (F29 beyond the Outputs preview), quiet notes, and the mobile reskin.
@@ -1168,3 +1166,29 @@ exported with `extract.cjs v1.2 simple`. Everything in the window that changed s
 3. **Every icon is Lucide's** at §20's sizes: the gear for settings, `GitBranch` and `FolderGit2` on the cards,
    `AlarmClock` on the Snoozed fold, the head pills' icons and the panel's tab icons (§20.2). The stair logo, the spark,
    lamps, bars and pearls are unchanged (§20.3).
+
+---
+
+## 22. Screens (27 Oct 2026)
+
+The places the window opens, drawn as D on the page (`#screens`, SC1–SC6) and approved by the owner on 27 Oct. They are
+in the 1.2 export: `v1.2/index.html` renders them after the panels, and `control-v1.css` carries their rules.
+
+1. **Git holds the pull request (SC1).** PR is Git's third mode after Graph and Diff. It shows this thread's pull request
+   (state, title, branches, description, checks, review, watching, Merge or Ready or Reopen, files, activity), the pull
+   requests linked to the thread, and the repository's other open ones; a click on any shows it here. The foot links one
+   by its link or number, and ⌘K's Link pull request opens this field. The Pull Requests page and the panel's separate
+   pull-request surfaces go.
+2. **Settings (SC2)** takes the sidebar's place under the held gear: a search field, then the pages. Every page is a
+   column of groups, a row a label with its line and its control at the right; the layers mark says a project can
+   override it. Providers is **Claude**, with Claude's mark; Integrations takes a puzzle piece and Source control a fork.
+   Page names are in sentence case.
+3. **Usage (SC3)** keeps every part the app has, in D's skin: the head's environments, providers, Cost/Tokens/Limits and
+   period; the total and each provider's share beside the daily line; totals; cost (or tokens) by type; the ranked
+   breakdown with its share underlined. Limits show the share used, the pace and the reset. Claude's mark and the chart
+   are Claude's orange, `--claude` (the app's `#d97757`).
+4. **Welcome (SC4)**, **the agent sign-in page (SC5)** and **the thread's details (SC6)** keep their content; T3's
+   gradient leaves the sign-in page.
+5. **The panel's views take D's heads** (§5.2–5.6) and keep every control the app has: the common ones as icons in the
+   head, the rest in its menu (owner, 27 Oct).
+

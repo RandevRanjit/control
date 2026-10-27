@@ -215,8 +215,8 @@ is on by default, so every limit stop continues at its reset; turn it off in
 mobile. While a limit is in force, auto-compact leaves that account's threads alone
 rather than compacting into the same limit.
 The environment must be running when the reset arrives; it resumes overdue
-continuations after a restart. Sending a new message, archiving, or settling the
-thread prevents a pending continuation from starting.
+continuations after a restart. Stopping the thread, sending a new message,
+archiving, or settling it prevents a pending continuation from starting.
 
 Choose **Snooze until reset** to hide the thread until its allowance returns.
 Snooze and auto-resume are independent: snooze alone wakes the thread without

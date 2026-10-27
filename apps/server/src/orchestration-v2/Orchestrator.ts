@@ -20,6 +20,7 @@ import {
   type ModelSelection,
   OrchestrationV2Command,
   type OrchestrationV2InternalCommand,
+  type OrchestrationV2LimitRecoveryUpdate,
   type OrchestrationV2ServerCommand,
   type ThreadPullRequestLink,
   type ThreadPullRequestWatch,
@@ -282,6 +283,12 @@ export interface OrchestratorV2Shape {
   readonly dispatch: (
     command: OrchestrationV2ServerCommand,
   ) => Effect.Effect<OrchestratorV2DispatchResult, OrchestratorV2Error>;
+  /** The recovery sweep's arm, which a Stop committed after the sweep read its candidate wins. */
+  readonly autoArmLimitRecovery: (input: {
+    readonly commandId: CommandId;
+    readonly threadId: ThreadId;
+    readonly limitRecovery: OrchestrationV2LimitRecoveryUpdate;
+  }) => Effect.Effect<void, OrchestratorV2Error>;
   readonly getTimelinePage: (
     threadId: ThreadId,
     options: ProjectionTimelinePageOptions,
@@ -8620,7 +8627,47 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
   }) =>
     Effect.gen(function* () {
       const emitEvent = emit(input.events, input.command);
-      const { thread, runs, subagents } = input.projection;
+      const { runs, subagents } = input.projection;
+      let { thread } = input.projection;
+      // Stop cancels a usage-limit auto-resume, armed or not yet armed, so the reset never
+      // sends a turn the owner stopped.
+      let recovery = thread.limitRecovery;
+      const latest = latestExecutedRun(runs);
+      if (latest?.status === "failed") {
+        const { turnItems } = yield* projectionStore
+          .getThreadRecords(thread.id, ["turnItems"], {
+            turnItemTypes: ["error"],
+            turnItemRunIds: [latest.id],
+          })
+          .pipe(mapDispatchError(input.command));
+        const failure = latestRootProviderFailure(latest, turnItems);
+        if (
+          failure?.class === "usage_limit" &&
+          failure.resetAt != null &&
+          Number.isFinite(Date.parse(failure.resetAt)) &&
+          (recovery?.runId !== latest.id || recovery.resetAt !== failure.resetAt)
+        ) {
+          recovery = {
+            runId: latest.id,
+            resetAt: failure.resetAt,
+            autoResume: false,
+            snooze: false,
+          };
+        }
+      }
+      if (recovery && (recovery !== thread.limitRecovery || recovery.autoResume)) {
+        thread = {
+          ...thread,
+          limitRecovery: { ...recovery, autoResume: false, requestId: input.command.commandId },
+          updatedAt: input.now,
+        };
+        yield* emitEvent({
+          type: "thread.metadata-updated",
+          threadId: thread.id,
+          occurredAt: input.now,
+          payload: thread,
+        });
+      }
       for (const run of runs) {
         // A resumed queue can have a lower ordinal than a pending continuation source.
         // Stop must reach those sources even when interrupting the resumed run succeeds.
@@ -10980,6 +11027,26 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
     recoverDelegatedTask,
     delegatedTaskResultPending,
     dispatch: dispatchWithReceipt,
+    autoArmLimitRecovery: (input) =>
+      threadDispatch.withLock(
+        input.threadId,
+        Effect.gen(function* () {
+          const thread = yield* projectionStore
+            .getThread(input.threadId)
+            .pipe(
+              Effect.mapError(
+                (cause) => new OrchestratorProjectionError({ threadId: input.threadId, cause }),
+              ),
+            );
+          // Stop or an explicit recovery choice can commit after the sweep reads its candidate.
+          if (
+            thread.limitRecovery?.runId === input.limitRecovery.runId &&
+            thread.limitRecovery.resetAt === input.limitRecovery.resetAt
+          )
+            return;
+          yield* dispatchWithReceiptEffect({ type: "thread.metadata.update", ...input });
+        }),
+      ),
     getTimelinePage: (threadId, options) =>
       projectionStore
         .getTimelinePage(threadId, options)
@@ -11106,6 +11173,8 @@ const layerUnavailable: Layer.Layer<OrchestratorV2> = Layer.succeed(
     recoverDelegatedTasks: Effect.void,
     recoverDelegatedTask: () => Effect.void,
     delegatedTaskResultPending: () => Effect.succeed(false),
+    autoArmLimitRecovery: (input) =>
+      Effect.fail(new OrchestratorProjectionError({ threadId: input.threadId })),
     dispatch: (command) =>
       Effect.fail(
         new OrchestratorDispatchError({

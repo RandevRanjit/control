@@ -12,8 +12,8 @@ import { resolveChatCanvasLayout, type ChatCanvasPreview } from "./chatCanvasLay
 import type { PreviewMiniPlayerObstacles } from "../preview/previewMiniPlayerLayout";
 
 /**
- * Owns the available conversation space. Cards only report where they sit; the
- * canvas decides when chat moves over to make room for them.
+ * Owns the available conversation space. Cards only report where they sit; chat
+ * moves over only for the floating preview, never for the workspace card.
  */
 export function ChatCanvas({
   composerOverlayElement,
@@ -99,7 +99,7 @@ export function ChatCanvas({
     const container = { width: measurements.width, height: measurements.height };
     return {
       container,
-      lane: { padding: measurements.padding, minChatWidth: measurements.minChatWidth },
+      lane: { padding: measurements.padding, maxChatWidth: measurements.maxChatWidth },
       layout: resolveChatCanvasLayout({ ...measurements, container, preview, detailsCard }),
       previewKey: preview?.key ?? null,
       reportPreview,

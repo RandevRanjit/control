@@ -271,10 +271,7 @@ import {
   selectThreadPreviewMiniPlayer,
   usePreviewMiniPlayerStore,
 } from "../previewMiniPlayerStore";
-import {
-  pullRequestPanelContext,
-  threadPullRequestPanelTarget,
-} from "./pullRequest/pullRequestDetail.logic";
+import { pullRequestPanelContext } from "./pullRequest/pullRequestDetail.logic";
 import { PullRequestDetailPanel } from "./pullRequest/PullRequestDetailPanel";
 import { PullRequestDetailGhost } from "./pullRequest/PullRequestGhosts";
 import { PullRequestsUnavailableState } from "./pullRequest/PullRequestsUnavailableState";
@@ -5383,10 +5380,14 @@ export default function ChatView(props: ChatViewProps) {
   const visiblePullRequestCount = visiblePullRequests.length;
   const pullRequestsSurfaceAvailable =
     isServerThread && supportsThreadPullRequests && visiblePullRequestCount > 0;
+  // Git's PR view holds the thread's pull requests and every project's (design §22), so it opens
+  // wherever either can be read.
+  const pullRequestViewAvailable =
+    isServerThread && (supportsPullRequests || pullRequestsSurfaceAvailable);
   const addPullRequestsSurface = useCallback(() => {
-    if (!activeThreadRef || !pullRequestsSurfaceAvailable) return;
+    if (!activeThreadRef || !pullRequestViewAvailable) return;
     useRightPanelStore.getState().open(activeThreadRef, "pull-requests");
-  }, [activeThreadRef, pullRequestsSurfaceAvailable]);
+  }, [activeThreadRef, pullRequestViewAvailable]);
   const { state: deviceState, loaded: deviceStateLoaded } = useDeviceState(
     activeThreadRef?.environmentId ?? null,
   );
@@ -7096,20 +7097,6 @@ export default function ChatView(props: ChatViewProps) {
       },
     );
   }, [activeThreadReferenceCopyTarget]);
-  const pullRequestPanelTarget = activeThread
-    ? threadPullRequestPanelTarget({
-        projectId: activeThread.projectId,
-        pullRequests: visiblePullRequests,
-        linkedPullRequest: linkedThreadPullRequest,
-        branchPullRequest: activeThreadShell?.branchPullRequest ?? activeThread.branchPullRequest,
-      })
-    : null;
-  const addPullRequestSurface = useCallback(() => {
-    if (!supportsPullRequests || activeThreadRef === null || pullRequestPanelTarget === null)
-      return;
-    useRightPanelStore.getState().openPullRequest(activeThreadRef, pullRequestPanelTarget);
-  }, [activeThreadRef, pullRequestPanelTarget, supportsPullRequests]);
-  const pullRequestSurfaceAvailable = supportsPullRequests && pullRequestPanelTarget !== null;
   const supportsSettlement = serverConfig?.environment.capabilities.threadSettlement === true;
   const supportsSnooze = serverConfig?.environment.capabilities.threadSnooze === true;
   const supportsPinning = serverConfig?.environment.capabilities.threadPinning === true;
@@ -10931,11 +10918,19 @@ export default function ChatView(props: ChatViewProps) {
         shortcutsEnabled={
           rightPanelOpen && activeRightPanelSurface?.id === shownRightPanelSurface.id
         }
-        key={`${shownRightPanelSurface.host ?? ""}:${shownRightPanelSurface.repository}#${shownRightPanelSurface.number}`}
-        environmentId={activeThread.environmentId}
+        key={shownRightPanelSurface.id}
+        // The list under the thread's own spans every server, so a pull request opened from it
+        // is read from the one that listed it.
+        environmentId={
+          (shownRightPanelSurface.environmentId as EnvironmentId | undefined) ??
+          activeThread.environmentId
+        }
         onSelectPullRequest={(reference) => {
           if (activeThreadRef)
             useRightPanelStore.getState().openPullRequest(activeThreadRef, {
+              ...(shownRightPanelSurface.environmentId === undefined
+                ? {}
+                : { environmentId: shownRightPanelSurface.environmentId }),
               projectId: reference.projectId,
               repository: reference.repository,
               number: reference.number,
@@ -10960,11 +10955,7 @@ export default function ChatView(props: ChatViewProps) {
           shownRightPanelSurface,
         )}
         composerDraftTarget={composerDraftTarget}
-        onBack={
-          activeThreadRef !== null && pullRequestsSurfaceAvailable && visiblePullRequestCount > 1
-            ? addPullRequestsSurface
-            : undefined
-        }
+        onBack={pullRequestViewAvailable ? addPullRequestsSurface : undefined}
       />
     ) : shownRightPanelSurface.kind === "pull-requests" && activeThreadRef ? (
       <ThreadPullRequestsPanel threadRef={activeThreadRef} />
@@ -11820,13 +11811,12 @@ export default function ChatView(props: ChatViewProps) {
           onAddBrowser={() => createBrowserSurface()}
           onAddBrowserInProfile={createBrowserSurface}
           onAddTerminal={addTerminalSurface}
-          onAddPullRequest={addPullRequestSurface}
+          onAddDiff={addDiffSurface}
           onAddPullRequests={addPullRequestsSurface}
           onAddDevice={addDeviceSurface}
           browserAvailable={browserTabOpens}
           terminalAvailable={activeProject !== null && canOperateTerminal}
-          pullRequestAvailable={pullRequestSurfaceAvailable}
-          pullRequestsAvailable={pullRequestsSurfaceAvailable}
+          pullRequestsAvailable={pullRequestViewAvailable}
           deviceAvailable={activeThreadRef !== null}
           tabs={rightPanelTabs}
         >
@@ -11875,13 +11865,12 @@ export default function ChatView(props: ChatViewProps) {
             onAddBrowser={() => createBrowserSurface()}
             onAddBrowserInProfile={createBrowserSurface}
             onAddTerminal={addTerminalSurface}
-            onAddPullRequest={addPullRequestSurface}
+            onAddDiff={addDiffSurface}
             onAddPullRequests={addPullRequestsSurface}
             onAddDevice={addDeviceSurface}
             browserAvailable={browserTabOpens}
             terminalAvailable={activeProject !== null && canOperateTerminal}
-            pullRequestAvailable={pullRequestSurfaceAvailable}
-            pullRequestsAvailable={pullRequestsSurfaceAvailable}
+            pullRequestsAvailable={pullRequestViewAvailable}
             deviceAvailable={activeThreadRef !== null}
             tabs={rightPanelTabs}
           >

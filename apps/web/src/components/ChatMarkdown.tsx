@@ -195,8 +195,6 @@ interface ChatMarkdownProps {
   text: string;
   cwd: string | undefined;
   threadRef?: ScopedThreadRef | undefined;
-  /** Panel that receives pull request links, including the standalone PR view. */
-  pullRequestPanelRef?: ScopedThreadRef | undefined;
   /** Environment that owns non-thread markdown, such as a pull request panel. */
   environmentId?: EnvironmentId | undefined;
   onTaskListChange?: ((input: { markerOffset: number; checked: boolean }) => void) | undefined;
@@ -2472,7 +2470,6 @@ function useChatMarkdownState({
   text,
   cwd,
   threadRef,
-  pullRequestPanelRef,
   environmentId: explicitEnvironmentId,
   onTaskListChange,
   isStreaming = false,
@@ -2655,7 +2652,7 @@ function useChatMarkdownState({
         : payload.html,
     );
   }, []);
-  const openChangeRequestLink = useOpenChangeRequestLink(threadRef, pullRequestPanelRef);
+  const openChangeRequestLink = useOpenChangeRequestLink(threadRef);
   const openDeferredMarkdownLink = useOpenLink(threadRef);
   // Subscribed rather than read at click time: the anchor has to decide
   // synchronously whether to intercept its `_blank`, and a subscription is what
@@ -3208,10 +3205,7 @@ const CHAT_MARKDOWN_COMPONENTS = {
             // A link to a change request in a workspace project opens beside the
             // conversation instead of in a browser: it is the thing being talked about, and
             // the panel it opens offers the browser as one of its actions.
-            if (
-              !href ||
-              openChangeRequestLink(event, href, undefined, environmentId ?? undefined)
-            ) {
+            if (!href || openChangeRequestLink(event, href)) {
               return;
             }
             // Anything else follows the "Open links in" setting. The system browser
@@ -3322,8 +3316,6 @@ const CHAT_MARKDOWN_COMPONENTS = {
                   stopPropagation: () => undefined,
                 },
                 targetUrl,
-                undefined,
-                environmentId ?? undefined,
               )
             }
             onOpenFallback={openDeferredMarkdownLink}

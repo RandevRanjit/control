@@ -7,7 +7,6 @@ import type { Options as ReactMarkdownOptions } from "react-markdown";
 
 import { useAssetUrlRefresh, useAssetUrlState } from "~/assets/assetUrls";
 import { cn } from "~/lib/utils";
-import { PULL_REQUESTS_PANEL_REF } from "~/rightPanelStore";
 
 import ChatMarkdown from "../ChatMarkdown";
 import { MediaVideoPlayer } from "../media/MediaVideoPlayer";
@@ -97,7 +96,6 @@ export function PullRequestMarkdown({
               text={segment.text}
               cwd={cwd}
               threadRef={resolvedThreadRef}
-              pullRequestPanelRef={resolvedThreadRef ?? PULL_REQUESTS_PANEL_REF}
               environmentId={environmentId}
               extraRemarkPlugins={extraRemarkPlugins}
               githubMedia

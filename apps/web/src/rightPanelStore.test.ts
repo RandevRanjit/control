@@ -1007,102 +1007,73 @@ describe("rightPanelStore", () => {
     });
   });
 
-  it("tracks one surface per pull request", () => {
+  it("shows one pull request at a time: opening another replaces it", () => {
     const first = { projectId: "project-a", repository: "acme/control", number: 4909 };
     const second = { projectId: "project-a", repository: "acme/control", number: 4910 };
+    useRightPanelStore.getState().open(refA, "diff");
     useRightPanelStore.getState().openPullRequest(refA, first);
     useRightPanelStore.getState().openPullRequest(refA, second);
+
+    const state = selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA);
+    expect(state.surfaces.map((surface) => surface.id)).toEqual([
+      "diff",
+      pullRequestSurfaceId(second),
+    ]);
+    expect(state.activeSurfaceId).toBe(pullRequestSurfaceId(second));
+  });
+
+  it("shows the pull request list or one pull request, never both", () => {
+    const shown = { projectId: "project-a", repository: "acme/control", number: 4909 };
+    useRightPanelStore.getState().open(refA, "pull-requests");
+    useRightPanelStore.getState().openPullRequest(refA, shown);
+    expect(
+      selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA).surfaces,
+    ).toEqual([pullRequestSurface(shown)]);
+
+    useRightPanelStore.getState().open(refA, "pull-requests");
+    expect(
+      selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA).surfaces,
+    ).toEqual([{ id: "pull-requests", kind: "pull-requests" }]);
+  });
+
+  it("keeps a pull request's link when it is opened again without one", () => {
+    const first = { projectId: "project-a", repository: "acme/control", number: 4909 };
     const url = "https://gitlab.example.com/acme/control/-/merge_requests/4909";
     useRightPanelStore.getState().openPullRequest(refA, { ...first, url });
     useRightPanelStore.getState().openPullRequest(refA, first);
 
-    const state = selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA);
-    expect(state.surfaces.map((surface) => surface.id)).toEqual([
-      pullRequestSurfaceId(first),
-      pullRequestSurfaceId(second),
-    ]);
-    expect(state.activeSurfaceId).toBe(pullRequestSurfaceId(first));
     expect(
       selectActiveRightPanelSurface(useRightPanelStore.getState().byThreadKey, refA),
     ).toMatchObject({ url });
-    expect(state.surfaces[1]).not.toHaveProperty("url");
   });
 
-  it("keeps matching repository and number on different hosts as separate tabs", () => {
+  it("names a pull request by host and server as well as repository and number", () => {
     const first = { projectId: "project-a", repository: "acme/api", number: 7, host: "github.com" };
-    const second = { ...first, host: "github.example.com" };
-    useRightPanelStore.getState().openPullRequest(refA, first);
-    useRightPanelStore.getState().openPullRequest(refA, second);
-    const state = selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA);
-    expect(state.surfaces).toEqual([pullRequestSurface(first), pullRequestSurface(second)]);
+    expect(pullRequestSurfaceId({ ...first, host: "github.example.com" })).not.toBe(
+      pullRequestSurfaceId(first),
+    );
+    expect(pullRequestSurfaceId({ ...first, environmentId: "remote" })).not.toBe(
+      pullRequestSurfaceId(first),
+    );
     expect(pullRequestSurfaceId({ ...first, host: "GITHUB.COM" })).toBe(
       pullRequestSurfaceId(first),
     );
   });
 
-  it("keeps one pull request read from two servers as two tabs", () => {
-    const local = {
-      environmentId: "local",
+  it("replaces the shown pull request when the app opens the thread's own", () => {
+    const shown = pullRequestSurface({ projectId: "project-a", repository: "acme/api", number: 7 });
+    const linked = pullRequestSurface({
       projectId: "project-a",
-      repository: "acme/control",
-      number: 4909,
-    };
-    const remote = { ...local, environmentId: "remote" };
+      repository: "acme/api",
+      number: 8,
+    });
+    useRightPanelStore.getState().openPullRequest(refA, shown);
+    const revision = useRightPanelStore.getState().getUserActionRevision(refA);
+    useRightPanelStore.getState().openProactive(refA, linked, revision);
 
-    useRightPanelStore.getState().openPullRequest(refA, local);
-    useRightPanelStore.getState().openPullRequest(refA, remote);
-
-    const state = selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA);
-    expect(state.surfaces.map((surface) => surface.id)).toEqual([
-      pullRequestSurfaceId(local),
-      pullRequestSurfaceId(remote),
-    ]);
-  });
-
-  it("keeps the page's panel tabs reachable when the set of connected servers changes", () => {
-    // The pull-requests page keys its one shared panel by a fixed sentinel environment, not by
-    // whichever capable server happens to sort first (see PULL_REQUESTS_PANEL_ENVIRONMENT_ID in
-    // _chat.pull-requests.tsx) — a server disconnecting must not move every open tab to a store
-    // key nobody wrote them under.
-    const panelId = ThreadId.make("pull-requests-panel");
-    const stableRef = scopeThreadRef("pull-requests-panel" as EnvironmentId, panelId);
-    const fromServerA = {
-      environmentId: "server-a",
-      projectId: "project-a",
-      repository: "acme/control",
-      number: 1,
-    };
-    const fromServerB = {
-      environmentId: "server-b",
-      projectId: "project-b",
-      repository: "acme/control",
-      number: 2,
-    };
-
-    // Both servers connected: tabs from each open under the one stable ref.
-    useRightPanelStore.getState().openPullRequest(stableRef, fromServerA);
-    useRightPanelStore.getState().openPullRequest(stableRef, fromServerB);
-
-    // Server A disconnects. The stable ref does not depend on which servers remain connected, so
-    // the same lookup still finds both tabs.
-    const state = selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, stableRef);
-    expect(state.surfaces.map((surface) => surface.id)).toEqual([
-      pullRequestSurfaceId(fromServerA),
-      pullRequestSurfaceId(fromServerB),
-    ]);
-
-    // The bug this guards against: a ref keyed by the first capable environment instead of a
-    // fixed sentinel changes identity when that environment drops out, and a lookup under the new
-    // key finds nothing even though the tabs are still sitting under the old one.
-    const refWhileBothConnected = scopeThreadRef("server-a" as EnvironmentId, panelId);
-    const refAfterServerADisconnects = scopeThreadRef("server-b" as EnvironmentId, panelId);
-    expect(refWhileBothConnected).not.toEqual(refAfterServerADisconnects);
     expect(
-      selectThreadRightPanelState(
-        useRightPanelStore.getState().byThreadKey,
-        refAfterServerADisconnects,
-      ).surfaces,
-    ).toEqual([]);
+      selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA).surfaces,
+    ).toEqual([linked]);
   });
 
   it("tracks one surface per terminal session", () => {

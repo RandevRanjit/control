@@ -74,6 +74,7 @@ import { PreviewPanelShell, type PreviewPanelMode } from "./preview/PreviewPanel
 import { FaviconImage } from "./preview/PreviewFaviconIcon";
 import { previewBridge } from "./preview/previewBridge";
 import { PierreEntryIcon } from "./chat/PierreEntryIcon";
+import { Seg } from "./Seg";
 import { resolvePullRequestState } from "./pullRequest/pullRequestPresentation";
 import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
 
@@ -120,12 +121,13 @@ interface RightPanelTabsProps {
    */
   onAddBrowserInProfile: (profileId: string) => void;
   onAddTerminal: () => void;
-  onAddPullRequest: () => void;
+  /** Git's Diff, when it is not open yet. */
+  onAddDiff: () => void;
+  /** Git's PR view: the thread's pull requests and every project's (design §22). */
   onAddPullRequests: () => void;
   onAddDevice: () => void;
   browserAvailable: boolean;
   terminalAvailable: boolean;
-  pullRequestAvailable: boolean;
   pullRequestsAvailable: boolean;
   deviceAvailable: boolean;
   /**
@@ -170,10 +172,10 @@ export function shouldOpenDefaultBrowserProfileFromMenuClick(
   return pointerType !== "touch";
 }
 
+const GIT_VIEWS = ["Diff", "PR"] as const;
+
 const SURFACE_DISABLED_REASONS = {
   browser: "Browser previews are only available in the Control desktop app.",
-  pullRequest: "This thread's branch has no pull request yet.",
-  pullRequests: "No linked pull requests are available for this thread.",
   device: "Devices are only available from a thread.",
 } as const;
 
@@ -521,27 +523,17 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
             onClick: props.onAddDevice,
           },
         ]
-      : tab === "git"
-        ? [
-            {
-              label: "Pull request",
-              icon: PullRequestGlyph.pullRequest,
-              available: props.pullRequestAvailable,
-              disabledReason: SURFACE_DISABLED_REASONS.pullRequest,
-              onClick: props.onAddPullRequest,
-            },
-            {
-              label: "Linked pull requests",
-              icon: PullRequestGlyph.link,
-              available: props.pullRequestsAvailable,
-              disabledReason: SURFACE_DISABLED_REASONS.pullRequests,
-              onClick: props.onAddPullRequests,
-            },
-          ]
-        : [];
+      : [];
   const canAdd = addActions.some((action) => action.available);
+  // Git switches its two views with Diff | PR (design §22) where pull requests can be read.
+  const gitPullRequest = tabSurfaces.find(
+    (surface) => surface.kind === "pull-request" || surface.kind === "pull-requests",
+  );
+  const showGitSwitch =
+    tab === "git" && (props.pullRequestsAvailable || gitPullRequest !== undefined);
+  const activeTabSurface = tabSurfaces.find((surface) => surface.id === props.activeSurfaceId);
   // A tab shows its own row of chips once it holds more than one surface, or has something to add.
-  const showChips = tab === null || tabSurfaces.length > 1 || canAdd;
+  const showChips = tab !== "git" && (tab === null || tabSurfaces.length > 1 || canAdd);
 
   // The new-tab shortcut opens what the tab on show opens: a shell in Terminal, a page elsewhere.
   const onNewTabKeyDown = useEffectEvent((event: KeyboardEvent) => {
@@ -1005,6 +997,23 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
       {props.tabs && showChips ? (
         <div className="hy-vh flex shrink-0 px-2" data-right-panel-subtabs>
           {chips}
+        </div>
+      ) : null}
+      {showGitSwitch ? (
+        <div className="hy-vh flex shrink-0 px-2">
+          <Seg
+            label="Git view"
+            options={GIT_VIEWS}
+            value={activeTabSurface?.kind === "diff" ? "Diff" : "PR"}
+            onChange={(view) => {
+              const shown = tabSurfaces.find((surface) =>
+                view === "Diff" ? surface.kind === "diff" : surface === gitPullRequest,
+              );
+              if (shown) props.onActivate(shown);
+              else if (view === "Diff") props.onAddDiff();
+              else props.onAddPullRequests();
+            }}
+          />
         </div>
       ) : null}
       {/* isolate: a surface's own layers (the browser's control bar is z-20) stay under the

@@ -100,12 +100,11 @@ async function renderPanel(
         onAddBrowser={addBrowser}
         onAddBrowserInProfile={noop}
         onAddTerminal={addTerminal}
-        onAddPullRequest={noop}
+        onAddDiff={noop}
         onAddPullRequests={noop}
         onAddDevice={noop}
         browserAvailable
         terminalAvailable
-        pullRequestAvailable={false}
         pullRequestsAvailable={false}
         deviceAvailable={false}
         tabs={{ selected, unavailable: {}, onSelect: noop }}
@@ -225,5 +224,65 @@ describe("right panel tabs", () => {
   it("offers a new page from the Browser tab's chips", async () => {
     await renderPanel({ surfaces: [browserA], activeSurfaceId: browserA.id }, "browser");
     expect(container.querySelector('[aria-label="Add to Browser"]')).not.toBeNull();
+  });
+
+  it("switches Git between Diff and PR, and shows the pull request already open", async () => {
+    const diff = { id: "diff" as const, kind: "diff" as const };
+    const pullRequest = {
+      id: "pull-request:project-a:acme%2Fapi:7" as const,
+      kind: "pull-request" as const,
+      projectId: "project-a",
+      repository: "acme/api",
+      number: 7,
+    };
+    const onActivate = vi.fn();
+    const onAddPullRequests = vi.fn();
+    const onAddDiff = vi.fn();
+    const seg = (label: string) =>
+      [...container.querySelectorAll<HTMLButtonElement>('[aria-label="Git view"] button')].find(
+        (button) => button.textContent === label,
+      )!;
+
+    await renderPanel({
+      surfaces: [diff],
+      activeSurfaceId: diff.id,
+      pullRequestsAvailable: true,
+      onActivate,
+      onAddPullRequests,
+      onAddDiff,
+    });
+    expect(chipTitles()).toEqual([]);
+    expect(seg("Diff").getAttribute("aria-pressed")).toBe("true");
+    await act(() => seg("PR").click());
+    expect(onAddPullRequests).toHaveBeenCalledOnce();
+
+    await renderPanel({
+      surfaces: [diff, pullRequest],
+      activeSurfaceId: diff.id,
+      pullRequestsAvailable: true,
+      onActivate,
+      onAddPullRequests,
+      onAddDiff,
+    });
+    await act(() => seg("PR").click());
+    expect(onActivate).toHaveBeenCalledWith(pullRequest);
+    expect(onAddPullRequests).toHaveBeenCalledOnce();
+
+    await renderPanel({
+      surfaces: [pullRequest],
+      activeSurfaceId: pullRequest.id,
+      pullRequestsAvailable: true,
+      onActivate,
+      onAddPullRequests,
+      onAddDiff,
+    });
+    expect(seg("PR").getAttribute("aria-pressed")).toBe("true");
+    await act(() => seg("Diff").click());
+    expect(onAddDiff).toHaveBeenCalledOnce();
+  });
+
+  it("leaves Git as Diff alone where pull requests cannot be read", async () => {
+    await renderPanel({ surfaces: [{ id: "diff", kind: "diff" }], activeSurfaceId: "diff" });
+    expect(container.querySelector('[aria-label="Git view"]')).toBeNull();
   });
 });

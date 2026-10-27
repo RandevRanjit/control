@@ -116,9 +116,14 @@ uses the project's instructions and recent commit subjects.
 
 ## Review and merge
 
-Open **Pull requests** to review changes and comments, request reviewers, check out a branch,
-or merge. You can edit review titles and descriptions and your own comments where the host allows it.
-GitLab calls these merge requests.
+Pull requests live in a thread's right panel, under **Git → PR** (or **Open pull requests** in the
+command palette). The thread's own pull requests sit on top. Under them are the pull requests of
+this repository or of every project, grouped into those waiting on your review, yours, and others,
+with the search, filters and sort the list always had. At the panel's usual width the filters sit
+behind one icon; drag the panel wider or maximise it and they spread out as pickers. Open any pull
+request to review changes and comments, request reviewers, check out a branch, or merge, and use
+its back arrow to return to the list. You can edit review titles and descriptions and your own
+comments where the host allows it. GitLab calls these merge requests.
 
 Enable **Remove agent credits when merging** in Settings → Source Control to remove recognized
 agent co-author and generated-by lines from GitHub merge and squash commit messages. Human
@@ -180,19 +185,19 @@ does not show its diff, so marks are made and read on web and desktop.
 ## Linked pull requests
 
 A thread can hold several pull requests, including reviews from another repository on the same host.
-Use **Link pull request** in the command palette or **Linked pull requests** panel, or right-click a
-pull request link in the conversation. Creating a pull request from Git actions links it automatically.
+Use **Link pull request** in the command palette or the link field at the foot of **Git → PR**, or
+right-click a pull request link in the conversation. Creating a pull request from Git actions links it automatically.
 Agents can link their pull requests with the `link_pull_request` tool.
 
-Use **Link this PR** in a branch-detected badge's tooltip to keep it with the thread. From a review
-on the Pull Requests page, **Link to thread** lets you search for an active thread. The review header
-also lists the threads that link to it, including archived threads, so you can return to their context.
+Use **Link this PR** in a branch-detected badge's tooltip to keep it with the thread. A pull request
+opened from the list offers **Link to this thread**. The review header also lists the threads that
+link to it, including archived threads, so you can return to their context.
 
 Thread badges show a stack's layer count or the current review number with a count of additional
-links. Clicking a badge with more than one review opens the **Linked pull requests** panel. On mobile, the Git overview lists linked reviews and their stacks; tap a review to open it.
+links. Clicking a badge with more than one review opens **Git → PR**. On mobile, the Git overview lists linked reviews and their stacks; tap a review to open it.
 Linking and unlinking are available in the web and desktop clients.
 
-The **Linked pull requests** panel lists every review and groups stacks. Unlink a review from its
+**Git → PR** lists the thread's reviews on top and groups stacks. Unlink a review from its
 row menu. An unlinked stack layer stays out of later syncs. Open linked reviews refresh on the server;
 closed reviews refresh periodically so reopening one on the host is detected. Merged reviews refresh
 when requested. A settled thread's reviews stop refreshing until you unsettle it. With **Auto-settle merged threads** enabled, a thread can settle after every linked
@@ -208,7 +213,7 @@ when the pull request merges or closes, after 10 wakes in a row that bring only 
 failed reads in a row, or when you press Stop on the thread. A rate limit only pauses watching.
 Settling or archiving a thread also ends all its watches. Unsettle the thread before starting a new
 watch. Subagents cannot watch pull requests; the thread that delegated to them does. To start or stop
-it yourself, use the row menu in the **Linked pull requests** panel. In the thread details card, a
+it yourself, use the row menu in **Git → PR**. In the thread details card, a
 watched pull request shows an eye; click it to stop watching.
 
 A watched thread counts as working between wakes, so it stays in the **Working** section and does
@@ -220,7 +225,7 @@ out from the matching organization and repository.
 
 ## GitHub stacks
 
-The Pull Requests page shows each PR's position in its GitHub stack. Open the stack badge in a
+The pull request list shows each PR's position in its GitHub stack. Open the stack badge in a
 review to navigate its layers. **Merge stack** submits the selected pull request and every unmerged
 layer below it to GitHub together, respecting branch rules and merge queues. The confirmation shows
 the scope and merge strategy. GitHub rebases the remaining stack after merging.

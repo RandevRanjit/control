@@ -1,13 +1,6 @@
 import { useAtomValue } from "@effect/atom-react";
 import { useParams } from "@tanstack/react-router";
-import {
-  type CSSProperties,
-  type ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { create } from "zustand";
 
 import { isCommandPaletteOpen } from "../../commandPaletteBus";
@@ -24,6 +17,7 @@ import { useAtomCommand } from "../../state/use-atom-command";
 import { useOrchestrationCommand } from "../../state/use-orchestration-command";
 import { resolveThreadRouteRef } from "../../threadRoutes";
 import { GroupPearl } from "../GroupDialog";
+import { Seg } from "../Seg";
 import { Dialog, DialogPopup } from "../ui/dialog";
 import {
   canLockUntil,
@@ -73,39 +67,6 @@ export function LockSheetHost() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [keybindings]);
   return request === null ? null : <LockSheet request={request} />;
-}
-
-/** The sheet's two-way switch, the design's `.seg` with its sliding pill. */
-function Seg<T extends string>(props: {
-  readonly label: string;
-  readonly options: ReadonlyArray<T>;
-  readonly value: T | null;
-  readonly onChange: (value: T) => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [pill, setPill] = useState<CSSProperties | null>(null);
-  const index = props.value === null ? -1 : props.options.indexOf(props.value);
-  useLayoutEffect(() => {
-    const on = ref.current?.querySelectorAll("button")[index];
-    setPill(
-      on ? ({ "--x": `${on.offsetLeft}px`, "--w": `${on.offsetWidth}px` } as CSSProperties) : null,
-    );
-  }, [index]);
-  return (
-    <div ref={ref} className="seg sm" role="group" aria-label={props.label}>
-      {props.options.map((option) => (
-        <button
-          key={option}
-          type="button"
-          aria-pressed={option === props.value}
-          onClick={() => props.onChange(option)}
-        >
-          {option}
-        </button>
-      ))}
-      {pill === null ? null : <i className="seg-pill" aria-hidden="true" style={pill} />}
-    </div>
-  );
 }
 
 const TICK = (

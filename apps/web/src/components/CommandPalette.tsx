@@ -1,7 +1,6 @@
 "use client";
 
 import { threadPullRequestLinkMode } from "@control/client-runtime/thread-pull-request-compatibility";
-import { visibleThreadPullRequests } from "@control/shared/threadPullRequests";
 
 import { scopeProjectRef, scopeThreadRef } from "@control/client-runtime/environment";
 import {
@@ -138,7 +137,6 @@ import { isPreviewFocused } from "../lib/previewFocus";
 import { isTerminalFocused } from "../lib/terminalFocus";
 import {
   type PanelTab,
-  PULL_REQUESTS_PANEL_REF,
   type RightPanelKind,
   selectActiveRightPanel,
   useRightPanelStore,
@@ -233,7 +231,6 @@ import {
 } from "../sidebarProjectGrouping";
 import type { Project } from "../types";
 import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
-import { readPullRequestListPreferences } from "~/components/pullRequest/pullRequestListPreferences";
 
 const EMPTY_BROWSE_ENTRIES: FilesystemBrowseResult["entries"] = [];
 
@@ -757,22 +754,15 @@ function OpenCommandPaletteDialog(props: {
   const { activeDraftThread, activeThread, defaultProjectRef, handleNewThread } =
     useHandleNewThread();
   const projects = useProjects();
-  const referenceThreadRef =
-    pathname === "/pull-requests"
-      ? environments.some(
-          (environment) => environment.serverConfig?.environment.capabilities.pullRequests === true,
-        )
-        ? PULL_REQUESTS_PANEL_REF
-        : null
-      : activeThread
-        ? scopeThreadRef(activeThread.environmentId, activeThread.id)
-        : null;
+  const referenceThreadRef = activeThread
+    ? scopeThreadRef(activeThread.environmentId, activeThread.id)
+    : null;
   const openPanelPullRequestUrl = useOpenPanelPullRequestUrl(referenceThreadRef);
   const activeThreadServerConfig = useServerConfigs().get(
     activeThread?.environmentId ?? ("" as EnvironmentId),
   );
   const activeThreadReferenceCopyTarget =
-    referenceThreadRef === null || (pathname === "/pull-requests" && !openPanelPullRequestUrl)
+    referenceThreadRef === null
       ? null
       : resolveThreadReferenceCopyTarget({
           threadId: referenceThreadRef.threadId,
@@ -1999,19 +1989,6 @@ function OpenCommandPaletteDialog(props: {
         openLinkPullRequestDialog(threadRef);
       },
     });
-    if (activeThreadServerConfig?.environment.capabilities.threadPullRequests === true) {
-      actionItems.push({
-        kind: "action",
-        value: "action:open-thread-pull-requests",
-        searchTerms: ["pull requests", "linked", "stack", "prs"],
-        title: "Show linked pull requests",
-        disabled: visibleThreadPullRequests(activeThread.pullRequests).length === 0,
-        icon: <PullRequestGlyph.link className={ITEM_ICON_CLASS} />,
-        run: async () => {
-          useRightPanelStore.getState().open(threadRef, "pull-requests");
-        },
-      });
-    }
   }
 
   if (activeThread !== null) {
@@ -2285,19 +2262,33 @@ function OpenCommandPaletteDialog(props: {
     },
   });
 
+  // Git's PR view: the thread's pull requests and every project's (design §22).
   if (
-    environments.some(
-      (environment) => environment.serverConfig?.environment.capabilities.pullRequests === true,
-    )
+    activeThread !== null &&
+    (activeThreadServerConfig?.environment.capabilities.threadPullRequests === true ||
+      environments.some(
+        (environment) => environment.serverConfig?.environment.capabilities.pullRequests === true,
+      ))
   ) {
+    const threadRef = scopeThreadRef(activeThread.environmentId, activeThread.id);
     actionItems.push({
       kind: "action",
       value: "action:pull-requests",
-      searchTerms: ["pull requests", "prs", "pr", "github", "review", "merge", "branch"],
+      searchTerms: [
+        "pull requests",
+        "prs",
+        "pr",
+        "github",
+        "review",
+        "merge",
+        "branch",
+        "linked",
+        "stack",
+      ],
       title: "Open pull requests",
       icon: <PullRequestGlyph.pullRequest className={ITEM_ICON_CLASS} />,
       run: async () => {
-        await navigate({ to: "/pull-requests", search: readPullRequestListPreferences() });
+        useRightPanelStore.getState().open(threadRef, "pull-requests");
       },
     });
   }

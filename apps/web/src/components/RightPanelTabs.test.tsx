@@ -111,12 +111,11 @@ function renderTabs(
       onAddBrowser={() => undefined}
       onAddBrowserInProfile={() => undefined}
       onAddTerminal={() => undefined}
-      onAddPullRequest={() => undefined}
+      onAddDiff={() => undefined}
       onAddPullRequests={() => undefined}
       onAddDevice={() => undefined}
       browserAvailable
       terminalAvailable={false}
-      pullRequestAvailable={false}
       pullRequestsAvailable={false}
       deviceAvailable={false}
     >

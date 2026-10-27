@@ -45,6 +45,7 @@ function findLabeledGroup(node: ReactNode, label: string): ReactNode {
 
 function menu(overrides: Partial<Parameters<typeof PullRequestFiltersMenu>[0]>) {
   return PullRequestFiltersMenu({
+    layout: "icon",
     state: "open",
     stateOptions: [
       { value: "open", label: "Open", Icon: CircleIcon },

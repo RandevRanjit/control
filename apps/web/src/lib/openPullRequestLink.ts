@@ -1,6 +1,5 @@
 import type { EnvironmentId, PullRequestRef, ScopedThreadRef } from "@control/contracts";
 import { useAtomValue } from "@effect/atom-react";
-import { useNavigate } from "@tanstack/react-router";
 import { type MouseEvent, useCallback, useMemo } from "react";
 
 import { pullRequestHostOf, type SourceControlProviderKind } from "@control/contracts";
@@ -17,7 +16,6 @@ import type { EnvironmentProject } from "@control/client-runtime/state/shell";
 
 import { useProjects, useServerConfigs } from "../state/entities";
 import { serverEnvironment } from "../state/server";
-import { usePrimaryEnvironmentId } from "../state/environments";
 
 export {
   parseChangeRequestUrl,
@@ -185,18 +183,14 @@ export function findProjectOnChangeRequestHost(
 }
 
 /**
- * Opens a change request link on the page, and says whether it did. Anything else — another
- * organisation's repository, a host nothing here is checked out from, a link that merely looks
- * like one — is left alone for the caller to handle as the ordinary link it is.
+ * Opens a change request link in the thread's Git › PR view, and says whether it did. Anything
+ * else — another organisation's repository, a host nothing here is checked out from, a link that
+ * merely looks like one, or a link outside any thread — is left alone for the caller to handle as
+ * the ordinary link it is.
  *
- * Resolving the project here rather than on the page is what makes recognising a URL safe: a
- * lookalike hostname matches no project and stays a link, and the page is handed the project
- * rather than a host to narrow its whole list by.
- *
- * Given a thread, the link opens beside it in the right panel instead of taking the whole app to
- * the pull requests page: a reader following a link the agent wrote is reading the thread, and
- * should still be reading it afterwards. Any change request opens there, not only the thread's
- * own, since the panel is told which one to show.
+ * Resolving the project here is what makes recognising a URL safe: a lookalike hostname matches
+ * no project and stays a link. Any change request opens in the panel, not only the thread's own,
+ * since the panel is told which one to show.
  */
 export function shouldOpenPullRequestExternally(
   event: Pick<MouseEvent<HTMLElement>, "metaKey" | "ctrlKey">,
@@ -206,7 +200,6 @@ export function shouldOpenPullRequestExternally(
 
 export function useOpenChangeRequestLink(
   threadRef?: ScopedThreadRef,
-  panelRef?: ScopedThreadRef,
 ): (
   event: Pick<
     MouseEvent<HTMLElement>,
@@ -214,111 +207,53 @@ export function useOpenChangeRequestLink(
   >,
   targetUrl: string,
   targetThreadRef?: ScopedThreadRef,
-  targetEnvironmentId?: EnvironmentId,
 ) => boolean {
-  const navigate = useNavigate();
   const allProjects = useProjects();
   const serverConfigs = useServerConfigs();
-  const primaryEnvironmentId = usePrimaryEnvironmentId();
   return useCallback(
-    (event, targetUrl, targetThreadRef, targetEnvironmentId) => {
+    (event, targetUrl, targetThreadRef) => {
       if (shouldOpenPullRequestExternally(event)) return false;
       const resolvedThreadRef = targetThreadRef ?? threadRef;
-      const resolvedPanelRef = panelRef ?? resolvedThreadRef;
       const parsed = parseChangeRequestUrl(targetUrl);
-      if (parsed === null) return false;
+      // Outside a thread there is no panel to show it in, so the host opens it.
+      if (parsed === null || !resolvedThreadRef) return false;
       const reads = (environmentId: string) =>
         serverConfigs.get(environmentId as EnvironmentId)?.environment.capabilities.pullRequests ===
         true;
       // Beside a thread the panel reads on that thread's environment, so a project from another
       // one could not be read there whatever its remote says: two environments can hold the same
       // repository, and handing the panel the wrong one's id opens a surface that never loads.
-      //
-      // The page has no such tie — it lists every server at once — so the link is resolved
-      // against all of them, the primary first where two hold the same repository.
-      const projects = resolvedThreadRef
-        ? allProjects.filter((project) => project.environmentId === resolvedThreadRef.environmentId)
-        : targetEnvironmentId
-          ? allProjects.filter((project) => project.environmentId === targetEnvironmentId)
-          : allProjects
-              .filter((project) => reads(project.environmentId))
-              .toSorted(
-                (left, right) =>
-                  Number(right.environmentId === primaryEnvironmentId) -
-                  Number(left.environmentId === primaryEnvironmentId),
-              );
-      const exactProject = findProjectForChangeRequest(projects, parsed);
+      const projects = allProjects.filter(
+        (project) => project.environmentId === resolvedThreadRef.environmentId,
+      );
       const project =
-        exactProject ??
-        (resolvedPanelRef
-          ? findProjectOnChangeRequestHost(
-              projects.filter(
-                (candidate) =>
-                  serverConfigs.get(candidate.environmentId)?.environment.capabilities
-                    .threadPullRequests === true,
-              ),
-              parsed,
-            )
-          : undefined);
+        findProjectForChangeRequest(projects, parsed) ??
+        findProjectOnChangeRequestHost(
+          projects.filter(
+            (candidate) =>
+              serverConfigs.get(candidate.environmentId)?.environment.capabilities
+                .threadPullRequests === true,
+          ),
+          parsed,
+        );
       if (project === undefined || !reads(project.environmentId)) return false;
-      const repository =
+      const threadPullRequests =
         serverConfigs.get(project.environmentId)?.environment.capabilities.threadPullRequests ===
-        true
-          ? parsed.repository
-          : (sourceControlRepositorySelector(project.repositoryIdentity) ?? parsed.repository);
+        true;
       event.preventDefault();
       event.stopPropagation();
-      if (resolvedPanelRef) {
-        useRightPanelStore.getState().openPullRequest(resolvedPanelRef, {
-          // The standalone PR panel has a synthetic ref; each tab keeps its real environment.
-          ...(resolvedPanelRef.environmentId === project.environmentId
-            ? {}
-            : { environmentId: project.environmentId }),
-          projectId: project.id,
-          ...(serverConfigs.get(project.environmentId)?.environment.capabilities
-            .threadPullRequests === true
-            ? { host: parsed.authority ?? parsed.host }
-            : {}),
-          repository,
-          url: targetUrl,
-          number: parsed.number,
-        });
-        if (!resolvedThreadRef) {
-          void navigate({
-            to: "/pull-requests",
-            search: (previous) => ({
-              ...previous,
-              involvement: previous.involvement ?? "all",
-              state: previous.state ?? "all",
-              repository,
-              number: parsed.number,
-              selectedHost: parsed.authority ?? parsed.host,
-              selectedProjectId: project.id,
-              selectedEnvironmentId: project.environmentId,
-            }),
-            replace: true,
-          });
-        }
-        return true;
-      }
-      void navigate({
-        to: "/pull-requests",
-        search: {
-          involvement: "all",
-          // Every state, so the pull request being opened is also in the list behind it whether
-          // it is open, merged or closed.
-          state: "all",
-          repository,
-          number: parsed.number,
-          selectedHost: parsed.authority ?? parsed.host,
-          selectedProjectId: project.id,
-          // Named so the page opens the right one of two servers holding this project.
-          selectedEnvironmentId: project.environmentId,
-        },
+      useRightPanelStore.getState().openPullRequest(resolvedThreadRef, {
+        projectId: project.id,
+        ...(threadPullRequests ? { host: parsed.authority ?? parsed.host } : {}),
+        repository: threadPullRequests
+          ? parsed.repository
+          : (sourceControlRepositorySelector(project.repositoryIdentity) ?? parsed.repository),
+        url: targetUrl,
+        number: parsed.number,
       });
       return true;
     },
-    [allProjects, navigate, panelRef, primaryEnvironmentId, serverConfigs, threadRef],
+    [allProjects, serverConfigs, threadRef],
   );
 }
 

@@ -18,8 +18,6 @@ import type {
   PullRequestListState,
   SourceControlProviderKind,
 } from "@control/contracts";
-import { useAtomValue } from "@effect/atom-react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   ArrowDownUpIcon,
   CalendarArrowDownIcon,
@@ -30,13 +28,10 @@ import {
   LayersIcon,
   ListChecksIcon,
   PenLineIcon,
-  UsersIcon,
   Plug2Icon,
   Maximize2Icon,
   Minimize2Icon,
-  SearchIcon,
   UserLockIcon,
-  type LucideIcon,
 } from "lucide-react";
 import {
   useCallback,
@@ -88,146 +83,70 @@ import {
   pullRequestOverrideAfterAction,
   reusePullRequestEntries,
   settlePullRequestOverrides,
-} from "../components/pullRequest/pullRequestList.logic";
+} from "./pullRequestList.logic";
 import {
   pullRequestListPreferences,
   type PullRequestListPreferencePatch,
   type PullRequestListPreferences,
   type PullRequestListSort,
+  readPullRequestListPreferences,
   writePullRequestListPreferences,
-} from "../components/pullRequest/pullRequestListPreferences";
-import { assignProjectsToEnvironments } from "../components/pullRequest/pullRequestProjectAssignment.logic";
-import { pullRequestFilterProjects } from "../components/pullRequest/pullRequestProjectFilter.logic";
-import { environmentMachineIcon } from "../components/EnvironmentMachineIcon";
-import { PullRequestDetailPanel } from "../components/pullRequest/PullRequestDetailPanel";
+} from "./pullRequestListPreferences";
+import { assignProjectsToEnvironments } from "./pullRequestProjectAssignment.logic";
+import { pullRequestFilterProjects } from "./pullRequestProjectFilter.logic";
+import { environmentMachineIcon } from "../EnvironmentMachineIcon";
+import { Seg } from "../Seg";
 import {
   PullRequestFiltersMenu,
-  PullRequestFilterOptionIcon,
   PullRequestSearchInput,
   pullRequestHostLabel,
   pullRequestProjectKey,
   type PullRequestExpectedHost,
   type PullRequestFilterOption,
-} from "../components/pullRequest/PullRequestListFilters";
-import { PullRequestListEmptyState } from "../components/pullRequest/PullRequestListEmptyState";
-import { PullRequestListGhost } from "../components/pullRequest/PullRequestGhosts";
-import {
-  PullRequestRow,
-  type PullRequestRowTarget,
-} from "../components/pullRequest/PullRequestRow";
-import { PullRequestsUnavailableState } from "../components/pullRequest/PullRequestsUnavailableState";
-import { RightPanelTabs, type PullRequestTabStatusSeed } from "../components/RightPanelTabs";
-import {
-  WorkspaceBreadcrumb,
-  WorkspaceBreadcrumbItem,
-  WorkspaceBreadcrumbSeparator,
-} from "../components/WorkspaceBreadcrumb";
-import { WorkspacePageContainer } from "../components/WorkspacePageContainer";
-import { WorkspacePageHeader } from "../components/WorkspacePageHeader";
-import { isCommandPaletteOpen } from "../commandPaletteBus";
-import { isElectron } from "../env";
-import { resolveShortcutCommand, shortcutLabelForCommand } from "../keybindings";
-import { isTerminalFocused } from "../lib/terminalFocus";
-import { PanelLayoutControls } from "../components/chat/PanelLayoutControls";
-import { Button } from "../components/ui/button";
-import { Menu, MenuPopup, MenuRadioGroup, MenuRadioItem, MenuTrigger } from "../components/ui/menu";
-import { SidebarInset } from "../components/ui/sidebar";
-import { Tooltip, TooltipPopup, TooltipTrigger } from "../components/ui/tooltip";
-import { useLiveRefresh } from "../hooks/useLiveRefresh";
-import { useOpenPanelPullRequestUrl } from "../hooks/useOpenPanelPullRequestUrl";
-import { writeTextToClipboard } from "../hooks/useCopyToClipboard";
-import { toastManager } from "../components/ui/toast";
-import { useEscapeToGoBack } from "../hooks/useNavigateBack";
-import { usePanelAnimationSettings, usePanelPresence } from "../panelAnimations";
-import {
-  PULL_REQUESTS_PANEL_REF,
-  pullRequestSurfaceId,
-  selectActiveRightPanelSurface,
-  selectSelectedRightPanelSurface,
-  selectThreadRightPanelState,
-  useRightPanelStore,
-  type PullRequestSurface,
-} from "../rightPanelStore";
-import { useDebouncedValue } from "../state/queries";
-import { useAllEnvironmentShellsBootstrapped, useProjects } from "../state/entities";
-import { useEnvironments } from "../state/environments";
+} from "./PullRequestListFilters";
+import { PullRequestListEmptyState } from "./PullRequestListEmptyState";
+import { PullRequestListGhost } from "./PullRequestGhosts";
+import { PullRequestRow, type PullRequestRowTarget } from "./PullRequestRow";
+import { PullRequestsUnavailableState } from "./PullRequestsUnavailableState";
+import { Button } from "../ui/button";
+import { Menu, MenuPopup, MenuRadioGroup, MenuRadioItem, MenuTrigger } from "../ui/menu";
+import { useElementWidth } from "~/hooks/useElementWidth";
+import { useLiveRefresh } from "~/hooks/useLiveRefresh";
+import { useDebouncedValue } from "~/state/queries";
+import { useAllEnvironmentShellsBootstrapped, useProjects } from "~/state/entities";
+import { useEnvironments } from "~/state/environments";
 import {
   pullRequestEnvironment,
   usePullRequestList,
   usePullRequestListStats,
   usePullRequestTurnRefreshes,
   type EnvironmentQueryTarget,
-} from "../state/pullRequests";
-import { useAtomCommand } from "../state/use-atom-command";
+} from "~/state/pullRequests";
+import { useAtomCommand } from "~/state/use-atom-command";
 import { cn } from "~/lib/utils";
-import { Separator } from "~/components/ui/separator";
-import { primaryServerKeybindingsAtom } from "~/state/server";
 import { getSourceControlPresentationForKind } from "~/sourceControlPresentation";
-import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
+import { PullRequestGlyph } from "./pullRequestIcons";
 
-function getShortcutContext() {
-  return {
-    terminalFocus: isTerminalFocused(),
-    terminalOpen: false,
-    previewFocus: false,
-    previewOpen: false,
-    modelPickerOpen: false,
-    isWeb: !isElectron,
-    isDesktop: isElectron,
-  };
-}
+/** The list's own controls, held by the view and remembered between visits (see pullRequestListPreferences). */
+type PullRequestsSearch = PullRequestListPreferences;
 
-export interface PullRequestsSearch extends PullRequestListPreferences {
-  /**
-   * Narrows the list to one server. Absent means every connected one, which is the default the
-   * page has now — so a link written before servers could be chosen still opens the whole list.
-   */
-  readonly environmentId?: EnvironmentId;
-  /** Scopes the list. Separate from the selection so one cannot silently change the other. */
-  readonly projectId?: ProjectId;
-  /**
-   * Narrows the list to one host, named as the host itself: two GitHub installs are two
-   * accounts, and their shared provider kind cannot tell them apart. Absent means every host.
-   */
-  readonly host?: string;
-  readonly repository?: string;
-  readonly number?: number;
-  readonly selectedProjectId?: ProjectId;
-  /** Host of the open review; changing tabs must not narrow the list host filter. */
-  readonly selectedHost?: string;
-  /**
-   * Which server the selected pull request was read from. A project id only names a project on
-   * its own server, so this is what tells two servers holding one project apart. Optional: a
-   * link without it still opens, resolved by project id alone where that is unambiguous.
-   */
-  readonly selectedEnvironmentId?: EnvironmentId;
-}
-
-/**
- * A group reads like the sidebar's shelves: its glyph, its name, how many, then a rule out
- * to the edge. The glyph is the one the involvement filter uses for the same idea.
- */
-const GROUP_ICONS: Record<string, LucideIcon> = {
-  authored: PenLineIcon,
-  reviewRequested: EyeIcon,
-  others: UsersIcon,
-};
-
+/** A group's head, as the drawing has it: its name in caption ink and a pearl with the count. */
 function PullRequestGroupHeader({
   group,
 }: {
   group: { key: string; label: string; entries: ReadonlyArray<unknown> };
 }) {
-  const Icon = GROUP_ICONS[group.key] ?? LayersIcon;
   return (
-    <div className="flex items-center gap-2 px-3 pb-1 text-xs font-medium text-muted-foreground/70">
-      <Icon aria-hidden className="size-3.5 shrink-0" />
-      <h2 className="shrink-0">{group.label}</h2>
-      <span className="shrink-0 tabular-nums text-muted-foreground/50">{group.entries.length}</span>
-      <Separator className="min-w-2 flex-1" />
+    <div className="s-sc-ig">
+      <h2>{group.label}</h2>
+      <span className="pearl count">{group.entries.length}</span>
     </div>
   );
 }
+
+/** From this width the filters come out as pickers along the top (design SC1d). */
+const WIDE_PANEL_PX = 600;
+const SCOPES = ["This repo", "All"] as const;
 
 // The state filters wear the same glyphs the rows do, so the two read as one vocabulary.
 const INVOLVEMENT_TABS = [
@@ -269,93 +188,39 @@ const MAX_PAGE_SIZE = 500;
 const EMPTY_VIEWERS: PullRequestListResult["viewers"] = {};
 /** Stable so a read that is not wanted right now does not re-key on every render. */
 const NO_LIST_TARGETS: ReadonlyArray<EnvironmentQueryTarget<PullRequestListInput>> = [];
-const EMPTY_PREVIEW_SESSIONS = {};
-const EMPTY_PREVIEW_DESKTOP_STATE = {};
-const EMPTY_TERMINAL_LABELS = new Map<string, string>();
-const EMPTY_PENDING_SURFACES = new Set<string>();
-const MAX_SEARCH_LABEL_CANDIDATES = 100;
 
-const pullRequestListEntryId = (target: Parameters<typeof pullRequestSurfaceId>[0]) =>
-  pullRequestSurfaceId({ ...target, repository: target.repository.toLowerCase() });
-
-function pullRequestSearchLabels(raw: unknown): Partial<Pick<PullRequestsSearch, "labels">> {
-  const values = (Array.isArray(raw) ? raw : typeof raw === "string" ? [raw] : []).slice(
-    0,
-    MAX_SEARCH_LABEL_CANDIDATES,
-  );
-  const labels: Array<string> = [];
-  const seen = new Set<string>();
-  for (const rawValue of values) {
-    if (typeof rawValue !== "string") continue;
-    const value = rawValue.trim().slice(0, 200);
-    const key = value.toLowerCase();
-    if (value.length === 0 || seen.has(key)) continue;
-    labels.push(value);
-    seen.add(key);
-    if (labels.length === 10) break;
-  }
-  return labels.length === 0 ? {} : { labels };
-}
-
-export const Route = createFileRoute("/_chat/pull-requests")({
-  validateSearch: (raw: Record<string, unknown>): PullRequestsSearch => ({
-    involvement:
-      raw.involvement === "reviewing" || raw.involvement === "authored" ? raw.involvement : "all",
-    state:
-      raw.state === "closed" || raw.state === "merged" || raw.state === "all" ? raw.state : "open",
-    ...(SORT_OPTIONS.some((option) => option.value === raw.sort)
-      ? { sort: raw.sort as PullRequestListSort }
-      : {}),
-    ...(typeof raw.repository === "string" && raw.repository
-      ? { repository: raw.repository.slice(0, 200) }
-      : {}),
-    ...(typeof raw.number === "number" && Number.isInteger(raw.number) && raw.number > 0
-      ? { number: raw.number }
-      : {}),
-    ...(typeof raw.projectId === "string" && raw.projectId
-      ? { projectId: raw.projectId as ProjectId }
-      : {}),
-    ...(typeof raw.environmentId === "string" && raw.environmentId
-      ? { environmentId: raw.environmentId as EnvironmentId }
-      : {}),
-    ...(typeof raw.host === "string" && raw.host ? { host: raw.host.slice(0, 200) } : {}),
-    ...(typeof raw.selectedProjectId === "string" && raw.selectedProjectId
-      ? { selectedProjectId: raw.selectedProjectId as ProjectId }
-      : {}),
-    ...(typeof raw.selectedHost === "string" && raw.selectedHost
-      ? { selectedHost: raw.selectedHost.slice(0, 200) }
-      : {}),
-    ...(typeof raw.selectedEnvironmentId === "string" && raw.selectedEnvironmentId
-      ? { selectedEnvironmentId: raw.selectedEnvironmentId as EnvironmentId }
-      : {}),
-    ...(typeof raw.q === "string" && raw.q ? { q: raw.q.slice(0, 200) } : {}),
-    ...(raw.draft === "only" || raw.draft === "hide" ? { draft: raw.draft } : {}),
-    ...(raw.review === "approved" ||
-    raw.review === "changes-requested" ||
-    raw.review === "review-required" ||
-    raw.review === "none"
-      ? { review: raw.review }
-      : {}),
-    ...(raw.checks === "passing" || raw.checks === "failing" ? { checks: raw.checks } : {}),
-    ...(typeof raw.author === "string" && raw.author.trim()
-      ? { author: raw.author.trim().slice(0, 200) }
-      : {}),
-    ...pullRequestSearchLabels(raw.labels),
-  }),
-  component: PullRequestsRouteView,
-});
-
-function PullRequestsRouteView() {
-  useEscapeToGoBack();
+/**
+ * Every project's pull requests, in Git's PR view under the thread's own (design §22, SC1c and
+ * SC1d). It was the Pull Requests page; the panel's width now decides how much it shows.
+ */
+export function PullRequestInbox({
+  threadProject,
+  onOpen,
+  children,
+}: {
+  /** The thread's project, which "This repo" narrows to. */
+  threadProject: { readonly id: ProjectId; readonly environmentId: EnvironmentId } | null;
+  onOpen: (entry: PullRequestRowTarget) => void;
+  /** Above the list's controls, scrolling with it: the thread's own pull requests. */
+  children?: ReactNode;
+}) {
+  const [setRootElement, width] = useElementWidth<HTMLDivElement>();
+  const wide = (width ?? 0) >= WIDE_PANEL_PX;
   const modifiers = useShortcutModifierState(true);
   const speedMode =
     modifiers.shiftKey && !modifiers.metaKey && !modifiers.ctrlKey && !modifiers.altKey;
-  const search = Route.useSearch();
+  // The scope to one project stays with this visit; the rest is remembered for the next.
+  const [search, setSearch] = useState<PullRequestsSearch>(() => {
+    const {
+      projectId: _projectId,
+      environmentId: _environmentId,
+      ...rest
+    } = readPullRequestListPreferences();
+    return rest;
+  });
   const sort = search.sort ?? "ready";
   const statsPolicy: PullRequestStatsPolicy =
     sort === "ready" || sort === "largest" || sort === "smallest" ? "eager" : "visible";
-  const navigate = useNavigate({ from: Route.fullPath });
-  const keybindings = useAtomValue(primaryServerKeybindingsAtom);
   const { environments } = useEnvironments();
   // Every connected environment that has said it can list pull requests. Sorted, so the query
   // keys, the scope key and the stored snapshot all read the same whichever order the
@@ -431,143 +296,27 @@ function PullRequestsRouteView() {
     [environmentLabels, projects, scopedProject],
   );
 
-  // A link from a thread or the sidebar only knows the repository, so the owning project is
-  // resolved here; an explicit `projectId` in the URL still wins.
-  const selectedHost = search.selectedHost ?? search.host;
-  const projectIdForRepository = useMemo(() => {
-    const repository = search.repository?.toLowerCase();
-    if (repository === undefined) return undefined;
-    const identity = projects.find(
-      (project) =>
-        project.repositoryIdentity?.owner &&
-        project.repositoryIdentity.name &&
-        `${project.repositoryIdentity.owner}/${project.repositoryIdentity.name}`.toLowerCase() ===
-          repository &&
-        // The same `owner/name` can exist on two hosts. Without this the first match wins, and
-        // a link that named its host opens the pull request from the other one.
-        (selectedHost === undefined ||
-          pullRequestHostOf(
-            project.repositoryIdentity,
-            project.repositoryIdentity.provider as SourceControlProviderKind,
-          ) === selectedHost.toLowerCase()),
-    );
-    return identity?.id;
-  }, [projects, selectedHost, search.repository]);
-
-  // The selection is resolved the same way the scope is: an id no connected environment has can
-  // never be read here, and one that arrived before the projects did is not yet wrong.
-  const linkedProjectId = useMemo(
-    () => resolveProjectScope(search.selectedProjectId, projects, projectsKnown),
-    [projects, projectsKnown, search.selectedProjectId],
-  );
-  // The scope filter stands in as a last resort: a link can carry `projectId` with a repository
-  // whose identity the inference above cannot match, and refusing to open it because of the
-  // weaker signal would ignore the stronger one the URL spelled out.
-  const selectedProjectId = linkedProjectId ?? projectIdForRepository ?? scopedProjectId;
-  // Which server the selection belongs to. Named by the URL where a link had one to give;
-  // otherwise the project id decides, and only where exactly one server has that project.
-  // A named server still connecting is kept named rather than falling back: falling back while
-  // it is merely not ready yet would resolve the project against whatever other server has
-  // answered, which can be the wrong one where two servers share a project id. Only a name this
-  // workspace has never heard of falls back to the scope above, the same way that scope treats a
-  // stale name — a saved link naming a server that has since gone would otherwise open nothing,
-  // even where the project id it also carries names exactly one remaining server.
-  const selectedEnvironmentId = resolveSelectedEnvironmentId(
-    search.selectedEnvironmentId,
-    knownEnvironmentIds,
-    scopedEnvironmentId,
-  );
-  const selectedProject = useMemo(
-    () => findScopedProject(projects, selectedEnvironmentId, selectedProjectId),
-    [projects, selectedEnvironmentId, selectedProjectId],
-  );
-  // One panel for the page rather than one per server: the surfaces carry the server they were
-  // read from, so tabs from two of them sit side by side instead of replacing each other. Its ref
-  // uses a fixed sentinel environment, not whichever server happens to sort first, so the tab
-  // strip survives a capable server disconnecting or losing the pull-requests capability.
-  const rightPanelRef = capableEnvironments.length === 0 ? null : PULL_REQUESTS_PANEL_REF;
-  const openPanelPullRequestUrl = useOpenPanelPullRequestUrl(rightPanelRef);
-  const rightPanelState = useRightPanelStore((state) =>
-    selectThreadRightPanelState(state.byThreadKey, rightPanelRef),
-  );
-  const selectedRightPanelSurface = useRightPanelStore((state) =>
-    selectSelectedRightPanelSurface(state.byThreadKey, rightPanelRef),
-  );
-  const selectedPullRequestSurface =
-    selectedRightPanelSurface?.kind === "pull-request" ? selectedRightPanelSurface : null;
-  const activePullRequestSurface = rightPanelState.isOpen ? selectedPullRequestSurface : null;
-  const { active: panelAnimationsActive, durationMs: panelAnimationDurationMs } =
-    usePanelAnimationSettings();
-  const rightPanelPresenceValue = useMemo(
-    () => ({
-      activeSurface: selectedPullRequestSurface,
-      surfaces: rightPanelState.surfaces,
-    }),
-    [rightPanelState.surfaces, selectedPullRequestSurface],
-  );
-  const rightPanelPresence = usePanelPresence(
-    rightPanelState.isOpen && selectedPullRequestSurface !== null,
-    rightPanelPresenceValue,
-    panelAnimationsActive,
-    rightPanelRef?.threadId ?? null,
-    panelAnimationDurationMs,
-  );
-  const rightPanelPresent = rightPanelPresence.present;
-  const renderedPullRequestSurface = rightPanelPresence.value?.activeSurface ?? null;
-  const renderedRightPanelSurfaces = rightPanelPresence.value?.surfaces ?? [];
-  // The open tab names its own server; a link that arrived before any tab was opened names it
-  // through the project it selected.
-  const panelEnvironmentId =
-    (renderedPullRequestSurface?.environmentId as EnvironmentId | undefined) ??
-    selectedProject?.environmentId ??
-    null;
   const updateSearch = useCallback(
-    (patch: {
-      [Key in keyof PullRequestsSearch]?: PullRequestsSearch[Key] | undefined;
-    }) =>
-      void navigate({
-        // Rebuilt rather than spread so a cleared field leaves the URL instead of
-        // lingering as an explicit `undefined`.
-        search: (previous: PullRequestsSearch): PullRequestsSearch => {
-          const next = { ...previous, ...patch };
-          return {
-            involvement: next.involvement ?? previous.involvement,
-            state: next.state ?? previous.state,
-            ...(next.sort && next.sort !== "ready" ? { sort: next.sort } : {}),
-            ...(next.repository ? { repository: next.repository } : {}),
-            ...(next.number ? { number: next.number } : {}),
-            ...(next.projectId ? { projectId: next.projectId } : {}),
-            ...(next.environmentId ? { environmentId: next.environmentId } : {}),
-            ...(next.host ? { host: next.host } : {}),
-            ...(next.selectedHost ? { selectedHost: next.selectedHost } : {}),
-            ...(next.selectedProjectId ? { selectedProjectId: next.selectedProjectId } : {}),
-            ...(next.selectedEnvironmentId
-              ? { selectedEnvironmentId: next.selectedEnvironmentId }
-              : {}),
-            ...(next.q ? { q: next.q } : {}),
-            ...(next.draft ? { draft: next.draft } : {}),
-            ...(next.review ? { review: next.review } : {}),
-            ...(next.checks ? { checks: next.checks } : {}),
-            ...(next.author ? { author: next.author } : {}),
-            ...(next.labels && next.labels.length > 0 ? { labels: next.labels } : {}),
-          };
-        },
-        replace: true,
+    (patch: PullRequestListPreferencePatch) =>
+      setSearch((previous) => {
+        const next = { ...previous, ...patch };
+        return pullRequestListPreferences({
+          ...next,
+          involvement: next.involvement ?? previous.involvement,
+          state: next.state ?? previous.state,
+        });
       }),
-    [navigate],
+    [],
   );
 
-  const clearedSelection = {
-    repository: undefined,
-    number: undefined,
-    selectedProjectId: undefined,
-    selectedEnvironmentId: undefined,
-    selectedHost: undefined,
-  };
   // List controls change the rows behind the detail, not the independent selected surface. The
   // reader can keep working in that panel while narrowing, sorting, or switching projects.
   const updateListScope = (patch: PullRequestListPreferencePatch) => {
-    const currentPreferences = pullRequestListPreferences({
+    const {
+      projectId: _projectId,
+      environmentId: _environmentId,
+      ...currentPreferences
+    } = pullRequestListPreferences({
       ...search,
       ...patch,
       involvement: patch.involvement ?? search.involvement,
@@ -865,10 +614,6 @@ function PullRequestsRouteView() {
   // The header's refresh punches through the server's cache before re-reading; the error and
   // empty states retry plainly, because a failure is never cached.
   const invalidate = useAtomCommand(pullRequestEnvironment.invalidate, { reportFailure: false });
-  // What the reader pressed refresh for is everything they can see, not the one query that
-  // happens to be theirs: the list, the counts beside its rows, and whatever the panel is
-  // showing. The panel owns its own reads, so it is told to redo them rather than reached into.
-  const [detailRefreshToken, setDetailRefreshToken] = useState(0);
   // The queries only go pending once the invalidation has come back, so refreshing is tracked
   // from the first moment rather than the second: a button that stays live through the slow half
   // of its own work is a button that gets pressed again, and buys the whole cascade twice.
@@ -910,7 +655,6 @@ function PullRequestsRouteView() {
       setInvalidating(false);
     }
     refreshListAndStats(requestedStatsScope);
-    setDetailRefreshToken((token) => token + 1);
   };
   const refreshing = invalidating || listQuery.isPending;
 
@@ -963,8 +707,6 @@ function PullRequestsRouteView() {
       return next;
     });
   };
-  /** The detail panel's own writes, by row, so its failure takes back its own note. */
-  const detailOverrideTokens = useRef(new Map<string, number | null>());
   const speedActionRef = useRef<(result: PullRequestSpeedActionResult) => void>(() => {});
   speedActionRef.current = ({ entry, action }) => {
     // Some hosts accept a merge before it completes. Let the next host read declare it merged.
@@ -1331,21 +1073,6 @@ function PullRequestsRouteView() {
     viewers,
   ]);
 
-  // Seed the first tab paint from list rows while each tab's cached detail read lands.
-  const listedPullRequestTabStatuses = useMemo<Record<string, PullRequestTabStatusSeed>>(
-    () =>
-      Object.fromEntries(
-        entries.map((entry) => [
-          pullRequestSurfaceId(entry),
-          {
-            state: entry.state,
-            isDraft: entry.isDraft,
-          },
-        ]),
-      ),
-    [entries],
-  );
-
   const scrollRef = useRef<HTMLDivElement>(null);
 
   /**
@@ -1683,89 +1410,6 @@ function PullRequestsRouteView() {
       onAbort: () => {},
     });
   }, []);
-  const heldPullRequestsBySurface = useMemo(
-    () =>
-      new Map(
-        groups.flatMap((group) =>
-          group.entries.map((entry) => [pullRequestListEntryId(entry), entry] as const),
-        ),
-      ),
-    [groups],
-  );
-  const listedPullRequestsBySurface = useMemo(
-    () =>
-      new Map(
-        displayGroups.flatMap((group) =>
-          group.entries.map((entry) => [pullRequestListEntryId(entry), entry] as const),
-        ),
-      ),
-    [displayGroups],
-  );
-
-  const linkedSelection = useMemo(
-    () =>
-      search.repository && search.number && selectedProject
-        ? {
-            environmentId: selectedProject.environmentId,
-            repository: search.repository,
-            number: search.number,
-            projectId: selectedProject.id,
-            ...(selectedHost ? { host: selectedHost } : {}),
-          }
-        : null,
-    [search.number, search.repository, selectedProject, selectedHost],
-  );
-  const rightPanelAvailable = selectedPullRequestSurface !== null;
-  useEffect(() => {
-    if (!pullRequestsSupported || rightPanelRef === null || linkedSelection === null) return;
-    useRightPanelStore.getState().openPullRequest(rightPanelRef, linkedSelection);
-  }, [linkedSelection, pullRequestsSupported, rightPanelRef]);
-
-  const selected =
-    rightPanelState.isOpen && activePullRequestSurface !== null
-      ? {
-          environmentId: activePullRequestSurface.environmentId,
-          repository: activePullRequestSurface.repository,
-          number: activePullRequestSurface.number,
-          projectId: activePullRequestSurface.projectId as ProjectId,
-          host:
-            activePullRequestSurface.host ??
-            (selectedProject?.repositoryIdentity
-              ? pullRequestHostOf(
-                  selectedProject.repositoryIdentity,
-                  selectedProject.repositoryIdentity.provider as SourceControlProviderKind,
-                )
-              : undefined),
-        }
-      : null;
-
-  const selectSurfaceInUrl = (surface: PullRequestSurface | null) =>
-    updateSearch(
-      surface === null
-        ? clearedSelection
-        : {
-            repository: surface.repository,
-            number: surface.number,
-            selectedProjectId: surface.projectId as ProjectId,
-            selectedHost: surface.host,
-            ...(surface.environmentId === undefined
-              ? {}
-              : { selectedEnvironmentId: surface.environmentId as EnvironmentId }),
-          },
-    );
-
-  const toggleRightPanel = () => {
-    if (rightPanelRef === null) return;
-    if (rightPanelState.isOpen) {
-      useRightPanelStore.getState().close(rightPanelRef);
-      updateSearch(clearedSelection);
-      return;
-    }
-    if (selectedPullRequestSurface === null) return;
-    useRightPanelStore.getState().show(rightPanelRef);
-    selectSurfaceInUrl(selectedPullRequestSurface);
-  };
-
   // The provider list is the workspace's hosts, not the filtered ones, so switching to a host
   // cannot make the switcher that got you there disappear.
   const [hosts, setHosts] = useState<PullRequestListResult["providers"]>([]);
@@ -1809,55 +1453,12 @@ function PullRequestsRouteView() {
     [listErrors],
   );
 
-  // Stable so the memoized rows can skip re-rendering when the list around them changes.
-  const selectEntry = useCallback(
-    (entry: PullRequestRowTarget) => {
-      // The surface carries the row's own server, which is what its detail reads and acts on.
-      if (rightPanelRef === null) return;
-      useRightPanelStore.getState().openPullRequest(rightPanelRef, entry);
-      updateSearch({
-        repository: entry.repository,
-        number: entry.number,
-        selectedProjectId: entry.projectId,
-        selectedEnvironmentId: entry.environmentId,
-        selectedHost: entry.host,
-      });
-    },
-    [rightPanelRef, updateSearch],
-  );
-
   const searchInput = (
     <PullRequestSearchInput
       value={search.q ?? ""}
       busy={typedQuery.length > 0 && (!querySettled || showingCarried)}
       onChange={(query) => updateListScope({ q: query || undefined })}
     />
-  );
-  const panelToggleControls = (
-    <PanelLayoutControls
-      showThreadPanelControl={false}
-      threadPanelOpen={false}
-      threadPanelPresentation="inline"
-      threadPanelShortcutLabel={null}
-      onToggleThreadPanel={() => undefined}
-      rightPanelAvailable={rightPanelAvailable}
-      rightPanelOpen={rightPanelState.isOpen}
-      rightPanelShortcutLabel={shortcutLabelForCommand(keybindings, "rightPanel.toggle")}
-      rightPanelUnavailableLabel="Select a pull request first"
-      onToggleRightPanel={toggleRightPanel}
-    />
-  );
-  const openPanelControls = (
-    <div
-      // The bare workspace-titlebar-controls inset plus mr-px: the same
-      // anchor the thread view's controls and the sidebar trigger use, so
-      // every titlebar cluster in the app sits one shared inset from its
-      // edge.
-      className="absolute top-[var(--workspace-controls-top)] right-[var(--workspace-controls-right)] z-50 mr-px flex h-[var(--workspace-topbar-height)] items-center gap-1 [-webkit-app-region:no-drag]"
-      data-workspace-titlebar-controls
-    >
-      {panelToggleControls}
-    </div>
   );
   // The rows carried over from the last filters can also narrow to nothing one step further on,
   // where involvement is applied against the viewers of the answer they came from. "Nothing under
@@ -1929,13 +1530,8 @@ function PullRequestsRouteView() {
                       typedParsed.text.length > 0 &&
                       scorePullRequestMatch(entry, typedParsed.text) <= MATCHED_ELSEWHERE_SCORE
                     }
-                    selected={
-                      selected?.environmentId === entry.environmentId &&
-                      selected.repository === entry.repository &&
-                      selected.host?.toLowerCase() === entry.host.toLowerCase() &&
-                      selected.number === entry.number
-                    }
-                    onSelect={selectEntry}
+                    selected={false}
+                    onSelect={onOpen}
                     speedMode={speedMode}
                     onActed={onSpeedAction}
                     closing={closingKeys.has(entryKey)}
@@ -2010,19 +1606,46 @@ function PullRequestsRouteView() {
       Icon: environmentMachineIcon(resolveEnvironmentMachineKind(environment.serverConfig)),
     })),
   ];
+  const sortOption = SORT_OPTIONS.find((option) => option.value === sort) ?? SORT_OPTIONS[0];
   const sortMenu = (
-    <CompactFilterMenu
-      label="Sort pull requests"
-      triggerIcon={<ArrowDownUpIcon aria-hidden className="size-4" />}
-      triggerLabel="Sort"
-      outlined
-      value={sort}
-      options={SORT_OPTIONS}
-      onChange={(next) => updateListScope({ sort: next })}
-    />
+    <Menu>
+      <MenuTrigger
+        render={
+          wide ? (
+            <button type="button" className="s-sc-pk" />
+          ) : (
+            <button type="button" className="s-sc-ib" aria-label={`Sort: ${sortOption.label}`} />
+          )
+        }
+      >
+        <ArrowDownUpIcon aria-hidden />
+        {wide ? (
+          <>
+            <span>{sortOption.label}</span>
+            <ChevronDownIcon aria-hidden />
+          </>
+        ) : null}
+      </MenuTrigger>
+      <MenuPopup align="end" side="bottom">
+        <MenuRadioGroup
+          value={sort}
+          onValueChange={(next) => updateListScope({ sort: next as PullRequestListSort })}
+        >
+          {SORT_OPTIONS.map((option) => (
+            <MenuRadioItem key={option.value} value={option.value}>
+              <span className="flex min-w-0 items-center gap-2">
+                <option.Icon aria-hidden className="size-3.5" />
+                {option.label}
+              </span>
+            </MenuRadioItem>
+          ))}
+        </MenuRadioGroup>
+      </MenuPopup>
+    </Menu>
   );
-  const filtersMenu = (
+  const filtersMenu = (layout: "icon" | "pickers") => (
     <PullRequestFiltersMenu
+      layout={layout}
       onOpenChange={setFiltersOpen}
       state={search.state}
       stateOptions={STATE_TABS}
@@ -2062,659 +1685,61 @@ function PullRequestsRouteView() {
       }
     />
   );
-  const columnProps = {
-    refreshing,
-    onRefresh: () => void refreshFromHost(),
-    searchValue: search.q ?? "",
-    involvement: search.involvement,
-    state: search.state,
-    host: search.host,
-    hostMenuOptions,
-    onInvolvement: (involvement: PullRequestInvolvement) => updateListScope({ involvement }),
-    onState: (state: PullRequestListState) => updateListScope({ state }),
-    onHost: (host: string | undefined) => updateListScope({ host }),
-    searchInput,
-    sortMenu,
-    filtersMenu,
-    rightPanelControl:
-      // Footprint reserve while the panel is closed: the toggle itself stays
-      // mounted at the fixed titlebar inset in both states so it cannot move
-      // on toggle, and this spacer keeps refresh from sliding underneath it
-      // (sized per header padding so refresh ends a normal gap short of it).
-      !pullRequestsSupported ? null : (
-        <span
-          aria-hidden
-          className={cn(
-            "shrink-0",
-            rightPanelState.isOpen ? "-ml-3 w-0" : "w-7 sm:w-5",
-            panelAnimationsActive && "transition-[width,margin] ease-out",
-          )}
-          style={
-            panelAnimationsActive
-              ? { transitionDuration: `${panelAnimationDurationMs}ms` }
-              : undefined
-          }
-        />
-      ),
-    titlebarControls:
-      // While the panel is closed the strip lives inside the header: a no-drag
-      // descendant beats the header's desktop drag-region, where a floating
-      // sibling loses (app-region hit-testing ignores z-index). While the
-      // floating strip crosses the header during motion, the narrow extension
-      // keeps that overlap non-draggable without moving the toggle.
-      pullRequestsSupported ? (
-        rightPanelPresent ? (
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-full w-7 [-webkit-app-region:no-drag]"
-          />
-        ) : (
-          openPanelControls
-        )
-      ) : null,
-    rightPanelOpen: rightPanelState.isOpen,
-    listBody,
-    scrollRef,
-  };
-
-  const activateSurface = (surface: PullRequestSurface) => {
-    if (rightPanelRef === null) return;
-    useRightPanelStore.getState().activateSurface(rightPanelRef, surface.id);
-    selectSurfaceInUrl(surface);
-  };
-  const closeSurface = (surface: PullRequestSurface) => {
-    if (rightPanelRef === null) return;
-    useRightPanelStore.getState().closeSurface(rightPanelRef, surface.id);
-    const next = selectActiveRightPanelSurface(
-      useRightPanelStore.getState().byThreadKey,
-      rightPanelRef,
-    );
-    selectSurfaceInUrl(next?.kind === "pull-request" ? next : null);
-  };
-  const closeOtherSurfaces = (surface: PullRequestSurface) => {
-    if (rightPanelRef === null) return;
-    useRightPanelStore.getState().closeOtherSurfaces(rightPanelRef, surface.id);
-    selectSurfaceInUrl(surface);
-  };
-  const closeSurfacesToRight = (surface: PullRequestSurface) => {
-    if (rightPanelRef === null) return;
-    useRightPanelStore.getState().closeSurfacesToRight(rightPanelRef, surface.id);
-    const next = selectActiveRightPanelSurface(
-      useRightPanelStore.getState().byThreadKey,
-      rightPanelRef,
-    );
-    selectSurfaceInUrl(next?.kind === "pull-request" ? next : null);
-  };
-  const closeAllSurfaces = () => {
-    if (rightPanelRef === null) return;
-    useRightPanelStore.getState().closeAllSurfaces(rightPanelRef);
-    selectSurfaceInUrl(null);
-  };
-
-  // This page has no ChatView, so it handles the shared panel shortcuts itself.
-  const copyPullRequestFromShortcut = useEffectEvent((event: KeyboardEvent) => {
-    if (!openPanelPullRequestUrl) return;
-    event.preventDefault();
-    event.stopPropagation();
-    if (event.repeat) return;
-    const url = openPanelPullRequestUrl;
-    void writeTextToClipboard(url, "pull request link").then(
-      (didCopy) => {
-        if (didCopy)
-          toastManager.add({ type: "success", title: "PR link copied", description: url });
-      },
-      (error) => {
-        toastManager.add({
-          type: "error",
-          title: "Failed to copy PR link",
-          description: error instanceof Error ? error.message : "An error occurred.",
-        });
-      },
-    );
-  });
-  const closeActiveSurfaceFromShortcut = useEffectEvent((event: KeyboardEvent) => {
-    if (activePullRequestSurface === null) return;
-    event.preventDefault();
-    event.stopPropagation();
-    if (!event.repeat) closeSurface(activePullRequestSurface);
-  });
-  const toggleRightPanelFromShortcut = useEffectEvent((event: KeyboardEvent) => {
-    if (!rightPanelAvailable) return;
-    event.preventDefault();
-    event.stopPropagation();
-    if (!event.repeat) toggleRightPanel();
-  });
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || isCommandPaletteOpen()) return;
-      const command = resolveShortcutCommand(event, keybindings, {
-        context: getShortcutContext(),
-      });
-      if (command === "rightPanel.close") closeActiveSurfaceFromShortcut(event);
-      if (command === "rightPanel.toggle") toggleRightPanelFromShortcut(event);
-      if (command === "thread.copyReference") copyPullRequestFromShortcut(event);
-    };
-    // Let panel shortcuts consume Escape before page navigation at window.
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [keybindings]);
+  const repoScoped =
+    threadProject !== null &&
+    scopedProject?.id === threadProject.id &&
+    scopedProject.environmentId === threadProject.environmentId;
 
   return (
-    <SidebarInset className="h-dvh min-h-0 overflow-hidden overscroll-y-none">
-      <div className="relative flex min-h-0 flex-1">
-        {pullRequestsSupported && rightPanelPresent ? openPanelControls : null}
-        <PullRequestsColumn {...columnProps} />
-
-        {rightPanelPresent && renderedPullRequestSurface && panelEnvironmentId !== null ? (
-          <RightPanelTabs
-            mode="inline"
-            open={rightPanelState.isOpen}
-            keybindings={keybindings}
-            getShortcutContext={getShortcutContext}
-            widthStorageKey="control:pull-request-panel-width"
-            // Default to roughly half the viewport: the PR list needs more
-            // room than a chat, so the 540px chat-preview default squashes
-            // it. SSR has no window, so fall back to a reasonable width.
-            defaultWidth={typeof window === "undefined" ? 640 : Math.floor(window.innerWidth / 2)}
-            surfaces={renderedRightPanelSurfaces}
-            environmentId={panelEnvironmentId}
-            activeSurfaceId={renderedPullRequestSurface.id}
-            pendingSurfaceIds={EMPTY_PENDING_SURFACES}
-            previewSessions={EMPTY_PREVIEW_SESSIONS}
-            desktopByTabId={EMPTY_PREVIEW_DESKTOP_STATE}
-            terminalLabelsById={EMPTY_TERMINAL_LABELS}
-            onActivate={(surface) => {
-              if (surface.kind === "pull-request") activateSurface(surface);
-            }}
-            onCloseSurface={(surface) => {
-              if (surface.kind === "pull-request") closeSurface(surface);
-            }}
-            onCloseOtherSurfaces={(surface) => {
-              if (surface.kind === "pull-request") closeOtherSurfaces(surface);
-            }}
-            onCloseSurfacesToRight={(surface) => {
-              if (surface.kind === "pull-request") closeSurfacesToRight(surface);
-            }}
-            onCloseAllSurfaces={closeAllSurfaces}
-            onCopyFilePath={() => undefined}
-            onAddBrowser={() => undefined}
-            onAddBrowserInProfile={() => undefined}
-            onAddTerminal={() => undefined}
-            onAddPullRequest={() => undefined}
-            onAddPullRequests={() => undefined}
-            onAddDevice={() => undefined}
-            browserAvailable={false}
-            terminalAvailable={false}
-            pullRequestAvailable={false}
-            pullRequestsAvailable={false}
-            deviceAvailable={false}
-            pullRequestStatusSeeds={listedPullRequestTabStatuses}
-          >
-            <PullRequestDetailPanel
-              getShortcutContext={getShortcutContext}
-              shortcutsEnabled={activePullRequestSurface?.id === renderedPullRequestSurface.id}
-              key={renderedPullRequestSurface.id}
-              environmentId={panelEnvironmentId}
-              onSelectPullRequest={(reference) => {
-                if (rightPanelRef === null) return;
-                useRightPanelStore.getState().openPullRequest(rightPanelRef, {
-                  projectId: reference.projectId,
-                  repository: reference.repository,
-                  number: reference.number,
-                  ...(reference.host ? { host: reference.host } : {}),
-                  environmentId: panelEnvironmentId,
-                });
-                updateSearch({
-                  repository: reference.repository,
-                  number: reference.number,
-                  selectedHost: reference.host,
-                  selectedProjectId: reference.projectId,
-                  selectedEnvironmentId: panelEnvironmentId,
-                });
-              }}
-              reference={{
-                projectId: renderedPullRequestSurface.projectId as ProjectId,
-                repository: renderedPullRequestSurface.repository,
-                number: renderedPullRequestSurface.number,
-                ...(renderedPullRequestSurface.host
-                  ? { host: renderedPullRequestSurface.host }
-                  : {}),
-              }}
-              listEntry={
-                listedPullRequestsBySurface.get(
-                  pullRequestListEntryId(renderedPullRequestSurface),
-                ) ?? null
+    <div ref={setRootElement} className="s-sc-root flex min-h-0 min-w-0 flex-1 flex-col">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+        {children}
+        <div className="s-sc-ic">
+          {threadProject === null ? null : (
+            <Seg
+              label="Pull requests from"
+              options={SCOPES}
+              value={repoScoped ? "This repo" : scopedProjectId === undefined ? "All" : null}
+              onChange={(scope) =>
+                updateListScope(
+                  scope === "This repo"
+                    ? { projectId: threadProject.id, environmentId: threadProject.environmentId }
+                    : { projectId: undefined, environmentId: undefined },
+                )
               }
-              refreshToken={detailRefreshToken}
-              // Host actions can change both readiness and diff size, so refresh the counts
-              // alongside the list. The panel already refreshes itself after each action.
-              onActed={(action, phase = "done") => {
-                // An action that only moves a row's state is written onto the row as it is
-                // sent, and taken back if the host refuses; the host invalidates its caches,
-                // so the next scheduled read confirms it. The rest change what the counts and
-                // checks say, and those need the reads once they are done.
-                // From every row held, not the ones on screen: a pull request closed from an
-                // open list has left the screen, and reopening it has to find it anyway.
-                const acted = heldPullRequestsBySurface.get(
-                  pullRequestListEntryId(renderedPullRequestSurface),
-                );
-                const stateOnly =
-                  action !== undefined &&
-                  acted !== undefined &&
-                  pullRequestOverrideAfterAction(acted, action, new Date(), 0) !== null;
-                if (stateOnly) {
-                  const key = pullRequestEntryKey(acted);
-                  // A merge is written on once the host has done it, since a host that only
-                  // queues one leaves the pull request open; the rest go on as they are sent.
-                  if (phase === "sent" && action !== "merge") {
-                    detailOverrideTokens.current.set(key, overrideEntry(acted, action));
-                  }
-                  // A merge wrote nothing on the way out, so its failure has nothing to take
-                  // back; an earlier action's note on the same row is left standing.
-                  if (phase === "failed" && action !== "merge") {
-                    revertOverride(key, detailOverrideTokens.current.get(key) ?? null);
-                  }
-                  if (phase !== "sent") detailOverrideTokens.current.delete(key);
-                  if (phase === "done" && action === "merge") {
-                    overrideEntry(acted, action);
-                    refreshListAndStats(undefined, panelEnvironmentId);
-                  }
-                  return;
-                }
-                if (phase === "done") refreshListAndStats(undefined, panelEnvironmentId);
-              }}
             />
-          </RightPanelTabs>
-        ) : null}
-      </div>
-    </SidebarInset>
-  );
-}
-
-/** A compact stand-in for one pill group when the header is narrow. */
-function CompactFilterMenu<Value extends string>({
-  label,
-  triggerIcon,
-  triggerLabel,
-  outlined = false,
-  iconOnly = false,
-  value,
-  options,
-  onChange,
-  className,
-}: {
-  label: string;
-  triggerIcon?: ReactNode;
-  triggerLabel?: string;
-  outlined?: boolean;
-  iconOnly?: boolean;
-  value: Value;
-  options: ReadonlyArray<PullRequestFilterOption<Value>>;
-  onChange: (value: Value) => void;
-  className?: string;
-}) {
-  const current = options.find((option) => option.value === value) ?? options[0];
-  if (!current) return null;
-  return (
-    <Menu>
-      <MenuTrigger
-        aria-label={triggerLabel || iconOnly ? `${label}: ${current.label}` : label}
-        title={iconOnly ? `${label}: ${current.label}` : undefined}
-        render={
-          outlined ? (
-            <Button variant="outline" size={iconOnly ? "icon" : "default"} />
-          ) : (
-            <Button variant="ghost-muted" size="sm" />
-          )
-        }
-        className={cn("min-w-0", className)}
-      >
-        {iconOnly ? (
-          <current.Icon aria-hidden className="size-4" />
-        ) : triggerLabel ? (
-          <>
-            {triggerIcon}
-            <span>{triggerLabel}</span>
-          </>
-        ) : (
-          <>
-            <span className="truncate">{current.label}</span>
-            <ChevronDownIcon aria-hidden className="size-3 shrink-0 text-muted-foreground/70" />
-          </>
-        )}
-      </MenuTrigger>
-      <MenuPopup align="start" side="bottom">
-        <MenuRadioGroup value={value} onValueChange={(next) => onChange(next as Value)}>
-          {options.map((option) => {
-            const item = (
-              <MenuRadioItem
-                key={option.value}
-                value={option.value}
-                disabled={option.unavailable !== undefined}
-                className="data-disabled:pointer-events-auto"
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <PullRequestFilterOptionIcon option={option} />
-                  {option.label}
-                </span>
-              </MenuRadioItem>
-            );
-            return option.unavailable === undefined ? (
-              item
-            ) : (
-              <Tooltip key={option.value}>
-                <TooltipTrigger render={item} />
-                <TooltipPopup side="right">{option.unavailable}</TooltipPopup>
-              </Tooltip>
-            );
-          })}
-        </MenuRadioGroup>
-      </MenuPopup>
-    </Menu>
-  );
-}
-
-/**
- * The search, folded to an icon until asked for. Opening moves focus into the input — the
- * whole point of pressing it is to type. It stays open while it holds a query, so an active
- * search is never invisible; empty and blurred, it folds back.
- */
-function ExpandableSearch({
-  searchInput,
-  searchValue,
-  open,
-  onOpenChange,
-  focusToken,
-  onFocusWithin,
-}: {
-  searchInput: ReactNode;
-  searchValue: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  /** Bumped to pull focus into the input while it is already showing — the Mod+F path. */
-  focusToken: number;
-  /**
-   * Focus entering and leaving the expanded input. An unmount fires no blur, which is the
-   * point: whoever unmounted this can still see the reader was mid-typing and move the
-   * focus somewhere that continues the sentence.
-   */
-  onFocusWithin?: (focused: boolean) => void;
-}) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (!open) return;
-    containerRef.current?.querySelector("input")?.focus();
-  }, [open]);
-  const appliedFocusToken = useRef(focusToken);
-  useEffect(() => {
-    if (appliedFocusToken.current === focusToken) return;
-    appliedFocusToken.current = focusToken;
-    const input = containerRef.current?.querySelector("input");
-    input?.focus();
-    input?.select();
-  }, [focusToken]);
-  if (open || searchValue.length > 0) {
-    return (
-      <div
-        ref={containerRef}
-        className="w-56 min-w-24 shrink"
-        onFocus={() => onFocusWithin?.(true)}
-        onBlur={() => {
-          onFocusWithin?.(false);
-          if (searchValue.length === 0) onOpenChange(false);
-        }}
-      >
-        {searchInput}
-      </div>
-    );
-  }
-  return (
-    <Button
-      size="icon-sm"
-      variant="ghost"
-      aria-label="Search pull requests"
-      onClick={() => onOpenChange(true)}
-    >
-      <SearchIcon className="size-4" />
-    </Button>
-  );
-}
-
-/**
- * The pull request list column. The full controls live at the top of the scroll flow; once
- * they scroll away, the title transforms into the scope itself — "Pull Requests / Open ▾
- * Authored ▾" — where each segment is the menu for that filter, and a folded search sits on
- * the right. Scrolled back up, the topbar returns to the plain title. The topbar is the
- * window drag region throughout; its interactive children opt out through the `.drag-region`
- * descendant rules.
- */
-function PullRequestsColumn({
-  refreshing,
-  onRefresh,
-  searchValue,
-  involvement,
-  state,
-  host,
-  hostMenuOptions,
-  onInvolvement,
-  onState,
-  onHost,
-  searchInput,
-  sortMenu,
-  filtersMenu,
-  rightPanelControl,
-  titlebarControls,
-  rightPanelOpen,
-  listBody,
-  scrollRef,
-}: {
-  refreshing: boolean;
-  onRefresh: () => void;
-  searchValue: string;
-  involvement: PullRequestInvolvement;
-  state: PullRequestListState;
-  host: string | undefined;
-  hostMenuOptions: ReadonlyArray<PullRequestFilterOption<string>>;
-  onInvolvement: (involvement: PullRequestInvolvement) => void;
-  onState: (state: PullRequestListState) => void;
-  onHost: (host: string | undefined) => void;
-  searchInput: ReactNode;
-  sortMenu: ReactNode;
-  filtersMenu: ReactNode;
-  rightPanelControl: ReactNode;
-  titlebarControls: ReactNode;
-  rightPanelOpen: boolean;
-  listBody: ReactNode;
-  scrollRef: RefObject<HTMLDivElement | null>;
-}) {
-  const markerRef = useRef<HTMLDivElement | null>(null);
-  const [condensed, setCondensed] = useState(false);
-  useEffect(() => {
-    const marker = markerRef.current;
-    if (!marker) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setCondensed(entry ? !entry.isIntersecting : false),
-      { root: scrollRef.current },
-    );
-    observer.observe(marker);
-    return () => observer.disconnect();
-  }, []);
-  // Typing into the topbar search narrows the list, and a short enough list un-scrolls the
-  // page — which dissolves the condensed topbar and unmounts the very input being typed in.
-  // The two inputs are one search to the reader, so the focus follows the value into the
-  // in-flow bar, caret at the end, and the sentence continues.
-  const topbarSearchFocusedRef = useRef(false);
-  const inFlowSearchRef = useRef<HTMLDivElement | null>(null);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchFocusToken, setSearchFocusToken] = useState(0);
-  const searchExpanded = searchOpen || searchValue.length > 0;
-  // Mod+F belongs to this page's own search: the desktop shell binds no find-in-page, so the
-  // shortcut would otherwise do nothing. Condensed, it unfolds the topbar search; at the top,
-  // it focuses the in-flow bar and selects the query the way a find field would.
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented) return;
-      if (event.key.toLowerCase() !== "f" || !(event.metaKey || event.ctrlKey)) return;
-      if (event.altKey || event.shiftKey) return;
-      event.preventDefault();
-      if (condensed) {
-        setSearchOpen(true);
-        setSearchFocusToken((token) => token + 1);
-        return;
-      }
-      const input = inFlowSearchRef.current?.querySelector("input");
-      input?.focus();
-      input?.select();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [condensed]);
-  useEffect(() => {
-    if (condensed) return;
-    // The fold-out is gone from the chrome; forgetting it open keeps the next condensing
-    // from starting with an empty expanded search nobody asked for.
-    setSearchOpen(false);
-    if (!topbarSearchFocusedRef.current) return;
-    topbarSearchFocusedRef.current = false;
-    const input = inFlowSearchRef.current?.querySelector("input");
-    if (!input) return;
-    input.focus();
-    input.setSelectionRange(input.value.length, input.value.length);
-  }, [condensed]);
-
-  return (
-    // Painted flat like the chat column: the inset underneath carries the chrome grain, and a
-    // content surface that lets it show reads as a different background than every thread.
-    <div className="@container/pr-list flex min-h-0 min-w-0 flex-1 flex-col bg-background">
-      {/* A closed right panel leaves this column full-width, so the shared header
-          reserves native window controls and hosts the controls strip itself: on
-          desktop the header is a drag-region, and only a no-drag descendant wins
-          clicks from it - a floating sibling loses to app-region hit-testing no
-          matter its z-index. While the panel is open, the strip mounts back at
-          the route level, whose box spans the panel too, so the toggle keeps one
-          fixed top-right anchor. */}
-      <WorkspacePageHeader
-        electron={isElectron}
-        reserveNativeControls={!rightPanelOpen}
-        className="relative bg-background"
-      >
-        {titlebarControls}
-        {condensed ? (
-          <WorkspaceBreadcrumb ariaLabel="Pull request scope" className="overflow-hidden">
-            {/* An expanded search owns the scarce horizontal space. The page title stays
-                available to readers while the live filters remain available in both states. */}
-            <WorkspaceBreadcrumbItem current className={cn(searchExpanded && "sr-only")}>
-              <h1 className="truncate">Pull Requests</h1>
-            </WorkspaceBreadcrumbItem>
-            {searchExpanded ? null : <WorkspaceBreadcrumbSeparator />}
-            <WorkspaceBreadcrumbItem className="shrink gap-1.5">
-              <CompactFilterMenu
-                label="Filter by state"
-                value={state}
-                options={STATE_TABS}
-                onChange={onState}
-                className="shrink-0"
-              />
-              <CompactFilterMenu
-                label="Filter by involvement"
-                value={involvement}
-                options={INVOLVEMENT_TABS}
-                onChange={onInvolvement}
-              />
-              {hostMenuOptions.length > 2 ? (
-                <CompactFilterMenu
-                  label="Filter by host"
-                  value={host ?? ""}
-                  options={hostMenuOptions}
-                  onChange={(next) => onHost(next === "" ? undefined : next)}
-                />
-              ) : null}
-            </WorkspaceBreadcrumbItem>
-          </WorkspaceBreadcrumb>
-        ) : (
-          <WorkspaceBreadcrumb ariaLabel="Pull requests breadcrumb">
-            <WorkspaceBreadcrumbItem current>
-              <h1 className="truncate">Pull Requests</h1>
-            </WorkspaceBreadcrumbItem>
-          </WorkspaceBreadcrumb>
-        )}
-        <div className="min-w-0 flex-1" />
-        {condensed ? (
-          <div className="flex shrink items-center gap-1.5">
-            <ExpandableSearch
-              searchInput={searchInput}
-              searchValue={searchValue}
-              open={searchOpen}
-              onOpenChange={setSearchOpen}
-              focusToken={searchFocusToken}
-              onFocusWithin={(focused) => {
-                topbarSearchFocusedRef.current = focused;
-              }}
-            />
-            <PullRequestRefreshControl compact refreshing={refreshing} onRefresh={onRefresh} />
-          </div>
-        ) : null}
-        {rightPanelControl}
-      </WorkspacePageHeader>
-
-      <div
-        ref={scrollRef}
-        className="topbar-scroll-fade scrollbar-gutter-both min-h-0 flex-1 overflow-y-auto"
-      >
-        {/* The top padding is the shared fade band's height, the same pairing the
-            settings page makes: at rest the controls sit fully below the mask, and only
-            content actually passing under the chrome fades. */}
-        <WorkspacePageContainer width="expanded" className="min-h-full gap-4">
-          <div className="flex flex-col gap-3">
-            <div ref={inFlowSearchRef} className="flex flex-wrap items-center gap-2">
-              <div className="min-w-0 basis-full @lg/pr-list:basis-0 @lg/pr-list:flex-1">
-                {searchInput}
-              </div>
-              {sortMenu}
-              {filtersMenu}
-              <CompactFilterMenu
-                label="Filter by provider"
-                outlined
-                iconOnly={host !== undefined}
-                triggerIcon={<Plug2Icon aria-hidden className="size-4" />}
-                triggerLabel="All"
-                value={host ?? ""}
-                options={hostMenuOptions}
-                onChange={(next) => onHost(next === "" ? undefined : next)}
-              />
-              {!condensed ? (
-                <PullRequestRefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              ) : null}
-            </div>
-            {/* Scrolled past this marker, the controls are gone and the title takes over. */}
-            <div ref={markerRef} aria-hidden className="-mt-3 h-px w-full" />
-          </div>
-
-          {listBody}
-        </WorkspacePageContainer>
+          )}
+          {searchInput}
+          {wide ? null : filtersMenu("icon")}
+          {sortMenu}
+          <PullRequestRefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void refreshFromHost()}
+          />
+        </div>
+        {wide ? <div className="s-sc-ifb">{filtersMenu("pickers")}</div> : null}
+        <div className="flex flex-col gap-3 px-1.5 pt-1 pb-3">{listBody}</div>
       </div>
     </div>
   );
 }
 
 function PullRequestRefreshControl({
-  compact = false,
   refreshing,
   onRefresh,
 }: {
-  compact?: boolean;
   refreshing: boolean;
   onRefresh: () => void;
 }) {
   return (
-    <Button
-      size={compact ? "icon-sm" : "icon"}
-      variant={compact ? "ghost" : "outline"}
+    <button
+      type="button"
+      className="s-sc-ib"
       aria-label="Refresh pull requests"
       onClick={onRefresh}
       disabled={refreshing}
     >
       <RefreshIcon size="md" refreshing={refreshing} />
-    </Button>
+    </button>
   );
 }

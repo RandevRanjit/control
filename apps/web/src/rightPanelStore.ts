@@ -7,12 +7,8 @@
  * terminal surfaces point at terminal session ids, file surfaces point at
  * workspace paths, and diff/files remain singleton surfaces.
  */
-import {
-  parseScopedThreadKey,
-  scopedThreadKey,
-  scopeThreadRef,
-} from "@control/client-runtime/environment";
-import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@control/contracts";
+import { parseScopedThreadKey, scopedThreadKey } from "@control/client-runtime/environment";
+import type { ScopedThreadRef } from "@control/contracts";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -119,16 +115,7 @@ const RIGHT_PANEL_STORAGE_KEY = "control:right-panel-state:v2";
 // v14 removes the agents surface; lineage lives in the thread title bar.
 const RIGHT_PANEL_STORAGE_VERSION = 14;
 
-/** A fixed workspace-level ref: each PR surface carries its own real environment. */
-export const PULL_REQUESTS_PANEL_REF = scopeThreadRef(
-  EnvironmentId.make("pull-requests-panel"),
-  ThreadId.make("pull-requests-panel"),
-);
-
-/**
- * The pull-request list's shared panel is session
- * state: reopening the app should show the list, not last session's tabs and detail fetches.
- */
+/** The old Pull Requests page's shared panel, which an early save may still hold. */
 const isPullRequestsPanelKey = (threadKey: string) => threadKey.endsWith(":pull-requests-panel");
 
 export interface ThreadRightPanelState {
@@ -331,6 +318,26 @@ const upsertSurface = (
     : [...current.surfaces, surface],
   activeSurfaceId: activate ? surface.id : current.activeSurfaceId,
 });
+
+/**
+ * Git's PR view shows the pull request list or one pull request (design §22): opening either
+ * takes the place of whichever was there.
+ */
+const showPullRequest = (
+  current: ThreadRightPanelState,
+  surface: Extract<RightPanelSurface, { kind: "pull-request" | "pull-requests" }>,
+): ThreadRightPanelState =>
+  upsertSurface(
+    {
+      ...current,
+      surfaces: current.surfaces.filter(
+        (entry) =>
+          (entry.kind !== "pull-request" && entry.kind !== "pull-requests") ||
+          entry.id === surface.id,
+      ),
+    },
+    surface,
+  );
 
 const updateThreadStateMap = (
   byThreadKey: Record<string, ThreadRightPanelState>,
@@ -670,7 +677,11 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
             return state;
           }
           opened = true;
-          return automaticUpdate(state, threadKey, (current) => upsertSurface(current, surface));
+          return automaticUpdate(state, threadKey, (current) =>
+            surface.kind === "diff"
+              ? upsertSurface(current, surface)
+              : showPullRequest(current, surface),
+          );
         });
         return opened;
       },
@@ -680,6 +691,9 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
             if (kind === "preview") {
               const existing = current.surfaces.find((surface) => surface.kind === "preview");
               return upsertSurface(current, existing ?? browserSurface(null));
+            }
+            if (kind === "pull-requests") {
+              return showPullRequest(current, { id: "pull-requests", kind: "pull-requests" });
             }
             return upsertSurface(current, singletonSurface(kind));
           }),
@@ -732,7 +746,7 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
         set((state) =>
           userAction(state, scopedThreadKey(ref), (current) => {
             const surface = pullRequestSurface(target);
-            const next = upsertSurface(current, surface);
+            const next = showPullRequest(current, surface);
             return target.url
               ? {
                   ...next,
@@ -1093,11 +1107,7 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
         resolveStorage(typeof window !== "undefined" ? window.localStorage : undefined),
       ),
       partialize: (state) => ({
-        byThreadKey: Object.fromEntries(
-          Object.entries(state.byThreadKey).filter(
-            ([threadKey]) => !isPullRequestsPanelKey(threadKey),
-          ),
-        ),
+        byThreadKey: state.byThreadKey,
         threadPanelVisibilityByThreadKey: Object.fromEntries(
           Object.entries(state.threadPanelVisibilityByThreadKey).flatMap(
             ([threadKey, visibility]) =>

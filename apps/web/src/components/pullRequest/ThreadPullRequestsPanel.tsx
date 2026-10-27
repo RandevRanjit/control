@@ -4,14 +4,7 @@ import {
   resolveThreadPullRequestChains,
   visibleThreadPullRequests,
 } from "@control/shared/threadPullRequests";
-import {
-  ArrowUpRightIcon,
-  EyeIcon,
-  EyeOffIcon,
-  LinkIcon,
-  MoreHorizontalIcon,
-  PlusIcon,
-} from "lucide-react";
+import { ArrowUpRightIcon, EyeIcon, EyeOffIcon, LinkIcon, MoreHorizontalIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
 import { writeTextToClipboard } from "~/hooks/useCopyToClipboard";
@@ -19,14 +12,14 @@ import { findProjectForChangeRequest, useOpenPrLink } from "~/lib/openPullReques
 import { cn } from "~/lib/utils";
 import { useShortcutModifierState } from "~/shortcutModifierState";
 import { useProjects, useServerConfigs, useThreadShell } from "~/state/entities";
-import { PullRequestsUnavailableState } from "./PullRequestsUnavailableState";
 import { threadEnvironment } from "~/state/threads";
 import { useAtomCommand } from "~/state/use-atom-command";
+import { usePullRequestLinking } from "~/hooks/usePullRequestLinking";
+import { useRightPanelStore } from "~/rightPanelStore";
 import { formatRelativeTimeLabel } from "~/timestampFormat";
 import { Button } from "../ui/button";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "../ui/menu";
 import { MiddleTruncate } from "../ui/middle-truncate";
-import { ScrollArea } from "../ui/scroll-area";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { openLinkPullRequestDialog } from "./LinkPullRequestDialog";
 import { pullRequestListLines, type PullRequestListLine } from "./pullRequestListLines";
@@ -45,6 +38,8 @@ import {
 } from "./pullRequestPresentation";
 import { PullRequestGlyph } from "./pullRequestIcons";
 import { PullRequestSpeedActions } from "./PullRequestSpeedActions";
+import { PullRequestInbox } from "./PullRequestInbox";
+import type { PullRequestRowTarget } from "./PullRequestRow";
 
 const SOURCE_LABELS: Record<ThreadPullRequestLink["source"], string> = {
   manual: "Linked by you",
@@ -314,20 +309,57 @@ function LinkRow({
   );
 }
 
+/**
+ * Git's PR view (design §22, SC1c and SC1d): the thread's own pull requests, every project's
+ * under them, and a foot that links one more. Opening any shows it here in their place.
+ */
 export function ThreadPullRequestsPanel({ threadRef }: { threadRef: ScopedThreadRef }) {
-  const configs = useServerConfigs();
-  if (configs.get(threadRef.environmentId)?.environment.capabilities.threadPullRequests !== true) {
-    return (
-      <PullRequestsUnavailableState
-        title="Linked pull requests unavailable"
-        error="This environment does not support multiple linked pull requests."
-      />
-    );
-  }
-  return <EnabledThreadPullRequestsPanel threadRef={threadRef} />;
+  const thread = useThreadShell(threadRef);
+  const linking = usePullRequestLinking(threadRef.environmentId);
+  const supportsLinks =
+    useServerConfigs().get(threadRef.environmentId)?.environment.capabilities.threadPullRequests ===
+    true;
+  const threadProject = useMemo(
+    () =>
+      thread?.projectId ? { id: thread.projectId, environmentId: threadRef.environmentId } : null,
+    [thread?.projectId, threadRef.environmentId],
+  );
+  const open = useCallback(
+    (entry: PullRequestRowTarget) =>
+      useRightPanelStore.getState().openPullRequest(threadRef, {
+        ...(entry.environmentId === threadRef.environmentId
+          ? {}
+          : { environmentId: entry.environmentId }),
+        projectId: entry.projectId,
+        host: entry.host,
+        repository: entry.repository,
+        number: entry.number,
+      }),
+    [threadRef],
+  );
+  return (
+    <div className="s-sc-root flex h-full min-h-0 flex-col">
+      <PullRequestInbox threadProject={threadProject} onOpen={open}>
+        {supportsLinks ? <ThreadLinks threadRef={threadRef} /> : null}
+      </PullRequestInbox>
+      {linking.mode === "unsupported" ? null : (
+        <footer className="s-sc-link">
+          <button
+            type="button"
+            className="s-sc-lf"
+            onClick={() => openLinkPullRequestDialog(threadRef)}
+          >
+            <LinkIcon aria-hidden />
+            Link a pull request: its link or #number
+          </button>
+        </footer>
+      )}
+    </div>
+  );
 }
 
-function EnabledThreadPullRequestsPanel({ threadRef }: { threadRef: ScopedThreadRef }) {
+/** The pull requests linked to this thread, on top of the list in the card tone. */
+function ThreadLinks({ threadRef }: { threadRef: ScopedThreadRef }) {
   const thread = useThreadShell(threadRef);
   const projects = useProjects();
   const environmentProjects = useMemo(
@@ -342,7 +374,6 @@ function EnabledThreadPullRequestsPanel({ threadRef }: { threadRef: ScopedThread
   const modifiers = useShortcutModifierState(true);
   const speedMode =
     modifiers.shiftKey && !modifiers.metaKey && !modifiers.ctrlKey && !modifiers.altKey;
-  const openLinkDialog = useCallback(() => openLinkPullRequestDialog(threadRef), [threadRef]);
   const unlink = useAtomCommand(threadEnvironment.unlinkPullRequest, { reportFailure: true });
   const watch = useAtomCommand(threadEnvironment.watchPullRequest, { reportFailure: true });
   const capabilities = useServerConfigs().get(threadRef.environmentId)?.environment.capabilities;
@@ -391,56 +422,33 @@ function EnabledThreadPullRequestsPanel({ threadRef }: { threadRef: ScopedThread
     return latest;
   }, [links]);
 
-  if (links.length === 0) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
-        <PullRequestGlyph.link aria-hidden className="size-6 text-muted-foreground/60" />
-        <p className="text-sm font-medium">No linked pull requests</p>
-        <p className="max-w-60 text-xs text-muted-foreground">
-          Pull requests the agent opens from this thread land here. Link one yourself from a URL or
-          a number.
-        </p>
-        <Button size="sm" variant="outline" onClick={openLinkDialog}>
-          <PlusIcon className="size-3.5" />
-          Link pull request
-        </Button>
-      </div>
-    );
-  }
-
+  if (links.length === 0) return null;
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="flex flex-col p-1.5">
-          {lines.map((line) => (
-            <LinkRow
-              key={`${line.link.host}/${line.link.repository}#${line.link.number}`}
-              line={line}
-              threadRef={threadRef}
-              projectId={
-                capabilities?.pullRequests === true
-                  ? (findProjectForChangeRequest(environmentProjects, line.link)?.id ??
-                    thread?.projectId ??
-                    null)
-                  : null
-              }
-              speedMode={speedMode}
-              onUnlink={handleUnlink}
-              onSetWatching={supportsWatch ? handleSetWatching : null}
-            />
-          ))}
-        </div>
-      </ScrollArea>
-      <footer className="flex items-center justify-between border-t border-border/60 px-2 py-1.5 text-2xs text-muted-foreground">
-        <span>
-          {openCount} open · {links.length} linked
-          {lastSynced ? ` · synced ${formatRelativeTimeLabel(lastSynced)}` : ""}
+    <section className="s-sc-mine" aria-label="This thread's pull requests">
+      <div className="s-sc-ig">
+        <h2>This thread</h2>
+        <span className="pearl count">{links.length}</span>
+        <span className="ml-auto font-normal">
+          {openCount} open{lastSynced ? ` · synced ${formatRelativeTimeLabel(lastSynced)}` : ""}
         </span>
-        <Button size="xs" variant="ghost" onClick={openLinkDialog}>
-          <PlusIcon className="size-3.5" />
-          Link
-        </Button>
-      </footer>
-    </div>
+      </div>
+      {lines.map((line) => (
+        <LinkRow
+          key={`${line.link.host}/${line.link.repository}#${line.link.number}`}
+          line={line}
+          threadRef={threadRef}
+          projectId={
+            capabilities?.pullRequests === true
+              ? (findProjectForChangeRequest(environmentProjects, line.link)?.id ??
+                thread?.projectId ??
+                null)
+              : null
+          }
+          speedMode={speedMode}
+          onUnlink={handleUnlink}
+          onSetWatching={supportsWatch ? handleSetWatching : null}
+        />
+      ))}
+    </section>
   );
 }

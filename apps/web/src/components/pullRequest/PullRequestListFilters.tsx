@@ -15,12 +15,13 @@ import {
   EyeOffIcon,
   FolderGit2Icon,
   LayersIcon,
+  ChevronDownIcon,
   ListFilterIcon,
   SearchIcon,
   TagIcon,
   UserRoundIcon,
 } from "lucide-react";
-import { type ElementType, useState } from "react";
+import { type ElementType, type ReactNode, useState } from "react";
 
 import { getSourceControlPresentationForKind } from "~/sourceControlPresentation";
 import { ProjectFavicon, type ProjectFaviconProject } from "../ProjectFavicon";
@@ -61,7 +62,7 @@ export interface PullRequestFilterOption<Value extends string> {
   readonly unavailable?: string | undefined;
 }
 
-export function PullRequestFilterOptionIcon<Value extends string>({
+function PullRequestFilterOptionIcon<Value extends string>({
   option,
 }: {
   option: PullRequestFilterOption<Value>;
@@ -105,15 +106,16 @@ export function PullRequestSearchInput({
   onChange: (value: string) => void;
 }) {
   return (
-    <InputGroup className="min-w-0 flex-1 **:[input]:h-9 sm:**:[input]:h-8">
+    <InputGroup variant="well" className="min-w-0 flex-1">
       <InputGroupAddon>
         {busy ? <Spinner aria-hidden /> : <SearchIcon aria-hidden />}
       </InputGroupAddon>
       <InputGroupInput
         type="search"
+        size="compact"
         value={value}
         onChange={(event) => onChange(event.currentTarget.value)}
-        placeholder="Search pull requests, or label:bug"
+        placeholder="Search, or label:bug"
         aria-label="Search pull requests"
       />
     </InputGroup>
@@ -159,6 +161,47 @@ const CHECKS_OPTIONS = [
   { value: "passing", label: "Passing", Icon: CircleCheckIcon },
   { value: "failing", label: "Failing", Icon: CircleXIcon },
 ] as const satisfies ReadonlyArray<PullRequestFilterOption<string>>;
+
+/** One filter: a submenu in the Filters menu, or a picker of its own in the wide panel (design SC1d). */
+function FilterShell({
+  pickers,
+  icon,
+  label,
+  value,
+  children,
+}: {
+  /** Each filter is its own menu in a row rather than a submenu of one. */
+  pickers: boolean;
+  icon: ReactNode;
+  label: string;
+  value: ReactNode;
+  children: ReactNode;
+}) {
+  if (pickers) {
+    return (
+      <Menu>
+        <MenuTrigger render={<button type="button" className="s-sc-pk" />}>
+          <em>{label}</em>
+          <span className="min-w-0 max-w-32 truncate">{value}</span>
+          <ChevronDownIcon aria-hidden />
+        </MenuTrigger>
+        <MenuPopup align="start" side="bottom">
+          {children}
+        </MenuPopup>
+      </Menu>
+    );
+  }
+  return (
+    <MenuSub>
+      <MenuSubTrigger>
+        {icon}
+        <span className="flex-1">{label}</span>
+        <span className="min-w-0 max-w-32 truncate text-xs text-muted-foreground">{value}</span>
+      </MenuSubTrigger>
+      <MenuSubPopup>{children}</MenuSubPopup>
+    </MenuSub>
+  );
+}
 
 function PullRequestFilterRadioGroup<Value extends string>({
   label,
@@ -210,11 +253,13 @@ function PullRequestFilterRadioGroup<Value extends string>({
 }
 
 function PullRequestFilterRadioSubmenu<Value extends string>({
+  pickers,
   label,
   value,
   options,
   onChange,
 }: {
+  pickers: boolean;
   label: string;
   value: Value;
   options: ReadonlyArray<PullRequestFilterOption<Value>>;
@@ -223,31 +268,29 @@ function PullRequestFilterRadioSubmenu<Value extends string>({
   const current = options.find((option) => option.value === value) ?? options[0];
   if (!current) return null;
   return (
-    <MenuSub>
-      <MenuSubTrigger>
-        <PullRequestFilterOptionIcon option={current} />
-        <span className="flex-1">{label}</span>
-        <span className="min-w-0 max-w-32 truncate text-xs text-muted-foreground">
-          {current.label}
-        </span>
-      </MenuSubTrigger>
-      <MenuSubPopup>
-        <PullRequestFilterRadioGroup
-          label={label}
-          value={value}
-          options={options}
-          onChange={onChange}
-        />
-      </MenuSubPopup>
-    </MenuSub>
+    <FilterShell
+      pickers={pickers}
+      icon={<PullRequestFilterOptionIcon option={current} />}
+      label={label}
+      value={current.label}
+    >
+      <PullRequestFilterRadioGroup
+        label={label}
+        value={value}
+        options={options}
+        onChange={onChange}
+      />
+    </FilterShell>
   );
 }
 
 function PullRequestAuthorFilter({
+  pickers,
   value,
   options,
   onChange,
 }: {
+  pickers: boolean;
   value: string | undefined;
   options: ReadonlyArray<PullRequestAuthorFacet>;
   onChange: (author: string | undefined) => void;
@@ -268,63 +311,61 @@ function PullRequestAuthorFilter({
   ].slice(0, 10);
   const select = (next: string) => next.toLowerCase() !== login && onChange(next || undefined);
   return (
-    <MenuSub>
-      <MenuSubTrigger>
-        <UserRoundIcon aria-hidden className="size-3.5" />
-        <span className="flex-1">Author</span>
-        <span className="min-w-0 max-w-32 truncate text-xs text-muted-foreground">
-          {value ?? "Anyone"}
-        </span>
-      </MenuSubTrigger>
-      <MenuSubPopup>
-        <div className="p-1 pb-2">
-          <InputGroup>
-            <InputGroupAddon>
-              <SearchIcon aria-hidden />
-            </InputGroupAddon>
-            <InputGroupInput
-              autoFocus
-              size="compact"
-              value={query}
-              onChange={(event) => setQuery(event.currentTarget.value)}
-              onKeyDown={(event) => {
-                if (event.key !== "ArrowDown" && event.key !== "Escape") event.stopPropagation();
-              }}
-              placeholder="Search authors"
-              aria-label="Search authors"
-            />
-          </InputGroup>
-        </div>
-        <MenuRadioGroup value={selected?.actor.login ?? value ?? ""} onValueChange={select}>
-          <MenuRadioItem value="">
+    <FilterShell
+      pickers={pickers}
+      icon={<UserRoundIcon aria-hidden className="size-3.5" />}
+      label="Author"
+      value={value ?? "Anyone"}
+    >
+      <div className="p-1 pb-2">
+        <InputGroup>
+          <InputGroupAddon>
+            <SearchIcon aria-hidden />
+          </InputGroupAddon>
+          <InputGroupInput
+            autoFocus
+            size="compact"
+            value={query}
+            onChange={(event) => setQuery(event.currentTarget.value)}
+            onKeyDown={(event) => {
+              if (event.key !== "ArrowDown" && event.key !== "Escape") event.stopPropagation();
+            }}
+            placeholder="Search authors"
+            aria-label="Search authors"
+          />
+        </InputGroup>
+      </div>
+      <MenuRadioGroup value={selected?.actor.login ?? value ?? ""} onValueChange={select}>
+        <MenuRadioItem value="">
+          <span className="flex min-w-0 items-center gap-2">
+            <LayersIcon aria-hidden className="size-3.5" />
+            Anyone
+          </span>
+        </MenuRadioItem>
+        {visible.map((option) => (
+          <MenuRadioItem key={option.actor.login.toLowerCase()} value={option.actor.login}>
             <span className="flex min-w-0 items-center gap-2">
-              <LayersIcon aria-hidden className="size-3.5" />
-              Anyone
+              <PullRequestActorAvatar actor={option.actor} />
+              <span className="min-w-0 flex-1 truncate">{option.actor.login}</span>
+              <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                {option.mergedCount} merges loaded
+              </span>
             </span>
           </MenuRadioItem>
-          {visible.map((option) => (
-            <MenuRadioItem key={option.actor.login.toLowerCase()} value={option.actor.login}>
-              <span className="flex min-w-0 items-center gap-2">
-                <PullRequestActorAvatar actor={option.actor} />
-                <span className="min-w-0 flex-1 truncate">{option.actor.login}</span>
-                <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                  {option.mergedCount} merges loaded
-                </span>
-              </span>
-            </MenuRadioItem>
-          ))}
-          {visible.length === 0 ? <MenuItem disabled>No authors found</MenuItem> : null}
-        </MenuRadioGroup>
-      </MenuSubPopup>
-    </MenuSub>
+        ))}
+        {visible.length === 0 ? <MenuItem disabled>No authors found</MenuItem> : null}
+      </MenuRadioGroup>
+    </FilterShell>
   );
 }
 
 function PullRequestLabelFilter({
+  pickers,
   value,
   options,
   onChange,
 }: {
+  pickers: boolean;
   value: ReadonlyArray<string>;
   options: ReadonlyArray<PullRequestLabelFacet>;
   onChange: (labels: ReadonlyArray<string>) => void;
@@ -337,55 +378,56 @@ function PullRequestLabelFilter({
     ...options,
   ];
   return (
-    <MenuSub>
-      <MenuSubTrigger>
-        <TagIcon aria-hidden className="size-3.5" />
-        <span className="flex-1">Labels</span>
-        <span className="text-xs text-muted-foreground">
-          {value.length === 0 ? "Any" : `${value.length} selected`}
-        </span>
-      </MenuSubTrigger>
-      <MenuSubPopup>
-        {visible.length === 0 ? (
-          <MenuItem disabled>No labels in this view</MenuItem>
-        ) : (
-          visible.map((option) => {
-            const key = option.name.toLowerCase();
-            const checked = selected.has(key);
-            const dot = pullRequestLabelColor(option.color);
-            return (
-              <MenuCheckboxItem
-                key={key}
-                checked={checked}
-                onCheckedChange={(next) =>
-                  onChange(
-                    next
-                      ? [...value, option.name]
-                      : value.filter((name) => name.toLowerCase() !== option.name.toLowerCase()),
-                  )
-                }
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <span
-                    aria-hidden
-                    className="size-2.5 shrink-0 rounded-full bg-muted-foreground"
-                    {...(dot ? { style: { backgroundColor: dot } } : {})}
-                  />
-                  <span className="min-w-0 flex-1 truncate">{option.name}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                    {option.count}
-                  </span>
+    <FilterShell
+      pickers={pickers}
+      icon={<TagIcon aria-hidden className="size-3.5" />}
+      label="Labels"
+      value={value.length === 0 ? "Any" : `${value.length} selected`}
+    >
+      {visible.length === 0 ? (
+        <MenuItem disabled>No labels in this view</MenuItem>
+      ) : (
+        visible.map((option) => {
+          const key = option.name.toLowerCase();
+          const checked = selected.has(key);
+          const dot = pullRequestLabelColor(option.color);
+          return (
+            <MenuCheckboxItem
+              key={key}
+              checked={checked}
+              onCheckedChange={(next) =>
+                onChange(
+                  next
+                    ? [...value, option.name]
+                    : value.filter((name) => name.toLowerCase() !== option.name.toLowerCase()),
+                )
+              }
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <span
+                  aria-hidden
+                  className="size-2.5 shrink-0 rounded-full bg-muted-foreground"
+                  {...(dot ? { style: { backgroundColor: dot } } : {})}
+                />
+                <span className="min-w-0 flex-1 truncate">{option.name}</span>
+                <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                  {option.count}
                 </span>
-              </MenuCheckboxItem>
-            );
-          })
-        )}
-      </MenuSubPopup>
-    </MenuSub>
+              </span>
+            </MenuCheckboxItem>
+          );
+        })
+      )}
+    </FilterShell>
   );
 }
 
+/**
+ * The list's narrowings. At 440 they sit behind one icon carrying a count while any is set; in a
+ * panel widened past 600 each is a picker of its own along the top (design §22, SC1c and SC1d).
+ */
 export function PullRequestFiltersMenu({
+  layout,
   onOpenChange,
   state,
   stateOptions,
@@ -409,6 +451,7 @@ export function PullRequestFiltersMenu({
   unavailable,
   onProject,
 }: {
+  layout: "icon" | "pickers";
   onOpenChange?: (open: boolean) => void;
   state: PullRequestListState;
   stateOptions: ReadonlyArray<PullRequestFilterOption<PullRequestListState>>;
@@ -497,98 +540,120 @@ export function PullRequestFiltersMenu({
           : {}),
       })),
   ];
+  const pickers = layout === "pickers";
+  const separator = pickers ? null : <MenuSeparator />;
+  const items = (
+    <>
+      <PullRequestFilterRadioSubmenu
+        pickers={pickers}
+        label="State"
+        value={state}
+        options={stateOptions}
+        onChange={onState}
+      />
+      <PullRequestFilterRadioSubmenu
+        pickers={pickers}
+        label="Involvement"
+        value={involvement}
+        options={involvementOptions}
+        onChange={onInvolvement}
+      />
+      {separator}
+      <PullRequestAuthorFilter
+        pickers={pickers}
+        value={filters.author}
+        options={authorOptions}
+        onChange={(author) => updateFilters({ author })}
+      />
+      <PullRequestLabelFilter
+        pickers={pickers}
+        value={selectedLabels}
+        options={labelOptions}
+        onChange={(labels) =>
+          updateFilters({
+            labels: labels.length === 0 ? undefined : labels.slice(0, 10).map((label) => [label]),
+          })
+        }
+      />
+      <PullRequestFilterRadioSubmenu
+        pickers={pickers}
+        label="Draft"
+        value={filters.draft ?? UNFILTERED_VALUE}
+        options={DRAFT_OPTIONS}
+        onChange={(draft) => updateFilter("draft", draft)}
+      />
+      <PullRequestFilterRadioSubmenu
+        pickers={pickers}
+        label="Review"
+        value={filters.review ?? UNFILTERED_VALUE}
+        options={REVIEW_OPTIONS}
+        onChange={(review) => updateFilter("review", review)}
+      />
+      <PullRequestFilterRadioSubmenu
+        pickers={pickers}
+        label="Checks"
+        value={filters.checks ?? UNFILTERED_VALUE}
+        options={CHECKS_OPTIONS}
+        onChange={(checks) => updateFilter("checks", checks)}
+      />
+      {hostOptions.length > 2 ? (
+        <>
+          {separator}
+          <PullRequestFilterRadioSubmenu
+            pickers={pickers}
+            label="Host"
+            value={host ?? ALL_HOSTS_VALUE}
+            options={hostOptions}
+            onChange={(next) => onHost(next === ALL_HOSTS_VALUE ? undefined : next)}
+          />
+        </>
+      ) : null}
+      {serverOptions.length > 2 ? (
+        <>
+          {separator}
+          <PullRequestFilterRadioSubmenu
+            pickers={pickers}
+            label="Server"
+            value={server ?? ALL_SERVERS_VALUE}
+            options={serverOptions}
+            onChange={(next) =>
+              onServer(next === ALL_SERVERS_VALUE ? undefined : (next as EnvironmentId))
+            }
+          />
+        </>
+      ) : null}
+      {separator}
+      <PullRequestFilterRadioSubmenu
+        pickers={pickers}
+        label="Project"
+        value={projectValue}
+        options={projectOptions}
+        onChange={(next) => {
+          const project = projects.find((candidate) => pullRequestProjectKey(candidate) === next);
+          if (project) onProject(project.id, project.environmentId);
+          else if (projectId !== undefined) onProject(undefined, undefined);
+        }}
+      />
+    </>
+  );
+  if (pickers) return items;
   return (
     <Menu onOpenChange={onOpenChange}>
-      <MenuTrigger render={<Button variant="outline" />}>
-        <ListFilterIcon className="size-4" />
-        <span>Filters</span>
-        {filterCount > 0 ? (
-          <span className="rounded-full bg-muted px-1.5 text-xs text-muted-foreground tabular-nums">
-            {filterCount}
-          </span>
-        ) : null}
+      <MenuTrigger
+        render={
+          <button
+            type="button"
+            className="s-sc-ib"
+            aria-label={filterCount > 0 ? `Filters, ${filterCount} set` : "Filters"}
+            data-on={filterCount > 0 ? "" : undefined}
+          />
+        }
+      >
+        <ListFilterIcon aria-hidden />
+        {filterCount > 0 ? <i>{filterCount}</i> : null}
       </MenuTrigger>
       <MenuPopup align="end" side="bottom">
-        <PullRequestFilterRadioSubmenu
-          label="State"
-          value={state}
-          options={stateOptions}
-          onChange={onState}
-        />
-        <PullRequestFilterRadioSubmenu
-          label="Involvement"
-          value={involvement}
-          options={involvementOptions}
-          onChange={onInvolvement}
-        />
-        <MenuSeparator />
-        <PullRequestAuthorFilter
-          value={filters.author}
-          options={authorOptions}
-          onChange={(author) => updateFilters({ author })}
-        />
-        <PullRequestLabelFilter
-          value={selectedLabels}
-          options={labelOptions}
-          onChange={(labels) =>
-            updateFilters({
-              labels: labels.length === 0 ? undefined : labels.slice(0, 10).map((label) => [label]),
-            })
-          }
-        />
-        <PullRequestFilterRadioSubmenu
-          label="Draft"
-          value={filters.draft ?? UNFILTERED_VALUE}
-          options={DRAFT_OPTIONS}
-          onChange={(draft) => updateFilter("draft", draft)}
-        />
-        <PullRequestFilterRadioSubmenu
-          label="Review"
-          value={filters.review ?? UNFILTERED_VALUE}
-          options={REVIEW_OPTIONS}
-          onChange={(review) => updateFilter("review", review)}
-        />
-        <PullRequestFilterRadioSubmenu
-          label="Checks"
-          value={filters.checks ?? UNFILTERED_VALUE}
-          options={CHECKS_OPTIONS}
-          onChange={(checks) => updateFilter("checks", checks)}
-        />
-        {hostOptions.length > 2 ? (
-          <>
-            <MenuSeparator />
-            <PullRequestFilterRadioSubmenu
-              label="Host"
-              value={host ?? ALL_HOSTS_VALUE}
-              options={hostOptions}
-              onChange={(next) => onHost(next === ALL_HOSTS_VALUE ? undefined : next)}
-            />
-          </>
-        ) : null}
-        {serverOptions.length > 2 ? (
-          <>
-            <MenuSeparator />
-            <PullRequestFilterRadioSubmenu
-              label="Server"
-              value={server ?? ALL_SERVERS_VALUE}
-              options={serverOptions}
-              onChange={(next) =>
-                onServer(next === ALL_SERVERS_VALUE ? undefined : (next as EnvironmentId))
-              }
-            />
-          </>
-        ) : null}
-        <MenuSeparator />
-        <PullRequestFilterRadioSubmenu
-          label="Project"
-          value={projectValue}
-          options={projectOptions}
-          onChange={(next) => {
-            const project = projects.find((candidate) => pullRequestProjectKey(candidate) === next);
-            if (project) onProject(project.id, project.environmentId);
-            else if (projectId !== undefined) onProject(undefined, undefined);
-          }}
-        />
+        {items}
       </MenuPopup>
     </Menu>
   );

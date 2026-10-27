@@ -55,3 +55,28 @@
 .s-sc-root .s-sc-pc2 em { display: block; margin-top: 2px; font: 400 11px/1.2 var(--f-mono); font-style: normal; color: var(--text-caption); }
 .s-sc-root .s-sc-pc2 .s-sc-r { font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-secondary); }
 .s-sc-root .s-sc-add { border-radius: var(--r-m); box-shadow: inset 0 0 0 1px var(--seam); }
+
+/* ---------- Git › PR (SC1c, SC1d): the thread's pull requests, every project's under them, and the link foot. Under
+   600 px the filters sit behind one icon; wider, they come out as pickers along the top ---------- */
+.s-sc-root .s-sc-mine { margin: 6px 6px 2px; padding: 0 0 4px; border-radius: var(--r-l); background: var(--hy-card); box-shadow: inset 0 1px 0 var(--lip); }
+.s-sc-root .s-sc-ic { display: flex; align-items: center; gap: 6px; padding: 6px 10px 4px 12px; }
+.s-sc-root .s-sc-ic .seg { flex: none; }
+.s-sc-root .s-sc-ib { position: relative; flex: none; display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: var(--r-m); color: var(--text-caption); cursor: pointer; }
+.s-sc-root .s-sc-ib:hover, .s-sc-root .s-sc-ib[data-popup-open] { color: var(--text-strong); }
+.s-sc-root .s-sc-ib[data-on] { background: var(--hy-card); color: var(--text-strong); box-shadow: inset 0 1px 0 var(--lip); }
+.s-sc-root .s-sc-ib:disabled { cursor: default; }
+.s-sc-root .s-sc-ib svg { width: 14px; height: 14px; }
+.s-sc-root .s-sc-ib i { position: absolute; top: 1px; right: 0; min-width: 12px; height: 12px; padding: 0 3px; border-radius: var(--r-pill); background: var(--ink-1); font: 600 8.5px/12px var(--f-mono); font-style: normal; color: var(--field); text-align: center; }
+.s-sc-root .s-sc-pk { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px; border-radius: var(--r-m); background: var(--sunken); box-shadow: var(--well);
+  font: var(--w-med) 12px/1 var(--f-chrome); color: var(--text-strong); white-space: nowrap; cursor: pointer; }
+.s-sc-root .s-sc-pk em { font-style: normal; color: var(--text-caption); }
+.s-sc-root .s-sc-pk svg { width: 14px; height: 14px; color: var(--text-secondary); }
+.s-sc-root .s-sc-pk svg:last-child { width: 12px; height: 12px; color: var(--text-caption); }
+.s-sc-root .s-sc-ifb { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 2px 12px 6px; }
+.s-sc-root .s-sc-ig { display: flex; align-items: center; gap: 6px; height: 28px; margin-top: 6px; padding: 0 12px; font: var(--w-strong) 11px/1 var(--f-chrome); letter-spacing: .02em; color: var(--text-caption); }
+.s-sc-root .s-sc-ig h2 { margin: 0; font: inherit; }
+.s-sc-root .s-sc-ig .pearl.count { --p: 16px; }
+.s-sc-root .s-sc-link { flex: none; display: flex; align-items: center; height: 44px; padding: 0 12px 0 14px; box-shadow: inset 0 1px 0 var(--seam); }
+.s-sc-root .s-sc-lf { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 10px; border-radius: var(--r-m); background: var(--sunken); box-shadow: var(--well);
+  font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-caption); cursor: text; }
+.s-sc-root .s-sc-lf svg { width: 12px; height: 12px; }

@@ -38,6 +38,7 @@
   --bar-blue-l: #899ff3; --bar-blue-b: #5773e1; --bar-blue-d: #3653c5;
   --bar-green-l: #93c35e; --bar-green-b: #5da12a; --bar-green-d: #397f19;
   --bar-lilac-l: #d1a9e3; --bar-lilac-b: #b283c7; --bar-lilac-d: #8f5da4;
+  --claude: #d97757;    /* Claude's own mark, as the app draws it (Icons.tsx ClaudeAI) */
   --id-rose: #b86c81; --id-butter: #9e8337; --id-sage: #65955a; --id-mint: #209993; --id-peri: #6c84c3; --id-lilac: #9f72ad;
   --ramp: #cd1f66 0%, #cd1f66 11%, #fc7392 14%, #fc7392 25%, #dbc3c2 28%, #dbc3c2 31%, #91b45e 34%, #91b45e 45%, #539624 48%, #539624 58%, #dbc3c2 61%, #dbc3c2 64%, #8ba0f1 67%, #8ba0f1 77%, #3d5ad9 80%, #3d5ad9 89%, #262b5b 92%, #262b5b 97%, #cd1f66 100%;
   --ramp-safe: #333964 0%, #333964 8%, #305d12 20%, #305d12 38%, #333964 50%, #333964 58%, #2b44a6 70%, #2b44a6 88%, #333964 100%;
@@ -90,6 +91,7 @@
   --bar-blue-l: #a4b7fa; --bar-blue-b: #6d8bf8; --bar-blue-d: #4768db;
   --bar-green-l: #b0dc75; --bar-green-b: #7cc74b; --bar-green-d: #449a2f;
   --bar-lilac-l: #e1c0f0; --bar-lilac-b: #d0a4e4; --bar-lilac-d: #b481cb;
+  --claude: #d97757;
   --id-rose: #e299ac; --id-butter: #c7af6d; --id-sage: #93c089; --id-mint: #66c4be; --id-peri: #98afeb; --id-lilac: #c99fd6;
   --ramp: #cf2668 0%, #cf2668 11%, #fe799b 14%, #fe799b 25%, #dbc3c2 28%, #dbc3c2 31%, #98bd5e 34%, #98bd5e 45%, #5ea130 48%, #5ea130 58%, #dbc3c2 61%, #dbc3c2 64%, #8fa5fa 67%, #8fa5fa 77%, #4765e8 80%, #4765e8 89%, #2a2f63 92%, #2a2f63 97%, #cf2668 100%;
   --ramp-safe: #dbc3c2 0%, #dbc3c2 8%, #a2ce72 20%, #a2ce72 38%, #dbc3c2 50%, #dbc3c2 58%, #9cb0fb 70%, #9cb0fb 88%, #dbc3c2 100%;
@@ -1791,6 +1793,219 @@ html[data-theme="night"] .s-lk-root .s-lk-tty .s-lk-warn { color: var(--amber-ba
 .s-mb-root .s-mb-zm .t3-head { justify-content: center; padding: 0; }
 
 </style>
+<style data-part="screens">
+.s-sc-root .bl-prose + .fig, .s-sc-root .bl-sub + .bl-prose + .fig { margin-top: var(--s-6); }
+.s-sc-root .s-sc-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-6) var(--s-7); margin-top: var(--s-6); align-items: start; }
+@media (max-width: 1000px) { .s-sc-root .s-sc-two { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- SC1 the Git tab's pull request (P3) ---------- */
+.s-sc-root .s-sc-prv { overflow: hidden; }
+.s-sc-root .s-sc-card { margin: 2px 10px 6px; padding: 12px 14px 14px; border-radius: var(--r-l); background: var(--hy-card); box-shadow: inset 0 1px 0 var(--lip); }
+.s-sc-root .s-sc-ct { display: flex; align-items: center; gap: 6px; font: 500 11px/1 var(--f-mono); color: var(--text-caption); }
+.s-sc-root .s-sc-ct .gi { width: 14px; height: 14px; }
+.s-sc-root .s-sc-ct [data-pr="open"] { color: var(--tv-write); }
+.s-sc-root .s-sc-ct [data-pr="merged"] { color: var(--tv-agent); }
+.s-sc-root .s-sc-ct [data-pr="draft"] { color: var(--text-caption); }
+.s-sc-root .s-sc-st { font: var(--w-med) 11.5px/1 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-sc-pt { margin-top: 9px; font: var(--w-strong) 15px/1.3 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-sc-pm { display: flex; align-items: center; gap: 6px; margin-top: 7px; font: 400 11px/1 var(--f-mono); color: var(--text-secondary); }
+.s-sc-root .s-sc-pm .gi { width: 12px; height: 12px; color: var(--text-caption); }
+.s-sc-root .s-sc-pm .s-sc-dot { color: var(--text-caption); }
+.s-sc-root .s-sc-facts { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; box-shadow: inset 0 1px 0 var(--seam); }
+.s-sc-root .s-sc-fact { display: flex; align-items: center; gap: 8px; font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-sc-fact .gi { width: 14px; height: 14px; color: var(--text-caption); }
+.s-sc-root .s-sc-fact b { font-weight: var(--w-med); color: var(--text-strong); }
+.s-sc-root .s-sc-fact .s-sc-r { margin-left: auto; font: 400 10.5px/1 var(--f-mono); color: var(--text-caption); }
+.s-sc-root .s-sc-acts { display: flex; align-items: center; gap: 6px; margin-top: 14px; }
+.s-sc-root .s-sc-acts .hy-soft { margin-left: 4px; font-size: 11.5px; }
+.s-sc-root .pill.s-sc-off { opacity: .45; }
+.s-sc-root .s-sc-desc { margin-top: 10px; font: var(--w-reg) 12.5px/1.45 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-sc-desc code { font: 400 11.5px/1 var(--f-mono); color: var(--text-strong); background: none; padding: 0; }
+.s-sc-root .s-sc-fact .t3g { width: 14px; height: 14px; color: var(--text-caption); }
+.s-sc-root .s-sc-fold { display: flex; align-items: center; gap: 6px; height: 30px; margin: 0 6px; padding: 0 8px; font: var(--w-med) 12px/1 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-sc-fold .gi { width: 12px; height: 12px; color: var(--text-caption); }
+.s-sc-root .s-sc-fold .hy-soft { margin-left: auto; font: 400 10.5px/1 var(--f-mono); }
+.s-sc-root .s-sc-fold .pearl.count { --p: 16px; }
+.s-sc-root .s-sc-prl { display: grid; grid-template-columns: 14px auto minmax(0, 1fr) auto; gap: 8px; align-items: center; height: 26px; margin: 0 6px; padding: 0 8px 0 26px; border-radius: var(--r-s); }
+.s-sc-root .s-sc-prl .gi { width: 14px; height: 14px; }
+.s-sc-root .s-sc-prl [data-pr="open"] { color: var(--tv-write); }
+.s-sc-root .s-sc-prl [data-pr="merged"] { color: var(--tv-agent); }
+.s-sc-root .s-sc-prl [data-pr="draft"] { color: var(--text-caption); }
+.s-sc-root .s-sc-prl .s-sc-n { font: 500 10.5px/1 var(--f-mono); color: var(--text-caption); }
+.s-sc-root .s-sc-prl .s-sc-tt { font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-sc-root .s-sc-prl .s-sc-r { font: 400 10.5px/1 var(--f-mono); color: var(--text-caption); }
+.s-sc-root .s-sc-gap { flex: 1; min-height: 8px; }
+.s-sc-root .s-sc-link { flex: none; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px 0 14px; box-shadow: inset 0 1px 0 var(--seam); }
+.s-sc-root .s-sc-link .input { flex: 1; min-width: 0; height: 26px; }
+.s-sc-root .s-sc-link .input .gi { width: 12px; height: 12px; color: var(--text-caption); }
+.s-sc-root .s-sc-empty { margin: 4px 10px 8px; padding: 16px 16px 18px; border-radius: var(--r-l); background: var(--hy-card); box-shadow: inset 0 1px 0 var(--lip); font: var(--w-reg) 12.5px/1.45 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-sc-empty b { display: block; margin-bottom: 4px; font: var(--w-med) 13px/1.3 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-sc-empty code { font: 400 11.5px/1 var(--f-mono); color: var(--text-strong); background: none; padding: 0; }
+.s-sc-root .s-sc-empty .s-sc-acts { margin-top: 12px; }
+.s-sc-root .t3w.s-sc-crop { height: var(--crop-h); }
+
+/* ---------- a page in D's centre: Settings and Usage (P4) ---------- */
+.s-sc-root .t3w.t3-d.s-sc-page { grid-template-columns: 256px minmax(0, 1fr); }
+.s-sc-root .s-sc-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.s-sc-root .s-sc-hd { height: 52px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px 0 24px; font: var(--w-strong) 14px/1 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-sc-hd .hy-soft { font-size: 12.5px; }
+.s-sc-root .s-sc-body { flex: 1; min-height: 0; overflow: hidden; padding: 4px 24px 24px; }
+.s-sc-root .s-sc-col { width: 640px; max-width: 100%; margin: 0 auto; }
+.s-sc-root .s-sc-h { display: flex; align-items: center; gap: 8px; height: 30px; margin-top: 18px; padding: 0 4px; font: var(--w-strong) 11.5px/1 var(--f-chrome); letter-spacing: .02em; color: var(--text-caption); }
+.s-sc-root .s-sc-h:first-child { margin-top: 4px; }
+.s-sc-root .s-sc-h .seg { margin-left: auto; letter-spacing: 0; }
+.s-sc-root .s-sc-grp { border-radius: var(--r-l); background: var(--raised); box-shadow: inset 0 1px 0 var(--lip); }
+.s-sc-root .s-sc-row { display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 10px 14px 10px 16px; }
+.s-sc-root .s-sc-row + .s-sc-row { box-shadow: inset 0 1px 0 var(--seam); }
+.s-sc-root .s-sc-l { flex: 1; min-width: 0; }
+.s-sc-root .s-sc-l b { display: block; font: var(--w-med) 13px/1.3 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-sc-l span { display: block; margin-top: 2px; font: var(--w-reg) 12px/1.4 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-sc-l code { font: 400 11px/1 var(--f-mono); color: var(--text-strong); background: none; padding: 0; }
+.s-sc-root .s-sc-pk { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px 0 10px; border-radius: var(--r-m); background: var(--sunken); box-shadow: var(--well);
+  font: var(--w-med) 12.5px/1 var(--f-chrome); color: var(--text-strong); white-space: nowrap; }
+.s-sc-root .s-sc-pk .gi { width: 14px; height: 14px; color: var(--text-secondary); }
+.s-sc-root .s-sc-pk .gi:last-child { width: 12px; height: 12px; color: var(--text-caption); }
+.s-sc-root .s-sc-num { flex: none; width: 64px; justify-content: flex-end; }
+.s-sc-root .s-sc-scope { display: flex; align-items: center; gap: 6px; padding: 0 4px; font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-caption); }
+.s-sc-root .s-sc-scope .s-sc-pk { height: 24px; font-size: 12px; }
+
+/* the settings nav, in the sidebar's place: the gear held down, then a search field and the pages */
+.s-sc-root .s-sc-side .d-set { background: var(--t3-accent); color: var(--t3-fg); }
+.s-sc-root .s-sc-nav { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1px; padding: 6px 8px; }
+.s-sc-root .s-sc-ni { display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 10px; border-radius: var(--r-m); font: var(--w-reg) 13px/1 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-sc-ni .gi { width: 14px; height: 14px; color: var(--text-caption); }
+.s-sc-root .s-sc-ni[data-on] { background: var(--hy-card); box-shadow: inset 0 1px 0 var(--lip); color: var(--text-strong); font-weight: var(--w-med); }
+.s-sc-root .s-sc-ni[data-on] .gi { color: var(--text-strong); }
+.s-sc-root .s-sc-side .s-sc-back { display: flex; align-items: center; gap: 8px; height: 40px; margin: 0 8px 8px; padding: 0 10px; box-shadow: inset 0 1px 0 var(--seam); font: var(--w-reg) 12.5px/1 var(--f-chrome); color: var(--text-caption); }
+.s-sc-root .s-sc-side .s-sc-back .gi { width: 12px; height: 12px; }
+
+/* Usage: the two limits large, tokens by day, and the threads that used them */
+
+.s-sc-root .s-sc-crumb { display: inline-flex; align-items: center; gap: 8px; }
+.s-sc-root .s-sc-crumb i { font-style: normal; font-weight: var(--w-reg); color: var(--text-caption); }
+.s-sc-root .s-sc-crumb .gi { width: 12px; height: 12px; margin-left: -2px; color: var(--text-caption); }
+.s-sc-root .s-sc-ib { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: var(--r-m); color: var(--text-caption); }
+.s-sc-root .s-sc-ib .gi { width: 14px; height: 14px; }
+.s-sc-root .s-sc-h > .gi { width: 14px; height: 14px; color: var(--text-strong); }
+.s-sc-root .s-sc-lim { display: grid; grid-template-columns: 120px 64px minmax(0, 1fr) 270px; align-items: center; gap: 16px; min-height: 68px; padding: 0 16px; }
+.s-sc-root .s-sc-lim + .s-sc-lim { box-shadow: inset 0 1px 0 var(--seam); }
+.s-sc-root .s-sc-lim b { display: block; font: var(--w-med) 13px/1.3 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-sc-lim div span { display: block; margin-top: 2px; font: 400 11px/1 var(--f-mono); color: var(--text-caption); }
+.s-sc-root .s-sc-pc { font: 500 20px/1 var(--f-mono); color: var(--text-strong); text-align: right; }
+.s-sc-root .s-sc-pc small { display: block; margin-top: 4px; font: var(--w-reg) 11px/1 var(--f-chrome); color: var(--text-caption); }
+.s-sc-root .s-sc-rs { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; font: 400 11px/1 var(--f-mono); color: var(--text-caption); white-space: nowrap; }
+.s-sc-root .s-sc-rs .gi { width: 14px; height: 14px; color: var(--text-secondary); }
+.s-sc-root .s-sc-rs i { font-style: normal; }
+.s-sc-root .s-sc-tot { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.s-sc-root .s-sc-tot div { padding: 14px 16px; }
+.s-sc-root .s-sc-tot div + div { box-shadow: inset 1px 0 0 var(--seam); }
+.s-sc-root .s-sc-tot span { display: block; font: var(--w-reg) 11.5px/1.2 var(--f-chrome); color: var(--text-caption); }
+.s-sc-root .s-sc-tot b { display: block; margin-top: 8px; font: 500 16px/1 var(--f-mono); color: var(--text-strong); }
+.s-sc-root .s-sc-sf .kbd { margin-left: auto; }
+.s-sc-root .s-sc-l b .gi { width: 12px; height: 12px; margin-left: 6px; vertical-align: -1px; color: var(--text-caption); }
+.s-sc-root .s-sc-pks { flex: none; display: inline-flex; align-items: center; gap: 8px; }
+.s-sc-root .s-sc-pk .t3g { width: 14px; height: 14px; color: var(--text-secondary); }
+.s-sc-root .s-sc-hd .seg + .seg { margin-left: 4px; }
+
+.s-sc-root .s-sc-wide { width: 1000px; }
+.s-sc-root svg.gi.s-sc-cl { color: var(--claude); }
+.s-sc-root .s-sc-top { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 32px; margin-top: 10px; }
+.s-sc-root .s-sc-big { display: block; margin-top: 6px; font: 500 36px/1 var(--f-mono); letter-spacing: -.01em; color: var(--text-strong); }
+.s-sc-root .s-sc-sub { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-caption); }
+.s-sc-root .s-sc-sub .gi { width: 12px; height: 12px; }
+.s-sc-root .s-sc-pv { margin-top: 22px; padding: 12px 14px; border-radius: var(--r-l); background: var(--raised); box-shadow: inset 0 1px 0 var(--lip); }
+.s-sc-root .s-sc-pv1 { display: flex; align-items: center; gap: 8px; font: var(--w-med) 13px/1 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-sc-pv1 > i { width: 8px; height: 8px; border-radius: 50%; background: var(--claude); }
+.s-sc-root .s-sc-pv1 .gi { width: 14px; height: 14px; }
+.s-sc-root .s-sc-pv1 em { font: 400 11px/1 var(--f-mono); font-style: normal; color: var(--text-caption); }
+.s-sc-root .s-sc-pv1 > * { white-space: nowrap; }
+.s-sc-root .s-sc-pv1 b { margin-left: auto; font: 500 12.5px/1 var(--f-mono); }
+.s-sc-root .s-sc-pv2 { margin: 8px 0 0 16px; font: 400 11px/1 var(--f-mono); color: var(--text-caption); }
+.s-sc-root .s-sc-cw .s-sc-h { margin-top: 0; }
+.s-sc-root .s-sc-svg { display: block; width: 100%; height: auto; }
+.s-sc-root .s-sc-grid line { stroke: var(--seam); stroke-width: 1; }
+.s-sc-root .s-sc-svg text { font: 400 10.5px var(--f-mono); fill: var(--text-caption); }
+.s-sc-root .s-sc-area { fill: color-mix(in srgb, var(--claude) 16%, transparent); }
+.s-sc-root .s-sc-line { fill: none; stroke: var(--claude); stroke-width: 2; stroke-linejoin: round; }
+.s-sc-root .s-sc-stack { display: flex; gap: 2px; width: 520px; height: 8px; margin: 6px 4px 0; }
+.s-sc-root .s-sc-stack i { flex: var(--s) 0 0; min-width: 4px; border-radius: var(--r-pill); background: var(--c); }
+.s-sc-root .s-sc-legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 12px 4px 0; font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-sc-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.s-sc-root .s-sc-legend i { width: 8px; height: 8px; border-radius: 2px; background: var(--c); }
+.s-sc-root .s-sc-legend b { font: 400 12px/1 var(--f-mono); color: var(--text-strong); }
+.s-sc-root .s-sc-br { display: grid; grid-template-columns: 20px minmax(0, 1fr) 96px 64px 72px; align-items: center; gap: 16px; min-height: 50px; padding: 0 16px; font: 400 12px/1 var(--f-mono); color: var(--text-secondary); }
+.s-sc-root .s-sc-br + .s-sc-br { box-shadow: inset 0 1px 0 var(--seam); }
+.s-sc-root .s-sc-br > span:first-child { color: var(--text-caption); }
+.s-sc-root .s-sc-br > span:nth-child(n+3) { text-align: right; }
+.s-sc-root .s-sc-br .s-sc-soft { color: var(--text-caption); }
+.s-sc-root .s-sc-brh { min-height: 34px; font: var(--w-reg) 11.5px/1 var(--f-chrome); color: var(--text-caption); }
+.s-sc-root .s-sc-mn { display: grid; grid-template-columns: 14px auto; gap: 7px 8px; align-items: center; justify-content: start; }
+.s-sc-root .s-sc-mn .gi { width: 14px; height: 14px; }
+.s-sc-root .s-sc-mn b { font: 500 12.5px/1 var(--f-mono); color: var(--text-strong); }
+.s-sc-root .s-sc-mn i { grid-column: 2; width: var(--w); height: 2px; border-radius: 1px; background: var(--claude); }
+
+/* ---------- a sheet on the bare window: Welcome (P4) ---------- */
+.s-sc-root .t3w.t3-d.s-sc-bare { display: block; background: var(--field); }
+.s-sc-root .s-sc-bare .s-sc-lt { position: absolute; top: 18px; left: 16px; }
+.s-sc-root .s-sc-bare .lights i { background: var(--t3-light); }
+.s-sc-root .s-sc-wz.panel { position: absolute; top: 150px; left: 50%; width: 600px; padding: 22px 24px 20px; transform: translateX(-50%); border-radius: var(--r-xl); color: var(--text-body); }
+.s-sc-root .s-sc-logo { display: block; color: var(--text-strong); }
+.s-sc-root .s-sc-steps { display: flex; align-items: center; gap: 6px; margin-top: 18px; font: var(--w-med) 12.5px/1 var(--f-chrome); color: var(--text-caption); }
+.s-sc-root .s-sc-steps span { display: inline-flex; align-items: center; gap: 7px; }
+.s-sc-root .s-sc-steps .pearl { --p: 18px; }
+.s-sc-root .s-sc-steps [data-on] { color: var(--text-strong); }
+.s-sc-root .s-sc-steps .s-sc-sl { width: 28px; height: 1px; background: var(--seam); }
+.s-sc-root .s-sc-wt { margin-top: 22px; font: var(--w-strong) 20px/1.25 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-sc-ws { margin-top: 6px; font: var(--w-reg) 13px/1.45 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-sc-pcs { display: flex; flex-direction: column; gap: 2px; margin-top: 16px; padding: 4px; border-radius: var(--r-l); background: var(--sunken); box-shadow: var(--well); }
+.s-sc-root .s-sc-pc2 { display: grid; grid-template-columns: 16px 16px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 48px; padding: 0 12px; border-radius: var(--r-m); }
+.s-sc-root .s-sc-pc2[data-on] { background: var(--raised); box-shadow: inset 0 1px 0 var(--lip); }
+.s-sc-root .s-sc-pc2 > .gi { width: 16px; height: 16px; color: var(--text-secondary); }
+.s-sc-root .s-sc-pc2 b { display: block; font: var(--w-med) 13px/1.3 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-sc-pc2 em { display: block; margin-top: 2px; font: 400 11px/1 var(--f-mono); font-style: normal; color: var(--text-caption); }
+.s-sc-root .s-sc-pc2 .s-sc-r { display: inline-flex; align-items: center; gap: 6px; font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-sc-box { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 5px; background: var(--sunken); box-shadow: var(--well), inset 0 0 0 1px var(--seam); color: var(--field); }
+.s-sc-root .s-sc-box[data-on] { background: var(--ink-1); box-shadow: inset 0 -2px 4px var(--occl-light); }
+.s-sc-root .s-sc-box svg { width: 12px; height: 12px; }
+.s-sc-root .s-sc-add { display: flex; align-items: center; gap: 8px; height: 40px; margin-top: 8px; padding: 0 12px; border-radius: var(--r-m); box-shadow: inset 0 0 0 1px var(--seam); font: var(--w-med) 12.5px/1 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-sc-add .gi { width: 14px; height: 14px; }
+.s-sc-root .s-sc-add .gi:last-child { margin-left: auto; width: 12px; height: 12px; color: var(--text-caption); }
+.s-sc-root .s-sc-wf { display: flex; align-items: center; gap: 8px; margin-top: 22px; font: var(--w-reg) 12px/1.4 var(--f-chrome); color: var(--text-caption); }
+
+/* ---------- the agent sign-in page, in the owner's browser (P4) ---------- */
+.s-sc-root .s-sc-web { position: relative; width: 1512px; height: 945px; overflow: hidden; border-radius: 10px; background: var(--field); color: var(--text-body); }
+.s-sc-root .s-sc-si { position: absolute; top: 96px; width: 468px; }
+.s-sc-root .s-sc-si.s-sc-a { left: 236px; }
+.s-sc-root .s-sc-si.s-sc-b { left: 808px; }
+.s-sc-root .s-sc-si .s-sc-logo { margin: 0 0 18px 4px; }
+.s-sc-root .s-sc-sc.panel { padding: 24px 26px 22px; border-radius: var(--r-xl); background: var(--raised); box-shadow: var(--float), inset 0 1px 0 var(--lip); }
+.s-sc-root .s-sc-eb { font: var(--w-strong) 11.5px/1 var(--f-chrome); letter-spacing: .02em; color: var(--text-caption); }
+.s-sc-root .s-sc-sc .s-sc-wt { margin-top: 10px; }
+.s-sc-root .s-sc-sc .s-sc-wt code { font: 600 18px/1.25 var(--f-mono); background: none; padding: 0; color: inherit; }
+.s-sc-root .s-sc-sc .s-sc-ws code { font: 400 12px/1 var(--f-mono); color: var(--text-strong); background: none; padding: 0; }
+.s-sc-root .s-sc-fine { margin-top: 8px; font: var(--w-reg) 12px/1.45 var(--f-chrome); color: var(--text-caption); }
+.s-sc-root .s-sc-fine code { font: 400 11px/1 var(--f-mono); color: var(--text-secondary); background: none; padding: 0; }
+.s-sc-root .s-sc-acc { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; padding: 4px; border-radius: var(--r-l); background: var(--sunken); box-shadow: var(--well); }
+.s-sc-root .s-sc-ac { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 2px 10px; align-items: center; padding: 8px 12px; border-radius: var(--r-m); }
+.s-sc-root .s-sc-ac[data-on] { background: var(--raised); box-shadow: inset 0 1px 0 var(--lip); }
+.s-sc-root .s-sc-ac .gi { width: 16px; height: 16px; color: var(--text-caption); }
+.s-sc-root .s-sc-ac[data-on] .gi { color: var(--text-strong); }
+.s-sc-root .s-sc-ac b { font: var(--w-med) 13px/1.3 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-sc-ac span { grid-column: 2; font: var(--w-reg) 12px/1.35 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-sc-lb { margin-top: 18px; font: var(--w-med) 12.5px/1 var(--f-chrome); color: var(--text-label); }
+.s-sc-root .s-sc-sc .s-sc-acts { margin-top: 20px; }
+
+/* ---------- SC6 the thread's details, hung from the head's toggle ---------- */
+.s-sc-root .s-sc-held { background: var(--t3-accent); color: var(--t3-fg); }
+.s-sc-root .s-sc-dt.panel { position: absolute; z-index: 4; top: 46px; right: 452px; width: 320px; padding: 6px; border-radius: var(--r-l); color: var(--text-body); }
+.s-sc-root .s-sc-dr { display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 10px; border-radius: var(--r-m); font: var(--w-reg) 12.5px/1 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-sc-dr[data-hover] { background: var(--raised); }
+.s-sc-root .s-sc-dr .gi { width: 14px; height: 14px; color: var(--text-caption); }
+.s-sc-root .s-sc-dr code { font: 400 11.5px/1 var(--f-mono); background: none; padding: 0; color: var(--text-strong); }
+.s-sc-root .s-sc-dr .s-sc-r { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font: 400 10.5px/1 var(--f-mono); color: var(--text-caption); }
+.s-sc-root .s-sc-dr .s-sc-r .gi { width: 12px; height: 12px; }
+.s-sc-root .s-sc-sep { height: 1px; margin: 6px 4px; background: var(--seam); }
+</style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -1832,6 +2047,39 @@ html[data-theme="night"] .s-lk-root .s-lk-tty .s-lk-warn { color: var(--amber-ba
     <symbol id="g-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
     <symbol id="g-branch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6a9 9 0 0 0-9 9V3"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/></symbol>
     <symbol id="g-spark" viewBox="0 0 16 16"><path fill="currentColor" d="M9.19 6.84L8.83 1.52A0.6 0.6 0 0 0 7.63 1.48L6.89 6.76ZM9.64 7.73L11.67 4.13A0.6 0.6 0 0 0 10.71 3.41L7.8 6.35ZM9.6 8.45L13.67 5.67A0.6 0.6 0 0 0 13.1 4.61L8.52 6.42ZM9.05 9.29L13.49 9.28A0.6 0.6 0 0 0 13.63 8.09L9.33 7ZM8.41 9.61L13.28 12.01A0.6 0.6 0 0 0 13.92 10.99L9.63 7.66ZM7.41 9.55L9.48 13.02A0.6 0.6 0 0 0 10.58 12.55L9.53 8.66ZM6.81 9.16L7.18 14.28A0.6 0.6 0 0 0 8.38 14.32L9.11 9.24ZM6.36 8.27L4.27 11.95A0.6 0.6 0 0 0 5.23 12.67L8.2 9.65ZM6.4 7.55L2.07 10.47A0.6 0.6 0 0 0 2.63 11.53L7.48 9.58ZM6.95 6.71L2.61 6.73A0.6 0.6 0 0 0 2.47 7.93L6.67 9ZM7.59 6.39L3.23 4.31A0.6 0.6 0 0 0 2.59 5.33L6.37 8.34ZM8.59 6.45L6.48 2.89A0.6 0.6 0 0 0 5.38 3.36L6.47 7.34ZM5.9 8a2.1 2.1 0 1 0 4.2 0a2.1 2.1 0 1 0 -4.2 0Z"/></symbol>
+    <!-- Screens (27 Oct): the Git tab's pull requests, Settings, Usage, Welcome, agent sign-in and thread details.
+         g-snap is the app's own SnapShots mark (createLucideIcon in SettingsSidebarNav), kept as the app draws it. -->
+    <symbol id="g-merge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></symbol>
+    <symbol id="g-prdraft" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M18 6V5"/><path d="M18 11v-1"/><line x1="6" x2="6" y1="9" y2="21"/></symbol>
+    <symbol id="g-prclosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><path d="M6 9v12"/><path d="m21 3-6 6"/><path d="m21 9-6-6"/><path d="M18 11.5V15"/><circle cx="18" cy="18" r="3"/></symbol>
+    <symbol id="g-cx" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></symbol>
+    <symbol id="g-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="g-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="g-commit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><line x1="3" x2="9" y1="12" y2="12"/><line x1="15" x2="21" y1="12" y2="12"/></symbol>
+    <symbol id="g-set2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 17H5"/><path d="M19 7h-9"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></symbol>
+    <symbol id="g-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></symbol>
+    <symbol id="g-panels" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></symbol>
+    <symbol id="g-kbd" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 8h.01"/><path d="M12 12h.01"/><path d="M14 8h.01"/><path d="M16 12h.01"/><path d="M18 8h.01"/><path d="M6 8h.01"/><path d="M7 16h10"/><path d="M8 12h.01"/><rect width="20" height="16" x="2" y="4" rx="2"/></symbol>
+    <symbol id="g-puzzle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z"/></symbol>
+    <symbol id="g-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></symbol>
+    <symbol id="g-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v2"/><path d="M12 2v2"/><path d="M17 20v2"/><path d="M17 2v2"/><path d="M2 12h2"/><path d="M2 17h2"/><path d="M2 7h2"/><path d="M20 12h2"/><path d="M20 17h2"/><path d="M20 7h2"/><path d="M7 20v2"/><path d="M7 2v2"/><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/></symbol>
+    <symbol id="g-fork" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9"/><path d="M12 12v3"/></symbol>
+    <symbol id="g-drive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16h.01"/><path d="M2.212 11.577a2 2 0 0 0-.212.896V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5.527a2 2 0 0 0-.212-.896L18.55 5.11A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><path d="M21.946 12.013H2.054"/><path d="M6 16h.01"/></symbol>
+    <symbol id="g-link2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" x2="16" y1="12" y2="12"/></symbol>
+    <symbol id="g-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></symbol>
+    <symbol id="g-padlock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="g-penline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 21h8"/><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></symbol>
+    <symbol id="g-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></symbol>
+    <symbol id="g-code" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></symbol>
+    <symbol id="g-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8"/><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="m8 17 4-4 4 4"/></symbol>
+    <symbol id="g-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></symbol>
+    <symbol id="g-snap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H6a3 3 0 0 0-3 3v2M16 3h2a3 3 0 0 1 3 3v2M21 16v2a3 3 0 0 1-3 3h-2M8 21H6a3 3 0 0 1-3-3v-2"/><rect width="10" height="8" x="7" y="8" rx="2"/><circle cx="12" cy="12" r="1.5"/></symbol>
+      <symbol id="g-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></symbol>
+    <symbol id="g-trendup" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></symbol>
+    <symbol id="g-trenddown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></symbol>
+    <symbol id="g-gauge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol>
+    <symbol id="g-claude" viewBox="0 0 256 257"><path fill="currentColor" d="m50.228 170.321 50.357-28.257.843-2.463-.843-1.361h-2.462l-8.426-.518-28.775-.778-24.952-1.037-24.175-1.296-6.092-1.297L0 125.796l.583-3.759 5.12-3.434 7.324.648 16.202 1.101 24.304 1.685 17.629 1.037 26.118 2.722h4.148l.583-1.685-1.426-1.037-1.101-1.037-25.147-17.045-27.22-18.017-14.258-10.37-7.713-5.25-3.888-4.925-1.685-10.758 7-7.713 9.397.649 2.398.648 9.527 7.323 20.35 15.75L94.817 91.9l3.889 3.24 1.555-1.102.195-.777-1.75-2.917-14.453-26.118-15.425-26.572-6.87-11.018-1.814-6.61c-.648-2.723-1.102-4.991-1.102-7.778l7.972-10.823L71.42 0 82.05 1.426l4.472 3.888 6.61 15.101 10.694 23.786 16.591 32.34 4.861 9.592 2.592 8.879.973 2.722h1.685v-1.556l1.36-18.211 2.528-22.36 2.463-28.776.843-8.1 4.018-9.722 7.971-5.25 6.222 2.981 5.12 7.324-.713 4.73-3.046 19.768-5.962 30.98-3.889 20.739h2.268l2.593-2.593 10.499-13.934 17.628-22.036 7.778-8.749 9.073-9.657 5.833-4.601h11.018l8.1 12.055-3.628 12.443-11.342 14.388-9.398 12.184-13.48 18.147-8.426 14.518.778 1.166 2.01-.194 30.46-6.481 16.462-2.982 19.637-3.37 8.88 4.148.971 4.213-3.5 8.62-20.998 5.184-24.628 4.926-36.682 8.685-.454.324.519.648 16.526 1.555 7.065.389h17.304l32.21 2.398 8.426 5.574 5.055 6.805-.843 5.184-12.962 6.611-17.498-4.148-40.83-9.721-14-3.5h-1.944v1.167l11.666 11.406 21.387 19.314 26.767 24.887 1.36 6.157-3.434 4.86-3.63-.518-23.526-17.693-9.073-7.972-20.545-17.304h-1.36v1.814l4.73 6.935 25.017 37.59 1.296 11.536-1.814 3.76-6.481 2.268-7.13-1.297-14.647-20.544-15.1-23.138-12.185-20.739-1.49.843-7.194 77.448-3.37 3.953-7.778 2.981-6.48-4.925-3.436-7.972 3.435-15.749 4.148-20.544 3.37-16.333 3.046-20.285 1.815-6.74-.13-.454-1.49.194-15.295 20.999-23.267 31.433-18.406 19.702-4.407 1.75-7.648-3.954.713-7.064 4.277-6.286 25.47-32.405 15.36-20.092 9.917-11.6-.065-1.686h-.583L44.07 198.125l-12.055 1.555-5.185-4.86.648-7.972 2.463-2.593 20.35-13.999-.064.065Z"/></symbol>
+      <symbol id="g-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
   </defs>
   <symbol id="t3-groupplus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></symbol>
   <symbol id="t3-cmd" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"/></symbol>
@@ -1879,7 +2127,7 @@ html[data-theme="night"] .s-lk-root .s-lk-tty .s-lk-warn { color: var(--amber-ba
 
 <header class="bl-nav"><div class="bl-nav-in">
   <a class="bl-wm" href="#top"><svg width="19" height="12" viewBox="0 0 19 12" aria-hidden="true"><polyline points="1,11 1,9 4,9 4,6 7,6 7,3 10,3 10,6 13,6 13,9 16,9 16,11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="translate(1 -1)"/></svg>CONTROL <em>Hybrid</em></a>
-  <nav class="bl-links" aria-label="Sections"><a href="#shell" aria-current="false">Shell</a><a href="#groups" aria-current="false">Groups</a><a href="#states" aria-current="false">States</a><a href="#picks" aria-current="false">Decisions</a><a href="#lock" aria-current="false">Lock</a><a href="#loose" aria-current="false">Loose ends</a><a href="#models" aria-current="false">Local models</a><a href="#menubar" aria-current="false">Menu bar</a></nav>
+  <nav class="bl-links" aria-label="Sections"><a href="#shell" aria-current="false">Shell</a><a href="#groups" aria-current="false">Groups</a><a href="#states" aria-current="false">States</a><a href="#picks" aria-current="false">Decisions</a><a href="#lock" aria-current="false">Lock</a><a href="#loose" aria-current="false">Loose ends</a><a href="#models" aria-current="false">Local models</a><a href="#menubar" aria-current="false">Menu bar</a><a href="#screens" aria-current="false">Screens</a></nav>
   <div class="bl-ctrls">
     <div class="seg sm" data-bind="theme" role="group" aria-label="Theme"><button data-v="field" aria-pressed="true">Field</button><button data-v="night" aria-pressed="false">Night</button></div>
     <button class="pill ghost sm" data-act="play" aria-pressed="true">Pause</button>
@@ -2207,6 +2455,54 @@ html[data-theme="night"] .s-lk-root .s-lk-tty .s-lk-warn { color: var(--amber-ba
   </div>
   <figure class="fig" data-fig="head"><div data-win="head"></div><div class="s-mb-zooms"><div data-win="zoom"></div><div data-win="zoom-hover"></div></div><figcaption class="cap"><span class="id">MB4</span><b>The head at 1:1, then its right end at 2×, at rest and hovered.</b><span>The button sits 8 px from the toggles, so it reads as its own thing. Hovered, it takes the same card-tone fill as the open right-panel toggle beside it.</span></figcaption></figure>
 
+</section>
+<section id="screens" class="bl-sec s-sc-root">
+  <header class="bl-sh">
+    <div class="no">10 <span class="bl-steps"></span></div>
+    <h2>Screens</h2>
+    <p class="meta">The pull request in Git, and the screens version 1 left in T3's look: Settings, Usage, Welcome, the agent sign-in page and the thread's details. Drawn 27 Oct 2026 for the owner's approval (P3, P4).</p>
+  </header>
+  <p class="bl-lead">Version 1 drew the window; these are the places you go from it. Each is drawn as D: the same tokens, faces, rows and controls, so nothing in the app still looks like T3. The words are the product's: a thread, not a chat.</p>
+
+  <h3 class="bl-sub"><span class="id">SC1</span>Git holds the pull request</h3>
+  <div class="bl-prose">
+    <p>Pull requests were in four places: the panel's Pull request and Linked pull requests surfaces, ⌘K's Link pull request, and a page of their own. They fold into one: <b>PR</b>, the third mode of the Git tab after Graph and Diff. It opens on this thread's pull request: its state, title and branches, its checks and reviews, then its files against the base. Merge, Ready and Open act on it. Under it, the pull requests linked to this thread, a stack's layers among them, and the repository's other open ones; a click on any shows it here. The field at the foot links another by its link or number; ⌘K's Link pull request opens this tab with the field ready. The Pull Requests page goes.</p>
+  </div>
+  <div class="s-sc-two">
+    <figure class="fig" data-fig="pr"><div data-win="pr"></div><figcaption class="cap"><span class="id">SC1</span><b>#48 on site-v2, checks running.</b><span>The card takes the card tone, radius 14. The state is the pull request's own icon in the write green (merged takes the agent lilac, a draft caption ink); the title is Regrade 15, strong. Checks, review and watching are one line each, with a lamp for the checks. Merge waits on the running check; a draft offers Ready, a closed one Reopen. Files are Diff's rows against main and open the diff; Activity holds the timeline, reviews and the comment field.</span></figcaption></figure>
+    <figure class="fig" data-fig="pr-none"><div data-win="pr-none"></div><figcaption class="cap"><span class="id">SC1b</span><b>No pull request yet.</b><span>Create opens one from the branch; the foot links one that already exists. The repository's open pull requests stay underneath.</span></figcaption></figure>
+  </div>
+
+  <h3 class="bl-sub"><span class="id">SC2</span>Settings</h3>
+  <div class="bl-prose">
+    <p>The gear holds down and the sidebar becomes Settings' pages, under the same top row and a search field. A page is a column of groups: each row a label with a line under it, and its control at the right, a picker, a switch or a number. Every page takes these rows. The layers mark after a label says a project can override it, as now. Three pages wore another meaning's icon (§20): Providers drew Agents' bot, Integrations Plugins' blocks and Source control the branch. Here Providers becomes Claude, the only provider, with the spark; Integrations takes a puzzle piece and Source control a fork. Page names are written properly: Scheduled tasks, Source control.</p>
+  </div>
+  <figure class="fig" data-fig="settings"><div data-win="settings"></div><figcaption class="cap"><span class="id">SC2</span><b>General.</b><span>Groups are on the raised tone, radius 14, rows 56 high with a seam between. Pickers are wells, 28 high, radius 10; switches are Bloom's. The column is 640 wide, centred. Reset restores this device's defaults, after saying which settings it resets.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">SC3</span>Usage</h3>
+  <div class="bl-prose">
+    <p>The chart at the sidebar's foot opens it, and holds down. The page keeps everything it has now, in D's skin: the head's environments and providers, its three views, Cost, Tokens and Limits, and its period. Cost leads with the total and each provider's share, beside the daily line; then the totals, cost by type, and the breakdown by model or by day, ranked, each with its share underlined. Tokens is the same page counted in tokens, with tokens by type. Limits are the sidebar's 5H and 7D lines at full width: how much is used, never how much is left, the pace, and when each resets. Claude keeps its own orange mark wherever the page names it.</p>
+  </div>
+  <figure class="fig" data-fig="usage"><div data-win="usage"></div><figcaption class="cap"><span class="id">SC3</span><b>Cost, the last 30 days.</b><span>Drawn whole, as it scrolls. The total is Plex 36 / 500. The daily line and its wash are Claude's orange (--claude, the app's #d97757), on seam grid lines with Plex axis labels. Cost by type is one stacked line in the four inks. The model ids stay as the API names them, in Plex; the orange underline is the share.</span></figcaption></figure>
+  <figure class="fig" data-fig="usage-limits"><div data-win="usage-limits"></div><figcaption class="cap"><span class="id">SC3b</span><b>Limits.</b><span>The percent is Plex 20 / 500, used. Pace is the app's icon with its word: ahead, on or under the window's pace. A model's own weekly limit is a third row. The lines are Bloom's usage lines.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">SC4</span>Welcome</h3>
+  <div class="bl-prose">
+    <p>The first run is one float sheet on the bare field, three steps along its top: Connect, Agents, Projects. The stair logo heads it, not the word.</p>
+  </div>
+  <figure class="fig" data-fig="welcome"><div data-win="welcome"></div><figcaption class="cap"><span class="id">SC4</span><b>Step 1, Connect.</b><span>600 wide, radius 20. Steps are pearls joined by a seam; this one in strong ink. Computers sit in a well, the picked one raised, with its lamp.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">SC5</span>Agent sign-in</h3>
+  <div class="bl-prose">
+    <p>When an agent outside CONTROL signs in, this page opens in your browser. T3's blue gradient goes: the page is the field with the stair logo and one raised card. The permission modes are the composer's, with their padlocks (§20.2); Read only takes the eye.</p>
+  </div>
+  <figure class="fig" data-fig="signin"><div data-win="signin"></div><figcaption class="cap"><span class="id">SC5</span><b>Asking, and refused.</b><span>The card is 468 wide, radius 20. The agent's name is in Plex because the agent chose it. A sign-in that can't continue says why and what to do next.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">SC6</span>The thread's details</h3>
+  <div class="bl-prose">
+    <p>The details toggle in the head opens the thread's card: where it runs and what you can do there. Its computer and folder, the editor, its scripts; then its worktree, publishing and what changed. Changes opens Git.</p>
+  </div>
+  <figure class="fig" data-fig="details"><div data-win="details"></div><figcaption class="cap"><span class="id">SC6</span><b>ORBIT-WEBSITE's details.</b><span>A float panel, 320 wide, radius 14, hung 6 under the toggle, which stays held down. Rows are 32 high with icons at 14; a seam parts where it runs from its git.</span></figcaption></figure>
 </section>
 </main>
 <footer class="bl-foot"><p>Design review 05 · Hybrid, settled 8 Oct 2026 · version 1 is D (design/hybrid/HANDOFF.md). Sources: design/bloom (review 04, owner-confirmed), docs/HANDOFF-v2.md §4, docs/HANDOFF-design.md, T3 Code's web app at the fork point (apps/web/src). Session names are the owner's working set; every number in the mocks is invented sample data.</p>
@@ -3594,6 +3890,184 @@ Bloom.section('menubar', { init(el) {
   el.querySelectorAll('[data-win]').forEach(d => { d.outerHTML = W[d.dataset.win](); });
   el.querySelectorAll('.t3w.t3-d').forEach(w => { w.dataset.tv = 'simple'; });
   Hy.wire(el);
+} });
+})();
+</script>
+<script data-part="screens">
+(() => {
+const G = Bloom.gi, T = Hy.T;
+const TICK = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.6 6.3l2.2 2.2 4.6-4.9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const STAIR = '<svg class="s-sc-logo" width="27" height="17" viewBox="0 0 19 12" aria-hidden="true"><polyline points="1,11 1,9 4,9 4,6 7,6 7,3 10,3 10,6 13,6 13,9 16,9 16,11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="translate(1 -1)"/></svg>';
+const seg = (items, on) => `<div class="seg sm">${items.map(i => `<button aria-pressed="${i === on}">${i}</button>`).join('')}</div>`;
+const pk = (label, icon) => `<span class="s-sc-pk">${icon || ''}${label}${G('chev-d')}</span>`;
+const sw = on => `<button class="toggle" role="switch" aria-checked="${on}"><i></i></button>`;
+
+/* ---------- SC1 Git › PR, in the panel ---------- */
+const PRI = { open: T('pr'), merged: G('merge'), draft: G('prdraft') };
+const prl = ([st, n, t, r]) => `<div class="s-sc-prl"><span data-pr="${st}">${PRI[st]}</span><span class="s-sc-n">#${n}</span><span class="s-sc-tt">${t}</span><span class="s-sc-r">${r}</span></div>`;
+const fold = (open, label, n, soft) => `<div class="s-sc-fold">${G(open ? 'chev-d' : 'chev-r')}${label}${Bloom.pearl({ n, p: 16 })}${soft ? `<span class="hy-soft">${soft}</span>` : ''}</div>`;
+const FILES = [['M', 'lib/release.ts', '+2', '−1'], ['M', 'app/download/page.tsx', '+1', '−1'], ['A', 'app/admin/page.tsx', '+31', ''], ['M', 'docs/DESIGN.md', '+4', '−10']];
+const linkFoot = `<div class="s-sc-link"><span class="input">${G('link')}<span class="ph">Link a pull request: its link or #number</span></span><span class="pill ghost sm">Link</span></div>`;
+const OTHERS = [['draft', 45, 'Changelog for 0.2.3', 'draft · 2d'], ['open', 44, 'Bump next to 15.1', '5d']];
+const prHead = `<div class="hy-vh">${seg(['Graph', 'Diff', 'PR'], 'PR')}<span class="sp"></span><span class="hy-soft">site-v2 · vs main</span></div>`;
+function prView() {
+  const card = `<div class="s-sc-card"><div class="s-sc-ct"><span data-pr="open">${PRI.open}</span><span class="s-sc-st">Open</span><span>#48</span><span class="sp"></span><span class="pill ghost sm">GitHub</span></div>`
+    + `<div class="s-sc-pt">Read the release size from the DMG</div>`
+    + `<div class="s-sc-pm">${G('branch')}site-v2<span class="s-sc-dot">→</span>main<span class="s-sc-dot">·</span>3 commits</div>`
+    + `<p class="s-sc-desc">Both pages read the size from <code>lib/release.ts</code>, which the build fills from the DMG. Adds <code>/admin</code>.</p>`
+    + `<div class="s-sc-facts"><div class="s-sc-fact">${Bloom.lamp('working', { d: 10 })}<span><b>2 of 3</b> checks passed · Preview deploy running</span><span class="s-sc-r">1m 12s</span></div>`
+    + `<div class="s-sc-fact">${G('msg')}<span>No review yet</span></div>`
+    + `<div class="s-sc-fact">${T('eye')}<span>Watching: the agent wakes when checks finish or someone comments</span></div></div>`
+    + `<div class="s-sc-acts"><span class="pill sm primary s-sc-off">Merge</span><span class="pill ghost sm">Close</span><span class="hy-soft">Merge waits on the checks</span></div></div>`;
+  const files = `<div class="hy-dsum"><span>4 files</span><span class="t-num hy-pn">+38</span><span class="t-num hy-mn">−12</span></div>`
+    + FILES.map(([s, f, a, r]) => `<div class="hy-df"><span></span><span>${s}</span><span>${f}</span><span class="t-num"><span class="hy-pn">${a}</span> <span class="hy-mn">${r}</span></span></div>`).join('');
+  const linked = fold(true, 'Linked to this thread', 1) + prl(['merged', 46, 'Download page: one price table', 'merged · 3d']);
+  const others = fold(true, 'Open in orbit-website', 2) + OTHERS.map(prl).join('');
+  return `<div class="pane hy-v s-sc-prv">${prHead}${card}${files}${fold(false, 'Activity', 3, 'CI · 4m')}${linked}${others}<div class="s-sc-gap"></div>${linkFoot}</div>`;
+}
+function prNone() {
+  const empty = `<div class="s-sc-empty"><b>No pull request for <code>site-v2</code> yet.</b>Create one from the branch, or link one that already exists below.<div class="s-sc-acts"><span class="pill sm primary">Create</span></div></div>`;
+  return `<div class="pane hy-v s-sc-prv">${prHead}${empty}${fold(true, 'Open in orbit-website', 2)}${OTHERS.map(prl).join('')}<div class="s-sc-gap"></div>${linkFoot}</div>`;
+}
+const gitPanel = (view, h) => Hy.dPanel('Outputs')
+  .replace('aria-selected="true" title="Outputs"', 'aria-selected="false" title="Outputs"').replace('aria-selected="false" title="Git"', 'aria-selected="true" title="Git"')
+  .replace(/<div class="hy-views">[\s\S]*<\/div><\/div><\/div><\/div><\/div>$/, `<div class="hy-views">${view}</div></div></div></div></div>`)
+  .replace('data-h="945"', `data-h="${h}"`).replace('t3-d dp-w"', `t3-d dp-w s-sc-crop" style="--crop-h:${h}px"`);
+
+/* ---------- a page in D's centre ---------- */
+const sideOf = () => Hy.dWin().match(/<aside class="t3-side">[\s\S]*?<\/aside>/)[0];
+const page = (side, main) => `<div class="bl-scale" data-w="1512" data-h="945"><div class="t3w t3-bloom t3-d s-sc-page" data-region>${side}<div class="s-sc-main">${main}</div></div></div>`;
+/* Settings' pages as the app lists them (Project shows only with a project picked); three take their own icon, and two are written properly */
+const NAV = [['set2', 'General', 1], ['palette', 'Appearance'], ['kbd', 'Keybindings'], ['snap', 'SnapShots'], ['claude', 'Claude'], ['puzzle', 'Integrations'],
+  ['cal', 'Scheduled tasks'], ['cpu', 'Local models'], ['fork', 'Source control'], ['drive', 'Storage'], ['link2', 'Connections'], ['archive', 'Archive']];
+function settingsSide() {
+  const top = sideOf().match(/<div class="t3-top">[\s\S]*?<\/span><\/div>/)[0];
+  return `<aside class="t3-side s-sc-side">${top}<div class="t3-srch"><span class="t3-sf s-sc-sf">${T('search')}Search settings<span class="kbd">/</span></span></div>`
+    + `<div class="s-sc-nav">${NAV.map(([g, l, on]) => `<div class="s-sc-ni"${on ? ' data-on' : ''}>${g === 'claude' ? CL() : G(g)}${l}</div>`).join('')}</div>`
+    + `<div class="s-sc-back">${G('chev-l')}Threads</div></aside>`;
+}
+/* a row: label, its line, its control; `own` marks a setting a project can override (the app's layers mark) */
+const row = (label, line, control, own) => `<div class="s-sc-row"><div class="s-sc-l"><b>${label}${own ? G('layers') : ''}</b><span>${line}</span></div>${control}</div>`;
+const num = v => `<span class="s-sc-pk s-sc-num t-num">${v}</span>`;
+const both = (...c) => `<span class="s-sc-pks">${c.join('')}</span>`;
+function settingsMain() {
+  const scope = `<div class="s-sc-scope">Applying settings for ${pk('All projects')}across ${pk('All environments')}</div>`;
+  const threads = `<div class="s-sc-h">New threads</div><div class="s-sc-grp">`
+    + row('Model', 'Default model for new threads. Projects can override it.', both(pk('Claude Opus 5.5', CL()), pk('Max', T('brain'))), 1)
+    + row('Permissions', 'Default permissions for new threads. Projects can override them.', pk('Full access', T('lockopen')), 1)
+    + row('Workspace', 'Where new threads start. Projects and their <code>control.json</code> can override it.', pk('Current checkout'), 1)
+    + row('Submodules', 'How new worktrees populate git submodules.', pk('Recursive'), 1) + `</div>`;
+  const org = `<div class="s-sc-h">Organization</div><div class="s-sc-grp">`
+    + row('Project grouping', 'Combine matching repositories across environments.', sw(true))
+    + row('Project order', 'Order of projects in the sidebar project picker and command palette.', pk('Last user message'))
+    + row('Auto-compact idle threads', 'Compact a big thread once it has sat idle, while its prompt cache is still warm.', sw(true), 1)
+    + row('Minutes idle before auto-compact', 'Past an hour its prompt cache has gone cold, so it compacts on your next send instead.', num('25'), 1)
+    + row('Context size before auto-compact', 'Only threads holding at least this many thousand tokens of context compact.', num('250'), 1)
+    + row('Daily housekeeping', 'Once a day at this hour, clear old debug logs, shell snapshots, session env and todos from <code>~/.claude</code>.', both(num('04:00'), sw(true))) + `</div>`;
+  return `<div class="s-sc-hd">General<span class="sp"></span><span class="pill ghost sm">Reset</span></div><div class="s-sc-body"><div class="s-sc-col">${scope}${threads}${org}</div></div>`;
+}
+
+/* ---------- SC3 Usage: Cost (Tokens is the same page counted in tokens), and Limits ---------- */
+const CL = () => G('claude', 's-sc-cl');    /* Claude's own mark, in its orange, wherever the page names Claude */
+const PACE = { ahead: ['trendup', 'ahead of pace'], on: ['gauge', 'on pace'], under: ['trenddown', 'under pace'] };
+const usageHead = on => `<div class="s-sc-hd"><span class="s-sc-crumb">Usage<i>/</i>All environments${G('chev-d')}<i>/</i>All providers${G('chev-d')}</span><span class="sp"></span>${seg(['Cost', 'Tokens', 'Limits'], on)}${seg(['Past 24h', '7 days', '30 days', '90 days'], on === 'Limits' ? '7 days' : '30 days')}<span class="s-sc-ib">${G('reload')}</span></div>`;
+/* a smooth line through the days (Catmull-Rom as Béziers), kept off the floor; the area closes under it */
+function curve(vals, x0, x1, y0, y1, max) {
+  const p = vals.map((v, i) => [x0 + i * (x1 - x0) / (vals.length - 1), y1 - v / max * (y1 - y0)]);
+  let d = `M${p[0][0].toFixed(1)},${p[0][1].toFixed(1)}`;
+  for (let i = 0; i < p.length - 1; i++) {
+    const a = p[i - 1] || p[i], b = p[i], c = p[i + 1], e = p[i + 2] || c;
+    const k = [[b[0] + (c[0] - a[0]) / 6, b[1] + (c[1] - a[1]) / 6], [c[0] - (e[0] - b[0]) / 6, c[1] - (e[1] - b[1]) / 6]].map(([x, y]) => `${x.toFixed(1)},${Math.min(y1, y).toFixed(1)}`);
+    d += ` C${k[0]} ${k[1]} ${c[0].toFixed(1)},${c[1].toFixed(1)}`;
+  }
+  return { line: d, area: `${d} L${x1},${y1} L${x0},${y1} Z` };
+}
+const COST = [52, 64, 158, 146, 6, 5, 6, 82, 92, 112, 104, 76, 66, 9, 42, 16, 24, 19, 11, 8, 30, 2, 33, 2, 50, 29, 16, 6, 6, 12];
+function costChart() {
+  const X0 = 64, X1 = 690, Y0 = 12, Y1 = 214, MAX = 200, { line, area } = curve(COST, X0, X1, Y0, Y1, MAX);
+  const grid = [0, 50, 100, 150, 200].map(v => { const y = Y1 - v / MAX * (Y1 - Y0); return `<line x1="${X0}" x2="${X1}" y1="${y}" y2="${y}"/><text x="${X0 - 10}" y="${y + 3.5}" text-anchor="end">$${v ? v + '.00' : '0'}</text>`; }).join('');
+  return `<svg class="s-sc-svg" viewBox="0 0 700 240" role="img" aria-label="Daily cost, 28 Sep to 27 Oct"><g class="s-sc-grid">${grid}</g>`
+    + `<path class="s-sc-area" d="${area}"/><path class="s-sc-line" d="${line}"/>`
+    + `<g class="s-sc-x"><text x="${X0}" y="234">28 SEP</text><text x="${(X0 + X1) / 2}" y="234" text-anchor="middle">13 OCT</text><text x="${X1}" y="234" text-anchor="end">27 OCT</text></g></svg>`;
+}
+const TOT = [['Processed tokens', '3.9B'], ['Cached input', '3.8B'], ['Uncached input', '41K'], ['Output', '7.7M'], ['Cache savings', '$13,745.20']];
+const BYTYPE = [['Input', '$0.15', .0001, 4], ['Cache read', '$746.70', .581, 3], ['Cache write', '$387.85', .302, 2], ['Output', '$149.90', .117, 1]];
+const MODELS = [['claude-opus-5-5', '$1,165.84', '90.8%', .908, '3.5B'], ['claude-sonnet-5', '$82.73', '6.4%', .064, '247M'], ['claude-sonnet-5-5', '$28.49', '2.2%', .022, '113M'],
+  ['claude-fable-5-1', '$6.93', '0.5%', .005, '5.6M'], ['claude-haiku-4-5-20251001', '$0.61', '<0.1%', .0005, '1.16M'], ['claude-haiku-5-5', '$0.00', '<0.1%', 0, '8.5K'], ['&lt;synthetic&gt;', 'Unpriced', '', 0, '0']];
+function usageCost() {
+  const sum = `<div class="s-sc-sum"><b class="s-sc-big">$1,284.60</b><span class="s-sc-sub">38 sessions · API estimate${G('info')}</span>`
+    + `<div class="s-sc-pv"><div class="s-sc-pv1"><i></i>${CL()}<span>Claude Code</span><em>38 sessions</em><b>$1,284.60</b></div><div class="s-sc-pv2">100.0% of cost · 3.9B tokens</div></div></div>`;
+  const top = `<div class="s-sc-top">${sum}<div class="s-sc-cw"><div class="s-sc-h">Daily cost</div>${costChart()}</div></div>`;
+  const totals = `<div class="s-sc-h">Totals</div><div class="s-sc-grp s-sc-tot">${TOT.map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>`;
+  const bytype = `<div class="s-sc-h">Cost by type</div><div class="s-sc-stack">${BYTYPE.map(([l, v, s, k]) => `<i style="--s:${Math.max(s, .006)};--c:var(--ink-${k})"></i>`).join('')}</div>`
+    + `<div class="s-sc-legend">${BYTYPE.map(([l, v, s, k]) => `<span><i style="--c:var(--ink-${k})"></i>${l}<b>${v}</b></span>`).join('')}</div>`;
+  const br = `<div class="s-sc-h">Breakdown${seg(['Model', 'Day'], 'Model')}</div><div class="s-sc-grp">`
+    + `<div class="s-sc-br s-sc-brh"><span>#</span><span>Model</span><span>Cost</span><span>Share</span><span>Tokens</span></div>`
+    + MODELS.map(([m, c, s, f, t], i) => `<div class="s-sc-br"><span>${i + 1}</span><span class="s-sc-mn">${CL()}<b>${m}</b>${c === 'Unpriced' ? '' : `<i style="--w:${Math.max(8, Math.round(f * 360))}px"></i>`}</span><span${c === 'Unpriced' ? ' class="s-sc-soft"' : ''}>${c}</span><span>${s}</span><span>${t}</span></div>`).join('') + `</div>`;
+  return usageHead('Cost') + `<div class="s-sc-body"><div class="s-sc-col s-sc-wide">${top}${totals}${bytype}${br}</div></div>`;
+}
+function usageLimits() {
+  const lim = (label, span, v, pace, rs) => `<div class="s-sc-lim"><div><b>${label}</b><span>${span}</span></div><span class="s-sc-pc">${Math.round(v * 100)}%<small>used</small></span>`
+    + `${Bloom.usageLine(v, { kind: span === '5 hours' ? '5h' : '7d', w: '100%', label: `${label} ${Math.round(v * 100)} % used` })}<span class="s-sc-rs">${G(PACE[pace][0])}${PACE[pace][1]}<i>·</i>${G('reload')}${rs}</span></div>`;
+  return usageHead('Limits') + `<div class="s-sc-body"><div class="s-sc-col s-sc-wide"><div class="s-sc-h s-sc-ph">${CL()}Claude</div><div class="s-sc-grp">`
+    + lim('Session', '5 hours', .71, 'ahead', '1h 10m') + lim('Weekly', '7 days', .22, 'under', '4d 13h') + lim('Weekly · Fable', '7 days', .04, 'under', '4d 13h') + `</div></div></div>`;
+}
+const usageSide = () => sideOf().replace(/<div class="t3-util"><span class="t3-ib">/, '<div class="t3-util"><span class="t3-ib s-sc-held">');
+const pageTall = (side, main, h) => page(side, main).replace('data-h="945"', `data-h="${h}"`).replace('s-sc-page"', `s-sc-page" style="height:${h}px"`);
+
+/* ---------- SC4 Welcome ---------- */
+function welcome() {
+  const steps = `<div class="s-sc-steps"><span data-on>${Bloom.pearl({ n: 1, p: 18 })}Connect</span><i class="s-sc-sl"></i><span>${Bloom.pearl({ n: 2, p: 18 })}Agents</span><i class="s-sc-sl"></i><span>${Bloom.pearl({ n: 3, p: 18 })}Projects</span></div>`;
+  const pc = (on, g, name, url, st) => `<div class="s-sc-pc2"${on ? ' data-on' : ''}><span class="s-sc-box"${on ? ' data-on' : ''}>${on ? TICK : ''}</span>${G(g)}<div><b>${name}</b><em>${url}</em></div><span class="s-sc-r">${Bloom.lamp(st, { d: 9 })}${st === 'done' ? 'Connected' : 'Asleep'}</span></div>`;
+  const sheet = `<div class="panel float s-sc-wz">${STAIR}${steps}<p class="s-sc-wt">Connect your computers</p><p class="s-sc-ws">Choose one or more computers. We'll set up agents and projects on each.</p>`
+    + `<div class="s-sc-pcs">${pc(true, 'monitor', 'MacBook Pro', '127.0.0.1:3773', 'done')}${pc(false, 'monitor', 'Studio', 'studio.tailnet.ts.net', 'idle')}</div>`
+    + `<div class="s-sc-add">${G('link')}Add a computer${G('chev-r')}</div>`
+    + `<div class="s-sc-wf">Usage data stays on this computer.<span class="sp"></span><span class="pill sm primary">Continue</span></div></div>`;
+  return `<div class="bl-scale" data-w="1512" data-h="945"><div class="t3w t3-bloom t3-d s-sc-bare" data-region><span class="lights s-sc-lt"><i></i><i></i><i></i></span>${sheet}</div></div>`;
+}
+
+/* ---------- SC5 the agent sign-in page ---------- */
+const ACCESS = [['t3:eye', 'Read only', 'Read projects and threads. Cannot start, message or change anything.'], ['padlock', 'Supervised', 'Ask before commands and file changes.', 1],
+  ['penline', 'Auto-accept edits', 'Auto-approve edits, ask before other actions.'], ['key', 'Auto', 'Claude approves routine actions itself; risky ones still ask.'], ['t3:lockopen', 'Full access', 'Allow commands and edits without prompts.']];
+const icon = g => g.startsWith('t3:') ? T(g.slice(3)).replace('class="t3g', 'class="gi t3g') : G(g);
+function signin() {
+  const ask = `<div class="s-sc-si s-sc-a">${STAIR}<div class="panel s-sc-sc"><div class="s-sc-eb">Agent sign-in</div><p class="s-sc-wt">Connect <code>Claude Code</code></p>`
+    + `<p class="s-sc-ws">This agent wants to use the threads in every project on <code>MacBook Pro</code>.</p>`
+    + `<p class="s-sc-fine">The name is chosen by the agent. Approval returns to <code>127.0.0.1:52114</code> on the computer that opened this page. Only approve a sign-in you just started.</p>`
+    + `<div class="s-sc-lb">What it may do</div><div class="s-sc-acc">${ACCESS.map(([g, l, d, on]) => `<div class="s-sc-ac"${on ? ' data-on' : ''}>${icon(g)}<b>${l}</b><span>${d}</span></div>`).join('')}</div>`
+    + `<div class="s-sc-acts"><span class="pill primary">Approve</span><span class="pill ghost">Deny</span></div></div></div>`;
+  const no = `<div class="s-sc-si s-sc-b">${STAIR}<div class="panel s-sc-sc"><div class="s-sc-eb">Agent sign-in</div><p class="s-sc-wt">This sign-in cannot continue</p>`
+    + `<p class="s-sc-ws">This sign-in link names an unknown app. Close this page and start the sign-in again from your agent.</p></div></div>`;
+  return `<div class="bl-scale" data-w="1512" data-h="945"><div class="s-sc-web">${ask}${no}</div></div>`;
+}
+
+/* ---------- SC6 the thread's details ---------- */
+function details() {
+  const dr = (g, body, r, hover) => `<div class="s-sc-dr"${hover ? ' data-hover' : ''}>${g}${body}${r ? `<span class="s-sc-r">${r}</span>` : ''}</div>`;
+  const pop = `<div class="panel float s-sc-dt" role="dialog" aria-label="Thread details">`
+    + `${dr(G('monitor'), 'MacBook Pro', `<code>~/Projects/orbit-website</code>`)}${dr(G('code'), 'Open in VS Code', G('chev-d'), 1)}`
+    + `${dr(G('play'), '<code>bun dev</code>', 'script')}${dr(G('plus'), 'Add project script')}`
+    + `<div class="s-sc-sep"></div>${dr(G('wt'), '<code>site-v2</code>', `worktree${G('chev-d')}`)}${dr(G('upload'), 'Publish repository', G('chev-d'))}`
+    + `${dr(G('diff'), 'Changes', '<span class="hy-pn">+38</span> <span class="hy-mn">−12</span>')}</div>`;
+  return Hy.dWin().replace(/(<span class="t3-ib d-cmdk"[^>]*>[\s\S]*?<\/span>)<span class="t3-ib">/, '$1<span class="t3-ib s-sc-held">')
+    .replace(/<\/div><\/div>$/, `${pop}</div></div>`);
+}
+
+Bloom.section('screens', { init(el) {
+  const W = {
+    pr: () => gitPanel(prView(), 860),
+    'pr-none': () => gitPanel(prNone(), 420),
+    settings: () => page(settingsSide(), settingsMain()),
+    usage: () => pageTall(usageSide(), usageCost(), 1290),
+    'usage-limits': () => page(usageSide(), usageLimits()),
+    welcome,
+    signin,
+    details,
+  };
+  el.querySelectorAll('[data-win]').forEach(d => { d.outerHTML = W[d.dataset.win](); });
+  el.querySelectorAll('.t3w.t3-d').forEach(w => { w.dataset.tv = 'simple'; });
+  Hy.wire(el);
+  requestAnimationFrame(() => Hy.dashes(el));
 } });
 })();
 </script>

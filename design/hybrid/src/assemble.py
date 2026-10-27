@@ -27,6 +27,7 @@ ORDER = [
     ("loose", "Loose ends", "le"),
     ("models", "Local models", "lm"),
     ("menubar", "Menu bar", "mb"),
+    ("screens", "Screens", "sc"),
 ]
 PREFIX = {i: p for i, _, p in ORDER}
 

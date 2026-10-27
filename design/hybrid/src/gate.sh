@@ -13,7 +13,7 @@ for q in "" "theme=night" "theme=field&motion=reduce"; do
   res=$(node probe.cjs "$OUT" "$q" 3000 "document.querySelectorAll('.bl-sec').length" 2>&1)
   if echo "$res" | grep -qE "EXCEPTION|console.error"; then bad "page[$q]: $(echo "$res" | grep -E 'EXCEPTION|error' | head -3 | tr '\n' ' ')"; else ok "page[$q] clean: $(echo "$res" | tail -1)"; fi
 done
-for id in masthead shell groups states picks lock loose models menubar; do
+for id in masthead shell groups states picks lock loose models menubar screens; do
   for th in field night; do
     res=$(node shotcdp.cjs "$OUT" "shot=$id&t=1750&theme=$th" "$SH/${id}_${th}_390.png" 390 844 1500 1 2>&1)
     echo "$res" | grep -q "HORIZONTAL OVERFLOW" && bad "$id/$th overflow at 390" || ok "$id/$th no overflow at 390"

@@ -229,7 +229,10 @@ it("hot updates Tailwind classes when a source file changes in bundled dev", asy
 });
 
 it("warms the wanted lazy chunk chain and nothing else", async () => {
-  const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "control-warm-"));
+  // Real path: macOS's tmpdir sits behind /var -> /private/var, and module ids are resolved.
+  const root = await NodeFSP.realpath(
+    await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "control-warm-")),
+  );
   let server: Awaited<ReturnType<typeof createServer>> | undefined;
 
   try {

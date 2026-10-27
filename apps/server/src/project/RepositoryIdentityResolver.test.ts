@@ -273,7 +273,7 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
 
       const mixedIdentity = yield* resolver.resolve(mixedDir);
       expect(mixedIdentity?.locator.remoteName).toBe("mirror");
-      expect(mixedIdentity?.canonicalKey).toBe("github.com/control/control");
+      expect(mixedIdentity?.canonicalKey).toBe("github.com/controltools/control");
     }).pipe(Effect.provide(RepositoryIdentityResolver.layer)),
   );
 

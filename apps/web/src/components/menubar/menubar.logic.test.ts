@@ -2,7 +2,7 @@ import type { EnvironmentThreadShell } from "@control/client-runtime/state/model
 import { describe, expect, it } from "vite-plus/test";
 
 import { lockChats } from "../lock/lock.logic";
-import { menubarIcon, menubarView, settleIcon } from "./menubar.logic";
+import { menubarIcon, menubarPanelHeight, menubarView, settleIcon } from "./menubar.logic";
 
 const NOW = new Date(2026, 9, 16, 16, 0).getTime();
 const NOW_ISO = new Date(NOW).toISOString();
@@ -217,5 +217,25 @@ describe("settleIcon", () => {
     expect(shown).toEqual([]);
     clock.advance(500);
     expect(shown).toEqual(["done"]);
+  });
+});
+
+describe("menubarPanelHeight", () => {
+  // Header, a note with its 6 px margin, the sections, the usage strip with its 6 px margin, the footer.
+  const parts = (sectionsShown: number) => [
+    { height: 40, margins: 0 },
+    { height: 34, margins: 6 },
+    { height: sectionsShown, margins: 0, contentHeight: 912.5 },
+    { height: 62, margins: 6 },
+    { height: 40, margins: 0 },
+  ];
+
+  it("asks for the panel's whole height, the sections at the full height of what they hold", () => {
+    expect(menubarPanelHeight(12, parts(912.5))).toBe(1113);
+  });
+
+  it("asks for the same height however tall the window already is, so the two can't chase each other", () => {
+    expect(menubarPanelHeight(12, parts(600))).toBe(menubarPanelHeight(12, parts(912.5)));
+    expect(menubarPanelHeight(12, parts(0))).toBe(menubarPanelHeight(12, parts(912.5)));
   });
 });

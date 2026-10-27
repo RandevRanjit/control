@@ -36,7 +36,7 @@ import {
 import { SidebarUsageStrip } from "../sidebar/SidebarChrome";
 import { SidebarSessionUpdateNote } from "../sidebar/SidebarSessionUpdateNote";
 import { sessionUpdateNoteView } from "../sidebar/sessionUpdateNote";
-import { menubarIcon, menubarView, settleIcon } from "./menubar.logic";
+import { menubarIcon, menubarPanelHeight, menubarView, settleIcon } from "./menubar.logic";
 
 const act = (action: DesktopMenubarAction) => void window.desktopBridge?.menubar?.act(action);
 
@@ -213,9 +213,9 @@ function useSettledIcon(icon: ReturnType<typeof menubarIcon>) {
 
 /**
  * Sizes the window to the panel: its natural height, which the desktop app caps at the screen's
- * visible height less 40. Past that the sections scroll under the fade. The panel is capped at
- * the window, so a part that grows or arrives late (the usage strip, a note) changes no size but
- * its own: every part is watched, and what spills past the panel counts.
+ * visible height less 40. Past that the sections scroll under the fade. A part that grows or
+ * arrives late (the usage strip, a note) is watched like the rest. The height is worked out from
+ * the parts alone (menubarPanelHeight), never from the window, and sent only when it changes.
  */
 function useFitWindow() {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -227,11 +227,30 @@ function useFitWindow() {
     const sections = sectionsRef.current;
     const content = contentRef.current;
     if (!panel || !sections || !content) return;
+    const px = (value: string) => Number.parseFloat(value) || 0;
+    let sent = 0;
     const measure = () => {
-      const hidden = content.offsetHeight - sections.clientHeight;
-      const spilled = panel.scrollHeight - panel.clientHeight;
-      setOverflowing(hidden > 0);
-      void window.desktopBridge?.menubar?.resize(Math.ceil(panel.offsetHeight + spilled + hidden));
+      const box = getComputedStyle(panel);
+      const parts = [...panel.children].map((part) => {
+        const style = getComputedStyle(part);
+        return {
+          height: part.getBoundingClientRect().height,
+          margins: px(style.marginTop) + px(style.marginBottom),
+          ...(part === sections ? { contentHeight: sections.scrollHeight } : {}),
+        };
+      });
+      const height = menubarPanelHeight(
+        px(box.paddingTop) +
+          px(box.paddingBottom) +
+          px(box.borderTopWidth) +
+          px(box.borderBottomWidth),
+        parts,
+      );
+      setOverflowing(sections.scrollHeight > sections.clientHeight);
+      const resize = window.desktopBridge?.menubar?.resize;
+      if (resize === undefined || height === sent) return;
+      sent = height;
+      void resize(height);
     };
     const observer = new ResizeObserver(measure);
     const watch = () => {

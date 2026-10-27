@@ -96,3 +96,22 @@ export function settleIcon(
           }, SETTLE_MS);
   };
 }
+
+/** One part of the panel as measured: its height and vertical margins; the sections also give what they hold. */
+export interface MenubarPanelPart {
+  readonly height: number;
+  readonly margins: number;
+  /** The scrolling sections' full content height, whatever part of it the window shows. */
+  readonly contentHeight?: number;
+}
+
+/**
+ * The height the panel asks its window for: its padding and border, each part with its margins, and the sections
+ * at the full height of what they hold. None of it depends on the window's own size, so resizing the window can't
+ * change the answer and the two can't chase each other (K15: 120 resizes a second while the panel was open).
+ */
+export function menubarPanelHeight(chrome: number, parts: ReadonlyArray<MenubarPanelPart>): number {
+  return Math.ceil(
+    parts.reduce((sum, part) => sum + (part.contentHeight ?? part.height) + part.margins, chrome),
+  );
+}

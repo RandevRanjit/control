@@ -94,10 +94,22 @@ export const make = Effect.gen(function* () {
       Effect.orElseSucceed(() => null),
     );
 
+  /** Moves the panel under the item; a window already there isn't touched. Says whether it moved. */
   const place = ({ tray, panel }: Item) => {
     const itemBounds = tray.getBounds();
     const { workArea } = Electron.screen.getDisplayMatching(itemBounds);
-    panel.setBounds(menubarPanelBounds({ item: itemBounds, workArea, height }));
+    const next = menubarPanelBounds({ item: itemBounds, workArea, height });
+    const current = panel.getBounds();
+    if (
+      next.x === current.x &&
+      next.y === current.y &&
+      next.width === current.width &&
+      next.height === current.height
+    ) {
+      return false;
+    }
+    panel.setBounds(next);
+    return true;
   };
 
   const hide = (panel: Electron.BrowserWindow) => {
@@ -184,9 +196,10 @@ export const make = Effect.gen(function* () {
       item.tray.setTitle(icon.title, { fontType: "monospacedDigit" });
     }),
     resize: (next) =>
-      Effect.sync(() => {
+      Effect.gen(function* () {
         height = next;
-        if (item !== null && !item.panel.isDestroyed()) place(item);
+        const moved = item !== null && !item.panel.isDestroyed() && place(item);
+        yield* Effect.annotateCurrentSpan({ "menubar.height": next, "menubar.moved": moved });
       }),
     act: Effect.fn("desktop.menubar.act")(function* (action) {
       yield* Effect.annotateCurrentSpan({ action: action.type });

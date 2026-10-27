@@ -1,8 +1,4 @@
-import {
-  WorkspaceBreadcrumb,
-  WorkspaceBreadcrumbItem,
-  WorkspaceBreadcrumbSeparator,
-} from "../WorkspaceBreadcrumb";
+import { WorkspaceBreadcrumb, WorkspaceBreadcrumbItem } from "../WorkspaceBreadcrumb";
 import { SETTINGS_SECTION_LABELS } from "./settingsSearch";
 
 const SETTINGS_BREADCRUMB_LABELS: Readonly<Record<string, string>> = {
@@ -17,20 +13,15 @@ function settingsBreadcrumbLabel(pathname: string): string | null {
 }
 
 /**
- * `Settings / Section`. The scope a change applies to lives at the top of the
- * page content, see `SettingsScopeSentence`.
+ * The page's name (design §22, SC2: the held gear already says Settings). The
+ * scope a change applies to lives at the top of the page content, see
+ * `SettingsScopeSentence`.
  */
 export function SettingsBreadcrumb({ pathname }: { pathname: string }) {
   const sectionLabel = settingsBreadcrumbLabel(pathname);
 
   return (
     <WorkspaceBreadcrumb ariaLabel="Settings breadcrumb">
-      {sectionLabel ? (
-        <>
-          <WorkspaceBreadcrumbItem>Settings</WorkspaceBreadcrumbItem>
-          <WorkspaceBreadcrumbSeparator />
-        </>
-      ) : null}
       <WorkspaceBreadcrumbItem current className="truncate">
         {sectionLabel ?? "Settings"}
       </WorkspaceBreadcrumbItem>

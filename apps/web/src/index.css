@@ -8,6 +8,7 @@
 @import "./control/loose.css" layer(control);
 @import "./control/localModels.css" layer(control);
 @import "./control/menubar.css" layer(control);
+@import "./control/screens.css" layer(control);
 
 /* Design v1 draws a fixed 1512 x 945 window with its own corners and shadow;
    the app fills the real window, and fixed controls must not be clipped. */

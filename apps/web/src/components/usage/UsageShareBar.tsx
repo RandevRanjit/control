@@ -31,7 +31,7 @@ export function UsageShareBar({
   return (
     <div className="flex min-w-0 flex-col gap-2.5">
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-sm font-medium text-foreground">{label}</h3>
+        <h3 className="s-sc-h">{label}</h3>
         {aside}
       </div>
       <div

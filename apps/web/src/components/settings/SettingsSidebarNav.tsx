@@ -9,23 +9,23 @@ import {
 } from "react";
 import {
   ArchiveIcon,
-  BlocksIcon,
-  BotIcon,
   createLucideIcon,
   CalendarClockIcon,
   CpuIcon,
-  GitBranchIcon,
+  GitForkIcon,
   HardDriveIcon,
   PanelsTopLeftIcon,
   KeyboardIcon,
   Link2Icon,
   PaletteIcon,
+  PuzzleIcon,
   SearchIcon,
   Settings2Icon,
   XIcon,
 } from "lucide-react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 
+import { ClaudeAI } from "../Icons";
 import { Button } from "../ui/button";
 import { Kbd } from "../ui/kbd";
 import {
@@ -69,11 +69,11 @@ const SETTINGS_SECTION_ICONS: Readonly<
   "/settings/projects": PanelsTopLeftIcon,
   "/settings/keybindings": KeyboardIcon,
   "/settings/snap-shot": SnapShotIcon,
-  "/settings/providers": BotIcon,
-  "/settings/integrations": BlocksIcon,
+  "/settings/providers": ClaudeAI,
+  "/settings/integrations": PuzzleIcon,
   "/settings/scheduled-tasks": CalendarClockIcon,
   "/settings/local-models": CpuIcon,
-  "/settings/source-control": GitBranchIcon,
+  "/settings/source-control": GitForkIcon,
   "/settings/storage": HardDriveIcon,
   "/settings/connections": Link2Icon,
   "/settings/archived": ArchiveIcon,

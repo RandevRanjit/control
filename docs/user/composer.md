@@ -80,7 +80,7 @@ messages survive app restarts.
 
 ## Custom models
 
-On web and desktop, use Settings → Providers → **Models** to add an unlisted model with a custom
+On web and desktop, use Settings → Claude → **Models** to add an unlisted model with a custom
 name and options. Only options supported by the provider integration affect turns.
 
 ## Model defaults

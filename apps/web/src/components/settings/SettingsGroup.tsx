@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 
 import { cn } from "../../lib/utils";
 
-/** Shared settings card surface, with optional separators between rows. */
+/** Shared settings card surface (design §22, SC2), with optional seams between rows. */
 export function SettingsGroup({
   variant = "grouped",
   divided = true,
@@ -15,14 +15,11 @@ export function SettingsGroup({
   return (
     <div
       {...props}
+      data-divided={variant === "grouped" && divided ? "" : undefined}
       className={cn(
         "relative overflow-visible text-foreground",
-        variant === "grouped"
-          ? "rounded-xl border border-border/60 bg-card/40 shadow-xs/5"
-          : "space-y-1",
-        variant === "grouped" &&
-          divided &&
-          "[&>*+*]:border-t [&>*+*]:border-border/50 [&>[data-slot=settings-row]]:rounded-none",
+        variant === "grouped" ? "s-sc-grp" : "space-y-1",
+        variant === "grouped" && divided && "[&>[data-slot=settings-row]]:rounded-none",
         className,
       )}
     />

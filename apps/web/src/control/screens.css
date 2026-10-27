@@ -1,0 +1,26 @@
+/* CONTROL's screens (design/hybrid/HANDOFF.md §22): Settings, Usage, Welcome, the agent sign-in page and the thread's
+   details. A port of the <style> block of design/hybrid/src/parts/screens.html, screen by screen, with the app's own
+   elements where the figures draw stand-ins (a row's h3 and p for the figure's b and span) and :hover for [data-hover].
+   The figures' crops and window frames stay in the design. Edit the source, then re-port. The app puts .s-sc-root on
+   each screen's root. */
+
+/* ---------- Settings (SC2): a page is a column of groups; a row is a label, its line, and its control ---------- */
+.s-sc-root .s-sc-h { display: flex; align-items: center; gap: 8px; min-height: 30px; margin: 0; padding: 0 4px; font: var(--w-strong) 11.5px/1 var(--f-chrome); letter-spacing: .02em; color: var(--text-caption); }
+.s-sc-root .s-sc-grp { border-radius: var(--r-l); background: var(--raised); box-shadow: inset 0 1px 0 var(--lip); }
+.s-sc-root .s-sc-grp[data-divided] > * + * { box-shadow: inset 0 1px 0 var(--seam); }
+.s-sc-root .s-sc-row { min-height: 56px; padding: 10px 14px 10px 16px; }
+.s-sc-root .s-sc-l h3 { margin: 0; font: var(--w-med) 13px/1.3 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-sc-l p { margin: 2px 0 0; font: var(--w-reg) 12px/1.4 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-sc-l code { font: 400 11px/1 var(--f-mono); color: var(--text-strong); background: none; padding: 0; }
+
+/* ---------- Usage (SC3): the app's page in D's skin. Heads and groups are Settings'; the chart keeps its own ---------- */
+.s-sc-root .s-sc-big { font: 500 36px/1 var(--f-mono); letter-spacing: -.01em; color: var(--text-strong); }
+.s-sc-root .s-sc-pv { padding: 12px 14px; border-radius: var(--r-l); background: var(--raised); box-shadow: inset 0 1px 0 var(--lip); }
+.s-sc-root .s-sc-tot > div { padding: 14px 16px; }
+.s-sc-root .s-sc-tot > div + div { box-shadow: inset 1px 0 0 var(--seam); }
+.s-sc-root .s-sc-tot span { font: var(--w-reg) 11.5px/1.2 var(--f-chrome); color: var(--text-caption); }
+.s-sc-root .s-sc-tot b { margin-top: 8px; font: 500 16px/1 var(--f-mono); color: var(--text-strong); }
+.s-sc-root .s-sc-lim { min-height: 68px; padding: 12px 16px; }
+.s-sc-root .s-sc-lim b { font: var(--w-med) 13px/1.3 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-sc-pc { font: 500 20px/1 var(--f-mono); color: var(--text-strong); }
+.s-sc-root .s-sc-lim small { font: var(--w-reg) 11px/1 var(--f-chrome); color: var(--text-caption); }

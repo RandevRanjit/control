@@ -29,6 +29,7 @@
   --bar-blue-l: #899ff3; --bar-blue-b: #5773e1; --bar-blue-d: #3653c5;
   --bar-green-l: #93c35e; --bar-green-b: #5da12a; --bar-green-d: #397f19;
   --bar-lilac-l: #d1a9e3; --bar-lilac-b: #b283c7; --bar-lilac-d: #8f5da4;
+  --claude: #d97757;
   --id-rose: #b86c81; --id-butter: #9e8337; --id-sage: #65955a; --id-mint: #209993; --id-peri: #6c84c3; --id-lilac: #9f72ad;
   --ramp: #cd1f66 0%, #cd1f66 11%, #fc7392 14%, #fc7392 25%, #dbc3c2 28%, #dbc3c2 31%, #91b45e 34%, #91b45e 45%, #539624 48%, #539624 58%, #dbc3c2 61%, #dbc3c2 64%, #8ba0f1 67%, #8ba0f1 77%, #3d5ad9 80%, #3d5ad9 89%, #262b5b 92%, #262b5b 97%, #cd1f66 100%;
   --ramp-safe: #333964 0%, #333964 8%, #305d12 20%, #305d12 38%, #333964 50%, #333964 58%, #2b44a6 70%, #2b44a6 88%, #333964 100%;
@@ -82,6 +83,7 @@
   --bar-blue-l: #a4b7fa; --bar-blue-b: #6d8bf8; --bar-blue-d: #4768db;
   --bar-green-l: #b0dc75; --bar-green-b: #7cc74b; --bar-green-d: #449a2f;
   --bar-lilac-l: #e1c0f0; --bar-lilac-b: #d0a4e4; --bar-lilac-d: #b481cb;
+  --claude: #d97757;
   --id-rose: #e299ac; --id-butter: #c7af6d; --id-sage: #93c089; --id-mint: #66c4be; --id-peri: #98afeb; --id-lilac: #c99fd6;
   --ramp: #cf2668 0%, #cf2668 11%, #fe799b 14%, #fe799b 25%, #dbc3c2 28%, #dbc3c2 31%, #98bd5e 34%, #98bd5e 45%, #5ea130 48%, #5ea130 58%, #dbc3c2 61%, #dbc3c2 64%, #8fa5fa 67%, #8fa5fa 77%, #4765e8 80%, #4765e8 89%, #2a2f63 92%, #2a2f63 97%, #cf2668 100%;
   --ramp-safe: #dbc3c2 0%, #dbc3c2 8%, #a2ce72 20%, #a2ce72 38%, #dbc3c2 50%, #dbc3c2 58%, #9cb0fb 70%, #9cb0fb 88%, #dbc3c2 100%;

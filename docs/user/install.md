@@ -62,7 +62,7 @@ before sharing.
 
 ## Providers
 
-Open **Settings → Providers** in the web or desktop app, select the environment,
+Open **Settings → Claude** in the web or desktop app, select the environment,
 and enable the provider you want. Installation, login, and configuration belong
 to that environment's machine, even when you connect from a phone or another
 computer.
@@ -75,7 +75,7 @@ Provider CLIs must be on the server's `PATH`. If CONTROL cannot find one, set it
 **Binary path** in provider settings, especially when using a version manager.
 
 CONTROL warns when a provider version has known compatibility problems with your
-release. Check **Settings → Providers** on that environment for the recommended
+release. Check **Settings → Claude** on that environment for the recommended
 version or range. When its package manager supports installing a specific version,
 you can install the recommendation there. Otherwise use the provider's installer
 on the environment's machine. An unlisted version is unverified.

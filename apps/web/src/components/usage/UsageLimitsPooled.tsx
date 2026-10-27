@@ -497,14 +497,12 @@ function PoolWindowCard({
   // The soonest reset that hands anything back; an untouched account resets to no effect.
   const nextRefill = pool.resets.find((reset) => reset.restoresPercent > 0);
   return (
-    <div className="grid items-center gap-x-6 gap-y-3 rounded-lg border border-border/60 p-4 md:grid-cols-[11rem_minmax(0,1fr)]">
+    <div className="s-sc-lim grid items-center gap-x-6 gap-y-3 md:grid-cols-[11rem_minmax(0,1fr)]">
       <div className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-foreground">{pool.label}</span>
+        <b>{pool.label}</b>
         <span className="flex items-baseline gap-2">
-          <span className="text-3xl font-semibold text-foreground tabular-nums">
-            {pool.usedPercent}%
-          </span>
-          <span className="text-sm text-muted-foreground">used</span>
+          <span className="s-sc-pc">{pool.usedPercent}%</span>
+          <small>used</small>
           {pool.pace ? <PaceIcon pace={pool.pace} /> : null}
         </span>
         {nextRefill && pool.columns.length > 1 ? (
@@ -522,8 +520,8 @@ function PoolSection({ pool, now }: { readonly pool: LimitPool; readonly now: nu
   const color = barColor(pool.driver);
   const label = getDriverOption(pool.driver)?.label ?? String(pool.driver);
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="flex items-center gap-2 text-sm font-medium text-foreground">
+    <section className="flex flex-col gap-1">
+      <h2 className="s-sc-h">
         <ProviderInstanceIcon
           driverKind={pool.driver}
           displayName={label}
@@ -533,9 +531,16 @@ function PoolSection({ pool, now }: { readonly pool: LimitPool; readonly now: nu
         />
         {label}
       </h2>
-      {pool.windows.map((window) => (
-        <PoolWindowCard key={`${window.kind}:${window.id}`} pool={window} color={color} now={now} />
-      ))}
+      <div className="s-sc-grp" data-divided="">
+        {pool.windows.map((window) => (
+          <PoolWindowCard
+            key={`${window.kind}:${window.id}`}
+            pool={window}
+            color={color}
+            now={now}
+          />
+        ))}
+      </div>
     </section>
   );
 }

@@ -536,7 +536,9 @@ export function SourceControlSettingsPanel() {
         }),
   );
   const result = discovery.data ?? EMPTY_DISCOVERY_RESULT;
-  const hasVersionControlSystems = result.versionControlSystems.length > 0;
+  // A system Control can't drive yet (Jujutsu) isn't listed as "coming soon" (owner, 27 Oct).
+  const versionControlSystems = result.versionControlSystems.filter((item) => !isVcsNotReady(item));
+  const hasVersionControlSystems = versionControlSystems.length > 0;
   const hasDiscoveryItems = hasVersionControlSystems || result.sourceControlProviders.length > 0;
   const isInitialScanPending = discovery.isPending && discovery.data === null;
   const handleScan = () => {
@@ -586,7 +588,7 @@ export function SourceControlSettingsPanel() {
               title={`Version Control${environmentSuffix}`}
               headerAction={scanButton}
             >
-              {result.versionControlSystems.map((item) => (
+              {versionControlSystems.map((item) => (
                 <DiscoveryItemRow key={`vcs:${item.kind}`} item={item}>
                   {item.kind === "git" ? <GitFetchIntervalSettings /> : undefined}
                 </DiscoveryItemRow>

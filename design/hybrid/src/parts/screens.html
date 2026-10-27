@@ -49,6 +49,46 @@
 .s-sc-root .s-sc-empty .s-sc-acts { margin-top: 12px; }
 .s-sc-root .t3w.s-sc-crop { height: var(--crop-h); }
 
+/* ---------- SC1c, SC1d: every project's pull requests, folded into Git › PR. The panel's width decides how much each row shows ---------- */
+.s-sc-root [data-pr="open"] { color: var(--tv-write); }
+.s-sc-root [data-pr="merged"] { color: var(--tv-agent); }
+.s-sc-root [data-pr="draft"] { color: var(--text-caption); }
+.s-sc-root .s-sc-mine, .s-sc-root .s-sc-ir { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 0 10px; align-items: start; }
+.s-sc-root .s-sc-mine { margin: 2px 10px 4px; padding: 10px 12px; border-radius: var(--r-l); background: var(--hy-card); box-shadow: inset 0 1px 0 var(--lip); }
+.s-sc-root .s-sc-ir { margin: 0 6px; padding: 7px 12px; border-radius: var(--r-m); }
+.s-sc-root .s-sc-prw .s-sc-ir { grid-template-columns: 16px 14px minmax(0, 1fr) auto; }
+.s-sc-root .s-sc-ir[data-sel] { background: var(--hy-card); box-shadow: inset 0 1px 0 var(--lip); }
+.s-sc-root .s-sc-gl { display: flex; flex-direction: column; align-items: center; gap: 7px; padding-top: 1px; }
+.s-sc-root .s-sc-gl .gi, .s-sc-root .s-sc-gl .t3g { width: 14px; height: 14px; }
+.s-sc-root .s-sc-ir b, .s-sc-root .s-sc-mine b { display: block; font: var(--w-med) 12.5px/1.3 var(--f-chrome); color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-sc-root .s-sc-ir b i, .s-sc-root .s-sc-mine b i { margin-right: 6px; font: 400 11px/1 var(--f-mono); font-style: normal; color: var(--text-caption); }
+.s-sc-root .s-sc-ir em, .s-sc-root .s-sc-mine em { display: flex; align-items: center; gap: 6px; margin-top: 4px; font: 400 10.5px/1.2 var(--f-mono); font-style: normal; color: var(--text-caption); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-sc-root .s-sc-ia { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; padding-top: 2px; font: 400 10.5px/1.2 var(--f-mono); color: var(--text-caption); }
+.s-sc-root .s-sc-mine .s-sc-ia { flex-direction: row; align-items: center; gap: 8px; }
+.s-sc-root .s-sc-ia .gi { width: 14px; height: 14px; }
+.s-sc-root .s-sc-lab { padding: 1px 6px; border-radius: var(--r-pill); background: var(--sunken); box-shadow: inset 0 0 0 1px var(--seam); font: 400 10px/1.3 var(--f-mono); }
+.s-sc-root .s-sc-ic { display: flex; align-items: center; gap: 6px; padding: 6px 10px 4px 12px; }
+.s-sc-root .s-sc-ic .seg { flex: none; }
+.s-sc-root .s-sc-is.input { flex: 1; min-width: 0; height: 26px; padding: 0 8px; gap: 6px; font-size: 11.5px; }
+.s-sc-root .s-sc-is .t3g { width: 12px; height: 12px; color: var(--text-caption); }
+.s-sc-root .s-sc-ib { position: relative; flex: none; display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: var(--r-m); color: var(--text-caption); }
+.s-sc-root .s-sc-ib[data-on] { background: var(--hy-card); color: var(--text-strong); box-shadow: inset 0 1px 0 var(--lip); }
+.s-sc-root .s-sc-ib .gi { width: 14px; height: 14px; }
+.s-sc-root .s-sc-ib i { position: absolute; top: 1px; right: 0; min-width: 12px; height: 12px; padding: 0 3px; border-radius: var(--r-pill); background: var(--ink-1); font: 600 8.5px/12px var(--f-mono); font-style: normal; color: var(--field); text-align: center; }
+.s-sc-root .s-sc-ig { display: flex; align-items: center; gap: 6px; height: 28px; margin-top: 6px; padding: 0 18px; font: var(--w-strong) 11px/1 var(--f-chrome); letter-spacing: .02em; color: var(--text-caption); }
+.s-sc-root .s-sc-ig .pearl.count { --p: 16px; }
+.s-sc-root .s-sc-ic .s-sc-pk, .s-sc-root .s-sc-ifb .s-sc-pk { flex: none; height: 26px; padding: 0 8px; font-size: 12px; }
+.s-sc-root .s-sc-ifb { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 2px 12px 6px; }
+.s-sc-root .s-sc-ifb .s-sc-pk em { font-style: normal; color: var(--text-caption); }
+.s-sc-root .s-sc-batch { flex: none; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px 0 18px; box-shadow: inset 0 1px 0 var(--seam); font: var(--w-med) 12px/1 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .t3w.t3-d.s-sc-widepanel { width: 1760px; grid-template-columns: 256px minmax(0, 1fr) 820px; }
+.s-sc-root .s-sc-widepanel .t3d-panel { position: relative; }
+.s-sc-root .s-sc-grip { position: absolute; z-index: 2; top: 0; bottom: 0; left: -1px; width: 2px; background: var(--focus); }
+.s-sc-root .s-sc-grip::after { content: ""; position: absolute; top: 50%; left: -3px; width: 8px; height: 28px; margin-top: -14px; border-radius: var(--r-pill); background: var(--focus); }
+.s-sc-root .s-sc-tabmax { margin-left: auto; display: inline-grid; place-items: center; width: 30px; height: 26px; color: var(--text-caption); }
+.s-sc-root .s-sc-tabmax .gi { width: 14px; height: 14px; }
+.s-sc-root .s-sc-tabmax + .d-loose { margin-left: 0; }
+
 /* ---------- a page in D's centre: Settings and Usage (P4) ---------- */
 .s-sc-root .t3w.t3-d.s-sc-page { grid-template-columns: 256px minmax(0, 1fr); }
 .s-sc-root .s-sc-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
@@ -228,6 +268,16 @@
     <figure class="fig" data-fig="pr-none"><div data-win="pr-none"></div><figcaption class="cap"><span class="id">SC1b</span><b>No pull request yet.</b><span>Create opens one from the branch; the foot links one that already exists. The repository's open pull requests stay underneath.</span></figcaption></figure>
   </div>
 
+  <h3 class="bl-sub"><span class="id">SC1c</span>Every project's pull requests, in the same view</h3>
+  <div class="bl-prose">
+    <p>The Pull Requests page folds in too (owner, 27 Oct). Under this thread's pull request, PR lists the pull requests of this repository or of every project, grouped as the page groups them: review requested from you, yours, others. The row is the page's own, so nothing is redrawn and nothing is lost: state over checks, number and title, the diff on the right; author, repository and review under it, the age on the right. The view fits the panel's width, which the panel already lets you change: drag its edge, or maximise it. At 440 the filters sit behind one icon, with a count while any is set. Widened past 600, the filters come out as pickers, rows show their labels, and rows can be picked and closed together.</p>
+  </div>
+  <div class="s-sc-two">
+    <figure class="fig" data-fig="pr-inbox"><div data-win="pr-inbox"></div><figcaption class="cap"><span class="id">SC1c</span><b>At 440.</b><span>This thread's pull request stays on top in the card tone; a click opens it as SC1. Groups are caption heads with a count. Titles in Regrade 12.5 after the number in Plex; the second line in Plex caption ink. The filter icon is held, with its count, while a filter is set; the sort icon opens the page's sorts.</span></figcaption></figure>
+    <figure class="fig" data-fig="pr-inbox-note"><figcaption class="cap"><span class="id">Note</span><b>How the width works.</b><span>Under 600 px: filters behind the icon, no picking, labels left off the row (search still finds them). 600 and over: the scope, search, sort and refresh on one line, the filter pickers under it (state, who's involved, review, checks, author, labels, host), labels on each row, and a box at each row's start for picking several; the foot then says how many and offers Close. Maximised, the same view fills the window beside the sidebar, as the page did. ⌘K's Pull requests opens the Git tab on PR, maximised.</span></figcaption></figure>
+  </div>
+  <figure class="fig" data-fig="pr-wide"><div data-win="pr-wide"></div><figcaption class="cap"><span class="id">SC1d</span><b>Dragged to 820, two picked.</b><span>The panel's edge, while you drag it, is the focus colour with a grip. Pickers are wells with their name in caption ink. A picked row takes the card tone; the foot says how many and offers Clear and Close. Maximise sits at the right of the tab row, beside Loose ends.</span></figcaption></figure>
+
   <h3 class="bl-sub"><span class="id">SC2</span>Settings</h3>
   <div class="bl-prose">
     <p>The gear holds down and the sidebar becomes Settings' pages, under the same top row and a search field. A page is a column of groups: each row a label with a line under it, and its control at the right, a picker, a switch or a number. Every page takes these rows. The layers mark after a label says a project can override it, as now. Three pages wore another meaning's icon (§20): Providers drew Agents' bot, Integrations Plugins' blocks and Source control the branch. Here Providers becomes Claude, the only provider, with the spark; Integrations takes a puzzle piece and Source control a fork. Page names are written properly: Scheduled tasks, Source control.</p>
@@ -299,6 +349,41 @@ const gitPanel = (view, h) => Hy.dPanel('Outputs')
   .replace('aria-selected="true" title="Outputs"', 'aria-selected="false" title="Outputs"').replace('aria-selected="false" title="Git"', 'aria-selected="true" title="Git"')
   .replace(/<div class="hy-views">[\s\S]*<\/div><\/div><\/div><\/div><\/div>$/, `<div class="hy-views">${view}</div></div></div></div></div>`)
   .replace('data-h="945"', `data-h="${h}"`).replace('t3-d dp-w"', `t3-d dp-w s-sc-crop" style="--crop-h:${h}px"`);
+
+/* ---------- SC1c, SC1d: the inbox in Git › PR, in the page's own row (PullRequestListRow): state over checks, #n and title, the diff on the right; author, repository, review and labels under it, the age on the right ---------- */
+const INBOX = [
+  ['Review requested', [['open', 'control', 5012, 'Panel: the Git tab holds the pull request', 'mira', 'failed', 'Review requested', '1h', [412, 96], ['ui']]]],
+  ['Yours', [['draft', 'orbit-website', 45, 'Changelog for 0.2.3', 'you', '', 'Draft', '2d', [18, 2], ['docs']],
+    ['open', 'portfolio', 12, 'Scroll position restores on back', 'you', 'done', 'Changes requested', '3d', [64, 21], ['bug']]]],
+  ['Others', [['open', 'orbit-website', 44, 'Bump next to 15.1', 'dependabot', 'done', 'Approved', '5d', [3, 3], ['deps']], ['open', 'control', 4996, 'Menubar: one height, sent once', 'mira', 'done', 'Approved', '6d', [120, 88], []]]],
+];
+const PRG = { open: T('pr'), merged: G('merge'), draft: G('prdraft') };
+const lampOf = st => st ? Bloom.lamp(st, { d: 8 }) : '';
+const inboxHead = `<div class="hy-vh">${seg(['Graph', 'Diff', 'PR'], 'PR')}<span class="sp"></span><span class="hy-soft">site-v2 · vs main</span></div>`;
+const mine = `<div class="s-sc-mine"><span class="s-sc-gl"><span data-pr="open">${PRG.open}</span>${lampOf('working')}</span><div><b><i>#48</i>Read the release size from the DMG</b><em>This thread · site-v2 → main · 2 of 3 checks</em></div><span class="s-sc-ia"><span><span class="hy-pn">+38</span> <span class="hy-mn">−12</span></span>${G('chev-r')}</span></div>`;
+const SEL = new Set([45, 4996]);
+const box = on => `<span class="s-sc-box"${on ? ' data-on' : ''}>${on ? TICK : ''}</span>`;
+const inboxRows = wide => INBOX.map(([g, rows]) => `<div class="s-sc-ig">${g}${Bloom.pearl({ n: rows.length, p: 16 })}</div>` + rows.map(([st, repo, n, t, who, ck, rv, age, [ad, rm], labels]) =>
+  `<div class="s-sc-ir"${wide && SEL.has(n) ? ' data-sel' : ''}>${wide ? box(SEL.has(n)) : ''}<span class="s-sc-gl"><span data-pr="${st}">${PRG[st]}</span>${lampOf(ck)}</span>`
+  + `<div><b><i>#${n}</i>${t}</b><em>${who} · ${repo} · ${rv}${wide ? labels.map(l => `<span class="s-sc-lab">${l}</span>`).join('') : ''}</em></div>`
+  + `<span class="s-sc-ia"><span><span class="hy-pn">+${ad}</span> <span class="hy-mn">−${rm}</span></span><span>${age}</span></span></div>`).join('')).join('');
+function inboxCompact() {
+  const controls = `<div class="s-sc-ic">${seg(['This repo', 'All'], 'All')}<span class="input s-sc-is">${T('search')}<span class="ph">Search, or label:bug</span></span><span class="s-sc-ib" data-on>${G('filter')}<i>1</i></span><span class="s-sc-ib">${G('sort')}</span></div>`;
+  return `<div class="pane hy-v s-sc-prv">${inboxHead}${mine}${controls}${inboxRows(false)}<div class="s-sc-gap"></div>${linkFoot}</div>`;
+}
+function inboxWide() {
+  const picks = [['State', 'Open'], ['Involves', 'Anyone'], ['Review', 'Any'], ['Checks', 'Any'], ['Author', 'Anyone'], ['Labels', 'Any'], ['Host', 'All']];
+  const bar = `<div class="s-sc-ic">${seg(['This repo', 'All projects'], 'All projects')}<span class="input s-sc-is">${T('search')}<span class="ph">Search, or label:bug</span></span><span class="s-sc-pk">${G('sort')}Updated${G('chev-d')}</span><span class="s-sc-ib">${G('reload')}</span></div>`
+    + `<div class="s-sc-ifb">${picks.map(([k, v]) => `<span class="s-sc-pk"><em>${k}</em>${v}${G('chev-d')}</span>`).join('')}</div>`;
+  const batch = `<div class="s-sc-batch">2 selected<span class="sp"></span><span class="pill ghost sm">Clear</span><span class="pill sm primary">Close</span></div>`;
+  return `<div class="pane hy-v s-sc-prv s-sc-prw">${inboxHead}${mine}${bar}${inboxRows(true)}<div class="s-sc-gap"></div>${batch}</div>`;
+}
+const wideWin = () => Hy.dWin()
+  .replace('data-w="1512"', 'data-w="1760"')
+  .replace('t3-d" data-region>', 't3-d s-sc-widepanel" data-region>')
+  .replace('<div class="t3d-panel">', '<div class="t3d-panel"><span class="s-sc-grip" aria-hidden="true"></span>')
+  .replace('<span class="d-loose"', `<span class="s-sc-tabmax" role="button" aria-label="Maximise">${G('max')}</span><span class="d-loose"`)
+  .replace(/<div class="hy-views">[\s\S]*<\/div><\/div><\/div><\/div><\/div>$/, `<div class="hy-views">${inboxWide()}</div></div></div></div></div>`);
 
 /* ---------- a page in D's centre ---------- */
 const sideOf = () => Hy.dWin().match(/<aside class="t3-side">[\s\S]*?<\/aside>/)[0];
@@ -423,6 +508,8 @@ Bloom.section('screens', { init(el) {
   const W = {
     pr: () => gitPanel(prView(), 860),
     'pr-none': () => gitPanel(prNone(), 420),
+    'pr-inbox': () => gitPanel(inboxCompact(), 640),
+    'pr-wide': wideWin,
     settings: () => page(settingsSide(), settingsMain()),
     usage: () => pageTall(usageSide(), usageCost(), 1290),
     'usage-limits': () => page(usageSide(), usageLimits()),

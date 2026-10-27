@@ -22,7 +22,7 @@ import {
   limitsNotice,
   paceOf,
   providersWithLimits,
-  remainingPercent,
+  usedPercent,
 } from "./usageLimits.ts";
 
 const now = Date.parse("2026-09-03T12:00:00.000Z");
@@ -877,12 +877,12 @@ describe("sameUsageLimitCommandCoverage", () => {
   });
 });
 
-describe("remainingPercent", () => {
-  it("inverts and clamps the reported usage", () => {
-    expect(remainingPercent(window)).toBe(60);
-    expect(remainingPercent({ ...window, usedPercent: 0 })).toBe(100);
-    expect(remainingPercent({ ...window, usedPercent: 100 })).toBe(0);
-    expect(remainingPercent({ ...window, usedPercent: 33.4 })).toBe(67);
+describe("usedPercent", () => {
+  it("rounds and clamps the reported usage", () => {
+    expect(usedPercent(window)).toBe(40);
+    expect(usedPercent({ ...window, usedPercent: -3 })).toBe(0);
+    expect(usedPercent({ ...window, usedPercent: 140 })).toBe(100);
+    expect(usedPercent({ ...window, usedPercent: 33.6 })).toBe(34);
   });
 });
 

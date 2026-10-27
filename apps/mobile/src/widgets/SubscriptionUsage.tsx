@@ -88,7 +88,7 @@ function SubscriptionUsage(
             accessibilityElement("ignore"),
             accessibilityLabel(
               tightest
-                ? `${provider.name}, ${tightest.label}, ${tightest.remaining} percent remaining. ${tightest.reset}. ${provider.detail}.`
+                ? `${provider.name}, ${tightest.label}, ${100 - tightest.remaining} percent used. ${tightest.reset}. ${provider.detail}.`
                 : `${provider.name}. ${detail}.`,
             ),
           ]}
@@ -114,14 +114,14 @@ function SubscriptionUsage(
               ]}
             >
               {tightest
-                ? `${tightest.remaining}% left`
+                ? `${100 - tightest.remaining}% used`
                 : period !== "auto" && !stale && provider.windows.length > 0
                   ? "N/A"
                   : "Open Control"}
             </Text>
           </HStack>
           {tightest ? (
-            <ProgressView value={tightest.remaining / 100} modifiers={barModifiers} />
+            <ProgressView value={(100 - tightest.remaining) / 100} modifiers={barModifiers} />
           ) : null}
         </VStack>
       );
@@ -164,7 +164,7 @@ function SubscriptionUsage(
             modifiers={[
               accessibilityElement("ignore"),
               accessibilityLabel(
-                `${provider.name}, ${window.label}, ${window.remaining} percent remaining. ${window.reset}. ${provider.detail}.`,
+                `${provider.name}, ${window.label}, ${100 - window.remaining} percent used. ${window.reset}. ${provider.detail}.`,
               ),
             ]}
           >
@@ -196,10 +196,10 @@ function SubscriptionUsage(
                   ),
                 ]}
               >
-                {window.remaining}% left
+                {100 - window.remaining}% used
               </Text>
             </HStack>
-            <ProgressView value={window.remaining / 100} modifiers={barModifiers} />
+            <ProgressView value={(100 - window.remaining) / 100} modifiers={barModifiers} />
             {!compact ? (
               <Text modifiers={[font({ size: 10 }), foregroundStyle("secondary"), lineLimit(1)]}>
                 {window.reset}

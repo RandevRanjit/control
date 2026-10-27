@@ -53,12 +53,12 @@ function render(props: SubscriptionUsageSnapshot, colorScheme: "light" | "dark" 
 }
 
 describe("SubscriptionUsage Android layout", () => {
-  it("renders each window with its remaining share, bar, and reset", () => {
+  it("renders each window with its used share, bar, and reset", () => {
     const tree = render(snapshot);
-    expect(tree).toContain("5 hours · 60% left");
-    expect(tree).toContain('"progress":0.6');
+    expect(tree).toContain("5 hours · 40% used");
+    expect(tree).toContain('"progress":0.4');
     expect(tree).toContain("Next reset Sep 5, 5:00 PM");
-    expect(tree).toContain('"progress":0.08');
+    expect(tree).toContain('"progress":0.92');
     expect(tree).toContain('"color":"dark-error"');
     expect(tree).toContain("As of ");
   });
@@ -80,7 +80,7 @@ describe("SubscriptionUsage Android layout", () => {
 
   it("keeps quotas without an expiry deadline visible", () => {
     const tree = render({ ...snapshot, providers: [{ ...provider, expiresAt: 0 }] });
-    expect(tree).toContain("5 hours · 60% left");
+    expect(tree).toContain("5 hours · 40% used");
     expect(tree).not.toContain("Open Control to refresh");
   });
 

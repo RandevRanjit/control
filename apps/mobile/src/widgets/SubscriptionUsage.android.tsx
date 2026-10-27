@@ -77,11 +77,11 @@ export function SubscriptionUsage(props: SubscriptionUsageProps, environment: Wi
                       maxLines={1}
                       style={{ fontSize: 11 }}
                     >
-                      {`${window.label} · ${window.remaining}% left`}
+                      {`${window.label} · ${100 - window.remaining}% used`}
                     </Text>
                     <Column modifiers={[fillMaxWidth(), padding(0, 3, 0, 3)]}>
                       <LinearProgressIndicator
-                        progress={window.remaining / 100}
+                        progress={(100 - window.remaining) / 100}
                         color={low ? colors.error : colors.primary}
                         trackColor={colors.surfaceVariant}
                         modifiers={[fillMaxWidth(), height(6)]}

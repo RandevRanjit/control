@@ -8,7 +8,7 @@ import {
   collectLimitPools,
   formatDuration,
   formatResetsIn,
-  remainingPercent,
+  usedPercent,
   type LimitAccount,
   type LimitPoolWindow,
 } from "@control/shared/usageLimits";
@@ -35,13 +35,13 @@ function accountName(account: LimitAccount) {
   return `${local[0] ?? ""}${domain[0] ?? ""}`.toUpperCase() || "Account";
 }
 
-/** The spent share comes back at reset. SVG keeps the hatching static on both platforms. */
+/** The used share comes back at reset. SVG keeps the hatching static on both platforms. */
 function AccountSegment({
-  remaining,
+  used,
   color,
   pending,
 }: {
-  readonly remaining: number;
+  readonly used: number;
   readonly color: string;
   readonly pending: boolean;
 }) {
@@ -53,15 +53,8 @@ function AccountSegment({
           <Path d="M-1 1L1 -1M0 6L6 0M5 7L7 5" stroke={color} strokeWidth={1} opacity={0.22} />
         </Pattern>
       </Defs>
-      {pending ? (
-        <Rect
-          x={`${remaining}%`}
-          width={`${100 - remaining}%`}
-          height="100%"
-          fill={`url(#${patternId})`}
-        />
-      ) : null}
-      <Rect width={`${remaining}%`} height="100%" fill={color} opacity={0.35} />
+      <Rect width={`${used}%`} height="100%" fill={color} opacity={0.35} />
+      {pending ? <Rect width={`${used}%`} height="100%" fill={`url(#${patternId})`} /> : null}
     </Svg>
   );
 }
@@ -100,9 +93,9 @@ function PoolWindowCard({
           <Text className="text-sm font-control-medium text-foreground">{pool.label}</Text>
           <View className="flex-row items-baseline gap-1.5">
             <Text className="text-3xl font-control-bold tabular-nums text-foreground">
-              {pool.remainingPercent}%
+              {pool.usedPercent}%
             </Text>
-            <Text className="text-sm text-foreground-muted">left</Text>
+            <Text className="text-sm text-foreground-muted">used</Text>
           </View>
         </View>
         {pool.pace ? (
@@ -122,13 +115,13 @@ function PoolWindowCard({
             <Pressable
               key={account.key}
               accessibilityRole="button"
-              accessibilityLabel={`Segment ${index + 1}, ${accountName(account)}, ${remainingPercent(window)}% left`}
+              accessibilityLabel={`Segment ${index + 1}, ${accountName(account)}, ${usedPercent(window)}% used`}
               accessibilityHint="Show account details"
               onPress={() => openAccount(account)}
               className="h-7 min-w-0 flex-1 overflow-hidden rounded-md bg-subtle"
             >
               <AccountSegment
-                remaining={remainingPercent(window)}
+                used={usedPercent(window)}
                 color={color}
                 pending={Boolean(window.resetsAt)}
               />
@@ -150,7 +143,7 @@ function PoolWindowCard({
             <Pressable
               key={account.key}
               accessibilityRole="button"
-              accessibilityLabel={`Segment ${index + 1}, ${accountName(account)}, ${remainingPercent(window)}% left${resetsIn ? `, ${resetsIn}` : ""}${credits ? `, ${credits} reset credits banked` : ""}`}
+              accessibilityLabel={`Segment ${index + 1}, ${accountName(account)}, ${usedPercent(window)}% used${resetsIn ? `, ${resetsIn}` : ""}${credits ? `, ${credits} reset credits banked` : ""}`}
               accessibilityHint="Show account details"
               onPress={() => openAccount(account)}
               className="min-h-[44px] flex-row items-center gap-2 active:opacity-60"
@@ -167,7 +160,7 @@ function PoolWindowCard({
                 {accountName(account)}
               </Text>
               <Text className="text-sm font-control-medium tabular-nums text-foreground">
-                {remainingPercent(window)}%
+                {usedPercent(window)}%
               </Text>
               <View className="flex-row items-center gap-1">
                 {resetsIn ? (
@@ -356,7 +349,7 @@ export function UsageLimitAccountScreen({ route }: AccountScreenProps) {
             <View className="gap-3 rounded-[24px] border-continuous bg-grouped-card p-4">
               <Text className="text-sm font-control-medium text-foreground">{window.label}</Text>
               <Text className="text-3xl font-control-bold tabular-nums text-foreground">
-                {remainingPercent(window)}% left
+                {usedPercent(window)}% used
               </Text>
               {window.resetsAt ? (
                 <Text selectable className="text-sm text-foreground-muted">

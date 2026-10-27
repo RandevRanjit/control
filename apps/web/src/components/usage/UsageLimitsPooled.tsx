@@ -8,7 +8,7 @@ import {
   type LimitPool,
   type LimitPoolMember,
   type LimitPoolWindow,
-  remainingPercent,
+  usedPercent,
 } from "@control/shared/usageLimits";
 import { AlertTriangleIcon, ExternalLinkIcon, TicketIcon } from "lucide-react";
 import { type ReactNode, useState } from "react";
@@ -148,7 +148,7 @@ function SegmentPopover({
   readonly onRedeem: () => void;
 }) {
   const timestampFormat = usePrimarySettings((settings) => settings.timestampFormat);
-  const remaining = remainingPercent(window);
+  const used = usedPercent(window);
   const resetsIn = formatResetsIn(window, now);
   const where =
     account.environments.length > 0
@@ -182,7 +182,7 @@ function SegmentPopover({
         ) : null}
       </div>
       <div className="flex flex-col gap-1 border-t border-border/60 pt-2.5">
-        <Row label="Left">{remaining}%</Row>
+        <Row label="Used">{used}%</Row>
         {window.resetsAt ? (
           <Row label="Resets">
             {formatUpcomingTimestamp(window.resetsAt, timestampFormat, now)}
@@ -237,7 +237,7 @@ function PoolSegment({
   readonly showAccountName: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const remaining = remainingPercent(window);
+  const used = usedPercent(window);
   const resetsIn = formatResetsIn(window, now);
   const credits = account.limits.resetCredits?.availableCount ?? 0;
   return (
@@ -248,7 +248,7 @@ function PoolSegment({
           <button
             type="button"
             style={{ gridColumn: index, gridRow: 1 }}
-            aria-label={`${account.displayName ?? (account.email ? accountInitials(account.email) : account.driver)}: ${remaining}% left${resetsIn ? `, ${resetsIn}` : ""}${credits ? `, ${credits} reset ${credits === 1 ? "credit" : "credits"} banked` : ""}`}
+            aria-label={`${account.displayName ?? (account.email ? accountInitials(account.email) : account.driver)}: ${used}% used${resetsIn ? `, ${resetsIn}` : ""}${credits ? `, ${credits} reset ${credits === 1 ? "credit" : "credits"} banked` : ""}`}
             className="relative h-5 min-w-0 cursor-pointer overflow-hidden rounded-md bg-muted text-start outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[popup-open]:ring-1 data-[popup-open]:ring-border @2xl/pool:h-8"
           />
         }
@@ -257,15 +257,15 @@ function PoolSegment({
         <div
           aria-hidden
           className="absolute inset-y-0 left-0 rounded-md opacity-35"
-          style={{ width: `${remaining}%`, backgroundColor: color }}
+          style={{ width: `${used}%`, backgroundColor: color }}
         />
-        {/* The spent share is hatched, not blank: it is what the countdown restores. */}
-        {remaining < 100 && reset ? (
+        {/* The used share is hatched too: it is what the countdown restores. */}
+        {used > 0 && reset ? (
           <div
             aria-hidden
-            className="absolute inset-y-0 right-0 opacity-20"
+            className="absolute inset-y-0 left-0 opacity-20"
             style={{
-              width: `${100 - remaining}%`,
+              width: `${used}%`,
               backgroundImage: `repeating-linear-gradient(135deg, ${color} 0 1px, transparent 1px 5px)`,
             }}
           />
@@ -283,7 +283,7 @@ function PoolSegment({
               className="min-w-0 truncate font-medium text-foreground"
             />
           ) : null}
-          <span className="shrink-0 font-semibold text-foreground tabular-nums">{remaining}%</span>
+          <span className="shrink-0 font-semibold text-foreground tabular-nums">{used}%</span>
           {/* Countdown and badge get their own plate: fill and hatching run under them otherwise. */}
           <span className="ms-auto flex shrink-0 items-center gap-1.5 rounded-sm bg-background/85 px-1.5 py-0.5 text-2xs text-foreground tabular-nums">
             {resetsIn?.replace("resets in ", "↻ ") ?? ""}
@@ -347,7 +347,7 @@ function LegendRow({
   readonly now: number;
   readonly index: number;
 }) {
-  const remaining = remainingPercent(window);
+  const used = usedPercent(window);
   const resetsIn = formatResetsIn(window, now);
   const credits = account.limits.resetCredits?.availableCount ?? 0;
   return (
@@ -366,7 +366,7 @@ function LegendRow({
         <span className="relative">{index}</span>
       </span>
       <AccountName account={account} className="min-w-0 truncate font-medium text-foreground" />
-      <span className="shrink-0 font-semibold text-foreground tabular-nums">{remaining}%</span>
+      <span className="shrink-0 font-semibold text-foreground tabular-nums">{used}%</span>
       <span className="ms-auto flex shrink-0 items-center gap-1.5 text-2xs text-muted-foreground tabular-nums">
         {resetsIn?.replace("resets in ", "↻ ") ?? ""}
         {credits ? (
@@ -502,9 +502,9 @@ function PoolWindowCard({
         <span className="text-sm font-medium text-foreground">{pool.label}</span>
         <span className="flex items-baseline gap-2">
           <span className="text-3xl font-semibold text-foreground tabular-nums">
-            {pool.remainingPercent}%
+            {pool.usedPercent}%
           </span>
-          <span className="text-sm text-muted-foreground">left</span>
+          <span className="text-sm text-muted-foreground">used</span>
           {pool.pace ? <PaceIcon pace={pool.pace} /> : null}
         </span>
         {nextRefill && pool.columns.length > 1 ? (

@@ -4,18 +4,15 @@ import { isElectron } from "~/env";
 import { cn } from "~/lib/utils";
 
 import { Skeleton } from "./ui/skeleton";
+import { FILE_SURFACE_SUBHEADER_CLASS } from "./files/fileSurfaceChrome";
 
 export type DiffPanelMode = "inline" | "sheet" | "sidebar" | "embedded";
 
 function getDiffPanelHeaderRowClassName(mode: DiffPanelMode) {
   const shouldUseDragRegion = isElectron && mode !== "sheet" && mode !== "embedded";
-  return cn(
-    "flex items-center justify-between gap-2",
-    mode === "embedded" ? "px-2" : "px-4",
-    shouldUseDragRegion
-      ? "drag-region h-[var(--workspace-topbar-height)] border-b border-border wco:pr-(--workspace-native-controls-inset)"
-      : "flex h-10 min-h-10 shrink-0 items-center border-b border-border/60 bg-background in-data-[preview-panel-mode=inline]:mb-3 in-data-[preview-panel-mode=inline]:h-7 in-data-[preview-panel-mode=inline]:min-h-7 in-data-[preview-panel-mode=inline]:border-b-transparent",
-  );
+  return shouldUseDragRegion
+    ? "drag-region flex h-[var(--workspace-topbar-height)] items-center justify-between gap-2 border-b border-border px-4 wco:pr-(--workspace-native-controls-inset)"
+    : cn(FILE_SURFACE_SUBHEADER_CLASS, "justify-between");
 }
 
 export function DiffPanelShell(props: {

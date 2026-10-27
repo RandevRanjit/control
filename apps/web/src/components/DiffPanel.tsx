@@ -8,17 +8,8 @@ import {
 } from "@control/client-runtime/state/runtime";
 import { safeErrorLogAttributes } from "@control/client-runtime/errors";
 import type { ScopedThreadRef, RunId } from "@control/contracts";
-import {
-  ArrowRightIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  Columns2Icon,
-  FolderTreeIcon,
-  PilcrowIcon,
-  Rows3Icon,
-  TextWrapIcon,
-} from "lucide-react";
-import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown } from "lucide";
+import { ArrowRightIcon, CheckIcon, ChevronDownIcon, EllipsisIcon } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide";
 import * as Schema from "effect/Schema";
 import * as DateTime from "effect/DateTime";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -58,7 +49,6 @@ import { DiffFileTree } from "./diffs/DiffFileTree";
 import { diffFileTreeEntries } from "./diffs/diffFileTree.logic";
 import { Button } from "./ui/button";
 import { MorphIcon } from "~/components/MorphIcon";
-import { ToggleGroup, Toggle } from "./ui/toggle-group";
 import { Switch } from "./ui/switch";
 import {
   Combobox,
@@ -71,9 +61,12 @@ import {
 } from "./ui/combobox";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -952,110 +945,68 @@ export default function DiffPanel({
             </TooltipPopup>
           </Tooltip>
         )}
-        {diffFileKeys.length > 0 && (
+        {/* Design §22: the head keeps its counts and refresh; the view's options sit in one menu. */}
+        <DropdownMenu>
           <Tooltip>
             <TooltipTrigger
               render={
-                <Button
-                  type="button"
-                  size="icon-sm"
-                  variant="ghost"
-                  aria-label={allDiffFilesCollapsed ? "Expand all files" : "Collapse all files"}
-                  onClick={toggleDiffFileCollapse}
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="ghost"
+                      aria-label="Diff options"
+                    />
+                  }
                 />
               }
             >
-              <MorphIcon
-                className="size-3.5"
-                icon={allDiffFilesCollapsed ? ChevronsUpDown : ChevronsDownUp}
-              />
+              <EllipsisIcon className="size-3.5" />
             </TooltipTrigger>
-            <TooltipPopup side="top">
-              {allDiffFilesCollapsed ? "Expand all files" : "Collapse all files"}
-            </TooltipPopup>
+            <TooltipPopup side="top">Diff options</TooltipPopup>
           </Tooltip>
-        )}
-        <ToggleGroup
-          aria-label="Diff layout"
-          className="shrink-0"
-          variant="segmented"
-          value={[diffLayout]}
-          onValueChange={(value) => {
-            const next = value[0];
-            if (next === "stacked" || next === "split") {
-              updateClientSettings({ diffLayout: next });
-            }
-          }}
-        >
-          <Toggle aria-label="Stacked diff view" value="stacked">
-            <Rows3Icon className="size-3.5" />
-          </Toggle>
-          <Toggle aria-label="Split diff view" value="split">
-            <Columns2Icon className="size-3.5" />
-          </Toggle>
-        </ToggleGroup>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Toggle
-                aria-label={wordWrap ? "Disable diff line wrapping" : "Enable diff line wrapping"}
-                variant="ghost"
-                size="sm"
-                pressed={wordWrap}
-                onPressedChange={(pressed) => {
-                  setWordWrap(Boolean(pressed));
-                }}
-              />
-            }
-          >
-            <TextWrapIcon className="size-3.5" />
-          </TooltipTrigger>
-          <TooltipPopup side="top">
-            {wordWrap ? "Disable line wrapping" : "Enable line wrapping"}
-          </TooltipPopup>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Toggle
-                aria-label={
-                  diffIgnoreWhitespace ? "Show whitespace changes" : "Hide whitespace changes"
+          <DropdownMenuContent align="end">
+            <DropdownMenuRadioGroup
+              value={diffLayout}
+              onValueChange={(next) => {
+                if (next === "stacked" || next === "split") {
+                  updateClientSettings({ diffLayout: next });
                 }
-                variant="ghost"
-                size="sm"
-                pressed={diffIgnoreWhitespace}
-                onPressedChange={(pressed) => {
-                  setDiffIgnoreWhitespace(Boolean(pressed));
-                }}
-              />
-            }
-          >
-            <PilcrowIcon className="size-3.5" />
-          </TooltipTrigger>
-          <TooltipPopup side="top">
-            {diffIgnoreWhitespace ? "Show whitespace changes" : "Hide whitespace changes"}
-          </TooltipPopup>
-        </Tooltip>
-        {diffFileKeys.length > 0 && (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Toggle
-                  aria-label={fileTreeOpen ? "Hide file tree" : "Show file tree"}
-                  variant="ghost"
-                  size="sm"
-                  pressed={fileTreeOpen}
-                  onPressedChange={(pressed) => setFileTreeOpen(Boolean(pressed))}
-                />
-              }
+              }}
             >
-              <FolderTreeIcon className="size-3.5" />
-            </TooltipTrigger>
-            <TooltipPopup side="top">
-              {fileTreeOpen ? "Hide file tree" : "Show file tree"}
-            </TooltipPopup>
-          </Tooltip>
-        )}
+              <DropdownMenuRadioItem value="stacked">Stacked</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="split">Side by side</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem
+              checked={wordWrap}
+              onCheckedChange={(checked) => setWordWrap(Boolean(checked))}
+            >
+              Wrap lines
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={diffIgnoreWhitespace}
+              onCheckedChange={(checked) => setDiffIgnoreWhitespace(Boolean(checked))}
+            >
+              Hide whitespace changes
+            </DropdownMenuCheckboxItem>
+            {diffFileKeys.length > 0 ? (
+              <>
+                <DropdownMenuCheckboxItem
+                  checked={fileTreeOpen}
+                  onCheckedChange={(checked) => setFileTreeOpen(Boolean(checked))}
+                >
+                  File tree
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={toggleDiffFileCollapse}>
+                  {allDiffFilesCollapsed ? "Expand all files" : "Collapse all files"}
+                </DropdownMenuItem>
+              </>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </>
   );

@@ -1493,49 +1493,45 @@ export default function ThreadTerminalDrawer({
   // The terminal actions sit in their own strip, above the canvas or atop the sidebar, so
   // they never cover terminal output.
   const terminalActionStrip = (
-    <div className="flex h-[22px] shrink-0 items-stretch justify-end border-b border-border/70">
-      <div className="inline-flex h-full items-stretch">
-        <TerminalActionButton
-          disabled={!canOperateTerminal}
-          className={`inline-flex h-full items-center px-1 text-foreground/90 transition-colors ${
-            hasReachedSplitLimit
-              ? "cursor-not-allowed opacity-64 hover:bg-transparent"
-              : "hover:bg-accent/70"
-          }`}
-          onClick={onSplitTerminalAction}
-          label={splitTerminalActionLabel}
-        >
-          <SquareSplitHorizontal className="size-3.25" />
-        </TerminalActionButton>
-        <TerminalActionButton
-          disabled={!canOperateTerminal}
-          className={`inline-flex h-full items-center border-l border-border/70 px-1 text-foreground/90 transition-colors ${
-            hasReachedSplitLimit
-              ? "cursor-not-allowed opacity-64 hover:bg-transparent"
-              : "hover:bg-accent/70"
-          }`}
-          onClick={onSplitTerminalVerticalAction}
-          label={splitTerminalVerticalActionLabel}
-        >
-          <SquareSplitVertical className="size-3.25" />
-        </TerminalActionButton>
-        <TerminalActionButton
-          disabled={!canOperateTerminal}
-          className="inline-flex h-full items-center border-l border-border/70 px-1 text-foreground/90 transition-colors hover:bg-accent/70"
-          onClick={onNewTerminalAction}
-          label={newTerminalActionLabel}
-        >
-          <Plus className="size-3.25" />
-        </TerminalActionButton>
-        <TerminalActionButton
-          disabled={!canOperateTerminal}
-          className="inline-flex h-full items-center border-l border-border/70 px-1 text-foreground/90 transition-colors hover:bg-accent/70"
-          onClick={() => confirmCloseTerminal(resolvedActiveTerminalId)}
-          label={closeTerminalActionLabel}
-        >
-          <Trash2 className="size-3.25" />
-        </TerminalActionButton>
-      </div>
+    <div className={cn("hy-vh justify-end", !isPanel && "h-[26px]")}>
+      <TerminalActionButton
+        disabled={!canOperateTerminal}
+        className={cn(
+          "hy-ib hover:bg-accent/70 hover:text-foreground",
+          hasReachedSplitLimit && "cursor-not-allowed opacity-64 hover:bg-transparent",
+        )}
+        onClick={onSplitTerminalAction}
+        label={splitTerminalActionLabel}
+      >
+        <SquareSplitHorizontal className="size-3.5" />
+      </TerminalActionButton>
+      <TerminalActionButton
+        disabled={!canOperateTerminal}
+        className={cn(
+          "hy-ib hover:bg-accent/70 hover:text-foreground",
+          hasReachedSplitLimit && "cursor-not-allowed opacity-64 hover:bg-transparent",
+        )}
+        onClick={onSplitTerminalVerticalAction}
+        label={splitTerminalVerticalActionLabel}
+      >
+        <SquareSplitVertical className="size-3.5" />
+      </TerminalActionButton>
+      <TerminalActionButton
+        disabled={!canOperateTerminal}
+        className="hy-ib hover:bg-accent/70 hover:text-foreground"
+        onClick={onNewTerminalAction}
+        label={newTerminalActionLabel}
+      >
+        <Plus className="size-3.5" />
+      </TerminalActionButton>
+      <TerminalActionButton
+        disabled={!canOperateTerminal}
+        className="hy-ib hover:bg-accent/70 hover:text-foreground"
+        onClick={() => confirmCloseTerminal(resolvedActiveTerminalId)}
+        label={closeTerminalActionLabel}
+      >
+        <Trash2 className="size-3.5" />
+      </TerminalActionButton>
     </div>
   );
 

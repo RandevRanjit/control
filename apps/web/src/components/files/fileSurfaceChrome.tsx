@@ -13,8 +13,8 @@ import { cn } from "~/lib/utils";
  * left, icon-only actions on the right. Attachments and workspace files must
  * not grow separate chrome.
  */
-export const FILE_SURFACE_SUBHEADER_CLASS =
-  "flex h-10 min-h-10 shrink-0 items-center gap-2 border-b border-border/60 bg-background px-3 in-data-[preview-panel-mode=inline]:mb-3 in-data-[preview-panel-mode=inline]:h-7 in-data-[preview-panel-mode=inline]:min-h-7 in-data-[preview-panel-mode=inline]:border-b-transparent";
+/** Every panel view's head (design §5, §22): D's 34 px head, no rule under it. index.css trims it inline. */
+export const FILE_SURFACE_SUBHEADER_CLASS = "hy-vh min-w-0";
 
 export const FILE_LINK_REVEAL_ATTRIBUTE = "data-file-link-reveal";
 

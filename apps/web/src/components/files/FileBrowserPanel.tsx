@@ -30,6 +30,7 @@ import { areAllDirectoriesExpanded, setAllDirectoriesExpanded } from "./fileTree
 import { buildFileTreePathUpdates } from "./fileTreePathReconciliation";
 import { useDirectoryEntries } from "./useDirectoryEntries";
 import { useProjectPathSearch } from "~/state/queries";
+import { FILE_SURFACE_SUBHEADER_CLASS } from "./fileSurfaceChrome";
 
 interface FileBrowserPanelProps {
   environmentId: EnvironmentId;
@@ -84,7 +85,7 @@ function FileSearchField(props: {
   value: string;
 }) {
   return (
-    <InputGroup variant="ghost" className="h-7 min-w-0 flex-1">
+    <InputGroup variant="well" className="h-6 min-w-0 flex-1">
       <InputGroupInput
         type="search"
         name={props.name}
@@ -507,10 +508,7 @@ export default function FileBrowserPanel({
       className="flex min-h-0 min-w-0 flex-1 flex-col bg-background"
       data-file-browser-panel={`${environmentId}:${cwd}`}
     >
-      <div
-        className="flex h-10 min-h-10 shrink-0 items-center gap-1 border-b border-border/60 bg-background px-2 in-data-[preview-panel-mode=inline]:mb-1 in-data-[preview-panel-mode=inline]:h-9 in-data-[preview-panel-mode=inline]:min-h-9 in-data-[preview-panel-mode=inline]:border-b-transparent"
-        data-surface-subheader
-      >
+      <div className={FILE_SURFACE_SUBHEADER_CLASS} data-surface-subheader>
         <Tooltip>
           <TooltipTrigger
             render={

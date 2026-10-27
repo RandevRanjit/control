@@ -70,7 +70,19 @@ describe("theme failure handling", () => {
     }
   });
 
-  it("reads the persisted Control Chat theme preference", async () => {
+  it("reads a persisted built-in theme preference", async () => {
+    vi.stubGlobal("window", {
+      localStorage: createStorage({
+        getItem: () => "ocean",
+      }),
+    });
+
+    const { readThemePreference } = await import("./useTheme");
+
+    expect(readThemePreference()).toBe("ocean");
+  });
+
+  it("reads a saved Chat theme, no longer offered, as the standard look", async () => {
     vi.stubGlobal("window", {
       localStorage: createStorage({
         getItem: () => "control-chat",
@@ -79,7 +91,7 @@ describe("theme failure handling", () => {
 
     const { readThemePreference } = await import("./useTheme");
 
-    expect(readThemePreference()).toBe("control-chat");
+    expect(readThemePreference()).toBe("system");
   });
 
   it("falls back during initial theme application and logs only safe attributes", async () => {

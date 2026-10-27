@@ -1,6 +1,5 @@
 import {
   BUILT_IN_THEMES,
-  CONTROL_CHAT_THEME,
   CONTROL_LIGHT_THEME_COLORS,
   CONTROL_DARK_THEME_COLORS,
   getThemeColorsForAppearance,
@@ -349,7 +348,7 @@ export function createMobileThemeVariables(
 }
 
 export const MOBILE_THEME_VARIABLE_NAMES = Object.keys(
-  createMobileThemeVariables(CONTROL_CHAT_THEME.colors, "light"),
+  createMobileThemeVariables(CONTROL_LIGHT_THEME_COLORS, "light"),
 ) as ReadonlyArray<MobileThemeVariable>;
 
 export function getMobileThemeColors(
@@ -359,7 +358,8 @@ export function getMobileThemeColors(
   if (themeId === DEFAULT_MOBILE_THEME_ID) {
     return appearance === "dark" ? CONTROL_DARK_THEME_COLORS : CONTROL_LIGHT_THEME_COLORS;
   }
-  const theme = BUILT_IN_THEMES.find((candidate) => candidate.id === themeId) ?? CONTROL_CHAT_THEME;
+  const theme = BUILT_IN_THEMES.find((candidate) => candidate.id === themeId);
+  if (!theme) return appearance === "dark" ? CONTROL_DARK_THEME_COLORS : CONTROL_LIGHT_THEME_COLORS;
   return getThemeColorsForAppearance(theme, appearance) ?? theme.colors;
 }
 
@@ -402,7 +402,8 @@ export function getMobileThemePreviewColors(
 ): ThemePreviewColors {
   if (themeId === DEFAULT_MOBILE_THEME_ID || themeId === "material-you")
     return STANDARD_THEME_PREVIEW_COLORS[appearance];
-  const theme = BUILT_IN_THEMES.find((candidate) => candidate.id === themeId) ?? CONTROL_CHAT_THEME;
+  const theme = BUILT_IN_THEMES.find((candidate) => candidate.id === themeId);
+  if (!theme) return STANDARD_THEME_PREVIEW_COLORS[appearance];
   const colors = getThemeColorsForAppearance(theme, appearance) ?? theme.colors;
   return {
     canvas: themeColorToNativeColor(colors.canvas),

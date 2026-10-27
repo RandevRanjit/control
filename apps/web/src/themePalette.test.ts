@@ -8,7 +8,6 @@ import {
   getThemeDefinition,
   getThemeModes,
   getThemePreviewSidebarArtwork,
-  getThemePreferenceMode,
   isKnownThemePreference,
   getCustomThemes,
   getStandardThemeColors,
@@ -27,7 +26,6 @@ import {
   subscribeToThemePreview,
   subscribeToCustomThemes,
   themeAllowsSidebarArtwork,
-  CONTROL_CHAT_THEME,
   EMBER_THEME,
   GROVE_THEME,
   IRIS_THEME,
@@ -299,14 +297,14 @@ describe("theme files", () => {
 
   it("canonicalizes the explicitly exported theme", () => {
     const serialized = serializeThemeFile({
-      ...CONTROL_CHAT_THEME,
-      colors: { ...CONTROL_CHAT_THEME.colors, accent: "hsl(263 70% 58%)" },
+      ...GROVE_THEME,
+      colors: { ...GROVE_THEME.colors, accent: "hsl(263 70% 58%)" },
     });
     expect(JSON.parse(serialized)).toMatchObject({
       version: THEME_FILE_VERSION,
-      id: CONTROL_CHAT_THEME.id,
-      name: CONTROL_CHAT_THEME.label,
-      appearance: "light",
+      id: GROVE_THEME.id,
+      name: GROVE_THEME.label,
+      appearance: GROVE_THEME.appearance,
       colors: { accent: canonical("hsl(263 70% 58%)") },
     });
   });
@@ -357,7 +355,7 @@ describe("theme files", () => {
       },
     });
 
-    applyThemeColorPreview(CONTROL_CHAT_THEME.colors, "light");
+    applyThemeColorPreview(GROVE_THEME.colors, "light");
     expect(getThemePreviewSidebarArtwork()).toBe(false);
     expect(listener).toHaveBeenCalledTimes(1);
 
@@ -386,63 +384,19 @@ describe("theme files", () => {
       canvas: canonical("#101827"),
       text: canonical("#eef5ff"),
     });
-    expect(getThemeModes(CONTROL_CHAT_THEME)).toEqual(["light", "dark"]);
-    expect(resolveThemeAppearance(CONTROL_CHAT_THEME.id, true, true)).toBe("dark");
-    expect(resolveDesktopTheme(CONTROL_CHAT_THEME.id, true)).toBe("system");
-    expect(resolveThemeAppearance(CONTROL_CHAT_THEME.id, false, false, "dark")).toBe("dark");
-    expect(resolveDesktopTheme(CONTROL_CHAT_THEME.id, false, "dark")).toBe("dark");
+    expect(getThemeModes(GROVE_THEME)).toEqual(["light", "dark"]);
+    expect(resolveThemeAppearance(GROVE_THEME.id, true, true)).toBe("dark");
+    expect(resolveDesktopTheme(GROVE_THEME.id, true)).toBe("system");
+    expect(resolveThemeAppearance(GROVE_THEME.id, false, false, "dark")).toBe("dark");
+    expect(resolveDesktopTheme(GROVE_THEME.id, false, "dark")).toBe("dark");
     expect(JSON.parse(serializeThemeFile(theme)).variants.dark).toMatchObject({
       canvas: canonical("#101827"),
       text: canonical("#eef5ff"),
     });
   });
 
-  it("keeps the Control Chat palette faithful and readable", () => {
-    expectThemeColors(CONTROL_CHAT_THEME.colors, {
-      canvas: "#fdf7fd",
-      chrome: "#fdf7fd",
-      toolbarBorder: "#efbdeb",
-      toolbarControl: "#f3e6f5",
-      toolbarControlHover: "#eccfe3",
-      surfaceRaised: "#fdfafd",
-      input: "#e7c1dc",
-      focus: "#db2777",
-      messageSurface: "#f7def2",
-      codeBackground: "#f5ecf9",
-      codeForeground: "#673c8b",
-      accentSurface: "#f3e6f5",
-      sidebar: "#f2e1f4",
-    });
-    expectThemeColors(CONTROL_CHAT_THEME.variants!.dark!, {
-      canvas: "#1f1a24",
-      chrome: "#1f1a24",
-      surface: "#29232d",
-      surfaceRaised: "#2c2631",
-      input: "#302029",
-      focus: "#db2777",
-      messageSurface: "#2b2431",
-      codeBackground: "#1f1a24",
-      sidebar: "#171018",
-      sidebarBorder: "#322028",
-    });
-
-    for (const mode of ["light", "dark"] as const) {
-      const colors = getThemeColorsForMode(CONTROL_CHAT_THEME, mode)!;
-      expect(contrastRatio(colors.text, colors.canvas)).toBeGreaterThanOrEqual(7);
-      expect(contrastRatio(colors.textMuted, colors.canvas)).toBeGreaterThanOrEqual(4.5);
-      expect(contrastRatio(colors.messageForeground, colors.messageSurface)).toBeGreaterThanOrEqual(
-        4.5,
-      );
-      expect(contrastRatio(colors.secondaryForeground, colors.secondary)).toBeGreaterThanOrEqual(
-        4.5,
-      );
-      expect(contrastRatio(colors.sidebarForeground, colors.sidebar)).toBeGreaterThanOrEqual(4.5);
-      expect(contrastRatio(colors.accentForeground, colors.accent)).toBeGreaterThanOrEqual(4.5);
-    }
-  });
-
   it("includes the dual-mode maintainer themes", () => {
-    for (const theme of [CONTROL_CHAT_THEME, GROVE_THEME, OCEAN_THEME, EMBER_THEME, IRIS_THEME]) {
+    for (const theme of [GROVE_THEME, OCEAN_THEME, EMBER_THEME, IRIS_THEME]) {
       expect(getThemeDefinition(theme.id)).toBe(theme);
       expect(getThemeModes(theme)).toEqual(["light", "dark"]);
       expect(theme.sidebarArtwork).toBe(true);
@@ -455,13 +409,11 @@ describe("theme files", () => {
         expect(colors).not.toBeNull();
         expect(contrastRatio(colors!.text, colors!.canvas)).toBeGreaterThanOrEqual(4.5);
         expect(contrastRatio(colors!.textMuted, colors!.canvas)).toBeGreaterThanOrEqual(4.5);
-        if (theme !== CONTROL_CHAT_THEME) {
-          expect(contrastRatio(colors!.textMuted, colors!.canvas)).toBeLessThan(5.5);
-          expect(contrastRatio(colors!.textMuted, colors!.canvas)).toBeCloseTo(
-            mode === "dark" ? 5.082 : 4.705,
-            1,
-          );
-        }
+        expect(contrastRatio(colors!.textMuted, colors!.canvas)).toBeLessThan(5.5);
+        expect(contrastRatio(colors!.textMuted, colors!.canvas)).toBeCloseTo(
+          mode === "dark" ? 5.082 : 4.705,
+          1,
+        );
         expect(contrastRatio(colors!.accentForeground, colors!.accent)).toBeGreaterThanOrEqual(4.5);
         expect(
           contrastRatio(colors!.toolbarControlForeground, colors!.toolbarControl),
@@ -1004,12 +956,14 @@ describe("stored theme preferences", () => {
     }
   });
 
-  it("resolves the legacy t3-chat-dark preference to dark Control Chat", () => {
-    expect(getThemeDefinition("t3-chat-dark")).toBe(CONTROL_CHAT_THEME);
-    expect(getThemePreferenceMode("t3-chat-dark")).toBe("dark");
-    expect(resolveThemeAppearance("t3-chat-dark", true, false)).toBe("dark");
-    expect(resolveDesktopTheme("t3-chat-dark", false)).toBe("dark");
-    expect(isKnownThemePreference("t3-chat-dark")).toBe(true);
+  it("reads a saved Chat theme as the standard look, since Chat is no longer offered", () => {
+    for (const saved of ["control-chat", "t3-chat", "t3-chat-dark"]) {
+      expect(getThemeDefinition(saved)).toBe(null);
+      expect(isKnownThemePreference(saved)).toBe(false);
+    }
+    expect(parseThemeHalves(JSON.stringify({ light: "control-chat", dark: "grove" }))).toEqual({
+      dark: GROVE_THEME.id,
+    });
   });
 
   it("resolves legacy t3-prefixed ids onto the renamed themes", () => {
@@ -1023,12 +977,6 @@ describe("stored theme preferences", () => {
       expect(isKnownThemePreference(legacy)).toBe(true);
       expect(canonicalThemePreference(legacy)).toBe(theme.id);
     }
-    // Chat was t3-chat until the rename; a stored preference moves to the new id.
-    expect(getThemeDefinition("t3-chat")).toBe(CONTROL_CHAT_THEME);
-    expect(isKnownThemePreference("t3-chat")).toBe(true);
-    expect(canonicalThemePreference("t3-chat")).toBe("control-chat");
-    // The dark-variant alias keeps its raw form: it still carries a mode hint.
-    expect(canonicalThemePreference("t3-chat-dark")).toBe("t3-chat-dark");
     // A stored mix that predates the rename resolves to the new ids.
     expect(parseThemeHalves(JSON.stringify({ light: "t3-ocean", dark: "t3-grove" }))).toEqual({
       light: OCEAN_THEME.id,
@@ -1037,7 +985,7 @@ describe("stored theme preferences", () => {
   });
 
   it("recognizes only preferences the runtime can render", () => {
-    for (const preference of ["light", "dark", "system", CONTROL_CHAT_THEME.id, GROVE_THEME.id]) {
+    for (const preference of ["light", "dark", "system", OCEAN_THEME.id, GROVE_THEME.id]) {
       expect(isKnownThemePreference(preference)).toBe(true);
     }
     expect(isKnownThemePreference(`${GROVE_THEME.id}:dark`)).toBe(false);
@@ -1087,8 +1035,8 @@ describe("stored theme preferences", () => {
 
 describe("singleAppearanceOf", () => {
   it("reports the only half a theme can claim, and null for a pair", () => {
-    const { variants: _pair, ...base } = CONTROL_CHAT_THEME;
+    const { variants: _pair, ...base } = GROVE_THEME;
     expect(singleAppearanceOf({ ...base, id: "x", appearance: "dark" })).toBe("dark");
-    expect(singleAppearanceOf(CONTROL_CHAT_THEME)).toBe(null);
+    expect(singleAppearanceOf(GROVE_THEME)).toBe(null);
   });
 });

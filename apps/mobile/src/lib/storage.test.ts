@@ -218,19 +218,19 @@ describe("mobile connection storage", () => {
     const themes = { lightThemeId: "material-you", darkThemeId: "ocean" } as const;
     await savePreferencesPatch(themes);
     await expect(loadPreferences()).resolves.toEqual(themes);
-    await savePreferencesPatch({ lightThemeId: "control-chat" });
-    await expect(loadPreferences()).resolves.toEqual({ ...themes, lightThemeId: "control-chat" });
+    await savePreferencesPatch({ lightThemeId: "iris" });
+    await expect(loadPreferences()).resolves.toEqual({ ...themes, lightThemeId: "iris" });
   });
 
   it.each([true, false])("drops the removed Android layout preference (%s)", async (enabled) => {
     mocks.setPreferencesJson(
       JSON.stringify({
         materialYouStyleLayoutEnabled: enabled,
-        lightThemeId: "control-chat",
+        lightThemeId: "iris",
       }),
       10,
     );
-    await expect(loadPreferences()).resolves.toEqual({ lightThemeId: "control-chat" });
+    await expect(loadPreferences()).resolves.toEqual({ lightThemeId: "iris" });
   });
 
   it("drops the removed theme transition preference", async () => {

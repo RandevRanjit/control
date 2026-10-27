@@ -240,8 +240,9 @@ describe("mobile themes", () => {
   it("normalizes persisted theme preferences", () => {
     expect(normalizeMobileThemeId("ocean")).toBe("ocean");
     expect(normalizeMobileThemeId("missing-theme")).toBe(DEFAULT_MOBILE_THEME_ID);
-    // Saved before the rename.
-    expect(normalizeMobileThemeId("t3-chat")).toBe("control-chat");
+    // Chat is no longer offered: a saved Chat theme, under either id, reads as the standard look.
+    expect(normalizeMobileThemeId("control-chat")).toBe(DEFAULT_MOBILE_THEME_ID);
+    expect(normalizeMobileThemeId("t3-chat")).toBe(DEFAULT_MOBILE_THEME_ID);
     expect(normalizeMobileThemeId("t3-code")).toBe("control");
     expect(normalizeMobileThemeMode("dark")).toBe("dark");
     expect(normalizeMobileThemeMode("sepia")).toBe("system");
@@ -262,11 +263,11 @@ describe("mobile themes", () => {
   });
 
   it("changes either theme without switching the active appearance", () => {
-    const themeIds = { light: "control-chat", dark: "grove" } as const;
+    const themeIds = { light: "ember", dark: "grove" } as const;
     expect(createMobileThemeSelectionPatch(themeIds, "light", "dark", "ocean")).toEqual({
-      lightThemeId: "control-chat",
+      lightThemeId: "ember",
       darkThemeId: "ocean",
-      themeId: "control-chat",
+      themeId: "ember",
     });
     expect(createMobileThemeSelectionPatch(themeIds, "light", "light", "iris")).toEqual({
       lightThemeId: "iris",

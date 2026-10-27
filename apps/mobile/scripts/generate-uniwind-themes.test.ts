@@ -27,8 +27,6 @@ describe("generate mobile Uniwind themes", () => {
 
   it("registers every custom palette for both appearances", () => {
     expect(customThemeNames).toEqual([
-      "control-chat-light",
-      "control-chat-dark",
       "grove-light",
       "grove-dark",
       "ocean-light",

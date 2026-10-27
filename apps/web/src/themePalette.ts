@@ -21,10 +21,9 @@ import {
   type ThemeVariants,
 } from "@control/shared/themePalettes";
 
-export { EMBER_THEME, GROVE_THEME, IRIS_THEME, OCEAN_THEME, CONTROL_CHAT_THEME, THEME_COLOR_ROLES };
+export { EMBER_THEME, GROVE_THEME, IRIS_THEME, OCEAN_THEME, THEME_COLOR_ROLES };
 export type { ThemeAppearance, ThemeColorRole, ThemeColors, ThemeDefinition, ThemeVariants };
 
-export const CONTROL_CHAT_THEME_ID = "control-chat" as const;
 const GROVE_THEME_ID = "grove" as const;
 export const OCEAN_THEME_ID = "ocean" as const;
 const EMBER_THEME_ID = "ember" as const;
@@ -34,8 +33,6 @@ export const CUSTOM_THEMES_STORAGE_KEY = "control:themes:v1";
 export const THEME_FOLLOW_SYSTEM_STORAGE_KEY = "control:theme-follow-system";
 export const THEME_APPEARANCE_MODE_STORAGE_KEY = "control:theme-appearance-mode";
 export const THEME_HALVES_STORAGE_KEY = "control:theme-halves:v1";
-
-const LEGACY_CHAT_DARK_THEME_ID = "t3-chat-dark";
 
 export const ThemePreference = Schema.String;
 export type ThemePreference = typeof ThemePreference.Type;
@@ -295,12 +292,10 @@ export function subscribeToCustomThemes(listener: () => void): () => void {
   };
 }
 
-// Earlier builds shipped every maintainer theme under a t3- prefix, and Chat
-// kept it (`t3-chat`) until the rename. Stored preferences and mixes with the
-// old ids stay readable through this alias table.
+// Earlier builds shipped every maintainer theme under a t3- prefix. Stored
+// preferences and mixes with the old ids stay readable through this alias table.
 const LEGACY_THEME_ID_ALIASES: Readonly<Record<string, string>> = {
   ...RENAMED_THEME_IDS,
-  [LEGACY_CHAT_DARK_THEME_ID]: CONTROL_CHAT_THEME_ID,
   "t3-grove": GROVE_THEME_ID,
   "t3-ocean": OCEAN_THEME_ID,
   "t3-ember": EMBER_THEME_ID,
@@ -311,30 +306,19 @@ function normalizeThemeId(themeId: string): string {
   return LEGACY_THEME_ID_ALIASES[themeId] ?? themeId;
 }
 
-/**
- * Map a stored preference onto the id the runtime applies, so selection state
- * matches the theme cards. The legacy dark-variant id stays as-is because it
- * still carries the appearance hint getThemePreferenceMode reads.
- */
+/** Map a stored preference onto the id the runtime applies, so selection state matches the theme cards. */
 export function canonicalThemePreference(theme: string): string {
-  return theme === LEGACY_CHAT_DARK_THEME_ID ? theme : normalizeThemeId(theme);
+  return normalizeThemeId(theme);
 }
 
 function themeIdFromPreference(theme: ThemePreference): string {
   return normalizeThemeId(theme);
 }
 
-// Older builds stored the dark Chat palette as a separate theme. Keep
-// those preferences readable while mapping them to the dark variant.
-function legacyThemeMode(theme: ThemePreference): ThemeAppearance | null {
-  return theme === LEGACY_CHAT_DARK_THEME_ID ? "dark" : null;
-}
-
 /**
  * The standard CONTROL look as a theme palette, for seeding a new theme when
  * no theme is installed. Distinct from {@link getDefaultThemeColors}, which
- * carries the flagship Chat palette used to fill roles omitted by theme
- * files.
+ * carries T3 Chat's palette used to fill roles omitted by theme files.
  */
 export function getStandardThemeColors(appearance: ThemeAppearance): ThemeColors {
   if (appearance === "dark") {
@@ -1118,8 +1102,6 @@ export function getThemeModes(theme: ThemeDefinition): ReadonlyArray<ThemeAppear
 export function getThemePreferenceMode(theme: ThemePreference): ThemeAppearance | null {
   if (theme === "system") return null;
   if (theme === "light" || theme === "dark") return theme;
-  const legacyMode = legacyThemeMode(theme);
-  if (legacyMode) return legacyMode;
   return getThemeDefinition(theme)?.appearance ?? null;
 }
 
@@ -1526,7 +1508,7 @@ export function applyThemePalette(theme: ThemePreference, appearance?: ThemeAppe
 
   if (palette) {
     root.dataset.themeId = palette.id;
-    const mode = appearance ?? legacyThemeMode(theme) ?? palette.appearance;
+    const mode = appearance ?? palette.appearance;
     const colors = getThemeColorsForMode(palette, mode) ?? palette.colors;
     for (const [role, value] of Object.entries(colors) as Array<[ThemeColorRole, string]>) {
       root.style.setProperty(APP_THEME_VARIABLES[role], value);

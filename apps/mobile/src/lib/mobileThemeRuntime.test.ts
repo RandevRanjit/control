@@ -19,7 +19,7 @@ describe("mobileThemeRuntime", () => {
   });
 
   it("maps custom palettes and appearances to registered themes", () => {
-    expect(getMobileUniwindThemeName("control-chat", "dark")).toBe("control-chat-dark");
+    expect(getMobileUniwindThemeName("grove", "dark")).toBe("grove-dark");
   });
 
   it("hydrates text variables and clears the native appearance override", () => {
@@ -28,7 +28,7 @@ describe("mobileThemeRuntime", () => {
       (operation) => operation.kind === "update-text-variables",
     );
 
-    expect(variableOperations).toHaveLength(12);
+    expect(variableOperations).toHaveLength(10);
     expect(variableOperations.at(-1)?.themeName).toBe("iris-dark");
     expect(operations.at(-1)).toEqual({
       kind: "set-appearance-mode",
@@ -68,7 +68,7 @@ describe("mobileThemeRuntime", () => {
       baseFontSize: 18,
     });
 
-    expect(operations).toHaveLength(12);
+    expect(operations).toHaveLength(10);
     expect(operations.every((operation) => operation.kind === "update-text-variables")).toBe(true);
     expect(operations.at(-1)).toMatchObject({
       kind: "update-text-variables",

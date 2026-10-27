@@ -1,11 +1,13 @@
-export const BUILT_IN_THEME_IDS = ["control-chat", "grove", "ocean", "ember", "iris"] as const;
+export const BUILT_IN_THEME_IDS = ["grove", "ocean", "ember", "iris"] as const;
 
 /** The standard CONTROL palette, kept separate from the optional built-in theme library. */
 export const MOBILE_DEFAULT_THEME_ID = "control";
 
 /** Ids saved before the rename, read as their new ones by every client. */
 export const RENAMED_THEME_IDS: Readonly<Record<string, string>> = {
-  "t3-chat": "control-chat",
+  // Chat was T3 Chat's brand theme and is no longer offered (owner, 27 Oct): its saves read as the standard look.
+  "t3-chat": MOBILE_DEFAULT_THEME_ID,
+  "control-chat": MOBILE_DEFAULT_THEME_ID,
   "t3-code": MOBILE_DEFAULT_THEME_ID,
 };
 
@@ -255,6 +257,7 @@ export const CONTROL_DARK_THEME_COLORS: ThemeColors = {
   terminalScrollbarHover: "#363636",
 };
 
+/** T3 Chat's palette. No longer a theme you can pick; it still fills the roles a theme file leaves out. */
 export const CONTROL_CHAT_THEME: ThemeDefinition = {
   id: "control-chat",
   label: "Control Chat",
@@ -891,7 +894,6 @@ export const IRIS_THEME: ThemeDefinition = {
 };
 
 export const BUILT_IN_THEMES: ReadonlyArray<ThemeDefinition> = [
-  CONTROL_CHAT_THEME,
   GROVE_THEME,
   OCEAN_THEME,
   EMBER_THEME,

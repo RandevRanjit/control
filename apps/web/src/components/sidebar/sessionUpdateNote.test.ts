@@ -19,7 +19,7 @@ describe("sessionUpdateNoteView", () => {
   it("reports queued chats once all are queued", () => {
     expect(
       sessionUpdateNoteView({ installedVersion: "2.1.300", outdated: 0, waiting: 1 }, false),
-    ).toEqual({ kind: "waiting", text: "1 chat update when idle" });
+    ).toEqual({ kind: "waiting", text: "1 thread update when idle" });
   });
 
   it("has nothing to press while a Claude install runs, whichever prompt started it", () => {

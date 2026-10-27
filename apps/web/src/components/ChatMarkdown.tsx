@@ -2464,7 +2464,7 @@ function areMarkdownFileLinkPropsEqual(
 
 function missingChipFileError(path: string): Error {
   return new Error(
-    `Nothing is at ${path} now, and no single file in this chat's folders matches it.`,
+    `Nothing is at ${path} now, and no single file in this thread's folders matches it.`,
   );
 }
 

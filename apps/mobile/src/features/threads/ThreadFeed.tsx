@@ -237,7 +237,7 @@ const MESSAGE_TIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
   minute: "2-digit",
 });
 function missingChipFileMessage(path: string): string {
-  return `Nothing is at ${path} now, and no single file in this chat's folders matches it.`;
+  return `Nothing is at ${path} now, and no single file in this thread's folders matches it.`;
 }
 
 function formatMessageTime(input: string): string {

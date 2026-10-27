@@ -220,9 +220,9 @@ export const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "chat-width",
-    title: "Chat width",
+    title: "Thread width",
     to: "/settings/appearance",
-    searchTerms: ["wide full width column layout messages composer monitor"],
+    searchTerms: ["chat wide full width column layout messages composer monitor"],
   },
   {
     id: "panel-animations",
@@ -294,9 +294,9 @@ export const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "auto-compact",
-    title: "Auto-compact idle chats",
+    title: "Auto-compact idle threads",
     to: "/settings/general",
-    searchTerms: ["compact context cache idle tokens summarise"],
+    searchTerms: ["chats compact context cache idle tokens summarise"],
   },
   {
     id: "auto-compact-idle-minutes",
@@ -326,9 +326,11 @@ export const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "usage-pace-notice",
-    title: "Pace notice to working chats",
+    title: "Pace notice to working threads",
     to: "/settings/general",
-    searchTerms: ["usage quota 5-hour window burn rate subagents workflows sequential linear"],
+    searchTerms: [
+      "chats usage quota 5-hour window burn rate subagents workflows sequential linear",
+    ],
   },
   {
     id: "working-shelf",

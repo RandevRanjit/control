@@ -520,7 +520,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       ...(settings.diffColorScheme !== DEFAULT_UNIFIED_SETTINGS.diffColorScheme
         ? ["Diff colors"]
         : []),
-      ...(settings.chatWidth !== DEFAULT_UNIFIED_SETTINGS.chatWidth ? ["Chat width"] : []),
+      ...(settings.chatWidth !== DEFAULT_UNIFIED_SETTINGS.chatWidth ? ["Thread width"] : []),
       ...(settings.panelAnimationDurationMs !== DEFAULT_UNIFIED_SETTINGS.panelAnimationDurationMs
         ? ["Panel animations"]
         : []),
@@ -561,7 +561,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       ...(settings.autoCompact !== DEFAULT_UNIFIED_SETTINGS.autoCompact ||
       settings.autoCompactIdleMinutes !== DEFAULT_UNIFIED_SETTINGS.autoCompactIdleMinutes ||
       settings.autoCompactMinTokens !== DEFAULT_UNIFIED_SETTINGS.autoCompactMinTokens
-        ? ["Auto-compact idle chats"]
+        ? ["Auto-compact idle threads"]
         : []),
       ...(settings.housekeepingHour !== DEFAULT_UNIFIED_SETTINGS.housekeepingHour
         ? ["Daily housekeeping"]
@@ -570,7 +570,7 @@ export function useSettingsRestore(onRestored?: () => void) {
         ? ["Auto-resume limited threads"]
         : []),
       ...(settings.usagePaceNotice !== DEFAULT_UNIFIED_SETTINGS.usagePaceNotice
-        ? ["Pace notice to working chats"]
+        ? ["Pace notice to working threads"]
         : []),
       ...(settings.snoozeLimitedThreads !== DEFAULT_UNIFIED_SETTINGS.snoozeLimitedThreads
         ? ["Snooze limited threads"]
@@ -1391,7 +1391,7 @@ export function AppearanceSettingsPanel() {
           resetAction={
             settings.chatWidth !== DEFAULT_UNIFIED_SETTINGS.chatWidth ? (
               <SettingResetButton
-                label="chat width"
+                label="thread width"
                 onClick={() => updateSettings({ chatWidth: DEFAULT_UNIFIED_SETTINGS.chatWidth })}
               />
             ) : null
@@ -1405,7 +1405,7 @@ export function AppearanceSettingsPanel() {
                     updateSettings({ chatWidth: value });
                 }}
               >
-                <SelectTrigger size="sm" className="w-full min-w-0" aria-label="Chat width">
+                <SelectTrigger size="sm" className="w-full min-w-0" aria-label="Thread width">
                   <SelectValue>{CHAT_WIDTH_LABELS[settings.chatWidth]}</SelectValue>
                 </SelectTrigger>
                 <SelectPopup align="end" alignItemWithTrigger={false}>
@@ -2360,14 +2360,14 @@ export function GeneralSettingsPanel() {
         <SettingsRow
           serverScoped
           {...searchableSetting("auto-compact")}
-          description="Compact a big chat once it has sat idle, while its prompt cache is still warm. A send during it waits until it finishes."
+          description="Compact a big thread once it has sat idle, while its prompt cache is still warm. A send during it waits until it finishes."
           settingKeys={["autoCompact"]}
           control={
             <ScopedSwitch
               settingKeys={["autoCompact"]}
               checked={settings.autoCompact}
               onCheckedChange={(checked) => updateSettings({ autoCompact: Boolean(checked) })}
-              aria-label="Auto-compact idle chats"
+              aria-label="Auto-compact idle threads"
             />
           }
         />
@@ -2377,7 +2377,7 @@ export function GeneralSettingsPanel() {
               serverScoped
               settingKeys={["autoCompactIdleMinutes"]}
               title={searchableSetting("auto-compact-idle-minutes").title}
-              description="How long a chat sits idle before it compacts. Past an hour its prompt cache has gone cold, so it compacts on your next send instead."
+              description="How long a thread sits idle before it compacts. Past an hour its prompt cache has gone cold, so it compacts on your next send instead."
               control={
                 <BoundedIntInput
                   value={settings.autoCompactIdleMinutes}
@@ -2392,7 +2392,7 @@ export function GeneralSettingsPanel() {
               serverScoped
               settingKeys={["autoCompactMinTokens"]}
               title={searchableSetting("auto-compact-min-tokens").title}
-              description="Only chats holding at least this many thousand tokens of context compact."
+              description="Only threads holding at least this many thousand tokens of context compact."
               control={
                 <BoundedIntInput
                   value={settings.autoCompactMinTokens / 1000}
@@ -2457,14 +2457,14 @@ export function GeneralSettingsPanel() {
         <SettingsRow
           serverScoped
           {...searchableSetting("usage-pace-notice")}
-          description="When the 5-hour window burns faster than it can last, tell chats working on that account to stop spawning subagents and workflows and continue sequentially. Chats already working alone carry on."
+          description="When the 5-hour window burns faster than it can last, tell threads working on that account to stop spawning subagents and workflows and continue sequentially. Threads already working alone carry on."
           settingKeys={["usagePaceNotice"]}
           control={
             <ScopedSwitch
               settingKeys={["usagePaceNotice"]}
               checked={settings.usagePaceNotice}
               onCheckedChange={(checked) => updateSettings({ usagePaceNotice: Boolean(checked) })}
-              aria-label="Pace notice to working chats"
+              aria-label="Pace notice to working threads"
             />
           }
         />
@@ -3279,7 +3279,7 @@ export function GeneralSettingsPanel() {
 
         <SettingsRow
           {...searchableSetting("delete-confirmation")}
-          description="Ask before deleting a thread and its chat history."
+          description="Ask before deleting a thread and its history."
           resetAction={
             settings.confirmThreadDelete !== DEFAULT_UNIFIED_SETTINGS.confirmThreadDelete ? (
               <SettingResetButton

@@ -114,7 +114,7 @@ function TerminalHeader(props: {
       subtitle={props.subtitle}
       onBack={props.onCloseTerminal}
       backInSplitView={{
-        accessibilityLabel: "Back to chat",
+        accessibilityLabel: "Back to thread",
         icon: "chevron.left",
       }}
       menus={

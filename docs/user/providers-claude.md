@@ -67,10 +67,10 @@ working. Wait for the reset, or stop the turn and continue later. The warning's
 timestamp shows when the displayed wait started.
 
 When an account's 5-hour window runs **Ahead of pace** in **Usage → Limits**,
-CONTROL tells every chat working on that account, once per window, to stop
-spawning subagents and continue sequentially. A chat already working alone in
-its thread carries on. Switch it off with **Pace notice to working chats** in
-**Settings → General**. Chats the limit stops continue at the reset; see
+CONTROL tells every thread working on that account, once per window, to stop
+spawning subagents and continue sequentially. A thread already working alone
+carries on. Switch it off with **Pace notice to working threads** in
+**Settings → General**. Threads the limit stops continue at the reset; see
 [limited threads](./thread-sidebar.md#inspect-agent-work).
 
 ## Skills
@@ -102,7 +102,7 @@ login credentials can conflict with the router token.
 
 Select the model you want in CONTROL. For an OpenRouter model outside the built-in
 list, open that Claude instance in **Settings > Providers** and add its full model
-ID with **Add custom model**. Then select it in the chat model picker.
+ID with **Add custom model**. Then select it in the model picker.
 `ANTHROPIC_DEFAULT_*_MODEL` variables map Claude Code aliases such as `sonnet`; they
 do not replace the explicit model ID selected in CONTROL. Custom models may have
 fewer effort, thinking, or context controls than built-in models.

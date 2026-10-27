@@ -211,7 +211,7 @@ export function DeviceControlsRail(props: {
           <MenuPopup side={popupSide} align="end">
             <MenuItem onClick={props.onFloat}>
               <PictureInPicture2 />
-              Float device over chat
+              Float device over thread
             </MenuItem>
             <MenuItem onClick={props.onClose}>
               <X />

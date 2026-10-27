@@ -337,17 +337,17 @@ function ModelEditor(props: {
         </label>
         <div className="s-lm-hint">idle, with no call running.</div>
       </div>
-      <span className="s-lm-lb">Chats</span>
+      <span className="s-lm-lb">Threads</span>
       <div>
         <Switch
           checked={model.chat === true}
           disabled={!props.canEdit}
           onCheckedChange={(checked) => save(checked)}
-          aria-label="Offer in chats"
+          aria-label="Offer in threads"
         />
         <div className="s-lm-hint">
-          In the chat model picker, where Claude Code runs on this model. Off for a model built for
-          one job.
+          In the model picker, where Claude Code runs on this model. Off for a model built for one
+          job.
         </div>
       </div>
       <span className="s-lm-lb">Memory</span>

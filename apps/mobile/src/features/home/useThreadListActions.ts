@@ -219,7 +219,7 @@ function confirmSettleWithLooseEnds(thread: EnvironmentThreadShell): Promise<boo
   const title = `Settle ${thread.title}?`;
   const message = `${open === 1 ? "One loose end is" : `${open} loose ends are`} still open. ${
     open === 1 ? "It stays" : "They stay"
-  } with the chat in Settled.`;
+  } with the thread in Settled.`;
   return new Promise((resolve) => {
     if (process.env.EXPO_OS === "ios") {
       Alert.alert(

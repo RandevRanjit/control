@@ -199,7 +199,7 @@ export default function FileBrowserPanel({
         [
           ...fileMenuItems,
           { id: "copy-mention", label: "Copy mention" },
-          { id: "add-to-chat", label: "Add to chat" },
+          { id: "add-to-chat", label: "Add to thread" },
         ],
         position,
       );
@@ -230,8 +230,8 @@ export default function FileBrowserPanel({
         if (!composer) {
           toastManager.add({
             type: "error",
-            title: "Unable to add to chat",
-            description: "Open a chat for this project and try again.",
+            title: "Unable to add to thread",
+            description: "Open a thread for this project and try again.",
           });
           return;
         }
@@ -239,8 +239,8 @@ export default function FileBrowserPanel({
         if (!inserted) {
           toastManager.add({
             type: "error",
-            title: "Unable to add to chat",
-            description: "The chat isn't ready to accept input right now.",
+            title: "Unable to add to thread",
+            description: "The thread isn't ready to accept input right now.",
           });
         }
       }

@@ -208,7 +208,7 @@ function AutoSettleSettingsRows() {
           />
           <SettingsSwitchRow
             icon="clock"
-            label="Pace notice to working chats"
+            label="Pace notice to working threads"
             value={uniformMobileSetting(displayTargets, "usagePaceNotice")}
             disabled={disabled}
             onValueChange={(value) => writeToAll({ usagePaceNotice: value })}

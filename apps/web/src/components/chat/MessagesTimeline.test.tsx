@@ -1999,7 +1999,7 @@ describe("MessagesTimeline", () => {
     expect(markup).toContain('data-v2-item-type="thread_created"');
     expect(markup).toContain('aria-label="Open Claude research thread"');
     expect(markup).toContain("Claude research thread");
-    expect(markup).toContain("Open chat");
+    expect(markup).toContain("Open thread");
     expect(markup).not.toContain("Work Log");
   });
 

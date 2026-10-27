@@ -222,7 +222,7 @@ function LockSheet(props: { readonly request: SheetRequest }) {
       .map((group) => group.name.toUpperCase()),
     ...(chats.some((chat) => chat.live && chat.groupKey === null) ? ["Loose"] : []),
   ];
-  const promise = `No early unlock. Nothing lifts it before ${endText}: not quitting CONTROL, not restarting, not rebooting. A chat that needs you comes through until you've answered it.`;
+  const promise = `No early unlock. Nothing lifts it before ${endText}: not quitting CONTROL, not restarting, not rebooting. A thread that needs you comes through until you've answered it.`;
 
   return (
     <Dialog
@@ -283,7 +283,7 @@ function LockSheet(props: { readonly request: SheetRequest }) {
                       <b>The window</b>shows the lock plate
                     </span>
                     <span>
-                      <b>Every chat</b>refuses your sends, from every device
+                      <b>Every thread</b>refuses your sends, from every device
                     </span>
                     <span>
                       <code>claude</code>refuses new prompts in any terminal

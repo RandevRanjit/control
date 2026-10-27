@@ -213,7 +213,7 @@ function Popover(props: PopoverProps) {
         </div>
         {openItems.length === 0 ? (
           <div className="s-le-empty">
-            <b>Nothing open in this chat.</b>
+            <b>Nothing open in this thread.</b>
             When an agent hands you something to do, it shows here.
           </div>
         ) : (

@@ -93,12 +93,12 @@ function SettleConfirm(props: { readonly refs: ReadonlyArray<ScopedThreadRef> })
         >
           <div className="panel float s-le-dlg">
             <p className="s-le-q">
-              Settle {single ? <code>{shells[0]?.title}</code> : `${props.refs.length} chats`}?
+              Settle {single ? <code>{shells[0]?.title}</code> : `${props.refs.length} threads`}?
             </p>
             <p className="s-le-qs">
               {single
-                ? `${count} still open. ${open === 1 ? "It stays" : "They stay"} with the chat in Settled, and the card keeps its mark.`
-                : `${count} still open across them. They stay with their chats in Settled, and the cards keep their marks.`}
+                ? `${count} still open. ${open === 1 ? "It stays" : "They stay"} with the thread in Settled, and the card keeps its mark.`
+                : `${count} still open across them. They stay with their threads in Settled, and the cards keep their marks.`}
             </p>
             <div className="s-le-ol">
               {props.refs.map((ref) => (

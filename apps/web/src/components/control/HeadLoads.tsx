@@ -64,7 +64,7 @@ export function HeadLoads(props: {
                     </p>
                     {rows === null || rows.length === 0 ? (
                       <p className="d-ldp-e">
-                        {rows === null ? "The list comes with this chat's next turn." : "None."}
+                        {rows === null ? "The list comes with this thread's next turn." : "None."}
                       </p>
                     ) : (
                       <ScrollArea scrollFade hideScrollbars className="max-h-[360px]">
@@ -192,7 +192,7 @@ function AgentsPill(props: { readonly agents: HeadAgents }) {
             <span className="t-num">{started}</span>
           </p>
           {running.length + done.length === 0 ? (
-            <p className="d-ldp-e">No subagents or workflows in this chat yet.</p>
+            <p className="d-ldp-e">No subagents or workflows in this thread yet.</p>
           ) : (
             <ScrollArea scrollFade hideScrollbars className="max-h-[360px]">
               {sections.map(([heading, rows]) =>

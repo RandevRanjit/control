@@ -64,7 +64,7 @@ describe("restoring V2 settings", () => {
   it.each([
     ["autoResumeLimitedThreads", "Auto-resume limited threads"],
     ["snoozeLimitedThreads", "Snooze limited threads"],
-    ["usagePaceNotice", "Pace notice to working chats"],
+    ["usagePaceNotice", "Pace notice to working threads"],
   ] as const)("restores %s when it is the only changed setting", async (key, label) => {
     state.settings = { ...DEFAULT_UNIFIED_SETTINGS, [key]: !DEFAULT_UNIFIED_SETTINGS[key] };
     hooks.beginRender();

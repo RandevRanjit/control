@@ -70,7 +70,8 @@ breaks one of these isn't 1:1.
      Bloom's rose wash was *"too dark and need[ed] to pop more"*.
 7. **Words are written properly.** Labels are capitalised: *"it should not be "chat" or "free" the first letter should
    be caps"*. Items in a row are spread evenly (*"space it evenly"*), not bunched to the left. Buttons are one word
-   (Update, Open, Reveal, Preview, Add).
+   (Update, Open, Reveal, Preview, Add). The noun is **thread**: every label, message and doc says thread, not chat
+   (owner, 27 Oct). The context legend's `Chat` is the conversation's share of the window, not the noun, and stays.
 8. **Icons are consistent.** One set, Lucide as T3 ships it, and one icon per meaning (§20): *"we have to change and
    make sure we have a standard for the icon"* (owner, 16 Oct, when the settings button drew a sun). CONTROL's marks
    stay its own: *"there is no reason to change the control lock logo"* (18 Oct). The branch icon
@@ -110,7 +111,7 @@ Top to bottom (box numbers are in `measure.md` §Sidebar):
    both 28 × 28. Then the **stair logo** (27 × 17, ink), centred in the space left to the right of the settings button.
    There is no wordmark.
 2. **Search row, 38.** A 176 × 32 field (radius 10, on the card tone `--hy-card`, `#DAE1F0` / `#232222`), then two
-   icon buttons: **New group** (a circle with a plus, in place of T3's project filter; owner, 11 Oct) and **New chat**
+   icon buttons: **New group** (a circle with a plus, in place of T3's project filter; owner, 11 Oct) and **New thread**
    (the pen). There is no folder button: the pen's *New thread in…* picker ends with **Add folder…**, which adds a
    folder and starts a chat in it (owner, 16 Oct).
 3. **Update note** (from C), 240 × 34, radius 10, on `--overlay`.
@@ -647,10 +648,10 @@ and each group lock still running) but never set, end or shorten one.
   - `Lock` and the `⌘L` key (Regrade 12 / 520, `--text-label`);
   - the question, Regrade 16 / 640 with the time in Plex: `Lock everything until 18:00?`, `Lock CONTROL until
     18:00?`;
-  - one line on what it holds, Regrade 13, `--text-secondary`: `11 chats, 4 of them working. Their turns run on.`;
+  - one line on what it holds, Regrade 13, `--text-secondary`: `11 threads, 4 of them working. Their turns run on.`;
   - a two-column form (labels 64 wide, Regrade 12 / 520): **Mode** (`Group | Full`, a small seg); **Covers** in Full
-    (`The window` shows the lock plate, `Every chat` refuses your sends from every device, `claude` refuses new prompts
-    in any terminal) or **Groups** in Group (a row per group: box, pearl, NAME in caps, `3 chats · 1 working`);
+    (`The window` shows the lock plate, `Every thread` refuses your sends from every device, `claude` refuses new prompts
+    in any terminal) or **Groups** in Group (a row per group: box, pearl, NAME in caps, `3 threads · 1 working`);
     **For** (`30 min | 1 h | 2 h`, then an `Until 18:00` field: typing a time picks it, a preset fills it);
   - the promise, Regrade 12.5 / 520 in `--text-strong`: *No early unlock. Nothing lifts it before 18:00: not quitting
     CONTROL, not restarting, not rebooting. A chat that needs you comes through until you've answered it.* It is ink,

@@ -5037,7 +5037,7 @@ export default function ChatView(props: ChatViewProps) {
     void runProjectScriptRef.current(
       {
         id: "chat-code-block",
-        name: "Chat code block",
+        name: "Code block",
         command,
         icon: "play",
         runOnWorktreeCreate: false,

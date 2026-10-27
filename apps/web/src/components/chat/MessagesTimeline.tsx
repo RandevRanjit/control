@@ -5580,7 +5580,7 @@ function WorkEntryLogRow(props: WorkEntryRowProps) {
               }}
               onKeyDown={stopRowToggle}
             >
-              Open chat
+              Open thread
             </button>
           ) : null}
           {notifiedSubagentThreadId ? (

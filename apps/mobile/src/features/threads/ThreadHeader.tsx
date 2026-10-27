@@ -27,7 +27,7 @@ export function ThreadHeader(
     const actions: ScreenHeaderAction[] = [];
     if (props.onReturnToThread) {
       actions.push({
-        accessibilityLabel: "Return to chat",
+        accessibilityLabel: "Return to thread",
         icon: "chevron.left",
         onPress: props.onReturnToThread,
       });

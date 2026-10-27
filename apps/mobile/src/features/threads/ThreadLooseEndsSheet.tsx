@@ -73,7 +73,7 @@ export function ThreadLooseEndsSheet({ route }: StaticScreenProps<LooseEndsTarge
       {open.length === 0 ? (
         <View className="px-2.5 pb-5 pt-4">
           <Text className="text-[15px] font-medium text-foreground-secondary">
-            Nothing open in this chat.
+            Nothing open in this thread.
           </Text>
           <Text className="text-[15px] text-foreground-tertiary">
             When an agent hands you something to do, it shows here.

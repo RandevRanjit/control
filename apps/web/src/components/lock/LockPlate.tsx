@@ -160,7 +160,7 @@ export function LockPlate(props: {
             done
           </p>
           <p className="s-lk-pr">
-            No early unlock. A chat that needs you opens here, until you've answered it.
+            No early unlock. A thread that needs you opens here, until you've answered it.
           </p>
         </div>
       </main>

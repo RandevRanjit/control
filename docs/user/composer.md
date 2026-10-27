@@ -294,12 +294,12 @@ Follow an agent's file link to read a report or other file outside the workspace
 These files open read-only. An HTML file outside the workspace cannot load scripts,
 styles, or images from neighboring files.
 
-When a link's path isn't there any more (the chat's worktree was removed, or the agent wrote the
+When a link's path isn't there any more (the thread's worktree was removed, or the agent wrote the
 path from a subfolder or another project), Control opens the one file that path names in the
-chat's folders. If none or several match, it says so instead of opening nothing.
+thread's folders. If none or several match, it says so instead of opening nothing.
 
 In the files panel, the ← arrow shows the folder above; press it again to keep going up, and
-**Back** returns to the chat's folder. Search is off above the chat's folder, and files there
+**Back** returns to the thread's folder. Search is off above the thread's folder, and files there
 open read-only.
 
 ## HTML and PDF files in the file viewer

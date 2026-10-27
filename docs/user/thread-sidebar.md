@@ -212,7 +212,7 @@ When the provider reports a reset time, choose **Resume at reset** to schedule a
 continuation. You can cancel it from the thread. **Auto-resume limited threads**
 is on by default, so every limit stop continues at its reset; turn it off in
 **Settings → General** on web and desktop, or **Settings → Thread behavior** on
-mobile. While a limit is in force, auto-compact leaves that account's chats alone
+mobile. While a limit is in force, auto-compact leaves that account's threads alone
 rather than compacting into the same limit.
 The environment must be running when the reset arrives; it resumes overdue
 continuations after a restart. Sending a new message, archiving, or settling the

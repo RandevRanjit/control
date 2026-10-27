@@ -129,7 +129,7 @@ function FileHeader(props: {
       backInSplitView={
         props.fileInspectorSupported
           ? {
-              accessibilityLabel: "Return to chat",
+              accessibilityLabel: "Return to thread",
               icon: "chevron.left",
               onPress: props.onReturnToThread,
             }

@@ -75,7 +75,7 @@ export function lockCounts(chats: ReadonlyArray<LockChat>) {
   };
 }
 
-const chatsWord = (count: number) => (count === 1 ? "1 chat" : `${count} chats`);
+const chatsWord = (count: number) => (count === 1 ? "1 thread" : `${count} threads`);
 
 /** The sheet's line under the question in Full mode. */
 export function fullLockSummary(chats: ReadonlyArray<LockChat>): string {

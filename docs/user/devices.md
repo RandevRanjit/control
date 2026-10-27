@@ -18,7 +18,7 @@ device to boot it. The panel shows when you or an agent starts a device.
 Each device opens beside the Browser tab's pages. Use **+ → Device** to open another, and
 double-click its name or choose **Rename** from its context menu to rename it.
 Only the visible tab streams video; switching tabs keeps both devices running.
-Choose **Float device over chat** in the toolbar to keep watching and tapping the
+Choose **Float device over thread** in the toolbar to keep watching and tapping the
 device in a small window while the right panel shows something else; drag the
 window by its handle, resize it from any edge, and use **Open in right panel**
 to bring it back.
@@ -60,7 +60,7 @@ back from the device after a change.
 
 ## Agents and devices
 
-When an agent opens a device, it floats over the chat in web and desktop clients
+When an agent opens a device, it floats over the thread in web and desktop clients
 connected to the thread, the same way an agent-driven browser does. Turn off
 **Auto-show floating preview** in **Settings → Integrations → Browser** to open a
 right-panel tab instead. In the mobile app, open the agent's thread and tap the

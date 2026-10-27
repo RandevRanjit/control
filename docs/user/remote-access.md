@@ -136,7 +136,7 @@ running is left alone.
 
 Browser tabs belong to the environment, so you and your agents see the same
 tabs from any device. The desktop app shows its own environment's tabs
-directly, except a tab an agent opened while the app wasn't showing its chat:
+directly, except a tab an agent opened while the app wasn't showing its thread:
 that one runs on the host and streams, so a sign-in you make in it reaches the
 agent. Every other device, and the desktop app for other environments,
 streams them from the host. Agents keep using them while no device is

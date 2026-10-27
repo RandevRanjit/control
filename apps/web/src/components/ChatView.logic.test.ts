@@ -399,7 +399,7 @@ describe("getStartedThreadModelChangeBlockReason", () => {
         },
       }),
     ).toEqual({
-      title: "Start a new chat to change models",
+      title: "Start a new thread to change models",
       description:
         "This provider does not allow switching models after a conversation has started.",
     });

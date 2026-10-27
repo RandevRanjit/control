@@ -9,7 +9,7 @@ export type SessionUpdateNoteView =
   | { readonly kind: "out"; readonly version: string | null }
   | { readonly kind: "waiting"; readonly text: string };
 
-const chats = (count: number) => (count === 1 ? "1 chat" : `${count} chats`);
+const chats = (count: number) => (count === 1 ? "1 thread" : `${count} threads`);
 
 /** CONTROL's Claude update note (HANDOFF-v2 §4): null when every session runs the installed CLI. */
 export function sessionUpdateNoteView(

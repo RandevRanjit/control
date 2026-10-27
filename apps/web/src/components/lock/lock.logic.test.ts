@@ -103,9 +103,9 @@ describe("the sheet's words", () => {
       {},
       NOW_ISO,
     );
-    expect(fullLockSummary(chats)).toBe("3 chats, 2 of them working. Their turns run on.");
+    expect(fullLockSummary(chats)).toBe("3 threads, 2 of them working. Their turns run on.");
     expect(fullLockSummary(lockChats([chat("a", "idle")], {}, NOW_ISO))).toBe(
-      "1 chat, none of them working.",
+      "1 thread, none of them working.",
     );
   });
 
@@ -116,10 +116,10 @@ describe("the sheet's words", () => {
       NOW_ISO,
     );
     expect(groupLockSummary(working, ["THESIS", "ORBIT", "Loose"])).toBe(
-      "3 chats, all working. THESIS, ORBIT and Loose stay open.",
+      "3 threads, all working. THESIS, ORBIT and Loose stay open.",
     );
-    expect(groupRowCount(working.slice(0, 1))).toBe("1 chat · 1 working");
-    expect(groupRowCount(lockChats([chat("a", "idle")], {}, NOW_ISO))).toBe("1 chat");
+    expect(groupRowCount(working.slice(0, 1))).toBe("1 thread · 1 working");
+    expect(groupRowCount(lockChats([chat("a", "idle")], {}, NOW_ISO))).toBe("1 thread");
   });
 
   it("ticks the groups with a working chat, less the open chat's", () => {

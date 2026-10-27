@@ -1,6 +1,6 @@
 # Install CONTROL
 
-CONTROL runs Claude Code chats on your Mac and lets you control them from its
+CONTROL runs Claude Code threads on your Mac and lets you control them from its
 desktop, web, or mobile app.
 
 ## Requirements

@@ -1012,7 +1012,7 @@ export function getStartedThreadModelChangeBlockReason(input: {
       return null;
     }
     return {
-      title: "Start a new chat to switch providers",
+      title: "Start a new thread to switch providers",
       description: "This thread does not support switching providers after it has started.",
     };
   }
@@ -1029,7 +1029,7 @@ export function getStartedThreadModelChangeBlockReason(input: {
     return null;
   }
   return {
-    title: "Start a new chat to change models",
+    title: "Start a new thread to change models",
     description: "This provider does not allow switching models after a conversation has started.",
   };
 }

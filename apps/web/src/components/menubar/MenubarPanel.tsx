@@ -142,8 +142,8 @@ export function MenubarPanel() {
                   )}
                   {empty ? (
                     <div className="s-mb-empty">
-                      <b>Nothing running.</b>No chat needs you, and none has finished since you last
-                      looked.
+                      <b>Nothing running.</b>No thread needs you, and none has finished since you
+                      last looked.
                     </div>
                   ) : null}
                 </>

@@ -120,7 +120,8 @@ Pull requests live in a thread's right panel, under **Git → PR** (or **Open pu
 command palette). The thread's own pull requests sit on top. Under them are the pull requests of
 this repository or of every project, grouped into those waiting on your review, yours, and others,
 with the search, filters and sort the list always had. At the panel's usual width the filters sit
-behind one icon; drag the panel wider or maximise it and they spread out as pickers. Open any pull
+behind one icon; drag the panel wider or maximise it and they spread out as pickers, and each open
+pull request gets a box: tick several and **Close** at the foot closes them together. Open any pull
 request to review changes and comments, request reviewers, check out a branch, or merge, and use
 its back arrow to return to the list. You can edit review titles and descriptions and your own
 comments where the host allows it. GitLab calls these merge requests.
@@ -185,12 +186,14 @@ does not show its diff, so marks are made and read on web and desktop.
 ## Linked pull requests
 
 A thread can hold several pull requests, including reviews from another repository on the same host.
-Use **Link pull request** in the command palette or the link field at the foot of **Git → PR**, or
-right-click a pull request link in the conversation. Creating a pull request from Git actions links it automatically.
+Type a pull request's link or number into the field at the foot of **Git → PR** and press Enter, use
+**Link pull request** in the command palette (it puts the cursor in that field), or right-click a
+pull request link in the conversation. Creating a pull request from Git actions links it automatically.
 Agents can link their pull requests with the `link_pull_request` tool.
 
 Use **Link this PR** in a branch-detected badge's tooltip to keep it with the thread. A pull request
-opened from the list offers **Link to this thread**. The review header also lists the threads that
+opened from the list offers **Link to this thread**, and **Link to another thread…** to search for
+any active thread. The review header also lists the threads that
 link to it, including archived threads, so you can return to their context.
 
 Thread badges show a stack's layer count or the current review number with a count of additional

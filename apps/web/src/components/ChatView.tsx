@@ -278,7 +278,6 @@ import { PullRequestsUnavailableState } from "./pullRequest/PullRequestsUnavaila
 import { type PanelTabsConfig, RightPanelTabs } from "./RightPanelTabs";
 import { OutputsPanel } from "./outputs/OutputsPanel";
 import { LooseEndsHeadIcon, toggleLooseEnds } from "./looseEnds/LooseEnds";
-import { LinkPullRequestDialogHost } from "./pullRequest/LinkPullRequestDialog";
 import { ThreadPullRequestsPanel } from "./pullRequest/ThreadPullRequestsPanel";
 import { useDeviceState } from "~/state/device";
 import { DeviceSetup } from "./device/DeviceSetup";
@@ -5383,7 +5382,7 @@ export default function ChatView(props: ChatViewProps) {
   // Git's PR view holds the thread's pull requests and every project's (design §22), so it opens
   // wherever either can be read.
   const pullRequestViewAvailable =
-    isServerThread && (supportsPullRequests || pullRequestsSurfaceAvailable);
+    isServerThread && (supportsPullRequests || supportsThreadPullRequests);
   const addPullRequestsSurface = useCallback(() => {
     if (!activeThreadRef || !pullRequestViewAvailable) return;
     useRightPanelStore.getState().open(activeThreadRef, "pull-requests");
@@ -11917,7 +11916,6 @@ export default function ChatView(props: ChatViewProps) {
           </AlertDialogFooter>
         </AlertDialogPopup>
       </AlertDialog>
-      <LinkPullRequestDialogHost />
       {expandedImage && (
         <ExpandedImageDialog
           key={expandedImageKey(expandedImage)}

@@ -156,6 +156,13 @@ function EnabledPullRequestThreadLinks({
               : "Link to thread"}
         </MenuItem>
       ) : null}
+      {/* Beside a thread the item above acts on it; any other active thread is a search away. */}
+      {display === "menu-item" && currentThreadRef !== null ? (
+        <MenuItem disabled={pending} onClick={() => onPickerOpenChange?.(true)}>
+          <PullRequestGlyph.link aria-hidden className="size-3.5" />
+          Link to another thread…
+        </MenuItem>
+      ) : null}
       {display === "picker" ? (
         <Dialog open onOpenChange={onPickerOpenChange}>
           <DialogPopup className="max-w-md" showCloseButton={false}>

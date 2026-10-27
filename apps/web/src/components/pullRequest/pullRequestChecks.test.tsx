@@ -98,7 +98,6 @@ function entry(overrides: Partial<EnvironmentPullRequestEntry>): EnvironmentPull
 function row(overrides: Partial<EnvironmentPullRequestEntry>): ReactNode {
   return PullRequestRow.type({
     entry: entry(overrides),
-    selected: false,
     showProjectTitle: false,
     showProvider: false,
     onSelect: () => {},

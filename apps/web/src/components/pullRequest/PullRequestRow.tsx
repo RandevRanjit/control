@@ -9,6 +9,7 @@ import { memo, type RefCallback } from "react";
 import { cn } from "~/lib/utils";
 import { getSourceControlPresentationForKind } from "~/sourceControlPresentation";
 
+import { Checkbox } from "../ui/checkbox";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { PullRequestChecksPopover } from "./PullRequestChecksPopover";
 import type { EnvironmentPullRequestEntry } from "./pullRequestList.logic";
@@ -81,7 +82,8 @@ export type PullRequestRowTarget = Pick<
 
 function PullRequestRowImpl({
   entry,
-  selected,
+  picked = false,
+  onPick,
   showProjectTitle,
   showProvider,
   environmentLabel,
@@ -96,7 +98,12 @@ function PullRequestRowImpl({
   onCloseSweepStart,
 }: {
   entry: EnvironmentPullRequestEntry;
-  selected: boolean;
+  picked?: boolean;
+  /**
+   * Given where the list lets several be picked and closed together (the panel widened past
+   * 600 px, design SC1d): an open row carries a box at its start.
+   */
+  onPick?: (entry: EnvironmentPullRequestEntry, picked: boolean) => void;
   showProjectTitle: boolean;
   /** Only when the list spans more than one host, where the repository alone is ambiguous. */
   showProvider: boolean;
@@ -118,6 +125,7 @@ function PullRequestRowImpl({
   onCloseSweepStart?: (entry: EnvironmentPullRequestEntry, event: PointerEvent) => void;
 }) {
   const { Icon, providerName } = getSourceControlPresentationForKind(entry.provider);
+  const closable = entry.state === "open" && entry.provider === "github";
   return (
     <div
       ref={statsRef}
@@ -126,12 +134,22 @@ function PullRequestRowImpl({
       className={cn(
         // Keep the action buttons inside the same skipped row, but outside its selection button.
         "flex items-center rounded-md [content-visibility:auto] [contain-intrinsic-block-size:56.5px]",
-        selected ? "bg-accent" : "hover:bg-accent/60",
+        picked ? "bg-accent" : "hover:bg-accent/60",
       )}
     >
+      {onPick ? (
+        <span className="flex w-7 shrink-0 justify-end">
+          {closable ? (
+            <Checkbox
+              aria-label={`Pick #${entry.number}`}
+              checked={picked}
+              onCheckedChange={(checked) => onPick(entry, checked)}
+            />
+          ) : null}
+        </span>
+      ) : null}
       <button
         type="button"
-        aria-current={selected ? "true" : undefined}
         onClick={() => onSelect(entry)}
         className={cn(
           PULL_REQUEST_ROW_CLASS,
@@ -271,7 +289,7 @@ function PullRequestRowImpl({
 
 /**
  * Memoized: the list re-renders on every keystroke of a search and every status poll, and a
- * row whose entry, selection and match state are unchanged has nothing new to say. Effective
+ * row whose entry, pick and match state are unchanged has nothing new to say. Effective
  * because the route hands it a stable `onSelect`.
  */
 export const PullRequestRow = memo(PullRequestRowImpl);

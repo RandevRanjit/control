@@ -197,12 +197,15 @@ export function PullRequestInbox({
   threadProject,
   onOpen,
   children,
+  foot,
 }: {
   /** The thread's project, which "This repo" narrows to. */
   threadProject: { readonly id: ProjectId; readonly environmentId: EnvironmentId } | null;
   onOpen: (entry: PullRequestRowTarget) => void;
   /** Above the list's controls, scrolling with it: the thread's own pull requests. */
   children?: ReactNode;
+  /** Under the list; rows picked to close together take its place while any are. */
+  foot?: ReactNode;
 }) {
   const [setRootElement, width] = useElementWidth<HTMLDivElement>();
   const wide = (width ?? 0) >= WIDE_PANEL_PX;
@@ -1332,6 +1335,20 @@ export function PullRequestInbox({
       ),
     [displayGroups],
   );
+  // Rows picked to close together (design SC1d), by key. Only the open rows still on screen
+  // count, so a row closed, filtered away or scrolled out of the answer drops out by itself.
+  const [pickedKeys, setPickedKeys] = useState<ReadonlySet<string>>(() => new Set());
+  const pickEntry = useCallback((entry: EnvironmentPullRequestEntry, picked: boolean) => {
+    setPickedKeys((current) => {
+      const next = new Set(current);
+      if (picked) next.add(pullRequestEntryKey(entry));
+      else next.delete(pullRequestEntryKey(entry));
+      return next;
+    });
+  }, []);
+  const pickedEntries = [...closeSweepRows.values()]
+    .map((row) => row.entry)
+    .filter((entry) => entry.state === "open" && pickedKeys.has(pullRequestEntryKey(entry)));
   const closeSweepRef = useRef({ displayGroups, closeSweepRows, closingKeys, closeBatch });
   closeSweepRef.current = { displayGroups, closeSweepRows, closingKeys, closeBatch };
   useEffect(() => () => closeSensorRef.current?.cancel(), [filterKey, search.q, sort]);
@@ -1530,7 +1547,8 @@ export function PullRequestInbox({
                       typedParsed.text.length > 0 &&
                       scorePullRequestMatch(entry, typedParsed.text) <= MATCHED_ELSEWHERE_SCORE
                     }
-                    selected={false}
+                    picked={pickedKeys.has(entryKey)}
+                    {...(wide ? { onPick: pickEntry } : {})}
                     onSelect={onOpen}
                     speedMode={speedMode}
                     onActed={onSpeedAction}
@@ -1720,6 +1738,25 @@ export function PullRequestInbox({
         {wide ? <div className="s-sc-ifb">{filtersMenu("pickers")}</div> : null}
         <div className="flex flex-col gap-3 px-1.5 pt-1 pb-3">{listBody}</div>
       </div>
+      {wide && pickedEntries.length > 0 ? (
+        <div className="s-sc-batch">
+          <span>{pickedEntries.length} selected</span>
+          <Button size="xs" variant="ghost" onClick={() => setPickedKeys(new Set())}>
+            Clear
+          </Button>
+          <Button
+            size="xs"
+            onClick={() => {
+              void closeBatch(pickedEntries);
+              setPickedKeys(new Set());
+            }}
+          >
+            Close
+          </Button>
+        </div>
+      ) : (
+        foot
+      )}
     </div>
   );
 }

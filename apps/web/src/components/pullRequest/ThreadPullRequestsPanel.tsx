@@ -21,7 +21,7 @@ import { Button } from "../ui/button";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "../ui/menu";
 import { MiddleTruncate } from "../ui/middle-truncate";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
-import { openLinkPullRequestDialog } from "./LinkPullRequestDialog";
+import { LinkPullRequestField } from "./LinkPullRequestField";
 import { pullRequestListLines, type PullRequestListLine } from "./pullRequestListLines";
 import {
   PULL_REQUEST_ROW_CLASS,
@@ -339,21 +339,15 @@ export function ThreadPullRequestsPanel({ threadRef }: { threadRef: ScopedThread
   );
   return (
     <div className="s-sc-root flex h-full min-h-0 flex-col">
-      <PullRequestInbox threadProject={threadProject} onOpen={open}>
+      <PullRequestInbox
+        threadProject={threadProject}
+        onOpen={open}
+        foot={
+          linking.mode === "unsupported" ? null : <LinkPullRequestField threadRef={threadRef} />
+        }
+      >
         {supportsLinks ? <ThreadLinks threadRef={threadRef} /> : null}
       </PullRequestInbox>
-      {linking.mode === "unsupported" ? null : (
-        <footer className="s-sc-link">
-          <button
-            type="button"
-            className="s-sc-lf"
-            onClick={() => openLinkPullRequestDialog(threadRef)}
-          >
-            <LinkIcon aria-hidden />
-            Link a pull request: its link or #number
-          </button>
-        </footer>
-      )}
     </div>
   );
 }

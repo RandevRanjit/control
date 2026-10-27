@@ -5,65 +5,30 @@ import {
   type ScopedThreadRef,
   type SourceControlProviderKind,
 } from "@control/contracts";
+import { scopedThreadKey } from "@control/client-runtime/environment";
 import { useAtomValue } from "@effect/atom-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LinkIcon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { parseChangeRequestUrl } from "~/lib/openPullRequestLink";
 import { parsePullRequestReference } from "~/pullRequestReference";
 import { useProjects, useThreadShell } from "~/state/entities";
 import { usePullRequestLinking } from "~/hooks/usePullRequestLinking";
+import { useRightPanelStore } from "~/rightPanelStore";
 import { appAtomRegistry } from "~/rpc/atomRegistry";
 import { Atom } from "effect/reactivity";
 import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogPanel,
-  DialogPopup,
-  DialogTitle,
-} from "../ui/dialog";
-import { Input } from "../ui/input";
 
-/**
- * Which thread has the link dialog open, set by whichever entry point asked (command palette,
- * pull-requests surface, detail panel) and rendered once by the chat view so the dialog outlives
- * a palette that closes the moment its command runs.
- */
-const linkPullRequestDialogThreadAtom = Atom.make<ScopedThreadRef | null>(null).pipe(
+/** The thread whose link field should take the focus, set by the command palette's Link pull request. */
+const linkPullRequestFieldThreadAtom = Atom.make<string | null>(null).pipe(
   Atom.keepAlive,
-  Atom.withLabel("pull-requests:link-dialog-thread"),
+  Atom.withLabel("pull-requests:link-field-thread"),
 );
 
-export function openLinkPullRequestDialog(threadRef: ScopedThreadRef): void {
-  appAtomRegistry.set(linkPullRequestDialogThreadAtom, threadRef);
-}
-
-interface LinkPullRequestDialogProps {
-  open: boolean;
-  threadRef: ScopedThreadRef;
-  /** The thread's own project: bare numbers resolve against its repository. */
-  projectId: string | null;
-  onOpenChange: (open: boolean) => void;
-}
-
-/** Mounted once per chat view; shows the dialog for whichever thread asked for it. */
-export function LinkPullRequestDialogHost() {
-  const threadRef = useAtomValue(linkPullRequestDialogThreadAtom);
-  const thread = useThreadShell(threadRef);
-  const linking = usePullRequestLinking(threadRef?.environmentId);
-  if (threadRef === null || linking.mode === "unsupported") return null;
-  return (
-    <LinkPullRequestDialog
-      open
-      threadRef={threadRef}
-      projectId={thread?.projectId ?? null}
-      onOpenChange={(open) => {
-        if (!open) appAtomRegistry.set(linkPullRequestDialogThreadAtom, null);
-      }}
-    />
-  );
+/** Opens Git › PR on the thread and puts the cursor in its link field (design §22). */
+export function focusLinkPullRequestField(threadRef: ScopedThreadRef): void {
+  useRightPanelStore.getState().open(threadRef, "pull-requests");
+  appAtomRegistry.set(linkPullRequestFieldThreadAtom, scopedThreadKey(threadRef));
 }
 
 interface ResolvedLink {
@@ -116,23 +81,24 @@ export function resolveLinkPullRequestInput(input: {
   };
 }
 
-function LinkPullRequestDialog({
-  open,
-  threadRef,
-  projectId,
-  onOpenChange,
-}: LinkPullRequestDialogProps) {
+/**
+ * The foot of Git › PR (design §22, SC1): type a pull request's link or number and press Enter to
+ * link it to the thread. A URL can point at any repository on a host this environment has a project
+ * for; a bare number means the thread's own repository.
+ */
+export function LinkPullRequestField({ threadRef }: { threadRef: ScopedThreadRef }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [reference, setReference] = useState("");
   const [dirty, setDirty] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const projectId = useThreadShell(threadRef)?.projectId ?? null;
   const projects = useProjects();
-  const environmentProjects = useMemo(
-    () => projects.filter((project) => project.environmentId === threadRef.environmentId),
-    [projects, threadRef.environmentId],
-  );
   const ownProject = useMemo(() => {
-    const project = environmentProjects.find((candidate) => candidate.id === projectId);
+    const project = projects.find(
+      (candidate) =>
+        candidate.environmentId === threadRef.environmentId && candidate.id === projectId,
+    );
     const identity = project?.repositoryIdentity;
     if (!project || !identity) return null;
     const repository =
@@ -149,32 +115,29 @@ function LinkPullRequestDialog({
           ? `${identity.webUrl.replace(/\/+$/, "")}/pulls/${number}`
           : changeRequestWebUrl(kind, host, repository, number, identity.locator.remoteUrl),
     };
-  }, [environmentProjects, projectId]);
+  }, [projectId, projects, threadRef.environmentId]);
   const linking = usePullRequestLinking(threadRef.environmentId);
-  const [pending, setPending] = useState(false);
 
+  const focusFor = useAtomValue(linkPullRequestFieldThreadAtom);
   useEffect(() => {
-    if (!open) return;
-    setReference("");
-    setDirty(false);
-    setSubmitError(null);
-    const frame = window.requestAnimationFrame(() => inputRef.current?.focus());
-    return () => window.cancelAnimationFrame(frame);
-  }, [open]);
+    if (focusFor !== scopedThreadKey(threadRef)) return;
+    appAtomRegistry.set(linkPullRequestFieldThreadAtom, null);
+    inputRef.current?.focus();
+  }, [focusFor, threadRef]);
 
   const resolved = useMemo(
     () =>
       resolveLinkPullRequestInput({
         reference,
         project: ownProject,
-        hasProject: (reference) => linking.canLink(reference.url),
+        hasProject: (candidate) => linking.canLink(candidate.url),
       }),
     [linking, ownProject, reference],
   );
 
-  const submit = useCallback(async () => {
+  const submit = async () => {
     setDirty(true);
-    if (resolved === null || "error" in resolved) return;
+    if (pending || resolved === null || "error" in resolved) return;
     setSubmitError(null);
     setPending(true);
     try {
@@ -185,73 +148,64 @@ function LinkPullRequestDialog({
     } finally {
       setPending(false);
     }
-    onOpenChange(false);
-  }, [linking, onOpenChange, resolved, threadRef]);
+    setReference("");
+    setDirty(false);
+  };
 
-  const validation = !dirty
-    ? null
-    : reference.trim().length === 0
-      ? "Paste a pull request URL or enter 123 / #123."
+  const validation =
+    !dirty || reference.trim().length === 0
+      ? null
       : resolved === null
         ? "Use a pull request URL, 123, or #123."
         : "error" in resolved
           ? resolved.error
           : null;
+  const message = validation ?? submitError;
 
   return (
-    <Dialog open={open} onOpenChange={(next) => (pending ? undefined : onOpenChange(next))}>
-      <DialogPopup className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Link pull request</DialogTitle>
-          <DialogDescription>
-            Attach a pull request to this thread. A full URL can point at any repository on a host
-            this environment has a project for.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogPanel>
-          <Input
-            ref={inputRef}
-            placeholder="Pull request URL or #42"
-            value={reference}
-            onChange={(event) => {
-              setDirty(true);
-              setReference(event.target.value);
-            }}
-            onKeyDown={(event) => {
-              if (event.key !== "Enter") return;
-              event.preventDefault();
-              void submit();
-            }}
-          />
-          {resolved !== null && "link" in resolved ? (
-            <p className="truncate text-muted-foreground text-xs">
-              {resolved.link.host}/{resolved.link.repository} #{resolved.link.number}
-            </p>
-          ) : null}
-          {(validation ?? submitError) ? (
-            <p className="text-destructive text-xs">{validation ?? submitError}</p>
-          ) : null}
-        </DialogPanel>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-            disabled={pending}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => void submit()}
-            disabled={pending || resolved === null || "error" in resolved}
-          >
-            {pending ? "Linking..." : "Link"}
-          </Button>
-        </DialogFooter>
-      </DialogPopup>
-    </Dialog>
+    <footer className="s-sc-link">
+      <label className="s-sc-lf">
+        <LinkIcon aria-hidden />
+        <input
+          ref={inputRef}
+          value={reference}
+          disabled={pending}
+          aria-label="Link a pull request"
+          placeholder="Link a pull request: its link or #number"
+          onChange={(event) => {
+            setReference(event.target.value);
+            setSubmitError(null);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape" && reference.length > 0) {
+              event.stopPropagation();
+              setReference("");
+              setDirty(false);
+            }
+            if (event.key !== "Enter") return;
+            event.preventDefault();
+            void submit();
+          }}
+        />
+      </label>
+      <Button
+        type="button"
+        size="xs"
+        variant="ghost"
+        disabled={pending || resolved === null || "error" in resolved}
+        onClick={() => void submit()}
+      >
+        {pending ? "Linking..." : "Link"}
+      </Button>
+      {message !== null ? (
+        <p className="s-sc-lm" data-error="">
+          {message}
+        </p>
+      ) : resolved !== null && "link" in resolved ? (
+        <p className="s-sc-lm">
+          {resolved.link.host}/{resolved.link.repository} #{resolved.link.number}
+        </p>
+      ) : null}
+    </footer>
   );
 }

@@ -5,6 +5,7 @@ import {
   TurnItemId,
   type OrchestrationProjectShell,
 } from "@control/contracts";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Predicate from "effect/Predicate";
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
@@ -34,7 +35,7 @@ import * as ProjectStore from "./ProjectStore.ts";
 import {
   buildActiveShellSnapshot,
   loadShellSnapshotParts,
-  omitIdleSubagentShells,
+  shellSnapshotForSubscriber,
 } from "./ShellStream.ts";
 import { boundedSnapshotResponseFields } from "./ThreadStream.ts";
 import { projectThreadProjectionForWire } from "./WireProjection.ts";
@@ -99,25 +100,25 @@ export const layer = HttpApiBuilder.group(
         ),
     );
 
-    const loadShellSnapshot = Effect.fn("http.orchestration.loadShellSnapshot")(function* (
-      omitIdleSubagents: boolean,
-    ) {
-      const base = buildActiveShellSnapshot({
-        ...(yield* loadShellSnapshotParts({
-          sql,
-          readThreads: threadManagement.readShellSnapshot({ location: "active" }),
-          listProjects: projectStore.listShells(),
-          latestSequence: applicationEvents.latestApplicationSequence,
-        })),
-        groups: yield* groupStore.listGroups(),
-      });
-      const projects = yield* enrichProjectShells(base.projects);
-      return {
-        ...base,
-        threads: omitIdleSubagents ? omitIdleSubagentShells(base.threads) : base.threads,
-        projects,
-      };
-    });
+    const loadShellSnapshot = Effect.fn("http.orchestration.loadShellSnapshot")(
+      function* (options: {
+        readonly omitIdleSubagents: boolean;
+        readonly omitOlderSettled: boolean;
+      }) {
+        const base = buildActiveShellSnapshot({
+          ...(yield* loadShellSnapshotParts({
+            sql,
+            readThreads: threadManagement.readShellSnapshot({ location: "active" }),
+            listProjects: projectStore.listShells(),
+            latestSequence: applicationEvents.latestApplicationSequence,
+          })),
+          groups: yield* groupStore.listGroups(),
+        });
+        const snapshot = shellSnapshotForSubscriber(base, { ...options, now: yield* DateTime.now });
+        const projects = yield* enrichProjectShells(base.projects);
+        return { ...snapshot, projects };
+      },
+    );
 
     const loadThreadSnapshot = Effect.fn("http.orchestration.loadThreadSnapshot")(function* (
       threadId: Parameters<typeof threadManagement.getThreadSnapshot>[0],
@@ -187,7 +188,10 @@ export const layer = HttpApiBuilder.group(
         Effect.fn("environment.orchestration.shellSnapshot")(function* (args) {
           yield* annotateEnvironmentRequest(args.endpoint.name);
           yield* requireEnvironmentScope(AuthOrchestrationReadScope);
-          return yield* loadShellSnapshot(args.query.omitIdleSubagents === "1").pipe(
+          return yield* loadShellSnapshot({
+            omitIdleSubagents: args.query.omitIdleSubagents === "1",
+            omitOlderSettled: args.query.omitOlderSettled === "1",
+          }).pipe(
             Effect.catch((cause) =>
               failEnvironmentInternal("orchestration_snapshot_failed", cause),
             ),

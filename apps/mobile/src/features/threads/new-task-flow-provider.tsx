@@ -121,6 +121,7 @@ import {
 } from "./new-task-context-presentation";
 import { resolveEnvironmentProjectMatch } from "./new-task-project-selection";
 import { resolveProjectThreadCreationBranch } from "./projectThreadCreationValidation";
+import { useOlderSettledCount } from "../../state/olderSettledShelf";
 
 type WorkspaceMode = "local" | "worktree";
 
@@ -536,13 +537,15 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
   // A thread without a project runs in a plain folder, so worktree mode
   // would leave it unsendable: it is always local and offers no choice.
   const canChooseWorkspace = !isScratchDraft;
+  const selectedProjectOlderSettledCount = useOlderSettledCount(selectedProject);
   const selectedProjectHasThreads =
     selectedProject !== null &&
-    threads.some(
-      (thread) =>
-        thread.environmentId === selectedProject.environmentId &&
-        thread.projectId === selectedProject.id,
-    );
+    (selectedProjectOlderSettledCount > 0 ||
+      threads.some(
+        (thread) =>
+          thread.environmentId === selectedProject.environmentId &&
+          thread.projectId === selectedProject.id,
+      ));
   const defaultWorkspaceMode: WorkspaceMode = canChooseWorkspace
     ? resolveNewThreadEnvMode({
         projectSettings,

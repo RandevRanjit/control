@@ -59,6 +59,7 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("~/connection/runtime", () => ({ connectionAtomRuntime: undefined }));
+vi.mock("~/state/olderSettledShelf", () => ({ readUnloadedThreadCount: () => 0 }));
 vi.mock("@control/client-runtime/state/session", () => ({
   createEnvironmentSessionAtoms: () => ({
     sessionStateAtom: (id: EnvironmentId) => state.sessions.get(id)!,

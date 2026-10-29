@@ -956,7 +956,7 @@ describe("environment shell synchronization", () => {
     }),
   );
 
-  it.effect("opts in to idle-child omission and counts authoritative snapshots and removals", () =>
+  it.effect("opts in to shell omissions and counts authoritative snapshots and removals", () =>
     Effect.gen(function* () {
       const events = yield* Queue.unbounded<OrchestrationV2ShellStreamItem>();
       const subscribeInput = yield* Deferred.make<unknown>();
@@ -972,6 +972,7 @@ describe("environment shell synchronization", () => {
         initialConfig: Effect.succeed({
           shellResumeCompletionMarker: true,
           shellThreadFamilies: true,
+          shellOlderSettled: true,
         } as never),
       };
       const supervisor = EnvironmentSupervisor.EnvironmentSupervisor.of({
@@ -1015,8 +1016,11 @@ describe("environment shell synchronization", () => {
       expect(yield* Deferred.await(subscribeInput)).toMatchObject({
         afterSequence: 1,
         omitIdleSubagents: true,
+        omitOlderSettled: true,
       });
-      expect(yield* Ref.get(loadOptions)).toEqual([{ omitIdleSubagents: true }]);
+      expect(yield* Ref.get(loadOptions)).toEqual([
+        { omitIdleSubagents: true, omitOlderSettled: true },
+      ]);
       const loaded = Option.getOrThrow(yield* stateWhere((state) => state.generation > 0));
       expect(loaded.removedAt.size).toBe(0);
 
@@ -1045,6 +1049,77 @@ describe("environment shell synchronization", () => {
         yield* stateWhere((state) => state.generation > loaded.generation),
       );
       expect(reset.removedAt.size).toBe(0);
+    }),
+  );
+
+  it.effect("asks an older server only for the omissions it advertises", () =>
+    Effect.gen(function* () {
+      const cases = [
+        { config: {}, expected: {} },
+        { config: { shellThreadFamilies: true }, expected: { omitIdleSubagents: true } },
+        // Older settled rows load through families, so the cut needs both.
+        { config: { shellOlderSettled: true }, expected: {} },
+      ];
+      for (const { config, expected } of cases) {
+        const subscribeInput = yield* Deferred.make<Record<string, unknown>>();
+        const loadOptions = yield* Deferred.make<Record<string, unknown>>();
+        const client = {
+          [ORCHESTRATION_V2_WS_METHODS.subscribeShell]: (input: Record<string, unknown>) =>
+            Stream.unwrap(Deferred.succeed(subscribeInput, input).pipe(Effect.as(Stream.never))),
+        } as unknown as WsRpcProtocolClient;
+        const supervisor = EnvironmentSupervisor.EnvironmentSupervisor.of({
+          target: TARGET,
+          state: yield* SubscriptionRef.make(AVAILABLE_CONNECTION_STATE),
+          session: yield* SubscriptionRef.make(
+            Option.some({
+              ...session(client),
+              initialConfig: Effect.succeed({
+                shellResumeCompletionMarker: true,
+                ...config,
+              } as never),
+            }),
+          ),
+          prepared: yield* SubscriptionRef.make(Option.some(PREPARED)),
+          connect: Effect.void,
+          disconnect: Effect.void,
+          retryNow: Effect.void,
+        } satisfies EnvironmentSupervisor.EnvironmentSupervisor["Service"]);
+        const cache = Persistence.EnvironmentCacheStore.of({
+          loadShell: () => Effect.succeed(Option.none()),
+          saveShell: () => Effect.void,
+          loadThread: () => Effect.succeed(Option.none()),
+          saveThread: () => Effect.void,
+          removeThread: () => Effect.void,
+          loadServerConfig: () => Effect.succeed(Option.none()),
+          saveServerConfig: () => Effect.void,
+          loadVcsRefs: () => Effect.succeed(Option.none()),
+          saveVcsRefs: () => Effect.void,
+          removeVcsRefs: () => Effect.void,
+          clearVcsRefs: () => Effect.void,
+          clear: () => Effect.void,
+        });
+        const snapshotLoader = ShellSnapshotLoader.ShellSnapshotLoader.of({
+          load: (_prepared, options) =>
+            Deferred.succeed(loadOptions, { ...options }).pipe(
+              Effect.as(Option.some(LIVE_SHELL_SNAPSHOT)),
+            ),
+        });
+        yield* makeEnvironmentShellState().pipe(
+          Effect.provideService(EnvironmentSupervisor.EnvironmentSupervisor, supervisor),
+          Effect.provideService(Persistence.EnvironmentCacheStore, cache),
+          Effect.provideService(ShellSnapshotLoader.ShellSnapshotLoader, snapshotLoader),
+        );
+
+        const sent = yield* Deferred.await(subscribeInput);
+        expect({
+          omitIdleSubagents: sent.omitIdleSubagents,
+          omitOlderSettled: sent.omitOlderSettled,
+        }).toEqual(expected);
+        const loaded = yield* Deferred.await(loadOptions);
+        expect(Object.fromEntries(Object.entries(loaded).filter(([, value]) => value))).toEqual(
+          expected,
+        );
+      }
     }),
   );
 

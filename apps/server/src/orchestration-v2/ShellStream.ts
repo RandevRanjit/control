@@ -3,19 +3,25 @@ import type {
   Group,
   OrchestrationProjectShell,
   OrchestrationV2ArchivedShellStreamItem,
+  OrchestrationV2OlderSettledCount,
+  OrchestrationV2OlderSettledThreads,
   OrchestrationV2ShellSnapshot,
   OrchestrationV2ThreadShell,
   OrchestrationV2ThreadShellSnapshot,
   OrchestrationV2ShellStreamItem,
   OrchestrationV2StoredEvent,
+  ProjectId,
+  ThreadId,
 } from "@control/contracts";
 import {
   isLiveSubagentShell,
+  isOlderSettledThreadShell,
   OrchestrationProjectShell as ProjectShellSchema,
   OrchestrationV2ThreadShell as ThreadShellSchema,
 } from "@control/contracts";
 import * as NodeSqliteClient from "@control/shared/nodeSqliteClient";
 import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import type * as SqlClient from "effect/sql/SqlClient";
@@ -60,6 +66,79 @@ export function omitIdleSubagentShells(
   );
 }
 
+const NEWEST_SETTLED_KEPT = 25;
+
+/**
+ * Opted-in snapshots keep the 25 newest settled top-level threads (and ties) and count the rest per
+ * project in `olderSettled`; clients page them with `getOlderSettledThreads`. Older rows stay while
+ * pinned, snoozed, live, or above a kept subagent, so walks over shell rows still find them.
+ */
+export function omitOlderSettledShells(input: {
+  readonly threads: ReadonlyArray<OrchestrationV2ThreadShell>;
+  readonly snapshotSequence: number;
+  readonly now: DateTime.Utc;
+}): {
+  readonly threads: ReadonlyArray<OrchestrationV2ThreadShell>;
+  readonly olderSettled: OrchestrationV2OlderSettledThreads;
+} {
+  const nowMs = DateTime.toEpochMillis(input.now);
+  const settledTimes = input.threads
+    .flatMap((thread) =>
+      thread.lineage.relationshipToParent !== "subagent" &&
+      thread.settledOverride === "settled" &&
+      thread.settledAt !== null
+        ? [DateTime.toEpochMillis(thread.settledAt)]
+        : [],
+    )
+    .sort((left, right) => right - left);
+  // With fewer than 25, the oldest one is the cut, so nothing is older.
+  const beforeMs = settledTimes[NEWEST_SETTLED_KEPT - 1] ?? settledTimes.at(-1) ?? nowMs;
+  const ancestorIds = new Set<string>();
+  for (const thread of input.threads) {
+    if (thread.lineage.relationshipToParent !== "subagent") continue;
+    if (thread.lineage.parentThreadId !== null) ancestorIds.add(thread.lineage.parentThreadId);
+    ancestorIds.add(thread.lineage.rootThreadId);
+  }
+  const counts = new Map<ProjectId, number>();
+  const threads = input.threads.filter((thread) => {
+    if (!isOlderSettledThreadShell(thread, beforeMs)) return true;
+    counts.set(thread.projectId, (counts.get(thread.projectId) ?? 0) + 1);
+    return (
+      thread.pinnedAt != null ||
+      (thread.snoozedUntil != null && DateTime.toEpochMillis(thread.snoozedUntil) > nowMs) ||
+      isLiveSubagentShell(thread) ||
+      ancestorIds.has(thread.id)
+    );
+  });
+  return {
+    threads,
+    olderSettled: {
+      before: DateTime.formatIso(DateTime.makeUnsafe(beforeMs)),
+      asOfSequence: input.snapshotSequence,
+      counts: Array.from(counts, ([projectId, count]) => ({ projectId, count })),
+    },
+  };
+}
+
+/** The snapshot a shell subscriber gets for its opt-ins. */
+export function shellSnapshotForSubscriber(
+  base: OrchestrationV2ShellSnapshot,
+  options: {
+    readonly omitIdleSubagents: boolean;
+    readonly omitOlderSettled: boolean;
+    readonly now: DateTime.Utc;
+  },
+): OrchestrationV2ShellSnapshot {
+  const threads = options.omitIdleSubagents ? omitIdleSubagentShells(base.threads) : base.threads;
+  if (!options.omitOlderSettled) return { ...base, threads };
+  const older = omitOlderSettledShells({
+    threads,
+    snapshotSequence: base.snapshotSequence,
+    now: options.now,
+  });
+  return { ...base, threads: older.threads, olderSettled: older.olderSettled };
+}
+
 /**
  * Loads the thread shell, projects and sequence for the shell snapshots.
  * One transaction covers the reads so they agree; the threads are decoded
@@ -89,6 +168,45 @@ export const loadShellSnapshotParts = <E1, E2, E3, E4>(input: {
       snapshotSequence: read.snapshotSequence,
     };
   });
+
+/** A page of older settled threads, read and decoded like `loadShellSnapshotParts`. */
+export const loadOlderSettledThreadsPage = Effect.fn("ShellStream.loadOlderSettledThreadsPage")(
+  function* <E1, E2, E3, E4>(input: {
+    readonly sql: SqlClient.SqlClient;
+    readonly listThreads: Effect.Effect<
+      {
+        readonly threadIds: ReadonlyArray<ThreadId>;
+        readonly counts: ReadonlyArray<OrchestrationV2OlderSettledCount>;
+      },
+      E1
+    >;
+    readonly readThreads: (
+      threadIds: ReadonlyArray<ThreadId>,
+    ) => Effect.Effect<Effect.Effect<OrchestrationV2ThreadShellSnapshot, E3>, E2>;
+    readonly latestSequence: Effect.Effect<number, E4>;
+  }) {
+    const read = yield* input.sql
+      .withTransaction(
+        Effect.gen(function* () {
+          const listed = yield* input.listThreads;
+          return {
+            listed,
+            decodeThreads:
+              listed.threadIds.length === 0 ? null : yield* input.readThreads(listed.threadIds),
+            snapshotSequence: yield* input.latestSequence,
+          };
+        }),
+      )
+      .pipe(NodeSqliteClient.readOnly);
+    const threads = read.decodeThreads === null ? [] : (yield* read.decodeThreads).threads;
+    const order = new Map(read.listed.threadIds.map((threadId, index) => [threadId, index]));
+    return {
+      snapshotSequence: read.snapshotSequence,
+      threads: threads.toSorted((left, right) => order.get(left.id)! - order.get(right.id)!),
+      counts: read.listed.counts,
+    };
+  },
+);
 
 export type ShellApplicationEvent =
   | Pick<

@@ -222,6 +222,7 @@ it.effect(
           getAutoCompactCandidates: () => Effect.die("unused getAutoCompactCandidates"),
           getShellSnapshot: () => Effect.die("unused getShellSnapshot"),
           readShellSnapshot: () => Effect.die("unused readShellSnapshot"),
+          listOlderSettledThreads: () => Effect.die("unused listOlderSettledThreads"),
           getThreadShell: () => Effect.die("unused getThreadShell"),
           getThread: () => Ref.get(projection).pipe(Effect.map((state) => state.thread)),
           getSettlementCandidates: () => Effect.die("unused getSettlementCandidates"),

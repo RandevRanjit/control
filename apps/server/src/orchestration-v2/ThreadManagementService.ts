@@ -320,8 +320,9 @@ export interface ThreadManagementServiceShape {
   readonly getShellSnapshot: (options?: {
     readonly location?: "active" | "archive";
   }) => Effect.Effect<OrchestrationV2ThreadShellSnapshot, Orchestrator.OrchestratorV2Error>;
+  readonly listOlderSettledThreads: Orchestrator.OrchestratorV2["Service"]["listOlderSettledThreads"];
   readonly readShellSnapshot: (
-    options?: Pick<ShellSnapshotOptions, "location" | "subagentFamilyOf" | "worktreePath">,
+    options?: Pick<ShellSnapshotOptions, "location" | "familyOf" | "worktreePath" | "threadIds">,
   ) => Effect.Effect<
     Effect.Effect<OrchestrationV2ThreadShellSnapshot, Orchestrator.OrchestratorV2Error>,
     Orchestrator.OrchestratorV2Error
@@ -905,6 +906,7 @@ const make = Effect.gen(function* () {
     getProjectThreadRecords,
     getProjectThread,
     getShellSnapshot: orchestrator.getShellSnapshot,
+    listOlderSettledThreads: orchestrator.listOlderSettledThreads,
     readShellSnapshot: orchestrator.readShellSnapshot,
     getThreadShell: orchestrator.getThreadShell,
     listProjectThreads,

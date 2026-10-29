@@ -181,6 +181,7 @@ vi.mock("../state/entities", () => ({
   useProjects: () => [],
   useThread: () => null,
 }));
+vi.mock("../state/olderSettledShelf", () => ({ readUnloadedThreadCount: () => 0 }));
 vi.mock("../state/server", () => ({
   environmentServerConfigsAtom: {},
   primaryServerSettingsAtom: "primary-settings",

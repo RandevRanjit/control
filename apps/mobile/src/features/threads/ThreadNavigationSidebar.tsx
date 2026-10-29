@@ -29,6 +29,7 @@ import { NativeStackScreenOptions } from "../../native/StackHeader";
 import { scopedProjectKey, scopedThreadKey } from "../../lib/scopedEntities";
 import { useProjects, useNavigationThreadShells } from "../../state/entities";
 import { useThreadSearch } from "../../state/queries";
+import { useOlderSettledShelf, useOlderSettledShelfGrowth } from "../../state/olderSettledShelf";
 import { useThreadListV2ShelfPreferences } from "./use-thread-list-v2-shelf-preferences";
 import { usePendingThreadOrder } from "../../state/thread-order";
 import { threadListEnvironmentsAtom } from "../../state/server";
@@ -80,7 +81,12 @@ import {
     settled "Show more" pager row. */
 type SidebarListItem =
   | ThreadListV2ListItem
-  | { readonly type: "v2-show-more"; readonly key: string; readonly hiddenCount: number };
+  | {
+      readonly type: "v2-show-more";
+      readonly key: string;
+      readonly hiddenCount: number;
+      readonly state?: "loading" | "failed";
+    };
 
 const SIDEBAR_STICKY_HEADER_HEIGHT = 106;
 
@@ -292,6 +298,39 @@ function ThreadNavigationSidebarPane(
   } = listEnvironments;
   const resolveProviderInstance = useThreadRowProviderInstanceResolver(providersByEnvironmentId);
   const pendingOrder = usePendingThreadOrder(nowMinute, snoozeWakeTick);
+  // Older settled threads load in pages; the shelf lists them only as far as they are loaded.
+  // A search lists every match it holds, so then the shelf neither pages nor holds rows back.
+  const searchingThreads = props.searchQuery.trim().length > 0;
+  const olderSettledShelf = useOlderSettledShelf({
+    scopes: (options.selectedEnvironmentId === null
+      ? [...settlementEnvironmentIds]
+      : [options.selectedEnvironmentId]
+    ).map((environmentId) => ({
+      environmentId,
+      projectIds: null,
+    })),
+    expanded: settledShelfExpanded,
+    visibleCount: searchingThreads ? 0 : settledVisibleCount,
+  });
+  const unloadedSettledCount = searchingThreads
+    ? 0
+    : olderSettledShelf.unloadedCount(
+        threads.filter(
+          (thread) =>
+            thread.archivedAt === null &&
+            (options.selectedEnvironmentId === null ||
+              thread.environmentId === options.selectedEnvironmentId),
+        ),
+      );
+  // The pager row reads this render's shelf, so the row renderer stays stable.
+  const olderSettledShelfRef = useRef(olderSettledShelf);
+  useEffect(() => {
+    olderSettledShelfRef.current = olderSettledShelf;
+  });
+  const showMoreSettledRows = useCallback(() => {
+    olderSettledShelfRef.current.retry();
+    showMoreSettled();
+  }, [showMoreSettled]);
   // Up/down menu availability for every card, computed once per section per
   // rebuild (see computeThreadMoveAvailability): per-thread planner calls made
   // list construction quadratic, and this list rebuilds on every minute tick.
@@ -350,8 +389,14 @@ function ThreadNavigationSidebarPane(
       snoozedShelfExpanded,
       settledShelfExpanded,
       selectedThreadKey: props.selectedThreadKey ?? null,
+      // The shelf's rows follow its atom value, so `environments` keys this memo.
+      ...(searchingThreads ? {} : { isListedSettled: olderSettledShelf.isListed }),
+      unloadedSettledCount,
     });
   }, [
+    searchingThreads,
+    olderSettledShelf.environments,
+    unloadedSettledCount,
     workingShelfEnabled,
     workingShelfExpanded,
     pendingOrder,
@@ -370,6 +415,7 @@ function ThreadNavigationSidebarPane(
     threads,
     projectTitleByProjectKey,
   ]);
+  useOlderSettledShelfGrowth(olderSettledShelf, threadListV2Layout.listedSettledThreads);
   // Re-partition the moment the earliest snooze expires (clamped to the
   // signed-32-bit setTimeout range; far-future wakes re-arm at the clamp).
   const nextSnoozeWakeAt = threadListV2Layout.nextSnoozeWakeAt;
@@ -425,10 +471,17 @@ function ThreadNavigationSidebarPane(
         type: "v2-show-more",
         key: "v2-show-more",
         hiddenCount: threadListV2Layout.hiddenSettledCount,
+        ...(olderSettledShelf.loading
+          ? { state: "loading" as const }
+          : olderSettledShelf.failed
+            ? { state: "failed" as const }
+            : {}),
       });
     }
     return items;
   }, [
+    olderSettledShelf.loading,
+    olderSettledShelf.failed,
     nowMinute,
     options.selectedEnvironmentId,
     pendingTasks,
@@ -560,7 +613,7 @@ function ThreadNavigationSidebarPane(
         return threadListV2ListItemsAreEqual(previous, item);
       }
       if (previous.type === "v2-show-more" && item.type === "v2-show-more") {
-        return previous.hiddenCount === item.hiddenCount;
+        return previous.hiddenCount === item.hiddenCount && previous.state === item.state;
       }
       return false;
     },
@@ -720,7 +773,8 @@ function ThreadNavigationSidebarPane(
             <ThreadListV2ShowMoreRow
               pane="sidebar"
               hiddenCount={item.hiddenCount}
-              onPress={showMoreSettled}
+              {...(item.state === undefined ? {} : { state: item.state })}
+              onPress={showMoreSettledRows}
             />
           );
       }
@@ -757,7 +811,7 @@ function ThreadNavigationSidebarPane(
       titleRegenerationEnvironmentIds,
       settleThread,
       settlementEnvironmentIds,
-      showMoreSettled,
+      showMoreSettledRows,
       sidebarScrollGesture,
       snoozeEnvironmentIds,
       snoozeThread,

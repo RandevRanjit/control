@@ -161,6 +161,7 @@ import { GroupPearl, requestGroupDetails } from "./GroupDialog";
 import { environmentServerConfigsAtom, primaryServerKeybindingsAtom } from "../state/server";
 import { vcsEnvironment } from "../state/vcs";
 import { threadEnvironment } from "../state/threads";
+import { useOlderSettledShelf, useOlderSettledShelfGrowth } from "../state/olderSettledShelf";
 import { useEnvironmentQuery } from "../state/query";
 import { useThreadSearch } from "../state/queries";
 import { useOrchestrationCommand } from "../state/use-orchestration-command";
@@ -2867,28 +2868,6 @@ export default function Sidebar() {
   // The settled tail renders in pages: history shouldn't dominate the
   // sidebar, and the common lookups are recent.
   const [settledVisibleCount, setSettledVisibleCount] = useState(SETTLED_TAIL_INITIAL_COUNT);
-  const visibleSettledThreads = useMemo(() => {
-    if (settledThreads.length <= settledVisibleCount) return settledThreads;
-    const visible = settledThreads.slice(0, settledVisibleCount);
-    // The open thread must never hide under "Show more": navigating into a
-    // deep settled thread (search, deep link) pulls its row into the visible
-    // tail so the highlight and the un-settle affordance stay reachable.
-    if (routeThreadKey !== null) {
-      const routeThread = settledThreads
-        .slice(settledVisibleCount)
-        .find(
-          (thread) =>
-            scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id)) === routeThreadKey,
-        );
-      if (routeThread !== undefined) visible.push(routeThread);
-    }
-    return visible;
-  }, [routeThreadKey, settledThreads, settledVisibleCount]);
-  const hiddenSettledCount = settledThreads.length - visibleSettledThreads.length;
-  const showMoreSettled = useCallback(
-    () => setSettledVisibleCount((count) => count + SETTLED_TAIL_PAGE_COUNT),
-    [],
-  );
   // Design v1's folds (§3.5): Snoozed and Settled sit in a strip above the
   // usage lines, and a click opens one in place of the list.
   const [openFold, setOpenFold] = useState<SidebarFold | null>(null);
@@ -2897,6 +2876,43 @@ export default function Sidebar() {
     [],
   );
   const settledShelfExpanded = openFold === "settled";
+  // Older settled threads load in pages; the shelf lists them only as far as they are loaded.
+  const olderSettledShelf = useOlderSettledShelf({
+    scopes: [...serverConfigs.keys()].map((environmentId) => ({ environmentId, projectIds: null })),
+    expanded: settledShelfExpanded,
+    visibleCount: settledVisibleCount,
+  });
+  const listedSettledThreads = settledThreads.filter(olderSettledShelf.isListed);
+  useOlderSettledShelfGrowth(olderSettledShelf, listedSettledThreads);
+  // A full lock lists only the threads that need you, so it counts no settled ones.
+  const settledCount = lockThrough
+    ? settledThreads.length
+    : settledThreads.length + olderSettledShelf.unloadedCount(threads);
+  const visibleSettledThreads = (() => {
+    const visible = listedSettledThreads.slice(0, settledVisibleCount);
+    // The open thread must never hide under "Show more": navigating into a
+    // deep settled thread (search, deep link) pulls its row into the visible
+    // tail so the highlight and the un-settle affordance stay reachable.
+    if (
+      routeThreadKey !== null &&
+      !visible.some(
+        (thread) =>
+          scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id)) === routeThreadKey,
+      )
+    ) {
+      const routeThread = settledThreads.find(
+        (thread) =>
+          scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id)) === routeThreadKey,
+      );
+      if (routeThread !== undefined) visible.push(routeThread);
+    }
+    return visible.length === settledThreads.length ? settledThreads : visible;
+  })();
+  const hiddenSettledCount = Math.max(0, settledCount - visibleSettledThreads.length);
+  const showMoreSettled = useCallback(
+    () => setSettledVisibleCount((count) => count + SETTLED_TAIL_PAGE_COUNT),
+    [],
+  );
   const snoozedShelfExpanded = openFold === "snoozed";
   const renderedSettledThreads = useMemo(() => {
     if (settledShelfExpanded) return visibleSettledThreads;
@@ -3893,7 +3909,7 @@ export default function Sidebar() {
         activeThreads.length +
         workingThreads.length +
         snoozedThreads.length +
-        settledThreads.length ===
+        settledCount ===
       0
     ) {
       return [];
@@ -3933,7 +3949,7 @@ export default function Sidebar() {
     openFold,
     pinnedThreads,
     renderedSettledThreads,
-    settledThreads.length,
+    settledCount,
     snoozedThreads,
     visibleSnoozedThreads,
     visibleWorkingThreads,
@@ -5689,11 +5705,19 @@ export default function Sidebar() {
                       <li className="list-none">
                         <button
                           type="button"
-                          onClick={showMoreSettled}
-                          className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-left text-sm text-sidebar-muted-foreground/55 hover:bg-sidebar-row-hover hover:text-sidebar-foreground"
+                          disabled={olderSettledShelf.loading}
+                          onClick={() => {
+                            olderSettledShelf.retry();
+                            showMoreSettled();
+                          }}
+                          className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-left text-sm text-sidebar-muted-foreground/55 hover:bg-sidebar-row-hover hover:text-sidebar-foreground disabled:cursor-default"
                         >
                           <PlusIcon aria-hidden className="size-4 shrink-0" />
-                          Show {Math.min(hiddenSettledCount, SETTLED_TAIL_PAGE_COUNT)} more
+                          {olderSettledShelf.loading
+                            ? "Loading"
+                            : olderSettledShelf.failed
+                              ? "Could not load older threads. Retry"
+                              : `Show ${Math.min(hiddenSettledCount, SETTLED_TAIL_PAGE_COUNT)} more`}
                         </button>
                       </li>
                     ) : null}
@@ -5709,7 +5733,7 @@ export default function Sidebar() {
             activeThreads.length +
             workingThreads.length +
             snoozedThreads.length +
-            settledThreads.length ===
+            settledCount ===
             0 ? (
             <div className="flex flex-col items-center gap-2 px-2 py-6 text-center text-xs text-muted-foreground/60">
               {projects.length === 0 ? (
@@ -5741,7 +5765,7 @@ export default function Sidebar() {
         <SidebarFoldButton
           ref={settledFoldRef}
           fold="settled"
-          count={settledThreads.length}
+          count={settledCount}
           open={openFold === "settled"}
           onToggle={toggleFold}
           dropTarget={dragState?.overSettledFold === true}

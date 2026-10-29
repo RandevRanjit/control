@@ -8,11 +8,17 @@ import { useThreadSearch } from "./queries";
 const searchResults = vi.hoisted(() => ({
   matches: [{ threadId: "thread-1", source: "user", snippet: "a link" }],
   isLoading: false,
+  rows: [],
 }));
 vi.mock("@effect/atom-react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@effect/atom-react")>()),
+  // No environment here leaves older settled threads out, so short titles never search.
   useAtomValue: (atom: { label?: ReadonlyArray<unknown> }) =>
-    String(atom.label?.[0]).includes("empty") ? { matches: [], isLoading: false } : searchResults,
+    String(atom.label?.[0]).includes("any-older-settled")
+      ? false
+      : String(atom.label?.[0]).includes("empty")
+        ? { matches: [], isLoading: false, rows: [] }
+        : searchResults,
 }));
 
 const environmentIds = [EnvironmentId.make("local")];

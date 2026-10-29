@@ -137,6 +137,10 @@ and prevents automatic settlement until new activity resumes the usual rules.
 On web and desktop, **Snoozed** and **Settled** sit in a strip at the foot of the sidebar,
 each with its count. Click one to show its threads in place of the list, and click it again
 to go back. A row's **Wake** or **Un-settle** button, or its menu, returns a thread to the list.
+
+To keep connecting fast, especially from the phone, CONTROL first loads only the 25 most
+recently settled threads. The **Settled** count still includes every settled thread. Older
+ones load when you show more, when search finds them, or when you open one from a link.
 Manually settling an idle thread dismisses unanswered async questions without
 sending an answer or restarting the agent. Settling also closes the thread's
 terminals that wait at an idle prompt, and keeps their output. A terminal that

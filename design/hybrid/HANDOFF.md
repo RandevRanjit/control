@@ -317,7 +317,7 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 
 ### 5.3 Outputs (F28, F30)
 
-- **Head.** `Outputs`, `this chat, newest first`, and the count at the right.
+- **Head.** `Outputs`, `this thread, newest first`, and the count at the right.
 - **What counts** (owner, 29 Oct). Things a person reads, not code: screenshots, files and pages the agent sent, and
   the documents, pictures, media and builds a turn wrote into the folder (Markdown, PDF, images, CSV, DMG…). Code a
   turn changed is Git's.
@@ -344,10 +344,9 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
     changes takes a dot (built 29 Oct; the age isn't built). The marks come from the working tree's status, mapped
     from the repository's paths onto the folder's.
   - Ignored folders (`dist`) are dimmed, with `ignored` in place of an age.
-- **Quick Look.** The picked file shows on `--deep`, radius 10, in Plex 11.5 / 18, with line numbers. Markdown shows
-  rendered, with a switch to its source. Keywords take
-  the lilac; strings take the green.
-- **Foot.** `lib/release.ts · 14 lines`, then **Preview** and **Reveal**.
+- **A file's tab.** The opened file shows on `--deep`, radius 10, in Plex 11.5 / 18, with line numbers. Markdown shows
+  rendered, with a switch to its source. Keywords take the lilac; strings take the green. S7b draws the tree with
+  `release.ts` open in its tab and Files picked; the foot went with the tabs (29 Oct).
 
 ### 5.5 Browser (F36, F37)
 
@@ -619,7 +618,7 @@ Four changes. Everything else in §1–§14 holds. Files: `design/hybrid/v1.1/`.
      - a failed call: full, in **T3's red** (`--diff-rem-mark`: `#B91C1C` Field, `#F87171` Night).
    - **Stack heads wear lamps, not pearls.** The 10 px **working lamp** is the background lamp (the band rising
      through a ring), as on the sidebar. A finished stack shows the 10 px **still tick**.
-   - Hue's colours (§4.5) stay in the tokens. The Folder view's git marks and the Quick Look syntax still use them.
+   - Hue's colours (§4.5) stay in the tokens. The Folder view's git marks and a file tab's syntax still use them.
 2. **A write's meta is coloured**: `+3` in the diff's green (`--diff-add-mark`), `−1` in the diff's red
    (`--diff-rem-mark`). This applies to every row whose meta is `+n −n`.
 3. **Loose ends**: a mail icon, 30 × 26 on a pill radius, caption ink, first in the chat head's tools, left of ⌘K. It

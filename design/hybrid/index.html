@@ -1294,7 +1294,8 @@ html[data-theme="night"] .t3-d { --diff-rem-wash: rgb(239 68 68 / .10); --diff-r
 .dp-w .t3d-panel { box-shadow: none; }
 .dp-v .hy-vh { padding: 0 14px; }
 .dp-list { flex: none; padding: 2px 6px 8px; }
-.dp-th { padding: 12px 8px 6px; font: var(--w-med) 11px/1 var(--f-chrome); color: var(--text-caption); }
+.dp-th { display: flex; align-items: center; gap: 4px; padding: 12px 8px 6px; font: var(--w-med) 11px/1 var(--f-chrome); color: var(--text-caption); }
+.dp-th .gi, .dp-v .hy-tx .gi { width: 12px; height: 12px; }
 .dp-o, .dp-f { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; align-items: center; gap: 10px; height: 28px; padding: 0 8px; border-radius: var(--r-s); color: var(--text-secondary); }
 .dp-o .gi, .dp-f .gi { width: 14px; height: 14px; color: var(--text-caption); }
 .dp-nm { font: 400 11.5px/1 var(--f-mono); color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1317,11 +1318,6 @@ html[data-theme="night"] .t3-d { --diff-rem-wash: rgb(239 68 68 / .10); --diff-r
 .dp-dim .dp-nm { color: var(--text-caption); }
 .dp-crumb { display: inline-flex; align-items: center; gap: 6px; font: 400 11.5px/1 var(--f-mono); color: var(--text-secondary); }
 .dp-crumb b { font-weight: 500; }
-.dp-ql { flex: 1; min-height: 0; overflow: hidden; margin: 4px 14px 0; padding: 12px 0; border-radius: var(--r-m); background: var(--deep); font: 400 11.5px/18px var(--f-mono); color: var(--text-body); white-space: pre; }
-.dp-ql > div { display: grid; grid-template-columns: 34px minmax(0, 1fr); }
-.dp-ql > div > :first-child { padding-right: 12px; text-align: right; color: var(--text-caption); }
-.dp-ql b { font-weight: 400; color: var(--tv-agent); }
-.dp-ql i { font-style: normal; color: var(--tv-write); }
 .dp-site { margin: 0 14px; }
 .hy-cta.dp-picked { outline: 1.5px dashed var(--cream); outline-offset: 5px; }
 .hy-pickbar.dp-pickbar { position: static; display: inline-flex; margin: 16px 0 0; }
@@ -2045,6 +2041,25 @@ html[data-theme="night"] .s-lk-root .s-lk-tty .s-lk-warn { color: var(--amber-ba
 .s-sc-root .s-sc-dr .s-sc-r { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font: 400 10.5px/1 var(--f-mono); color: var(--text-caption); }
 .s-sc-root .s-sc-dr .s-sc-r .gi { width: 12px; height: 12px; }
 .s-sc-root .s-sc-sep { height: 1px; margin: 6px 4px; background: var(--seam); }
+/* Git › Graph, ported to the app's screens.css */
+.s-sc-root .dp-gs[data-g="D"] { color: var(--tv-error); }
+.s-sc-root .dp-gs[data-g="R"] { color: var(--tv-write); }
+.s-sc-root .s-gg-list { flex: 1; min-height: 0; overflow: hidden; padding: 2px 6px 8px; }
+.s-sc-root .s-gg-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto 12px; align-items: center; column-gap: 8px; height: 28px; padding: 0 8px 0 2px; border-radius: var(--r-s); color: var(--text-secondary); }
+.s-sc-root .s-gg-row[data-on] { background: var(--hy-card); box-shadow: inset 0 1px 0 var(--lip); }
+.s-sc-root .s-gg-row svg { overflow: visible; }
+.s-sc-root .s-gg-cv { width: 12px; height: 12px; color: var(--text-caption); opacity: 0; }
+.s-sc-root .s-gg-row[data-on] .s-gg-cv { opacity: 1; }
+.s-sc-root .s-gg-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--w-reg) 12.5px/1 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-gg-refs { display: inline-flex; gap: 4px; min-width: 0; overflow: hidden; }
+.s-sc-root .s-gg-ref { flex: none; padding: 3px 6px; border-radius: var(--r-pill); background: var(--hy-card); font: 400 10px/1 var(--f-mono); color: var(--text-strong); }
+.s-sc-root .s-gg-row[data-on] .s-gg-ref:not([data-remote]) { background: var(--raised); }
+.s-sc-root .s-gg-ref[data-remote] { background: none; box-shadow: inset 0 0 0 1px var(--seam); color: var(--text-caption); }
+.s-sc-root .s-gg-open { margin: 0 0 0 7.25px; padding: 2px 0 8px 14px; box-shadow: inset 1.5px 0 0 var(--tv-read); }
+.s-sc-root .s-gg-subj { margin: 6px 8px 0; font: var(--w-reg) 12.5px/1.45 var(--f-chrome); color: var(--text-strong); }
+.s-sc-root .s-gg-by { margin: 6px 8px 0; font: 400 10.5px/1.4 var(--f-mono); color: var(--text-caption); }
+.s-sc-root .s-gg-body { margin: 4px 8px 6px; font: var(--w-reg) 12px/1.5 var(--f-chrome); color: var(--text-secondary); }
+.s-sc-root .s-gg-more { display: block; width: max-content; margin: 6px auto 0; padding: 6px 10px; border-radius: var(--r-pill); font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-secondary); }
 </style>
 </head>
 <body>
@@ -2525,6 +2540,12 @@ html[data-theme="night"] .s-lk-root .s-lk-tty .s-lk-warn { color: var(--amber-ba
     <figure class="fig" data-fig="pr-inbox-note"><figcaption class="cap"><span class="id">Note</span><b>How the width works.</b><span>Under 600 px: filters behind the icon, labels left off the row (search still finds them). 600 and over: the scope, search, sort and refresh on one line, the filter pickers under it (state, involvement, author, labels, draft, review, checks, project; host and server when there are several), labels on each row, and a box on each open row; with any picked the foot says how many and offers Clear and Close. Maximised, the same view fills the window beside the sidebar, as the page did. ⌘K's Open pull requests opens the Git tab on PR. A pull request opens in the list's place, with a back arrow to it.</span></figcaption></figure>
   </div>
   <figure class="fig" data-fig="pr-wide"><div data-win="pr-wide"></div><figcaption class="cap"><span class="id">SC1d</span><b>Dragged to 820, two picked.</b><span>The panel's edge, while you drag it, is the focus colour with a grip. Pickers are wells with their name in caption ink; sort is one too. A picked row takes the card tone, and the foot says how many and offers Clear and Close in the link field's place. Maximise sits at the right of the tab row, beside Loose ends.</span></figcaption></figure>
+
+  <h3 class="bl-sub"><span class="id">SC1e</span>Git › Graph</h3>
+  <div class="bl-prose">
+    <p>Graph is the branch's history, newest first, the way Zed and Linear's Git views draw it: lanes at the left, the subject, its refs, the date. A click opens the commit under its own row: who and when, the message, then its files with Git's letters; a file opens in Folder. Show older loads sixty more, up to two hundred (built 29 Oct).</p>
+  </div>
+  <figure class="fig" data-fig="graph"><div data-win="graph"></div><figcaption class="cap"><span class="id">SC1e</span><b>site-v2 over main, its head open.</b><span>Lanes take the tool inks in turn, read blue then write green; HEAD's node is filled. The subject is Regrade 12.5, strong; local refs are filled pills, remote ones outlined, in Plex 10. The row cut the subject short, so the open commit says it whole first. The open row takes the card tone and its lane runs on past its files; D is the error ink, A the read blue, M the write green.</span></figcaption></figure>
 
   <h3 class="bl-sub"><span class="id">SC2</span>Settings</h3>
   <div class="bl-prose">
@@ -3196,7 +3217,7 @@ function tabs(list, o = {}) {
   return `<div class="hy-tabs" role="tablist">${list.map(([g, l, on]) => `<span class="hy-tab${o.labels && on ? '' : ' hy-ico'}" role="tab" aria-selected="${!!on}" title="${l}">${G(g)}${o.labels && on ? l : ''}</span>`).join('')}${o.plus ? `<span class="hy-tab hy-ico" title="New tab">${G('plus')}</span>` : ''}</div>`;
 }
 const FILES = [['M', 'lib/release.ts', '+2', '−1'], ['M', 'app/download/page.tsx', '+1', '−1'], ['A', 'app/admin/page.tsx', '+31', ''], ['M', 'docs/DESIGN.md', '+4', '−10']];
-const diffView = () => `<div class="pane hy-v"><div class="hy-vh"><div class="seg sm"><button aria-pressed="false">Graph</button><button aria-pressed="true">Diff</button></div><span class="sp"></span><span class="hy-soft">this turn · vs HEAD</span></div>
+const diffView = () => `<div class="pane hy-v"><div class="hy-vh"><div class="seg sm"><button aria-pressed="false">Graph</button><button aria-pressed="true">Diff</button><button aria-pressed="false">PR</button></div><span class="sp"></span><span class="hy-soft">this turn · vs HEAD</span></div>
   <div class="hy-dsum"><span>4 files</span><span class="t-num hy-pn">+38</span><span class="t-num hy-mn">−12</span></div>
   ${FILES.map(([s, f, a, r]) => `<div class="hy-df"><span></span><span>${s}</span><span>${f}</span><span class="t-num"><span class="hy-pn">${a}</span> <span class="hy-mn">${r}</span></span></div>`).join('')}
   <div class="hy-diff hy-pd">${DIFF.release.map(dline).join('')}${DIFF.download.map(dline).join('')}</div></div>`;
@@ -3375,12 +3396,13 @@ function dmain() {
 
 
 /* ---------- D's right panel, tab by tab: Outputs (F28, F30), Folder (F31), Browser (F36, F37), Terminal. Git is the window's ---------- */
+/* [heading, open, rows]: only the newest turn starts open; a closed one shows its count. Code a turn changed is Git's */
 const OUTS = [
-  ['T14 · now', [['shot', 'button.cta.png', 'PNG · 212 × 40'], ['file', 'docs/DESIGN.md', 'Markdown', 1], ['diff', 'lib/release.ts', '+2 −1'], ['diff', 'app/admin/page.tsx', 'new']]],
-  ['T12 · 23:20', [['out', 'dist/ORBIT-0.2.3.dmg', 'DMG · 11.7 MB'], ['file', 'CHANGELOG.md', 'Markdown'], ['file', 'notary-log.json', 'JSON · accepted']]],
+  ['T14 · now', 1, [['shot', 'button.cta.png', 'PNG · 212 × 40'], ['file', 'docs/DESIGN.md', '+4 −10', 1]]],
+  ['T12 · 23:20', 0, [['out', 'dist/ORBIT-0.2.3.dmg', 'DMG · 11.7 MB'], ['file', 'CHANGELOG.md', 'Markdown'], ['file', 'notary-log.json', 'JSON · accepted']]],
 ];
-const dOutputs = () => `<div class="pane hy-v dp-v"><div class="hy-vh"><b>Outputs</b><span>this chat, newest first</span><span class="sp"></span><span class="t-num">7</span></div>
-  <div class="dp-list">${OUTS.map(([t, rows]) => `<div class="dp-th">${t}</div>${rows.map(([g, n, m, on]) => `<div class="dp-o"${on ? ' data-on' : ''}>${G(g)}<span class="dp-nm">${n}</span><span class="dp-mt">${m}</span></div>`).join('')}`).join('')}</div>
+const dOutputs = () => `<div class="pane hy-v dp-v"><div class="hy-vh"><b>Outputs</b><span>this thread, newest first</span><span class="sp"></span><span class="t-num">5</span></div>
+  <div class="dp-list">${OUTS.map(([t, open, rows]) => `<div class="dp-th">${G(open ? 'chev-d' : 'chev-r')}${t}<span class="sp"></span>${open ? '' : `<span class="t-num">${rows.length}</span>`}</div>${open ? rows.map(([g, n, m, on]) => `<div class="dp-o"${on ? ' data-on' : ''}>${G(g)}<span class="dp-nm">${n}</span><span class="dp-mt">${m}</span></div>`).join('') : ''}`).join('')}</div>
   <div class="dp-md"><h5>Release size</h5><p>The DMG's size is read from the file at build time, never typed. <code>lib/release.ts</code> holds it in bytes; both pages format it with <code>formatSize</code>.</p>
   <table><tr><th>Page</th><th>Reads</th></tr><tr><td><code>/download</code></td><td><code>release.size</code></td></tr><tr><td><code>/admin</code></td><td><code>release.size</code></td></tr></table>
   <p>Never hand-type a size again: the build fails if <code>dist/</code> has no DMG.</p></div>
@@ -3389,11 +3411,9 @@ const dOutputs = () => `<div class="pane hy-v dp-v"><div class="hy-vh"><b>Output
 const TREE = [[0, 'app', 'o', 'M'], [1, 'admin', 'o', 'A'], [2, 'page.tsx', '', 'A', 'now'], [1, 'download', 'o', 'M'], [2, 'page.tsx', '', 'M', 'now'], [1, 'layout.tsx', '', '', '3d'], [1, 'page.tsx', '', '', '3d'],
   [0, 'dist', 'c', 'ignored'], [0, 'docs', 'o', 'M'], [1, 'DESIGN.md', '', 'M', 'now'], [0, 'lib', 'o', 'M'], [1, 'format.ts', '', '', '2d'], [1, 'release.ts', '', 'M', 'now', 1],
   [0, 'public', 'c'], [0, 'package.json', '', '', '1w'], [0, 'README.md', '', '', '1w']];
-const QL = [[8, '<b>import</b> { formatSize } <b>from</b> <i>"./format"</i>;'], [9, ''], [10, '<b>export const</b> release = {'], [11, '  version: <i>"0.2.3"</i>,'], [12, '  bytes: 11_743_232,'], [13, '  size: formatSize(11_743_232),'], [14, '};']];
-const dFolder = () => `<div class="pane hy-v dp-v"><div class="hy-vh"><span class="dp-crumb">orbit-website<span>›</span><b>site-v2</b></span><span class="sp"></span><span>4 changed</span></div>
-  <div class="dp-list">${TREE.map(([d, n, dir, gs, age, on]) => `<div class="dp-f${gs === 'ignored' ? ' dp-dim' : ''}" style="--l:${d}"${on ? ' data-on' : ''}>${dir ? G(dir === 'o' ? 'chev-d' : 'chev-r', 'dp-cv') : '<i></i>'}${G(dir ? 'folder' : 'file')}<span class="dp-nm">${n}</span><span class="dp-gs" data-g="${gs || ''}">${gs && gs !== 'ignored' && !dir ? gs : ''}</span><span class="dp-mt">${gs === 'ignored' ? 'ignored' : age || ''}</span></div>`).join('')}</div>
-  <div class="dp-ql">${QL.map(([n, t]) => `<div><span>${n}</span><span>${t}</span></div>`).join('')}</div>
-  <div class="hy-sfoot"><span>lib/release.ts · 14 lines</span><span class="sp"></span><span class="pill ghost sm">Preview</span><span class="pill ghost sm">Reveal</span></div></div>`;
+const dFolder = () => `<div class="pane hy-v dp-v"><div class="hy-vh hy-tmux"><span class="hy-tx" data-on>${G('files')}Files</span><span class="hy-tx">${G('file')}release.ts</span></div>
+  <div class="hy-vh"><span class="dp-crumb">orbit-website<span>›</span><b>site-v2</b></span><span class="sp"></span><span>4 changed</span></div>
+  <div class="dp-list">${TREE.map(([d, n, dir, gs, age, on]) => `<div class="dp-f${gs === 'ignored' ? ' dp-dim' : ''}" style="--l:${d}"${on ? ' data-on' : ''}>${dir ? G(dir === 'o' ? 'chev-d' : 'chev-r', 'dp-cv') : '<i></i>'}${G(dir ? 'folder' : 'file')}<span class="dp-nm">${n}</span><span class="dp-gs" data-g="${gs || ''}">${gs && gs !== 'ignored' ? (dir ? '•' : gs) : ''}</span><span class="dp-mt">${gs === 'ignored' ? 'ignored' : age || ''}</span></div>`).join('')}</div></div>`;
 const dBrowser = () => `<div class="pane hy-v dp-v"><div class="hy-vh">${G('chev-l')}${G('chev-r')}${G('reload')}<span class="input hy-url">localhost:3000/download</span><span class="hy-pk" data-on>${G('pick')}</span><span class="hy-pk">${G('shot')}</span></div>
   <div class="hy-site dp-site"><div class="hy-snav"><b>ORBIT</b><span>Features</span><span>Download</span><span>Changelog</span></div><h4 class="hy-sh1">Download ORBIT</h4>
   <p class="hy-sp">The arming layer for your DAW. One key, every track ready.</p><span class="hy-cta dp-picked">Download for macOS · 11.2 MB</span>
@@ -3982,6 +4002,38 @@ function prNone() {
   const empty = `<div class="s-sc-empty"><b>No pull request for <code>site-v2</code> yet.</b>Create one from the branch, or link one that already exists below.<div class="s-sc-acts"><span class="pill sm primary">Create</span></div></div>`;
   return `<div class="pane hy-v s-sc-prv">${prHead}${empty}${fold(true, 'Open in orbit-website', 2)}${OTHERS.map(prl).join('')}<div class="s-sc-gap"></div>${linkFoot}</div>`;
 }
+/* ---------- SC1e Git › Graph (GitGraphPanel): lanes take the tool inks in turn, HEAD's node is filled ---------- */
+const LX = l => 6 + 12 * l, INK = ['var(--tv-read)', 'var(--tv-write)'];
+/* one row's slice: [lane] lines through it, ins/outs into and out of its node, the node */
+function gcell({ node, through = [], ins = [node], outs = [node], head }) {
+  const p = (d, l) => `<path d="${d}" stroke="${INK[l]}" stroke-width="1.5" fill="none"/>`;
+  const x = LX(node);
+  return `<svg width="36" height="28" aria-hidden="true">${through.map(l => p(`M${LX(l)} 0 V28`, l)).join('')}`
+    + ins.map(l => p(l === node ? `M${x} 0 V14` : `M${LX(l)} 0 C${LX(l)} 8.4 ${x} 5.6 ${x} 14`, l)).join('')
+    + outs.map(l => p(`M${x} 14 V28`, l)).join('')
+    + `<circle cx="${x}" cy="14" r="${head ? 4 : 3.5}" fill="${head ? INK[node] : 'var(--deep)'}" stroke="${INK[node]}" stroke-width="1.5"/></svg>`;
+}
+const GRAPH = [
+  ['Read the release size from the DMG', { node: 0, ins: [], head: 1 }, ['site-v2', 'origin/site-v2'], '29 Oct'],
+  ['Admin page lists the release', { node: 0 }, [], '29 Oct'],
+  ['Download page reads release.size', { node: 0 }, [], '28 Oct'],
+  ['Changelog for 0.2.3', { node: 1, ins: [], through: [0] }, ['origin/main'], '28 Oct'],
+  ['Bump next to 15.1', { node: 1, through: [0] }, [], '27 Oct'],
+  ['Price table on one page', { node: 0, ins: [0, 1] }, [], '26 Oct'],
+  ['Notarise the DMG in CI', { node: 0 }, [], '25 Oct'],
+  ['Release 0.2.2', { node: 0 }, ['v0.2.2'], '24 Oct'],
+];
+const GFILES = [['M', 'lib/release.ts', '+2', '−1'], ['M', 'app/download/page.tsx', '+1', '−1'], ['A', 'app/admin/page.tsx', '+31', ''], ['D', 'public/size.txt', '', '−1']];
+function graphView() {
+  const head = `<div class="hy-vh">${seg(['Graph', 'Diff', 'PR'], 'Graph')}<span class="sp"></span><span class="hy-soft">site-v2 · latest 60</span>${G('reload')}</div>`;
+  const open = `<div class="s-gg-open" style="padding-left:31px"><p class="s-gg-subj">${GRAPH[0][0]}</p><p class="s-gg-by">Randev Ranjit · 29 Oct, 17:20 · 5c53eca</p>`
+    + `<p class="s-gg-body">Both pages read the size from lib/release.ts, which the build fills from the DMG.</p>`
+    + GFILES.map(([s, f, a, r]) => `<div class="dp-o"><span class="dp-gs" data-g="${s}">${s}</span><span class="dp-nm">${f}</span><span class="dp-mt t-num">${a ? `<span class="hy-pn">${a}</span>` : ''}${a && r ? ' ' : ''}${r ? `<span class="hy-mn">${r}</span>` : ''}</span></div>`).join('') + `</div>`;
+  const rows = GRAPH.map(([s, cell, refs, d], i) => `<div class="s-gg-row"${i === 0 ? ' data-on' : ''}>${gcell(cell)}<span class="s-gg-sub">${s}</span>`
+    + `<span class="s-gg-refs">${refs.map(r => `<span class="s-gg-ref"${r.includes('/') ? ' data-remote' : ''}>${r}</span>`).join('')}</span>`
+    + `<span class="dp-mt">${d}</span>${G(i === 0 ? 'chev-d' : 'chev-r', 's-gg-cv')}</div>${i === 0 ? open : ''}`).join('');
+  return `<div class="pane hy-v dp-v">${head}<div class="s-gg-list">${rows}<span class="s-gg-more">Show older</span></div></div>`;
+}
 const gitPanel = (view, h) => Hy.dPanel('Outputs')
   .replace('aria-selected="true" title="Outputs"', 'aria-selected="false" title="Outputs"').replace('aria-selected="false" title="Git"', 'aria-selected="true" title="Git"')
   .replace(/<div class="hy-views">[\s\S]*<\/div><\/div><\/div><\/div><\/div>$/, `<div class="hy-views">${view}</div></div></div></div></div>`)
@@ -4143,6 +4195,7 @@ function details() {
 
 Bloom.section('screens', { init(el) {
   const W = {
+    graph: () => gitPanel(graphView(), 580),
     pr: () => gitPanel(prView(), 860),
     'pr-none': () => gitPanel(prNone(), 420),
     'pr-inbox': () => gitPanel(inboxCompact(), 640),

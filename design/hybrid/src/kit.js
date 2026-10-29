@@ -164,7 +164,7 @@ function tabs(list, o = {}) {
   return `<div class="hy-tabs" role="tablist">${list.map(([g, l, on]) => `<span class="hy-tab${o.labels && on ? '' : ' hy-ico'}" role="tab" aria-selected="${!!on}" title="${l}">${G(g)}${o.labels && on ? l : ''}</span>`).join('')}${o.plus ? `<span class="hy-tab hy-ico" title="New tab">${G('plus')}</span>` : ''}</div>`;
 }
 const FILES = [['M', 'lib/release.ts', '+2', '−1'], ['M', 'app/download/page.tsx', '+1', '−1'], ['A', 'app/admin/page.tsx', '+31', ''], ['M', 'docs/DESIGN.md', '+4', '−10']];
-const diffView = () => `<div class="pane hy-v"><div class="hy-vh"><div class="seg sm"><button aria-pressed="false">Graph</button><button aria-pressed="true">Diff</button></div><span class="sp"></span><span class="hy-soft">this turn · vs HEAD</span></div>
+const diffView = () => `<div class="pane hy-v"><div class="hy-vh"><div class="seg sm"><button aria-pressed="false">Graph</button><button aria-pressed="true">Diff</button><button aria-pressed="false">PR</button></div><span class="sp"></span><span class="hy-soft">this turn · vs HEAD</span></div>
   <div class="hy-dsum"><span>4 files</span><span class="t-num hy-pn">+38</span><span class="t-num hy-mn">−12</span></div>
   ${FILES.map(([s, f, a, r]) => `<div class="hy-df"><span></span><span>${s}</span><span>${f}</span><span class="t-num"><span class="hy-pn">${a}</span> <span class="hy-mn">${r}</span></span></div>`).join('')}
   <div class="hy-diff hy-pd">${DIFF.release.map(dline).join('')}${DIFF.download.map(dline).join('')}</div></div>`;
@@ -343,12 +343,13 @@ function dmain() {
 
 
 /* ---------- D's right panel, tab by tab: Outputs (F28, F30), Folder (F31), Browser (F36, F37), Terminal. Git is the window's ---------- */
+/* [heading, open, rows]: only the newest turn starts open; a closed one shows its count. Code a turn changed is Git's */
 const OUTS = [
-  ['T14 · now', [['shot', 'button.cta.png', 'PNG · 212 × 40'], ['file', 'docs/DESIGN.md', 'Markdown', 1], ['diff', 'lib/release.ts', '+2 −1'], ['diff', 'app/admin/page.tsx', 'new']]],
-  ['T12 · 23:20', [['out', 'dist/ORBIT-0.2.3.dmg', 'DMG · 11.7 MB'], ['file', 'CHANGELOG.md', 'Markdown'], ['file', 'notary-log.json', 'JSON · accepted']]],
+  ['T14 · now', 1, [['shot', 'button.cta.png', 'PNG · 212 × 40'], ['file', 'docs/DESIGN.md', '+4 −10', 1]]],
+  ['T12 · 23:20', 0, [['out', 'dist/ORBIT-0.2.3.dmg', 'DMG · 11.7 MB'], ['file', 'CHANGELOG.md', 'Markdown'], ['file', 'notary-log.json', 'JSON · accepted']]],
 ];
-const dOutputs = () => `<div class="pane hy-v dp-v"><div class="hy-vh"><b>Outputs</b><span>this chat, newest first</span><span class="sp"></span><span class="t-num">7</span></div>
-  <div class="dp-list">${OUTS.map(([t, rows]) => `<div class="dp-th">${t}</div>${rows.map(([g, n, m, on]) => `<div class="dp-o"${on ? ' data-on' : ''}>${G(g)}<span class="dp-nm">${n}</span><span class="dp-mt">${m}</span></div>`).join('')}`).join('')}</div>
+const dOutputs = () => `<div class="pane hy-v dp-v"><div class="hy-vh"><b>Outputs</b><span>this thread, newest first</span><span class="sp"></span><span class="t-num">5</span></div>
+  <div class="dp-list">${OUTS.map(([t, open, rows]) => `<div class="dp-th">${G(open ? 'chev-d' : 'chev-r')}${t}<span class="sp"></span>${open ? '' : `<span class="t-num">${rows.length}</span>`}</div>${open ? rows.map(([g, n, m, on]) => `<div class="dp-o"${on ? ' data-on' : ''}>${G(g)}<span class="dp-nm">${n}</span><span class="dp-mt">${m}</span></div>`).join('') : ''}`).join('')}</div>
   <div class="dp-md"><h5>Release size</h5><p>The DMG's size is read from the file at build time, never typed. <code>lib/release.ts</code> holds it in bytes; both pages format it with <code>formatSize</code>.</p>
   <table><tr><th>Page</th><th>Reads</th></tr><tr><td><code>/download</code></td><td><code>release.size</code></td></tr><tr><td><code>/admin</code></td><td><code>release.size</code></td></tr></table>
   <p>Never hand-type a size again: the build fails if <code>dist/</code> has no DMG.</p></div>
@@ -357,11 +358,9 @@ const dOutputs = () => `<div class="pane hy-v dp-v"><div class="hy-vh"><b>Output
 const TREE = [[0, 'app', 'o', 'M'], [1, 'admin', 'o', 'A'], [2, 'page.tsx', '', 'A', 'now'], [1, 'download', 'o', 'M'], [2, 'page.tsx', '', 'M', 'now'], [1, 'layout.tsx', '', '', '3d'], [1, 'page.tsx', '', '', '3d'],
   [0, 'dist', 'c', 'ignored'], [0, 'docs', 'o', 'M'], [1, 'DESIGN.md', '', 'M', 'now'], [0, 'lib', 'o', 'M'], [1, 'format.ts', '', '', '2d'], [1, 'release.ts', '', 'M', 'now', 1],
   [0, 'public', 'c'], [0, 'package.json', '', '', '1w'], [0, 'README.md', '', '', '1w']];
-const QL = [[8, '<b>import</b> { formatSize } <b>from</b> <i>"./format"</i>;'], [9, ''], [10, '<b>export const</b> release = {'], [11, '  version: <i>"0.2.3"</i>,'], [12, '  bytes: 11_743_232,'], [13, '  size: formatSize(11_743_232),'], [14, '};']];
-const dFolder = () => `<div class="pane hy-v dp-v"><div class="hy-vh"><span class="dp-crumb">orbit-website<span>›</span><b>site-v2</b></span><span class="sp"></span><span>4 changed</span></div>
-  <div class="dp-list">${TREE.map(([d, n, dir, gs, age, on]) => `<div class="dp-f${gs === 'ignored' ? ' dp-dim' : ''}" style="--l:${d}"${on ? ' data-on' : ''}>${dir ? G(dir === 'o' ? 'chev-d' : 'chev-r', 'dp-cv') : '<i></i>'}${G(dir ? 'folder' : 'file')}<span class="dp-nm">${n}</span><span class="dp-gs" data-g="${gs || ''}">${gs && gs !== 'ignored' && !dir ? gs : ''}</span><span class="dp-mt">${gs === 'ignored' ? 'ignored' : age || ''}</span></div>`).join('')}</div>
-  <div class="dp-ql">${QL.map(([n, t]) => `<div><span>${n}</span><span>${t}</span></div>`).join('')}</div>
-  <div class="hy-sfoot"><span>lib/release.ts · 14 lines</span><span class="sp"></span><span class="pill ghost sm">Preview</span><span class="pill ghost sm">Reveal</span></div></div>`;
+const dFolder = () => `<div class="pane hy-v dp-v"><div class="hy-vh hy-tmux"><span class="hy-tx" data-on>${G('files')}Files</span><span class="hy-tx">${G('file')}release.ts</span></div>
+  <div class="hy-vh"><span class="dp-crumb">orbit-website<span>›</span><b>site-v2</b></span><span class="sp"></span><span>4 changed</span></div>
+  <div class="dp-list">${TREE.map(([d, n, dir, gs, age, on]) => `<div class="dp-f${gs === 'ignored' ? ' dp-dim' : ''}" style="--l:${d}"${on ? ' data-on' : ''}>${dir ? G(dir === 'o' ? 'chev-d' : 'chev-r', 'dp-cv') : '<i></i>'}${G(dir ? 'folder' : 'file')}<span class="dp-nm">${n}</span><span class="dp-gs" data-g="${gs || ''}">${gs && gs !== 'ignored' ? (dir ? '•' : gs) : ''}</span><span class="dp-mt">${gs === 'ignored' ? 'ignored' : age || ''}</span></div>`).join('')}</div></div>`;
 const dBrowser = () => `<div class="pane hy-v dp-v"><div class="hy-vh">${G('chev-l')}${G('chev-r')}${G('reload')}<span class="input hy-url">localhost:3000/download</span><span class="hy-pk" data-on>${G('pick')}</span><span class="hy-pk">${G('shot')}</span></div>
   <div class="hy-site dp-site"><div class="hy-snav"><b>ORBIT</b><span>Features</span><span>Download</span><span>Changelog</span></div><h4 class="hy-sh1">Download ORBIT</h4>
   <p class="hy-sp">The arming layer for your DAW. One key, every track ready.</p><span class="hy-cta dp-picked">Download for macOS · 11.2 MB</span>

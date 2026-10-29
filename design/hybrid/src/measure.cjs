@@ -47,7 +47,7 @@ const PARTS = [
   ['row name', '.dp-nm', 'P0'], ['row meta', '.dp-mt', 'P0'], ['rendered report', '.dp-md', 'P0'], ['report heading', '.dp-md h5', 'P0'], ['report text', '.dp-md p', 'P0'], ['report code', '.dp-md code', 'P0'],
   ['report table cell', '.dp-md td', 'P0'], ['foot', '.hy-sfoot', 'P0'], ['foot button', '.hy-sfoot .pill', 'P0'],
   ['## Right panel: Folder', null],
-  ['breadcrumb', '.dp-crumb', 'P1'], ['tree row', '.dp-f', 'P1'], ['tree row, picked', '.dp-f[data-on]', 'P1'], ['git mark', '.dp-gs[data-g="M"]', 'P1'], ['ignored row name', '.dp-dim .dp-nm', 'P1'], ['Quick Look', '.dp-ql', 'P1'], ['Quick Look keyword', '.dp-ql b', 'P1'], ['Quick Look string', '.dp-ql i', 'P1'],
+  ['breadcrumb', '.dp-crumb', 'P1'], ['tree row', '.dp-f', 'P1'], ['tree row, picked', '.dp-f[data-on]', 'P1'], ['git mark', '.dp-gs[data-g="M"]', 'P1'], ['ignored row name', '.dp-dim .dp-nm', 'P1'],
   ['## Right panel: Browser', null],
   ['address', '.hy-url', 'P2'], ['pick tool, on', '.hy-pk[data-on]', 'P2'], ['site', '.dp-site', 'P2'], ['picked element', '.hy-cta', 'P2'], ['pick bar', '.hy-pickbar', 'P2'], ['pick bar Add', '.hy-pickbar .pill', 'P2'], ['foot', '.hy-sfoot', 'P2'],
   ['## Right panel: Terminal', null],

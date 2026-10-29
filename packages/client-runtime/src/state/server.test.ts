@@ -847,10 +847,15 @@ describe("server state projection", () => {
         skills: [],
         ...(workspaceSnapshots ? { workspaceSnapshots } : {}),
       }) as unknown as ServerConfig["providers"][number];
-    const configWith = (onDemand: boolean, providers: ServerConfig["providers"]) =>
+    const configWith = (
+      onDemand: boolean,
+      providers: ServerConfig["providers"],
+      providerInstances: Record<string, unknown> = {},
+    ) =>
       ({
         ...CONFIG,
         environment: { capabilities: { providerWorkspaceSnapshotsOnDemand: onDemand } },
+        settings: { providers: {}, providerInstances },
         providers,
       }) as unknown as ServerConfig;
     const claudeA = snapshot("/a", "claude");
@@ -864,7 +869,7 @@ describe("server state projection", () => {
         current,
         { instanceId, cwd: "/a", fresh },
         reply,
-        provider(instanceId),
+        configWith(true, [provider(claude), provider(claudeWork)]),
       );
 
     let fetched = record([], claude, false, [provider(claude, [claudeA])]);
@@ -905,6 +910,67 @@ describe("server state projection", () => {
 
     // A fresh scan drops the cwd's other provider snapshots, as the server does.
     expect(record(fetched, claude, true, [])).toEqual([]);
+  });
+
+  it("retires a fetched workspace snapshot when its instance is reconfigured", () => {
+    const claude = ProviderInstanceId.make("claudeAgent");
+    const claudeWork = ProviderInstanceId.make("claudeWork");
+    const snapshot = (command: string) => ({
+      cwd: "/a",
+      checkedAt: "2026-10-25T00:00:00.000Z",
+      slashCommands: [{ name: command }],
+      skills: [],
+    });
+    const provider = (
+      instanceId: ProviderInstanceId,
+      workspaceSnapshots?: ReadonlyArray<ReturnType<typeof snapshot>>,
+    ) =>
+      ({
+        instanceId,
+        enabled: true,
+        slashCommands: [],
+        skills: [],
+        ...(workspaceSnapshots ? { workspaceSnapshots } : {}),
+      }) as unknown as ServerConfig["providers"][number];
+    // Machine-wide commands and skills are the same before and after; only the
+    // instance's settings change, which makes the server rebuild it and drop
+    // its workspace snapshots without telling an on-demand client.
+    const configWith = (claudeHome: string) =>
+      ({
+        ...CONFIG,
+        environment: { capabilities: { providerWorkspaceSnapshotsOnDemand: true } },
+        settings: {
+          providers: {},
+          providerInstances: {
+            [claude]: { driver: "claudeAgent", config: { homePath: claudeHome } },
+            [claudeWork]: { driver: "claudeAgent", config: { homePath: "/work" } },
+          },
+        },
+        providers: [provider(claude), provider(claudeWork)],
+      }) as unknown as ServerConfig;
+    const before = configWith("/home");
+    let fetched = recordFetchedWorkspaceSnapshot(
+      [],
+      { instanceId: claude, cwd: "/a", fresh: false },
+      [provider(claude, [snapshot("claude")])],
+      before,
+    );
+    fetched = recordFetchedWorkspaceSnapshot(
+      fetched,
+      { instanceId: claudeWork, cwd: "/a", fresh: false },
+      [provider(claudeWork, [snapshot("work")])],
+      before,
+    );
+    expect(
+      withFetchedWorkspaceSnapshots(before, fetched).providers.map(
+        (entry) => entry.workspaceSnapshots,
+      ),
+    ).toEqual([[snapshot("claude")], [snapshot("work")]]);
+    expect(
+      withFetchedWorkspaceSnapshots(configWith("/other"), fetched).providers.map(
+        (entry) => entry.workspaceSnapshots,
+      ),
+    ).toEqual([undefined, [snapshot("work")]]);
   });
 
   it.effect("starts from cached configuration and persists the live projection", () =>

@@ -2,6 +2,8 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { afterEach, assert, expect, it, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
 import * as Fiber from "effect/Fiber";
@@ -19,6 +21,7 @@ import * as GitHubQuota from "../sourceControl/githubQuota.ts";
 import * as SourceControlRateLimit from "../sourceControl/SourceControlRateLimit.ts";
 import * as VcsProcess from "../vcs/VcsProcess.ts";
 import * as GitHubPullRequestApi from "./GitHubPullRequestApi.ts";
+import * as GitHubPullRequestProvider from "./GitHubPullRequestProvider.ts";
 import { KnownWorkflowRuns } from "./gitHubConditionalChecks.ts";
 
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
@@ -2226,6 +2229,362 @@ layer("GitHubPullRequestApi.layer", (it) => {
     }),
   );
 
+  it.effect.each([
+    {
+      description: "base-only write",
+      basePermission: "WRITE",
+      sourcePermission: "READ",
+      headRef: { id: "REF" },
+      expected: false,
+      actionAllowed: false,
+    },
+    {
+      description: "source-only write",
+      basePermission: "READ",
+      sourcePermission: "WRITE",
+      headRef: { id: "REF" },
+      expected: true,
+      actionAllowed: true,
+    },
+    {
+      description: "a deleted branch",
+      basePermission: "READ",
+      sourcePermission: "WRITE",
+      headRef: null,
+      expected: false,
+      actionAllowed: true,
+    },
+    {
+      description: "an unavailable source repository",
+      basePermission: "WRITE",
+      sourcePermission: null,
+      headRef: { id: "REF" },
+      expected: false,
+      actionAllowed: false,
+    },
+  ])(
+    "uses source branch access in both permission reads for $description",
+    ({ basePermission, sourcePermission, headRef, expected, actionAllowed }) =>
+      Effect.gen(function* () {
+        const answer = coreResponse({
+          headRepository: sourcePermission === null ? null : { viewerPermission: sourcePermission },
+          headRef,
+        });
+        answer.data.repository.viewerPermission = basePermission;
+        mockedExecute.mockReturnValue(Effect.succeed(output(encodeJson(answer))));
+        const cli = yield* GitHubPullRequestApi.GitHubPullRequestApi;
+        const input = { cwd: "/w", repository: "acme/web", host: "github.com", number: 7 };
+        expect((yield* cli.getViewerAccess(input)).canDeleteBranch).toBe(actionAllowed);
+        expect((yield* cli.getPullRequestDetail(input)).viewerAccess.canDeleteBranch).toBe(
+          expected,
+        );
+        for (const [call] of mockedExecute.mock.calls) {
+          if (
+            call.kind === "graphql" &&
+            !call.query.includes("query PullRequestStackMemberships")
+          ) {
+            if (call.query.includes("$headRef: String!")) {
+              expect(call.query).toContain("headRepository { nameWithOwner viewerPermission }");
+              expect(call.query).toContain("headRef { id }");
+            } else {
+              expect(call.query).toContain("headRepository { viewerPermission }");
+            }
+          }
+        }
+      }),
+  );
+
+  it.effect("preserves the actual source fork name in provider detail", () =>
+    Effect.gen(function* () {
+      const answer = coreResponse({
+        state: "MERGED",
+        isCrossRepository: true,
+        headRepository: { nameWithOwner: "contributor/web-fork", viewerPermission: "WRITE" },
+        headRef: { id: "REF" },
+      });
+      mockedExecute.mockReturnValue(Effect.succeed(output(encodeJson(answer))));
+      const provider = yield* GitHubPullRequestProvider.make;
+      const detail = yield* provider.getChangeRequest({
+        cwd: "/w",
+        repository: "acme/web",
+        host: "github.com",
+        number: 7,
+      });
+      expect(detail.headRepositoryNameWithOwner).toBe("contributor/web-fork");
+      expect(detail.viewerPermissions.actions).toContain("delete-branch");
+      expect(queryAt(0)).toContain("headRepository { nameWithOwner viewerPermission }");
+    }),
+  );
+
+  const branchToDelete = (pullRequest: Readonly<Record<string, unknown>> = {}) => ({
+    data: {
+      repository: {
+        pullRequest: {
+          state: "MERGED",
+          headRefName: "feat/delete",
+          baseRefName: "main",
+          headRefOid: "abc123",
+          headRepository: { id: "FORK_REPO" },
+          ...pullRequest,
+        },
+      },
+    },
+  });
+  const sourceBranch = (repository: Readonly<Record<string, unknown>> = {}) => ({
+    data: {
+      node: {
+        defaultBranchRef: { name: "main" },
+        ref: { target: { oid: "abc123" } },
+        ...repository,
+      },
+    },
+  });
+  /**
+   * A real repository on `main`, with `feat/delete` checked out wherever `checkedOut` says, so
+   * the worktree guard reads what git itself reports. Returns the main checkout's path, which is
+   * a plain folder for "no repository".
+   */
+  const repository = (
+    checkedOut: "nowhere" | "the main checkout" | "a linked worktree" | "no repository",
+  ) =>
+    Effect.gen(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const process = yield* VcsProcess.VcsProcess;
+      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "control-delete-branch-" });
+      const main = path.join(root, "main");
+      yield* fileSystem.makeDirectory(main);
+      if (checkedOut === "no repository") return main;
+      const git = (...args: string[]) =>
+        process.run({
+          operation: "test",
+          command: "git",
+          args: ["-c", "core.hooksPath=/dev/null", ...args],
+          cwd: main,
+        });
+      yield* git("init", "-q", "-b", "main");
+      yield* git(
+        "-c",
+        "user.email=t@t",
+        "-c",
+        "user.name=t",
+        "commit",
+        "-q",
+        "--allow-empty",
+        "-m",
+        "init",
+      );
+      if (checkedOut === "the main checkout") yield* git("switch", "-q", "-c", "feat/delete");
+      if (checkedOut === "a linked worktree")
+        yield* git("worktree", "add", "-q", "-b", "feat/delete", path.join(root, "linked"));
+      return main;
+    }).pipe(Effect.provide(VcsProcess.layer.pipe(Layer.provideMerge(NodeServices.layer))));
+
+  it.effect.each(["MERGED", "CLOSED"])("deletes the exact remote fork branch of a %s PR", (state) =>
+    Effect.gen(function* () {
+      route(
+        ["query PullRequestBranchToDelete", branchToDelete({ state })],
+        ["query PullRequestSourceBranch", sourceBranch()],
+      );
+      const cli = yield* GitHubPullRequestApi.GitHubPullRequestApi;
+      yield* cli.runPullRequestAction({
+        cwd: yield* repository("nowhere"),
+        repository: "acme/web",
+        host: "github.enterprise.test",
+        number: 7,
+        action: "delete-branch",
+      });
+      expect(variablesOf("query PullRequestBranchToDelete")).toEqual([
+        { owner: "acme", name: "web", number: 7 },
+      ]);
+      expect(variablesOf("query PullRequestSourceBranch")).toEqual([
+        { repositoryId: "FORK_REPO", ref: "refs/heads/feat/delete" },
+      ]);
+      expect(variablesOf("updateRefs(")).toEqual([
+        {
+          input: {
+            repositoryId: "FORK_REPO",
+            refUpdates: [
+              {
+                name: "refs/heads/feat/delete",
+                beforeOid: "abc123",
+                afterOid: "0000000000000000000000000000000000000000",
+              },
+            ],
+          },
+        },
+      ]);
+      expect(mockedExecute.mock.calls.at(-1)?.[0].host).toBe("github.enterprise.test");
+      expect(variablesOf("mergePullRequest(")).toEqual([]);
+      expect(variablesOf("closePullRequest(")).toEqual([]);
+    }),
+  );
+
+  it.effect.each([
+    { description: "an open PR", head: { state: "OPEN" }, source: {}, reason: "open-pr" },
+    {
+      description: "a missing source repository",
+      head: { headRepository: null },
+      source: {},
+      reason: "source-unavailable",
+    },
+    {
+      description: "the base branch",
+      head: { headRefName: "main" },
+      source: {},
+      reason: "unsafe-branch",
+    },
+    {
+      description: "the default branch",
+      head: {},
+      source: { defaultBranchRef: { name: "feat/delete" } },
+      reason: "unsafe-branch",
+    },
+    {
+      description: "a missing default branch",
+      head: {},
+      source: { defaultBranchRef: null },
+      reason: "unsafe-branch",
+    },
+    {
+      // The host's branch has commits the pull request never had: deleting it would lose them.
+      description: "a branch with commits beyond the PR's head",
+      head: {},
+      source: { ref: { target: { oid: "new-commit" } } },
+      reason: "head-changed",
+    },
+    {
+      description: "an unavailable source repository",
+      head: {},
+      source: null,
+      reason: "source-unavailable",
+    },
+  ])("refuses to delete $description", ({ head, source, reason }) =>
+    Effect.gen(function* () {
+      route(
+        ["query PullRequestBranchToDelete", branchToDelete(head)],
+        [
+          "query PullRequestSourceBranch",
+          source === null ? { data: { node: null } } : sourceBranch(source),
+        ],
+      );
+      const cli = yield* GitHubPullRequestApi.GitHubPullRequestApi;
+      const error = yield* Effect.flip(
+        cli.runPullRequestAction({
+          cwd: yield* repository("nowhere"),
+          repository: "acme/web",
+          host: "github.com",
+          number: 7,
+          action: "delete-branch",
+        }),
+      );
+      expect(error).toMatchObject({ _tag: "GitHubBranchDeletionRefusedError", reason });
+      expect(variablesOf("updateRefs(")).toEqual([]);
+    }),
+  );
+
+  it.effect.each(["the main checkout", "a linked worktree"] as const)(
+    "refuses to delete a branch checked out in %s",
+    (checkedOut) =>
+      Effect.gen(function* () {
+        route(
+          ["query PullRequestBranchToDelete", branchToDelete()],
+          ["query PullRequestSourceBranch", sourceBranch()],
+        );
+        const cli = yield* GitHubPullRequestApi.GitHubPullRequestApi;
+        const error = yield* Effect.flip(
+          cli.runPullRequestAction({
+            cwd: yield* repository(checkedOut),
+            repository: "acme/web",
+            host: "github.com",
+            number: 7,
+            action: "delete-branch",
+          }),
+        );
+        expect(error).toMatchObject({
+          _tag: "GitHubBranchDeletionRefusedError",
+          reason: "checked-out",
+        });
+        expect(variablesOf("updateRefs(")).toEqual([]);
+      }),
+  );
+
+  it.effect("refuses to delete a branch when the project's worktrees cannot be read", () =>
+    Effect.gen(function* () {
+      route(
+        ["query PullRequestBranchToDelete", branchToDelete()],
+        ["query PullRequestSourceBranch", sourceBranch()],
+      );
+      const cli = yield* GitHubPullRequestApi.GitHubPullRequestApi;
+      const error = yield* Effect.flip(
+        cli.runPullRequestAction({
+          cwd: yield* repository("no repository"),
+          repository: "acme/web",
+          host: "github.com",
+          number: 7,
+          action: "delete-branch",
+        }),
+      );
+      expect(error).toMatchObject({
+        _tag: "GitHubBranchDeletionRefusedError",
+        reason: "worktrees-unreadable",
+      });
+      expect(variablesOf("updateRefs(")).toEqual([]);
+    }),
+  );
+
+  it.effect("accepts an already deleted source branch", () =>
+    Effect.gen(function* () {
+      route(
+        ["query PullRequestBranchToDelete", branchToDelete()],
+        ["query PullRequestSourceBranch", sourceBranch({ ref: null })],
+      );
+      const cli = yield* GitHubPullRequestApi.GitHubPullRequestApi;
+      yield* cli.runPullRequestAction({
+        cwd: "/w",
+        repository: "acme/web",
+        host: "github.com",
+        number: 7,
+        action: "delete-branch",
+      });
+      expect(variablesOf("updateRefs(")).toEqual([]);
+    }),
+  );
+
+  it.effect("keeps the source branch when GitHub refuses deletion", () =>
+    Effect.gen(function* () {
+      route(
+        ["query PullRequestBranchToDelete", branchToDelete()],
+        ["query PullRequestSourceBranch", sourceBranch()],
+      );
+      const answer = mockedExecute.getMockImplementation()!;
+      mockedExecute.mockImplementation((call) =>
+        call.kind === "graphql" && call.query.includes("updateRefs(")
+          ? Effect.fail(
+              new GitHubApi.GitHubApiResponseError({
+                host: call.host,
+                operation: call.operation,
+                status: 422,
+              }),
+            )
+          : answer(call),
+      );
+      const cli = yield* GitHubPullRequestApi.GitHubPullRequestApi;
+      const error = yield* Effect.flip(
+        cli.runPullRequestAction({
+          cwd: yield* repository("nowhere"),
+          repository: "acme/web",
+          host: "github.com",
+          number: 7,
+          action: "delete-branch",
+        }),
+      );
+      expect(error._tag).toBe("GitHubApiResponseError");
+      expect(variablesOf("mergePullRequest(")).toEqual([]);
+      expect(variablesOf("closePullRequest(")).toEqual([]);
+    }),
+  );
+
   it.effect.each(["merge", "enable-auto-merge"] as const)(
     "removes agent credits from the proposed message for %s",
     (action) =>
@@ -4101,6 +4460,7 @@ layer("GitHubPullRequestApi.layer", (it) => {
         expect(access).toEqual({
           mergeCapabilities: { merge: true, squash: false, rebase: true },
           canWrite: false,
+          canDeleteBranch: false,
           canTriage: false,
           canUpdate: true,
           didAuthor: true,
@@ -4211,6 +4571,7 @@ layer("GitHubPullRequestApi.layer", (it) => {
       expect(access).toEqual({
         mergeCapabilities: { merge: true, squash: false, rebase: true },
         canWrite: false,
+        canDeleteBranch: false,
         canTriage: false,
         canUpdate: true,
         didAuthor: true,

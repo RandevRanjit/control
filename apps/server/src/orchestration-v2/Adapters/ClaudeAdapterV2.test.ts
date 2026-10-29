@@ -10057,6 +10057,18 @@ describe("ClaudeAdapterV2 background wake turns", () => {
           yield* stop!({ providerThread: harness.providerThread, nativeTaskId: "agent-stop" });
           assert.deepEqual(stopped, ["agent-stop"]);
           assert.equal(closes, 0);
+          // A subagent no live Claude process runs (here one this session never
+          // started, as after a restart) cannot be stopped; the failure says so
+          // in words the worker treats as final.
+          const orphaned = yield* stop!({
+            providerThread: harness.providerThread,
+            nativeTaskId: "agent-from-another-process",
+          }).pipe(Effect.flip);
+          assert.include(
+            "detail" in orphaned ? String(orphaned.detail) : "",
+            "treating as already stopped",
+          );
+          assert.deepEqual(stopped, ["agent-stop"]);
         }).pipe(Effect.provide(Layer.merge(IdAllocator.layer, NodeServices.layer))),
       ),
   );

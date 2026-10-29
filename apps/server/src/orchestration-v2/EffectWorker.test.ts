@@ -868,3 +868,45 @@ it.effect("a native subagent stop does not settle its owner's background work", 
     assert.deepEqual(yield* Ref.get(events), ["stop-child"]);
   }),
 );
+
+it.effect("settles a native subagent whose Stop found no process still running it", () =>
+  Effect.gen(function* () {
+    const now = yield* DateTime.now;
+    const events = yield* Ref.make<ReadonlyArray<string>>([]);
+    const subagentId = NodeId.make("orphaned-subagent");
+    const layer = layerExecutorFor({
+      events,
+      interrupt: () =>
+        new ProviderTurnControlService.ProviderTurnControlError({
+          threadId,
+          operation: "interrupt",
+          providerTurnId,
+          cause:
+            "Claude subagent native-task has no live Claude process; treating as already stopped.",
+        }),
+      threads: {
+        dispatch: (command) =>
+          Ref.update(events, (current) => [
+            ...current,
+            command.type === "thread.background-work.settle"
+              ? `${command.type}:${command.subagentId}`
+              : command.type,
+          ]).pipe(Effect.as({ sequence: 1, storedEvents: [] })),
+      },
+    });
+    yield* Effect.gen(function* () {
+      const executor = yield* EffectWorker.OrchestrationEffectExecutorV2;
+      yield* executor.execute({
+        ...restartEffect(now, { type: "detach" }),
+        request: {
+          type: "provider-turn.interrupt",
+          providerSessionId: oldSessionId,
+          providerThreadId,
+          providerTurnId,
+          subagent: { id: subagentId, nativeTaskId: "native-task" },
+        },
+      });
+    }).pipe(Effect.provide(layer));
+    assert.deepEqual(yield* Ref.get(events), [`thread.background-work.settle:${subagentId}`]);
+  }),
+);

@@ -700,5 +700,19 @@ it.effect(
         }),
       );
       assert.isTrue(Exit.isFailure(unrelated));
+
+      // A Stop that found no process still running the child settles only it, and says why.
+      yield* orchestrator.dispatch({
+        type: "thread.background-work.settle",
+        commandId: CommandId.make("settle-native-child"),
+        threadId,
+        providerThreadId: providerThread.id,
+        providerTurnId,
+        subagentId: subagent.id,
+      });
+      const settled = (yield* orchestrator.getThreadProjection(threadId)).subagents[0];
+      assert.equal(settled?.status, "interrupted");
+      assert.match(settled?.result ?? "", /no longer running/);
+      assert.deepEqual(yield* threadState(threadId), stateBefore);
     }).pipe(Effect.provide(layerTest)),
 );

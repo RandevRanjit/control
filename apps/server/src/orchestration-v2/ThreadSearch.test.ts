@@ -870,6 +870,7 @@ it.layer(layerTest)("ThreadSearch while the index backfills", (it) => {
         [
           thread(threadId, project),
           message(threadId, "accents", "user", "CRÈME BRÛLÉE À LA CARTE"),
+          message(threadId, "dotted-i", "user", "Flights to İstanbul"),
         ],
         projections.apply,
         { discard: true },
@@ -882,6 +883,8 @@ it.layer(layerTest)("ThreadSearch while the index backfills", (it) => {
         SELECT 0, max(rowid) FROM orchestration_v2_projection_messages
       `;
       assert.deepEqual(yield* threadIds("brûlée"), [threadId]);
+      // "İ" lowercases to "i" and a combining dot, which itself has no case.
+      assert.deepEqual(yield* threadIds("İstanbul"), [threadId]);
       yield* search.backfillIndex;
     }),
   );

@@ -2557,6 +2557,8 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     [pullRequestProjectId, threadPullRequests],
   );
 
+  // Thread mentions rank by recency as of when the composer mounted.
+  const [threadMentionNow] = useState(() => Date.now());
   const composerMenuItems = useMemo<ComposerCommandItem[]>(() => {
     if (!composerTrigger) return [];
     if (composerTrigger.kind === "path") {
@@ -2568,6 +2570,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
           environmentId,
           excludeThreadId: activeThreadId,
           query: composerTrigger.query,
+          now: threadMentionNow,
         }),
         ...workspaceEntries.entries.map((entry) => ({
           id: `path:${entry.kind}:${entry.path}`,
@@ -2730,6 +2733,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     selectedProviderSlashCommands,
     selectedProviderStatus,
     settings.showSkillsInSlashMenu,
+    threadMentionNow,
     workspaceEntries.entries,
   ]);
 

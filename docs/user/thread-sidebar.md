@@ -192,8 +192,18 @@ The search field at the top of the thread list matches thread titles and project
 so typing a project's name lists its threads.
 
 On web and desktop, open the command palette with `Cmd/Ctrl+K` to search threads
-across connected environments. Message search starts after two characters and
-includes your messages and final agent responses.
+across connected environments by title, branch, pull request, or project.
+Threads you open often or recently rank higher, and for three weeks the thread
+you last picked for a query ranks higher when you type that query again.
+Threads whose messages contain all your words appear below, under **In
+messages**: everything you wrote and every agent answer is searched, however
+long ago. Message search needs at least one word of three or more letters, or
+two for Chinese, Japanese, and Korean. On an iPad with a keyboard, `Cmd+K`
+opens the same palette.
+
+After an update that adds the message index, Control indexes your older threads
+in the background. Until it finishes, message search covers your most recent
+messages only.
 
 Use **Settings → Keybindings** to find or customize shortcuts for searching files
 and copying a thread reference. A copied reference uses the thread's pull request

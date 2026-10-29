@@ -2,7 +2,7 @@ import {
   ScheduledTaskId,
   ScheduledTask,
   OrchestrationSearchThreadsInput,
-  OrchestrationSearchThreadsResult,
+  OrchestrationThreadSearchMatch,
   OrchestrationV2ThreadForkSourcePoint,
   OrchestrationV2ContextTransfer,
   TrimmedNonEmptyString,
@@ -179,12 +179,23 @@ const ThreadTransferTool = Tool.make("thread_transfer", {
 const ThreadSearchTool = Tool.make("thread_search", {
   ...commandTool,
   description:
-    "Search active thread titles and content. Matches come from one project (`projectId`, else yours; outside a thread, every project) among the global top matches, so you may get fewer than `limit`. Not exhaustive; no pages.",
+    'Search active threads as the command palette does: title, branch, PR and project matches first (source "title"), then threads whose messages hold every word of 3+ letters (source "user" or "assistant", with a snippet; up to a fifth of `limit`). Skips subagent threads. One project (`projectId`, else yours; outside a thread, every project). Not exhaustive; no pages.',
   parameters: Schema.Struct({
     ...OrchestrationSearchThreadsInput.fields,
     projectId: Schema.optional(ProjectId),
   }),
-  success: OrchestrationSearchThreadsResult,
+  success: Schema.Struct({
+    matches: Schema.Array(
+      Schema.Struct({
+        threadId: OrchestrationThreadSearchMatch.fields.threadId,
+        projectId: OrchestrationThreadSearchMatch.fields.projectId,
+        title: Schema.String,
+        source: Schema.Literals(["title", "user", "assistant"]),
+        snippet: Schema.optional(OrchestrationThreadSearchMatch.fields.snippet),
+        messageCreatedAt: Schema.optional(OrchestrationThreadSearchMatch.fields.messageCreatedAt),
+      }),
+    ),
+  }),
   dependencies: [...commandTool.dependencies, ThreadSearch.ThreadSearch],
 })
   .annotate(Tool.Readonly, true)

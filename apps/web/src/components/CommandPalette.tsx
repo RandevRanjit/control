@@ -15,7 +15,19 @@ import {
   normalizePastedCloneUrl,
 } from "@control/client-runtime/operations/projects";
 import { connectionStatusText } from "@control/client-runtime/connection";
-import { threadSearchMatchKey } from "@control/client-runtime/state/thread-search";
+import {
+  claimThreadOpen,
+  nextShownOrder,
+  type EnvironmentThreadSearchMatch,
+  type ShownOrder,
+} from "@control/client-runtime/state/thread-search";
+import {
+  foldSearchQuery,
+  PALETTE_MESSAGE_LIMIT,
+  pickedQuery,
+  rankMessageMatches,
+  threadRecentUse,
+} from "@control/shared/paletteSearch";
 import { resolveThreadReferenceCopyTarget } from "@control/shared/threadReference";
 import {
   canPreloadBrowsePath,
@@ -89,6 +101,7 @@ import {
 } from "react";
 import type { LegendListRef } from "@legendapp/list/react";
 import { useAtomValue } from "@effect/atom-react";
+import { formatRelativeTimeLabel } from "../timestampFormat";
 
 import { isDesktopLocalConnectionTarget } from "../connection/desktopLocal";
 import { useDesktopLocalBootstraps } from "../connection/useDesktopLocalBootstraps";
@@ -206,7 +219,7 @@ import { ProjectFilePicker } from "./files/ProjectFilePicker";
 import { focusLinkPullRequestField } from "./pullRequest/LinkPullRequestField";
 import { ProjectContentSearchDialog } from "./search/ProjectContentSearchDialog";
 import { toggleThemeEditorForTheme } from "./settings/themeEditorStore";
-import { searchSettings, SETTINGS_SECTION_LABELS } from "./settings/settingsSearch";
+import { settingsForThisPlatform, SETTINGS_SECTION_LABELS } from "./settings/settingsSearch";
 import {
   COMMAND_PALETTE_META_ICON_CLASS,
   CommandPaletteMetaDot,
@@ -852,17 +865,9 @@ function OpenCommandPaletteDialog(props: {
   );
   const threadSearchQuery = currentView === null && !isActionsOnly ? deferredQuery : "";
   const threadSearch = useThreadSearch(environmentIds, threadSearchQuery);
-  const threadContentMatchByKey = useMemo(
-    () =>
-      new Map(
-        threadSearch.matches.flatMap((match) =>
-          match.source === "user" || match.source === "assistant"
-            ? [[threadSearchMatchKey(match), match] as const]
-            : [],
-        ),
-      ),
-    [threadSearch.matches],
-  );
+  const visitThread = useAtomCommand(threadEnvironment.visit, { reportFailure: false });
+  // Ranking is relative to when the palette opened, so rows do not reorder as time passes.
+  const [searchNow] = useState(() => Date.now());
   const [browseGeneration, setBrowseGeneration] = useState(0);
   const browseNavigationRef = useRef<ReturnType<typeof createBrowseNavigationCoordinator> | null>(
     null,
@@ -1141,7 +1146,6 @@ function OpenCommandPaletteDialog(props: {
     [projects],
   );
 
-  const activeThreadId = activeThread?.id;
   const currentProjectEnvironmentId =
     activeThread?.environmentId ?? activeDraftThread?.environmentId ?? null;
   const currentProjectId = activeThread?.projectId ?? activeDraftThread?.projectId ?? null;
@@ -1421,9 +1425,14 @@ function OpenCommandPaletteDialog(props: {
     () =>
       buildThreadActionItems({
         threads,
-        ...(activeThreadId ? { activeThreadId } : {}),
-        projectTitleById,
-        sortOrder: clientSettings.sidebarThreadSortOrder,
+        ...(environments.length > 1
+          ? {
+              environmentLabelOf: (thread: (typeof threads)[number]) =>
+                projectEnvironmentLocationById.get(thread.environmentId)?.label ?? null,
+            }
+          : {}),
+        ...(activeThread ? { activeThread } : {}),
+        projectByKey,
         icon: <MessageSquareIcon className={ITEM_ICON_CLASS} />,
         renderLeadingContent: (thread) => <ThreadRowLeadingStatus thread={thread} />,
         renderTrailingContent: (thread) => <ThreadRowTrailingStatus thread={thread} />,
@@ -1450,7 +1459,10 @@ function OpenCommandPaletteDialog(props: {
                   ? null
                   : thread.worktreePath
               }
-              isCurrent={thread.id === activeThreadId}
+              isCurrent={
+                thread.id === activeThread?.id &&
+                thread.environmentId === activeThread.environmentId
+              }
               driverKind={providerEntry?.driverKind ?? null}
               providerDisplayName={
                 thread.runtime?.providerName ?? providerEntry?.displayName ?? modelInstanceId
@@ -1458,22 +1470,27 @@ function OpenCommandPaletteDialog(props: {
             />
           );
         },
-        getContentMatch: (thread) => {
-          const match = threadContentMatchByKey.get(
-            threadSearchMatchKey({
-              environmentId: thread.environmentId,
-              threadId: thread.id,
-            }),
-          );
-          return match && (match.source === "user" || match.source === "assistant")
-            ? {
-                source: match.source,
-                snippet: match.snippet,
-                query: threadSearch.query,
-              }
-            : undefined;
-        },
         runThread: async (thread) => {
+          // A pick sends its open with the query, so the server records it; the
+          // thread view then skips its own open. The open thread is no pick.
+          const isPick =
+            threadSearchQuery.trim().length > 0 &&
+            !threadSearchQuery.startsWith(">") &&
+            !(
+              activeThread?.environmentId === thread.environmentId && activeThread.id === thread.id
+            );
+          if (isPick) claimThreadOpen(thread.environmentId, thread.id, Date.now());
+          if (isPick && thread.lastVisitedAt !== undefined) {
+            void visitThread({
+              environmentId: thread.environmentId,
+              input: {
+                threadId: thread.id,
+                visitedAt: thread.updatedAt,
+                opened: true,
+                searchQuery: pickedQuery(threadSearchQuery),
+              },
+            });
+          }
           await navigate({
             to: "/$environmentId/$threadId",
             params: buildThreadRouteParams(scopeThreadRef(thread.environmentId, thread.id)),
@@ -1481,21 +1498,77 @@ function OpenCommandPaletteDialog(props: {
         },
       }),
     [
-      activeThreadId,
-      clientSettings.sidebarThreadSortOrder,
+      activeThread,
+      environments.length,
       navigate,
       projectCwdById,
       projectByKey,
       projectEnvironmentLocationById,
-      projectTitleById,
       providerEntryByEnvironmentAndInstanceId,
       scratchWorkspaceRootFor,
-      threadContentMatchByKey,
-      threadSearch.query,
+      threadSearchQuery,
       threads,
+      visitThread,
     ],
   );
-  const recentThreadItems = allThreadItems.slice(0, RECENT_THREAD_LIMIT);
+  // Recent means used recently: written in or opened, whichever is later. The
+  // open thread would always lead that list, so it is left out.
+  const activeThreadValue = activeThread
+    ? `thread:${activeThread.environmentId}:${activeThread.id}`
+    : null;
+  const recentThreadItems = allThreadItems
+    .filter((item) => item.value !== activeThreadValue)
+    .toSorted(
+      (left, right) =>
+        (right.threadSearch ? threadRecentUse(right.threadSearch) : 0) -
+        (left.threadSearch ? threadRecentUse(left.threadSearch) : 0),
+    )
+    .slice(0, RECENT_THREAD_LIMIT);
+
+  // Threads whose messages match, best first, without those whose titles
+  // match: the palette lists those above.
+  const threadItemByValue = new Map(allThreadItems.map((item) => [item.value, item]));
+  const threadItemForMatch = (match: EnvironmentThreadSearchMatch) =>
+    threadItemByValue.get(`thread:${match.environmentId}:${match.threadId}`);
+  const rankedMessageItems = rankMessageMatches(
+    threadSearch.matches,
+    (match) => threadItemForMatch(match)?.threadSearch,
+    foldSearchQuery(threadSearchQuery),
+    searchNow,
+    { withoutTitleMatches: true },
+  ).flatMap((match): CommandPaletteActionItem[] => {
+    const item = threadItemForMatch(match);
+    if (!item) return [];
+    // The snippet replaces the project line, so a message row is as tall as a title row.
+    const { description: _description, ...rest } = item;
+    return [
+      {
+        ...rest,
+        // When the matching message was written, not when the thread last moved.
+        ...(match.messageCreatedAt
+          ? { timestamp: formatRelativeTimeLabel(match.messageCreatedAt) }
+          : {}),
+        threadContentMatch: {
+          source: match.source,
+          snippet: match.snippet,
+          query: threadSearch.query,
+        },
+      },
+    ];
+  });
+  // Rows already shown keep their places when a slower environment answers.
+  const [shownMessageOrder, setShownMessageOrder] = useState<ShownOrder | null>(null);
+  const messageOrder = nextShownOrder(
+    shownMessageOrder,
+    threadSearch.query,
+    rankedMessageItems.map((item) => item.value),
+    PALETTE_MESSAGE_LIMIT,
+  );
+  if (messageOrder !== shownMessageOrder) setShownMessageOrder(messageOrder);
+  const messageItemByValue = new Map(rankedMessageItems.map((item) => [item.value, item]));
+  const threadMessageItems = messageOrder.keys
+    .slice(0, messageOrder.shown)
+    .flatMap((value) => messageItemByValue.get(value) ?? []);
 
   const pushPaletteView = useCallback(
     (view: CommandPaletteView): void => {
@@ -1927,6 +2000,7 @@ function OpenCommandPaletteDialog(props: {
             New thread in <span className="font-semibold">{activeProjectTitle}</span>
           </>
         ),
+        searchTitle: `New thread in ${activeProjectTitle}`,
         icon: <SquarePenIcon className={ITEM_ICON_CLASS} />,
         shortcutCommand: "chat.newLocal",
         run: async () => {
@@ -1967,7 +2041,10 @@ function OpenCommandPaletteDialog(props: {
     actionItems.push({
       kind: "action",
       value: "action:copy-thread-reference",
-      searchTerms: ["copy", "pull request", "pr link", "thread id", "reference"],
+      searchTerms:
+        activeThreadReferenceCopyTarget.kind === "pull-request"
+          ? ["copy", "pull request", "link", "reference"]
+          : ["copy", "thread id", "reference"],
       title:
         activeThreadReferenceCopyTarget.kind === "pull-request" ? "Copy PR link" : "Copy thread ID",
       description: activeThreadReferenceCopyTarget.value,
@@ -2446,8 +2523,9 @@ function OpenCommandPaletteDialog(props: {
   }
 
   const rootGroups = buildRootGroups({ actionItems, recentThreadItems });
-  const settingsSearchItems: CommandPaletteActionItem[] = searchSettings(
-    deferredQuery,
+  // Every setting goes to the palette's own matcher, so settings get the same
+  // word starts and typo tolerance as threads.
+  const settingsSearchItems: CommandPaletteActionItem[] = settingsForThisPlatform(
     availableSettingsSearchItems,
   ).map((item) => ({
     kind: "action",
@@ -2482,6 +2560,8 @@ function OpenCommandPaletteDialog(props: {
           ? changeAppearanceItem.groups
           : (currentView?.groups ?? rootGroups);
 
+  const isLinkedThreadSearch =
+    linkedThreadSearch?.linkedThreads !== undefined && deferredQuery === linkedThreadSearch.query;
   const filteredGroups = filterCommandPaletteGroups({
     activeGroups,
     query: deferredQuery,
@@ -2489,7 +2569,7 @@ function OpenCommandPaletteDialog(props: {
     projectSearchItems: projectSearchItems,
     settingsSearchItems,
     threadSearchItems:
-      linkedThreadSearch?.linkedThreads && deferredQuery === linkedThreadSearch.query
+      isLinkedThreadSearch && linkedThreadSearch?.linkedThreads
         ? buildLinkedThreadActionItems({
             ...linkedThreadSearch.linkedThreads,
             query: linkedThreadSearch.query,
@@ -2502,6 +2582,8 @@ function OpenCommandPaletteDialog(props: {
             },
           })
         : allThreadItems,
+    threadMessageItems: isLinkedThreadSearch ? [] : threadMessageItems,
+    now: searchNow,
   });
 
   const handleAddProjectForEnvironment = useCallback(

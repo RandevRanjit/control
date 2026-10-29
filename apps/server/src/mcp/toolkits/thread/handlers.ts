@@ -110,18 +110,12 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
   thread_search: McpToolAccess.reads((input) =>
     Effect.gen(function* () {
       const { caller } = yield* readCaller();
-      const { projectId: requested, ...query } = input;
+      const threadSearch = yield* ThreadSearch.ThreadSearch;
       // Like the other project tools, an omitted project means the caller's own; a client
       // outside a thread searches every project.
-      const projectId = requested ?? caller?.projectId;
-      const threadSearch = yield* ThreadSearch.ThreadSearch;
-      const result = yield* threadSearch.search(query).pipe(Effect.mapError(unavailable));
-      return {
-        matches:
-          projectId === undefined
-            ? result.matches
-            : result.matches.filter((match) => match.projectId === projectId),
-      };
+      return yield* threadSearch
+        .searchThreads({ ...input, projectId: input.projectId ?? caller?.projectId })
+        .pipe(Effect.mapError(unavailable));
     }),
   ),
   thread_transfer: McpToolAccess.either(

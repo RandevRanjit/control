@@ -33,6 +33,7 @@ import * as ExternalLauncher from "./process/externalLauncher.ts";
 import * as EffectWorker from "./orchestration-v2/EffectWorker.ts";
 import * as LegacyV1ThreadImporter from "./orchestration-v2/legacy/LegacyV1ThreadImporter.ts";
 import * as Orchestrator from "./orchestration-v2/Orchestrator.ts";
+import * as ThreadSearch from "./orchestration-v2/ThreadSearch.ts";
 import * as ProviderRuntimeRecovery from "./orchestration-v2/ProviderRuntimeRecoveryService.ts";
 import * as ProviderSessionManager from "./orchestration-v2/ProviderSessionManager.ts";
 import * as ThreadLaunch from "./orchestration-v2/ThreadLaunchService.ts";
@@ -410,6 +411,7 @@ const make = (options?: StartupOptions) =>
     const legacyV1ThreadImporter = yield* LegacyV1ThreadImporter.LegacyV1ThreadImporter;
     const providerRuntimeRecovery = yield* ProviderRuntimeRecovery.ProviderRuntimeRecoveryService;
     const orchestrator = yield* Orchestrator.OrchestratorV2;
+    const threadSearch = yield* ThreadSearch.ThreadSearch;
     const providerSessions = yield* ProviderSessionManager.ProviderSessionManagerV2;
     const lifecycleEvents = yield* ServerLifecycleEvents.ServerLifecycleEvents;
     const serverSettings = yield* ServerSettings.ServerSettingsService;
@@ -563,6 +565,15 @@ const make = (options?: StartupOptions) =>
             )
           : importPendingTranscripts
       ).pipe(forkParked);
+
+      // History from before the message index fills it after startup, in small
+      // batches, so a long history neither delays startup nor holds the event loop.
+      yield* threadSearch.backfillIndex.pipe(
+        Effect.catch((cause) =>
+          Effect.logWarning("Message search index backfill failed", { cause }),
+        ),
+        forkParked,
+      );
 
       yield* forkParked(
         Effect.gen(function* () {

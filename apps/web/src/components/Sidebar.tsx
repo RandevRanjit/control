@@ -2813,7 +2813,7 @@ export default function Sidebar() {
     [activeThreads, groupSections, pinnedThreads, settledThreads, snoozedThreads, workingThreads],
   );
   const searchEnvironmentIds = useConnectedEnvironmentIds();
-  // useThreadSearch owns the debounce and the two-character floor.
+  // useThreadSearch owns the debounce and the three-letter floor.
   const threadSearch = useThreadSearch(searchEnvironmentIds, threadSearchQuery);
   const threadSearchMatchByKey = useMemo(
     () =>

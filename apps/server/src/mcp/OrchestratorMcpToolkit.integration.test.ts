@@ -57,6 +57,8 @@ import { FULL_PROVIDER_CAPABILITIES } from "../orchestration-v2/testkit/fullProv
 import { threadShellFromProjection } from "../orchestration-v2/ProjectionStore.ts";
 import * as EventSink from "../orchestration-v2/EventSink.ts";
 import * as Orchestrator from "../orchestration-v2/Orchestrator.ts";
+import * as ThreadLaunchService from "../orchestration-v2/ThreadLaunchService.ts";
+import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
 import * as ThreadManagementService from "../orchestration-v2/ThreadManagementService.ts";
 import {
   type ProviderAdapterV2Event,
@@ -639,7 +641,10 @@ describe("orchestrator MCP toolkit", () => {
             }),
           );
           const layerTest = Layer.merge(
-            McpHttpServer.layerOrchestratorToolkit,
+            McpHttpServer.layerOrchestratorToolkit.pipe(
+              Layer.provide(Layer.mock(ThreadLaunchService.ThreadLaunchService)({})),
+              Layer.provide(Layer.mock(GitVcsDriver.GitVcsDriver)({})),
+            ),
             McpHttpServer.layerThreadToolkit,
           ).pipe(
             Layer.provideMerge(McpServer.McpServer.layer),

@@ -37,6 +37,7 @@ import {
   createOlderSettledThreadAtoms,
   isListedSettledThread,
   olderSettledCountKey,
+  pressOlderSettledMore,
   settledShelfFrontier,
   unloadedOlderSettledCount,
   wantedOlderSettledPages,
@@ -380,6 +381,19 @@ const shellSnapshot = (input: {
       counts: [{ projectId: project, count: input.count }],
     },
   } as unknown as OrchestrationV2ShellSnapshot);
+
+describe("pressOlderSettledMore", () => {
+  it("retries a failed page without raising the shelf's limit, and shows more otherwise", () => {
+    const presses: string[] = [];
+    const shelf = (failed: boolean) => ({ failed, retry: () => presses.push("retry") });
+    const showMore = () => presses.push("more");
+
+    pressOlderSettledMore(shelf(true), showMore);
+    expect(presses).toEqual(["retry"]);
+    pressOlderSettledMore(shelf(false), showMore);
+    expect(presses).toEqual(["retry", "more"]);
+  });
+});
 
 describe("createOlderSettledThreadAtoms", () => {
   it.effect("keeps counts current: the snapshot's own, then one read after changes settle", () =>

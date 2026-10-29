@@ -29,6 +29,7 @@ import { NativeStackScreenOptions } from "../../native/StackHeader";
 import { scopedProjectKey, scopedThreadKey } from "../../lib/scopedEntities";
 import { useProjects, useNavigationThreadShells } from "../../state/entities";
 import { useThreadSearch } from "../../state/queries";
+import { pressOlderSettledMore } from "@control/client-runtime/state/threads";
 import { useOlderSettledShelf, useOlderSettledShelfGrowth } from "../../state/olderSettledShelf";
 import { useThreadListV2ShelfPreferences } from "./use-thread-list-v2-shelf-preferences";
 import { usePendingThreadOrder } from "../../state/thread-order";
@@ -328,8 +329,7 @@ function ThreadNavigationSidebarPane(
     olderSettledShelfRef.current = olderSettledShelf;
   });
   const showMoreSettledRows = useCallback(() => {
-    olderSettledShelfRef.current.retry();
-    showMoreSettled();
+    pressOlderSettledMore(olderSettledShelfRef.current, showMoreSettled);
   }, [showMoreSettled]);
   // Up/down menu availability for every card, computed once per section per
   // rebuild (see computeThreadMoveAvailability): per-thread planner calls made

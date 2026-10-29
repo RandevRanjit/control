@@ -39,6 +39,7 @@ import { nativeHeaderScrollEdgeEffects } from "../../native/scrollEdgeEffects";
 import { useNativeColumnLayoutMetrics } from "../../native/native-layout-metrics";
 import { NATIVE_LIQUID_GLASS_SUPPORTED } from "../../native/native-glass";
 import { useThreadSearch } from "../../state/queries";
+import { pressOlderSettledMore } from "@control/client-runtime/state/threads";
 import { useOlderSettledShelf, useOlderSettledShelfGrowth } from "../../state/olderSettledShelf";
 import { useThreadJumpShortcuts } from "../keyboard/threadKeyboardShortcuts";
 import { usePendingThreadOrder } from "../../state/thread-order";
@@ -1039,10 +1040,7 @@ export function HomeScreen(props: HomeScreenProps) {
                     : olderSettledShelf.failed
                       ? { state: "failed" as const }
                       : {})}
-                  onPress={() => {
-                    olderSettledShelf.retry();
-                    showMoreSettled();
-                  }}
+                  onPress={() => pressOlderSettledMore(olderSettledShelf, showMoreSettled)}
                 />
               ) : null
             }

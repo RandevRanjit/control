@@ -161,6 +161,7 @@ import { GroupPearl, requestGroupDetails } from "./GroupDialog";
 import { environmentServerConfigsAtom, primaryServerKeybindingsAtom } from "../state/server";
 import { vcsEnvironment } from "../state/vcs";
 import { threadEnvironment } from "../state/threads";
+import { pressOlderSettledMore } from "@control/client-runtime/state/threads";
 import { useOlderSettledShelf, useOlderSettledShelfGrowth } from "../state/olderSettledShelf";
 import { useEnvironmentQuery } from "../state/query";
 import { useThreadSearch } from "../state/queries";
@@ -227,6 +228,7 @@ import {
   type SidebarListItem,
   type SidebarListMarker,
   type SidebarSection,
+  settledShelfReadsOlderPages,
 } from "./Sidebar.logic";
 import { resolveLocalCheckoutBranchMismatch } from "./BranchToolbar.logic";
 import {
@@ -2879,7 +2881,10 @@ export default function Sidebar() {
   // Older settled threads load in pages; the shelf lists them only as far as they are loaded.
   const olderSettledShelf = useOlderSettledShelf({
     scopes: [...serverConfigs.keys()].map((environmentId) => ({ environmentId, projectIds: null })),
-    expanded: settledShelfExpanded,
+    expanded: settledShelfReadsOlderPages({
+      settledFoldOpen: settledShelfExpanded,
+      fullLock: lockThrough,
+    }),
     visibleCount: settledVisibleCount,
   });
   const isListedSettled = olderSettledShelf.isListed;
@@ -5710,10 +5715,7 @@ export default function Sidebar() {
                         <button
                           type="button"
                           disabled={olderSettledShelf.loading}
-                          onClick={() => {
-                            olderSettledShelf.retry();
-                            showMoreSettled();
-                          }}
+                          onClick={() => pressOlderSettledMore(olderSettledShelf, showMoreSettled)}
                           className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-left text-sm text-sidebar-muted-foreground/55 hover:bg-sidebar-row-hover hover:text-sidebar-foreground disabled:cursor-default"
                         >
                           <PlusIcon aria-hidden className="size-4 shrink-0" />

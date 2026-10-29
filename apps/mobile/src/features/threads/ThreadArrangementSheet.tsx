@@ -16,6 +16,7 @@ import { scopedThreadKey } from "../../lib/scopedEntities";
 import { environmentServerConfigsAtom } from "../../state/server";
 import { environmentThreadShells } from "../../state/threads";
 import { sortSettledThreads } from "@control/client-runtime/state/thread-sort";
+import { pressOlderSettledMore } from "@control/client-runtime/state/threads";
 import { useOlderSettledShelf, useOlderSettledShelfGrowth } from "../../state/olderSettledShelf";
 import {
   pendingThreadOrderAtom,
@@ -545,12 +546,13 @@ export function ThreadArrangementSheet(props: { onClose: () => void }) {
                       <Pressable
                         disabled={olderSettledShelf.loading}
                         className="flex-1 justify-center self-stretch"
-                        onPress={() => {
-                          olderSettledShelf.retry();
-                          setSettledVisibleCount(
-                            (count) => count + THREAD_LIST_V2_SETTLED_PAGE_COUNT,
-                          );
-                        }}
+                        onPress={() =>
+                          pressOlderSettledMore(olderSettledShelf, () =>
+                            setSettledVisibleCount(
+                              (count) => count + THREAD_LIST_V2_SETTLED_PAGE_COUNT,
+                            ),
+                          )
+                        }
                       >
                         <Text className="text-sm text-foreground-muted">
                           {olderSettledShelf.loading

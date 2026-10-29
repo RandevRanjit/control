@@ -22,7 +22,9 @@ import { Check, Copy, Maximize2, Minimize2 } from "lucide";
 import {
   AuthPreviewOperateScope,
   type AssetResource,
+  type EditorId,
   type EnvironmentId,
+  type ServerConfig,
   type ScopedThreadRef,
   type ServerProviderSkill,
   type ThreadPullRequestKey,
@@ -2504,6 +2506,22 @@ function missingChipFileError(path: string): Error {
   );
 }
 
+const NO_MARKDOWN_EDITORS: ReadonlyArray<EditorId> = [];
+
+/** The server config fields markdown reads. */
+function markdownServerConfigFields(config: ServerConfig | null) {
+  return {
+    pullRequestsEnabled: config?.environment.capabilities.pullRequests === true,
+    availableEditors: config?.availableEditors ?? NO_MARKDOWN_EDITORS,
+    revealInFileManagerLabel:
+      config?.shellRevealInFileManager === true && config.availableEditors.includes("file-manager")
+        ? config.shellRevealInFileManagerKind === undefined
+          ? revealInFileExplorerLabelForOs(config.environment.platform.os)
+          : revealInFileExplorerLabelForKind(config.shellRevealInFileManagerKind)
+        : undefined,
+  };
+}
+
 function useChatMarkdownState({
   text,
   inline = false,
@@ -2592,23 +2610,27 @@ function useChatMarkdownState({
     },
     [createAssetUrl, cwd, expandMedia, preparedConnection, threadRef],
   );
+  // Only the parts of the server config markdown reads. The config object itself
+  // changes with every provider status push, which would re-render every
+  // visible reply.
   const serverConfig = useAtomValue(serverEnvironment.configValueAtom(environmentId));
+  const nextConfigFields = markdownServerConfigFields(serverConfig);
+  const [configFields, setConfigFields] = useState(nextConfigFields);
+  if (
+    configFields.pullRequestsEnabled !== nextConfigFields.pullRequestsEnabled ||
+    configFields.availableEditors !== nextConfigFields.availableEditors ||
+    configFields.revealInFileManagerLabel !== nextConfigFields.revealInFileManagerLabel
+  ) {
+    setConfigFields(nextConfigFields);
+  }
+  const { pullRequestsEnabled, availableEditors, revealInFileManagerLabel } = configFields;
   const projects = useProjects();
-  const availableEditors = serverConfig?.availableEditors ?? [];
   const [preferredEditor] = usePreferredEditor(availableEditors);
   const preferredEditorMenuLabel = openInEditorMenuLabel(preferredEditor);
   const openInPreferredEditor = useOpenInPreferredEditor(environmentId, availableEditors);
   const openInEditor = useAtomCommand(shellEnvironment.openInEditor, {
     reportFailure: false,
   });
-  const revealInFileManagerLabel =
-    environmentId !== null &&
-    serverConfig?.shellRevealInFileManager === true &&
-    serverConfig.availableEditors.includes("file-manager")
-      ? serverConfig.shellRevealInFileManagerKind === undefined
-        ? revealInFileExplorerLabelForOs(serverConfig.environment.platform.os)
-        : revealInFileExplorerLabelForKind(serverConfig.shellRevealInFileManagerKind)
-      : undefined;
   const revealFileInFileManager = useCallback(
     (filePath: string) => {
       if (environmentId === null) {
@@ -2982,9 +3004,8 @@ function useChatMarkdownState({
       linkedThreadPullRequestFor,
       resolveThreadPullRequest,
       resolvedTheme,
-      serverConfig,
+      pullRequestsEnabled,
       skills,
-      text,
       threadRef,
       updateThreadPullRequestLink,
     }),
@@ -3016,9 +3037,8 @@ function useChatMarkdownState({
       linkedThreadPullRequestFor,
       resolveThreadPullRequest,
       resolvedTheme,
-      serverConfig,
+      pullRequestsEnabled,
       skills,
-      text,
       threadRef,
       updateThreadPullRequestLink,
     ],
@@ -3036,6 +3056,10 @@ function useChatMarkdownState({
 const ChatMarkdownRendererContext = React.createContext<
   ReturnType<typeof useChatMarkdownState>["componentState"]
 >(null!);
+
+// The markdown source changes on every streamed delta. Only the renderers that
+// slice it by node offset read it, so it sits apart from the renderer context.
+const ChatMarkdownTextContext = React.createContext("");
 
 // Screen readers take a heading's level from its tag, which would let a `#` in a
 // message outrank the heading placed above it. Override only the exposed level:
@@ -3096,18 +3120,20 @@ const CHAT_MARKDOWN_COMPONENTS = {
     );
   },
   li: function MarkdownListItem({ node, children, ...props }) {
-    const { text, skills } = use(ChatMarkdownRendererContext);
-    const listItemStart = node?.position?.start.offset;
-    const markerOffset =
-      typeof listItemStart === "number" ? findTaskListMarkerOffset(text, listItemStart) : null;
+    const { skills } = use(ChatMarkdownRendererContext);
+    // The checkbox finds its marker from this offset when toggled, so list items
+    // don't read the source text and re-render on every streamed token.
+    // remark-gfm marks task items with this class; plain items carry no offset.
+    const isTaskItem = String(props.className ?? "").includes("task-list-item");
     return (
-      <li {...props} data-task-marker-offset={markerOffset ?? undefined}>
+      <li {...props} data-list-item-offset={isTaskItem ? node?.position?.start.offset : undefined}>
         {renderSkillInlineMarkdownChildren(children, skills)}
       </li>
     );
   },
   input: function MarkdownInput({ node: _node, type, checked, disabled: _disabled, ...props }) {
     const { onTaskListChange } = use(ChatMarkdownRendererContext);
+    const text = use(ChatMarkdownTextContext);
     if (type !== "checkbox" || !onTaskListChange) {
       return (
         <input
@@ -3127,8 +3153,10 @@ const CHAT_MARKDOWN_COMPONENTS = {
         aria-label="Toggle task"
         checked={checked}
         onChange={(event) => {
-          const markerOffset = Number(event.currentTarget.closest("li")?.dataset.taskMarkerOffset);
-          if (!Number.isSafeInteger(markerOffset)) return;
+          const listItemStart = Number(event.currentTarget.closest("li")?.dataset.listItemOffset);
+          if (!Number.isSafeInteger(listItemStart)) return;
+          const markerOffset = findTaskListMarkerOffset(text, listItemStart);
+          if (markerOffset === null) return;
           onTaskListChange({ markerOffset, checked: event.currentTarget.checked });
         }}
       />
@@ -3151,12 +3179,12 @@ const CHAT_MARKDOWN_COMPONENTS = {
       projects,
       linkedThreadPullRequestFor,
       resolveThreadPullRequest,
-      serverConfig,
+      pullRequestsEnabled,
       updateThreadPullRequestLink,
       fileLinkChip,
       renderContextReference,
-      text,
     } = use(ChatMarkdownRendererContext);
+    const text = use(ChatMarkdownTextContext);
     const citation = href ? parseAssistantCitationHref(href) : null;
     if (citation) return <AssistantCitationChip citation={citation} />;
     // A thread link names a thread in this message's environment and opens it in the app.
@@ -3202,7 +3230,7 @@ const CHAT_MARKDOWN_COMPONENTS = {
         ? resolvePullRequestPreviewTarget({
             environmentId,
             projects,
-            pullRequestsEnabled: serverConfig?.environment.capabilities.pullRequests === true,
+            pullRequestsEnabled,
             url: pullRequestCandidateUrl,
           })
         : null;
@@ -3602,10 +3630,10 @@ const CHAT_MARKDOWN_COMPONENTS = {
       expandMedia,
       isStreaming,
       onRunShellCommand,
-      text,
       inline,
       mathEnabled,
     } = use(ChatMarkdownRendererContext);
+    const text = use(ChatMarkdownTextContext);
     const codeBlock = extractCodeBlock(children);
     if (!codeBlock) {
       return <pre {...props}>{children}</pre>;
@@ -3727,15 +3755,17 @@ function ChatMarkdown({
       onCopy={handleCopy}
     >
       <ChatMarkdownRendererContext value={componentState}>
-        <ReactMarkdown
-          remarkPlugins={remarkPlugins}
-          rehypePlugins={parseRawHtml ? CHAT_MARKDOWN_REHYPE_PLUGINS : undefined}
-          skipHtml={false}
-          components={CHAT_MARKDOWN_COMPONENTS}
-          urlTransform={markdownUrlTransform}
-        >
-          {text}
-        </ReactMarkdown>
+        <ChatMarkdownTextContext value={text}>
+          <ReactMarkdown
+            remarkPlugins={remarkPlugins}
+            rehypePlugins={parseRawHtml ? CHAT_MARKDOWN_REHYPE_PLUGINS : undefined}
+            skipHtml={false}
+            components={CHAT_MARKDOWN_COMPONENTS}
+            urlTransform={markdownUrlTransform}
+          >
+            {text}
+          </ReactMarkdown>
+        </ChatMarkdownTextContext>
       </ChatMarkdownRendererContext>
       {localMediaPreview ? (
         <ExpandedImageDialog

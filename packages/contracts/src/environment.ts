@@ -146,6 +146,8 @@ export const ExecutionEnvironmentCapabilities = Schema.Struct({
   /** Server streams quota from configured usage-limit sources. Same
       version-skew contract as environmentThemes. */
   usageLimitSources: Schema.optionalKey(Schema.Boolean),
+  /** Honors `workspaceSnapshotsOnDemand`; older servers send every snapshot and drop them in the stream. */
+  providerWorkspaceSnapshotsOnDemand: Schema.optionalKey(Schema.Boolean),
   /** Server persists custom model rates and applies them to usage summaries. */
   usagePriceOverrides: Schema.optionalKey(Schema.Boolean),
   /** Server persists model mappings and folds mapped usage into the target model. */

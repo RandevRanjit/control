@@ -1,8 +1,11 @@
 import { assert, it } from "@effect/vitest";
 import {
   ORCHESTRATION_PROTOCOL_VERSION,
+  ProviderDriverKind,
+  ProviderInstanceId,
   type ServerConfig,
   type ServerConfigStreamEvent,
+  type ServerProvider,
 } from "@control/contracts";
 import { HostProcessPlatform } from "@control/shared/hostProcess";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -21,9 +24,11 @@ import { ChildProcessSpawner } from "effect/process";
 import * as ExternalLauncher from "./process/externalLauncher.ts";
 import {
   hasCompatibleOrchestrationProtocol,
+  onDemandRefreshReply,
   resolveAvailableEditorsForConfig,
   shouldUseBoundedThreadSnapshot,
   withLateEditorConfig,
+  withoutWorkspaceSnapshots,
 } from "./ws.ts";
 
 it("accepts only the current orchestration protocol before websocket RPC setup", () => {
@@ -234,3 +239,51 @@ it.effect("recovers a reveal kind whose real probe outlasts the config timeout",
     }
   }).pipe(Effect.scoped),
 );
+
+it("on-demand clients get provider config without workspace snapshots", () => {
+  const instanceId = ProviderInstanceId.make("claudeAgent");
+  const snapshotFor = (cwd: string, checkedAt: string) => ({
+    cwd,
+    checkedAt,
+    slashCommands: [{ name: `${cwd.slice(1)}-command` }],
+    skills: [],
+  });
+  const provider: ServerProvider = {
+    instanceId,
+    driver: ProviderDriverKind.make("claudeAgent"),
+    enabled: true,
+    installed: true,
+    version: "1.0.0",
+    status: "ready",
+    auth: { status: "authenticated" },
+    checkedAt: "2026-10-25T00:00:00.000Z",
+    models: [],
+    slashCommands: [{ name: "machine-command" }],
+    skills: [],
+    workspaceSnapshots: [
+      snapshotFor("/a", "2026-10-25T00:00:00.000Z"),
+      snapshotFor("/b", "2026-10-25T00:00:00.000Z"),
+    ],
+  };
+  assert.isUndefined(withoutWorkspaceSnapshots([provider])[0]?.workspaceSnapshots);
+  // The config stream de-dupes on the stripped list, so a rescan that only
+  // touches a snapshot sends nothing.
+  assert.equal(
+    JSON.stringify(withoutWorkspaceSnapshots([provider])),
+    JSON.stringify(
+      withoutWorkspaceSnapshots([
+        { ...provider, workspaceSnapshots: [snapshotFor("/a", "2026-10-25T00:05:00.000Z")] },
+      ]),
+    ),
+  );
+  // A targeted refresh answers with that cwd's snapshot alone.
+  assert.deepEqual(
+    onDemandRefreshReply([provider], { instanceId, cwd: "/b" }).map((entry) => [
+      entry.workspaceSnapshots,
+      entry.slashCommands,
+    ]),
+    [[[snapshotFor("/b", "2026-10-25T00:00:00.000Z")], []]],
+  );
+  // An untargeted refresh answers like the config stream.
+  assert.isUndefined(onDemandRefreshReply([provider], {})[0]?.workspaceSnapshots);
+});

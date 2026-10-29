@@ -73,6 +73,7 @@ import {
   type ServerConfig as ClientServerConfig,
   type ServerConfigStreamEvent,
   type ServerLifecycleStreamEvent,
+  type ServerProvider,
   type FilesystemBrowseFailure,
   FilesystemBrowseError,
   AssetWorkspaceContextNotFoundError,
@@ -346,6 +347,34 @@ export const withLateEditorConfig = <E, R>(
     ),
   );
 };
+
+/** Clients that fetch workspace snapshots on demand get config without them. */
+export function withoutWorkspaceSnapshots(
+  providers: ReadonlyArray<ServerProvider>,
+): ServerProvider[] {
+  return providers.map(({ workspaceSnapshots: _workspaceSnapshots, ...provider }) => provider);
+}
+
+/** An on-demand refreshProviders reply: one instance's cwd snapshot, or config without snapshots. */
+export function onDemandRefreshReply(
+  providers: ReadonlyArray<ServerProvider>,
+  target: { readonly instanceId?: string | undefined; readonly cwd?: string | undefined },
+): ServerProvider[] {
+  const { instanceId, cwd } = target;
+  if (instanceId === undefined || cwd === undefined) return withoutWorkspaceSnapshots(providers);
+  return providers
+    .filter((provider) => provider.instanceId === instanceId)
+    .map((provider) => ({
+      ...provider,
+      // Callers read only the cwd snapshot; the config stream carries the rest.
+      models: [],
+      slashCommands: [],
+      skills: [],
+      workspaceSnapshots: (provider.workspaceSnapshots ?? []).filter(
+        (snapshot) => snapshot.cwd === cwd,
+      ),
+    }));
+}
 
 function unexpectedCompatibilityError(error: never): never {
   throw new Error(`Unhandled compatibility error: ${String(error)}`);
@@ -1367,13 +1396,19 @@ const layerWsRpc = (
           ),
         );
 
-      const loadServerConfig = (options: { readonly usageLimitsCommand: boolean }) =>
+      const loadServerConfig = (options: {
+        readonly usageLimitsCommand: boolean;
+        readonly workspaceSnapshotsOnDemand: boolean;
+      }) =>
         Effect.gen(function* () {
           const keybindingsConfig = yield* keybindings.loadConfigState;
           const currentProviders = yield* providerRegistry.getProviders;
-          const providers = options.usageLimitsCommand
+          const commandProviders = options.usageLimitsCommand
             ? withUsageLimitsCommands(currentProviders, yield* usageLimitSources.current)
             : currentProviders;
+          const providers = options.workspaceSnapshotsOnDemand
+            ? withoutWorkspaceSnapshots(commandProviders)
+            : commandProviders;
           const settings = ServerSettings.redactServerSettingsForClient(
             yield* serverSettings.getSettings,
           );
@@ -1782,7 +1817,8 @@ const layerWsRpc = (
             Effect.andThen(scheduledTasks.getWebhookDelivery(input)),
           ),
         [WS_METHODS.serverProbe]: (_input) => Effect.succeed({}),
-        [WS_METHODS.serverGetConfig]: (_input) => loadServerConfig({ usageLimitsCommand: false }),
+        [WS_METHODS.serverGetConfig]: (_input) =>
+          loadServerConfig({ usageLimitsCommand: false, workspaceSnapshotsOnDemand: false }),
         [WS_METHODS.serverRefreshProviders]: (input) =>
           Effect.gen(function* () {
             // Only explicit catalog refreshes bypass Control's caches. Workspace
@@ -1850,7 +1886,12 @@ const layerWsRpc = (
                 providers = yield* providerRegistry.refreshInstance(instance.instanceId);
               }
             }
-            return { providers };
+            if (input.workspaceSnapshotsOnDemand !== true) return { providers };
+            const commandProviders =
+              input.usageLimitsCommand === true
+                ? withUsageLimitsCommands(providers, yield* usageLimitSources.current)
+                : providers;
+            return { providers: onDemandRefreshReply(commandProviders, input) };
           }),
         [WS_METHODS.mcpAppsCallTool]: (input) => mcpAppRequests.callTool(input),
         [WS_METHODS.mcpAppsToolInfo]: (input) => mcpAppRequests.toolInfo(input),
@@ -2534,7 +2575,11 @@ const layerWsRpc = (
           Stream.unwrap(
             Effect.gen(function* () {
               const usageLimitsCommand = input.usageLimitsCommand === true;
-              const config = yield* loadServerConfig({ usageLimitsCommand });
+              const workspaceSnapshotsOnDemand = input.workspaceSnapshotsOnDemand === true;
+              const config = yield* loadServerConfig({
+                usageLimitsCommand,
+                workspaceSnapshotsOnDemand,
+              });
               const keybindingsUpdates = keybindings.streamChanges.pipe(
                 Stream.map((event) => ({
                   version: 1 as const,
@@ -2560,8 +2605,15 @@ const layerWsRpc = (
                     usageLimitsCommand ? sameUsageLimitCommandCoverage : () => true,
                   ),
                 ),
-                (providers, sources) =>
-                  usageLimitsCommand ? withUsageLimitsCommands(providers, sources) : providers,
+                (providers, sources) => {
+                  const commandProviders = usageLimitsCommand
+                    ? withUsageLimitsCommands(providers, sources)
+                    : providers;
+                  // Stripped before the de-dupe below, so snapshot-only changes send nothing.
+                  return workspaceSnapshotsOnDemand
+                    ? withoutWorkspaceSnapshots(commandProviders)
+                    : commandProviders;
+                },
               ).pipe(
                 // Both sides replay their current value, so the first pairing normally
                 // repeats the snapshot the client already holds. Compare against that

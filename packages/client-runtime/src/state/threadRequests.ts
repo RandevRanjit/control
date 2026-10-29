@@ -66,6 +66,8 @@ export async function declineForRedirect(input: {
   return { declined, blocked: declined ? blocker() : null };
 }
 
+import type { ThreadStructure, ThreadStructureVisibleTurnItem } from "./models.ts";
+
 export interface ThreadPendingApproval {
   readonly requestId: RuntimeRequestId;
   readonly requestKind: ProviderRequestKind;
@@ -101,7 +103,7 @@ export interface PendingThreadRequests {
 
 /** Joins pending request entities to the request items that carry display data. */
 export function derivePendingThreadRequests(
-  projection: Pick<OrchestrationV2ThreadProjection, "runtimeRequests" | "turnItems">,
+  projection: Pick<ThreadStructure, "runtimeRequests" | "turnItems">,
 ): PendingThreadRequests {
   const approvals: ThreadPendingApproval[] = [];
   const userInputs: ThreadPendingUserInput[] = [];
@@ -152,21 +154,25 @@ export function derivePendingThreadRequests(
 }
 
 /** Older V2 answers were saved on requests without updating their timeline items. */
-export function createQuestionHistoryProjector() {
-  type Rows = OrchestrationV2ThreadProjection["visibleTurnItems"];
+export function createQuestionHistoryProjector<
+  Row extends ThreadStructureVisibleTurnItem =
+    OrchestrationV2ThreadProjection["visibleTurnItems"][number],
+>() {
+  type Rows = ReadonlyArray<Row>;
   type Requests = OrchestrationV2ThreadProjection["runtimeRequests"];
   let previousRows: Rows | undefined;
   let previousRequests: Requests | undefined;
   let previousResult: Rows | undefined;
-  const cache = new WeakMap<Rows[number], { request: Requests[number]; row: Rows[number] }>();
-  return (
-    projection: Pick<OrchestrationV2ThreadProjection, "visibleTurnItems" | "runtimeRequests">,
-  ): Rows => {
+  const cache = new WeakMap<Row, { request: Requests[number]; row: Row }>();
+  return (projection: {
+    readonly visibleTurnItems: Rows;
+    readonly runtimeRequests: Requests;
+  }): Rows => {
     const { visibleTurnItems: rows, runtimeRequests: requests } = projection;
     if (rows === previousRows && requests === previousRequests && previousResult)
       return previousResult;
     const byId = new Map(requests.map((request) => [request.id, request]));
-    let result: Rows[number][] | undefined;
+    let result: Row[] | undefined;
     for (const [index, row] of rows.entries()) {
       const item = row.item;
       const request =

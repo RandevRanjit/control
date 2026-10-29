@@ -4,6 +4,8 @@ import type {
   EnvironmentProject,
   EnvironmentThread,
   EnvironmentThreadShell,
+  EnvironmentThreadStructure,
+  ThreadStructureVisibleTurnItem,
 } from "@control/client-runtime/state/shell";
 import {
   EMPTY_THREAD_HISTORY_META,
@@ -115,6 +117,13 @@ export function useThreadShell(ref: ScopedThreadRef | null): EnvironmentThreadSh
   );
 }
 
+/** The shell without its streaming timestamps; see quietThreadShellAtom. */
+export function useQuietThreadShell(ref: ScopedThreadRef | null): EnvironmentThreadShell | null {
+  return useAtomValue(
+    ref === null ? EMPTY_THREAD_SHELL_ATOM : environmentThreadShells.quietThreadShellAtom(ref),
+  );
+}
+
 export function useChildThreadInputs(ref: ScopedThreadRef | null) {
   return useAtomValue(
     ref === null ? EMPTY_THREAD_SHELLS_ATOM : environmentThreadShells.childThreadInputsAtom(ref),
@@ -124,6 +133,15 @@ export function useChildThreadInputs(ref: ScopedThreadRef | null) {
 export function useThreadProjection(ref: ScopedThreadRef | null): EnvironmentThread | null {
   return useAtomValue(
     ref === null ? EMPTY_THREAD_PROJECTION_ATOM : environmentThreadDetails.threadAtom(ref),
+  );
+}
+
+/** The thread's structure, held through streamed assistant and reasoning text; see ThreadStructure. */
+export function useQuietThreadProjection(
+  ref: ScopedThreadRef | null,
+): EnvironmentThreadStructure | null {
+  return useAtomValue(
+    ref === null ? EMPTY_THREAD_PROJECTION_ATOM : environmentThreadDetails.quietThreadAtom(ref),
   );
 }
 
@@ -156,6 +174,17 @@ export function useThreadVisibleTurnItems(
     ref === null
       ? EMPTY_VISIBLE_TURN_ITEMS_ATOM
       : environmentThreadDetails.visibleTurnItemsAtom(ref),
+  );
+}
+
+/** Visible turn items without their streamed text; see ThreadStructure. */
+export function useQuietThreadVisibleTurnItems(
+  ref: ScopedThreadRef | null,
+): ReadonlyArray<ThreadStructureVisibleTurnItem> {
+  return useAtomValue(
+    ref === null
+      ? EMPTY_VISIBLE_TURN_ITEMS_ATOM
+      : environmentThreadDetails.quietVisibleTurnItemsAtom(ref),
   );
 }
 

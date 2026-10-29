@@ -1,5 +1,8 @@
 import * as Option from "effect/Option";
-import type { EnvironmentThreadShell } from "@control/client-runtime/state/shell";
+import type {
+  EnvironmentThreadShell,
+  ThreadStructureVisibleTurnItem,
+} from "@control/client-runtime/state/shell";
 import {
   type AssetCreateUrlInput,
   type AssetCreateUrlResult,
@@ -10,7 +13,6 @@ import {
   ProjectId,
   type MessageId,
   type ModelSelection,
-  type OrchestrationV2ProjectedTurnItem,
   type PreviewAnnotationPayload,
   type ProviderInteractionMode,
   ProviderDriverKind,
@@ -1154,7 +1156,7 @@ export function createLocalDispatchSnapshot(
  * turn items avoids dropping steer rows in that gap.
  */
 export function deriveCommittedServerUserMessageIds(
-  visibleTurnItems: ReadonlyArray<OrchestrationV2ProjectedTurnItem>,
+  visibleTurnItems: ReadonlyArray<ThreadStructureVisibleTurnItem>,
 ): ReadonlySet<ChatMessage["id"]> {
   return new Set(
     visibleTurnItems.flatMap((row) =>

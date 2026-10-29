@@ -4,6 +4,7 @@ import {
   type RuntimeSubagent,
 } from "@control/client-runtime/state/subagentRuntime";
 import { formatSubagentDisplayTitle } from "@control/client-runtime/state/subagent-display";
+import type { ThreadStructure } from "@control/client-runtime/state/shell";
 import type { OrchestrationV2ThreadProjection } from "@control/contracts";
 import * as DateTime from "effect/DateTime";
 
@@ -42,7 +43,7 @@ export function headAgents(projection: {
   readonly providerThreads: ReadonlyArray<
     Pick<Projection["providerThreads"][number], "pendingBackgroundTasks">
   >;
-  readonly turnItems: Projection["turnItems"];
+  readonly turnItems: ThreadStructure["turnItems"];
 }): HeadAgents {
   const subagents = projectedSubagentsToRuntime(projection.subagents).map(
     (agent): HeadAgentRow & { readonly at: string } => ({

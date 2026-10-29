@@ -72,7 +72,7 @@ const TICK = (
 
 type PopoverProps = {
   readonly threadRef: ScopedThreadRef;
-  readonly projection: OrchestrationV2ThreadProjection | null;
+  readonly projection: Pick<OrchestrationV2ThreadProjection, "looseEnds" | "runs"> | null;
 };
 
 /**

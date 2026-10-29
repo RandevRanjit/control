@@ -5,7 +5,6 @@ import {
   type OrchestrationV2PlanArtifact,
   type OrchestrationV2ProjectedTurnItem,
   type OrchestrationV2RunAttempt,
-  type OrchestrationV2ThreadProjection,
   type OrchestrationV2TurnItem,
   type PlanId,
   type RunId,
@@ -35,7 +34,11 @@ import type {
   ThreadPendingApproval,
   ThreadPendingUserInput,
 } from "@control/client-runtime/state/thread-requests";
-import type { ThreadRunSummary, ThreadRuntimeSummary } from "@control/client-runtime/state/shell";
+import type {
+  ThreadRunSummary,
+  ThreadStructure,
+  ThreadStructureRuntime,
+} from "@control/client-runtime/state/shell";
 import { threadRuntimeHasInterruptibleRun } from "@control/client-runtime/state/thread-execution";
 import { turnItemIsWorkspacePreparation } from "@control/client-runtime/state/turn-item-presentation";
 
@@ -219,7 +222,7 @@ export function workEntryIndicatesToolNeutralStatus(entry: WorkLogEntry): boolea
 
 export function isLatestRunSettled(
   latestRun: Pick<ThreadRunSummary, "runId" | "startedAt" | "completedAt" | "status"> | null,
-  runtime: Pick<ThreadRuntimeSummary, "status" | "activeRunId"> | null,
+  runtime: Pick<ThreadStructureRuntime, "status" | "activeRunId"> | null,
 ): boolean {
   if (latestRun === null) return false;
   if (
@@ -238,7 +241,7 @@ export function deriveActiveWorkStartedAt(
     ThreadRunSummary,
     "runId" | "startedAt" | "requestedAt" | "completedAt" | "status"
   > | null,
-  runtime: Pick<ThreadRuntimeSummary, "status" | "activeRunId" | "activityStartedAt"> | null,
+  runtime: Pick<ThreadStructureRuntime, "status" | "activeRunId" | "activityStartedAt"> | null,
   sendStartedAt: string | null,
 ): string | null {
   const startedAt = resolveThreadWorkingStartedAt({ latestRun, runtime });
@@ -259,7 +262,7 @@ export function derivePendingUserInputs(
 }
 
 export function deriveActivePlanState(
-  projection: OrchestrationV2ThreadProjection | null,
+  projection: ThreadStructure | null,
   latestRunId: RunId | undefined,
 ): ActivePlanState | null {
   if (projection === null) return null;
@@ -270,7 +273,7 @@ export function deriveActivePlanState(
     null;
   if (plan === null || plan.steps.length === 0) return null;
   return {
-    createdAt: planItemTime(projection, plan.id),
+    createdAt: planItemTime(projection, plan),
     runId: plan.runId,
     explanation: plan.explanation ?? null,
     steps: plan.steps.map(({ text, status, durationMs }) => ({
@@ -281,20 +284,30 @@ export function deriveActivePlanState(
   };
 }
 
-function planItemTime(projection: OrchestrationV2ThreadProjection, planId: PlanId): string {
+function planItemTime(
+  projection: ThreadStructure,
+  plan: Pick<OrchestrationV2PlanArtifact, "id" | "runId">,
+): string {
   const item = projection.turnItems.findLast(
     (candidate) =>
       (candidate.type === "proposed_plan" || candidate.type === "todo_list") &&
-      candidate.planId === planId,
+      candidate.planId === plan.id,
   );
-  return DateTime.formatIso(item?.updatedAt ?? projection.updatedAt);
+  if (item?.type === "proposed_plan" || item?.type === "todo_list") {
+    return DateTime.formatIso(item.updatedAt);
+  }
+  // Without a plan item, the plan's run dates it; the thread's own timestamps move while a reply streams.
+  const run = projection.runs.find((candidate) => candidate.id === plan.runId);
+  return DateTime.formatIso(
+    run?.completedAt ?? run?.startedAt ?? run?.requestedAt ?? projection.thread.createdAt,
+  );
 }
 
 function toLatestProposedPlanState(
-  projection: OrchestrationV2ThreadProjection,
+  projection: ThreadStructure,
   plan: Extract<OrchestrationV2PlanArtifact, { readonly kind: "proposed_plan" }>,
 ): LatestProposedPlanState {
-  const updatedAt = planItemTime(projection, plan.id);
+  const updatedAt = planItemTime(projection, plan);
   return {
     id: plan.id,
     createdAt: updatedAt,
@@ -306,7 +319,7 @@ function toLatestProposedPlanState(
 }
 
 export function findLatestProposedPlan(
-  projection: OrchestrationV2ThreadProjection | null,
+  projection: ThreadStructure | null,
   latestRunId: RunId | string | null | undefined,
 ): LatestProposedPlanState | null {
   if (projection === null) return null;
@@ -315,7 +328,7 @@ export function findLatestProposedPlan(
   const plan = [...(candidates.length > 0 ? candidates : plans)]
     .toSorted(
       (left, right) =>
-        planItemTime(projection, left.id).localeCompare(planItemTime(projection, right.id)) ||
+        planItemTime(projection, left).localeCompare(planItemTime(projection, right)) ||
         left.id.localeCompare(right.id),
     )
     .at(-1);
@@ -1042,7 +1055,7 @@ export function deriveRevertTurnCountByUserMessageId(input: {
   return byUserMessageId;
 }
 
-export function derivePhase(runtime: ThreadRuntimeSummary | null): SessionPhase {
+export function derivePhase(runtime: ThreadStructureRuntime | null): SessionPhase {
   if (runtime === null) return "disconnected";
   if (
     runtime.status === "preparing" ||
@@ -1062,7 +1075,7 @@ export function derivePhase(runtime: ThreadRuntimeSummary | null): SessionPhase 
  */
 export function deriveCanInterruptRunningThread(
   hasActiveThread: boolean,
-  runtime: ThreadRuntimeSummary | null,
+  runtime: ThreadStructureRuntime | null,
 ): boolean {
   return (
     hasActiveThread &&

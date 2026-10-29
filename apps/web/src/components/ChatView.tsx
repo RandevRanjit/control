@@ -15,9 +15,7 @@ import {
   isPaintOnlyThreadTimeline,
   peekHeldThreadTimeline,
   peekRememberedThreadTimeline,
-  rememberReadyThreadTimeline,
   resolveThreadSwitchTimeline,
-  timelineHasEphemeralPreviewUrls,
   recallCheckoutIsRepo,
   rememberCheckoutIsRepo,
 } from "./ChatView.logic";
@@ -100,12 +98,15 @@ import {
   deriveRunlessWorkStartedAt,
   deriveThreadActivityRun,
   deriveLatestThreadRun,
-  deriveThreadRuntime,
+  deriveThreadStructureRuntime,
   presentPendingBackgroundWork,
   presentProviderGoal,
 } from "@control/client-runtime/state/thread-execution";
 import { threadSupportsProviderHandoff } from "@control/client-runtime/state/thread-workflows";
-import { shouldShowLoadEarlierControl } from "@control/client-runtime/state/threads";
+import {
+  isCompleteTurnItemRow,
+  shouldShowLoadEarlierControl,
+} from "@control/client-runtime/state/threads";
 import { resolveThreadLastVisitedAt } from "./Sidebar.logic";
 import {
   declineForRedirect,
@@ -144,6 +145,7 @@ import { Debouncer } from "@tanstack/react-pacer";
 import { useAtomValue } from "@effect/atom-react";
 import { Atom } from "effect/reactivity";
 import {
+  type ComponentProps,
   Fragment,
   lazy,
   memo,
@@ -188,6 +190,7 @@ import {
   deriveTimelineEntriesFromVisibleTurnItemsWithState,
   selectHandoffImageResources,
   type TimelineEntriesProjection,
+  type TimelineEntry,
   deriveActivePlanState,
   deriveActiveWorkStartedAt,
   deriveCanInterruptRunningThread,
@@ -425,13 +428,14 @@ import {
   useEnvironmentSupportsServerBrowser,
   useProject,
   useProjects,
-  useThreadProjection,
+  useQuietThreadProjection,
+  useQuietThreadVisibleTurnItems,
   useThreadStatus,
   useThreadHistory,
+  useQuietThreadShell,
   useThreadShell,
   useChildThreadInputs,
   useThreadRefs,
-  useThreadVisibleTurnItems,
   waitForThreadShell,
 } from "../state/entities";
 import { environmentShell } from "../state/shell";
@@ -442,7 +446,12 @@ import { DraftHeroHeadline } from "./chat/DraftHeroHeadline";
 import { ExpandedImageDialog } from "./chat/ExpandedImageDialog";
 import { PullRequestThreadDialog } from "./PullRequestThreadDialog";
 import type { AssistantCitationRequest } from "./chat/AssistantCitationSource";
-import { MessagesTimeline, type MessagesTimelineHistoryControls } from "./chat/MessagesTimeline";
+import type { MessagesTimelineHistoryControls } from "./chat/MessagesTimeline";
+import {
+  ThreadTimeline,
+  useLiveTimelineEntries,
+  type LiveTimelineEntriesInput,
+} from "./chat/ThreadTimeline";
 import { ProviderSubagentBar } from "./chat/ProviderSubagentBar";
 import { getTriggerDisplayModelName } from "./chat/providerIconUtils";
 import { resolveTimelineIsAtEnd, worktreeSetupAgentStarted } from "./chat/MessagesTimeline.logic";
@@ -992,7 +1001,7 @@ const PersistentThreadTerminalDrawer = memo(function PersistentThreadTerminalDra
   const openTerminal = useAtomCommand(terminalEnvironment.open, "terminal open");
   const writeTerminal = useAtomCommand(terminalEnvironment.write, "terminal write");
   const closeTerminalMutation = useAtomCommand(terminalEnvironment.close, "terminal close");
-  const serverThread = useThreadShell(threadRef);
+  const serverThread = useQuietThreadShell(threadRef);
   const draftThread = useComposerDraftStore((store) => store.getDraftThreadByRef(threadRef));
   const projectRef = serverThread
     ? scopeProjectRef(serverThread.environmentId, serverThread.projectId)
@@ -1396,7 +1405,7 @@ const PersistentThreadTerminalPanel = memo(function PersistentThreadTerminalPane
   newShortcutLabel,
   closeShortcutLabel,
 }: PersistentThreadTerminalPanelProps) {
-  const serverThread = useThreadShell(threadRef);
+  const serverThread = useQuietThreadShell(threadRef);
   const draftThread = useComposerDraftStore((store) => store.getDraftThreadByRef(threadRef));
   const projectRef = serverThread
     ? scopeProjectRef(serverThread.environmentId, serverThread.projectId)
@@ -1695,12 +1704,12 @@ export default function ChatView(props: ChatViewProps) {
         ? store.getDraftSession(draftId)
         : null,
   );
-  const serverThread = useThreadShell(routeThreadRef);
+  const serverThread = useQuietThreadShell(routeThreadRef);
   const routeThreadDetailRef = resolveThreadDetailRef(routeThreadRef, {
     shellExists: serverThread !== null,
     waitForShell: draftThread !== null,
   });
-  const serverThreadProjection = useThreadProjection(routeThreadDetailRef);
+  const serverThreadProjection = useQuietThreadProjection(routeThreadDetailRef);
   const serverProjection = serverThreadProjection?.projection ?? null;
   const reportedModelSelection = serverProjection
     ? deriveReportedModelSelection(serverProjection)
@@ -1723,7 +1732,7 @@ export default function ChatView(props: ChatViewProps) {
     }
     return null;
   }, [serverProjection?.providerTurns]);
-  const serverVisibleTurnItems = useThreadVisibleTurnItems(routeThreadDetailRef);
+  const serverVisibleTurnItems = useQuietThreadVisibleTurnItems(routeThreadDetailRef);
   const serverThreadHistory = useThreadHistory(routeThreadDetailRef);
   const threadHistoryControls = useMemo<MessagesTimelineHistoryControls | undefined>(() => {
     if (routeThreadDetailRef === null || !shouldShowLoadEarlierControl(serverThreadHistory)) {
@@ -1757,13 +1766,6 @@ export default function ChatView(props: ChatViewProps) {
     }
     return ids;
   }, [committedServerMessageIds, serverProjection]);
-  const markThreadVisited = useUiStateStore((store) => store.markThreadVisited);
-  const activeThreadLocalLastVisitedAt = useUiStateStore(
-    (store) => store.threadLastVisitedAtById[routeThreadKey],
-  );
-  const visitThreadMutation = useAtomCommand(threadEnvironment.visit, { reportFailure: false });
-  const lastDispatchedVisitRef = useRef<string | null>(null);
-  const lastVisitDispatchAtRef = useRef(0);
   const settings = useEnvironmentSettings(environmentId);
   const clientSettingsHydrated = useClientSettingsHydrated();
   const setStickyComposerModelSelection = useComposerDraftStore(
@@ -1967,7 +1969,15 @@ export default function ChatView(props: ChatViewProps) {
   );
   // Whether the timeline's rows extend past the viewport above the composer.
   // The composer only rests when there is reading space to give back.
-  const [timelineOverflows, setTimelineOverflows] = useState(false);
+  const [timelineOverflows, setTimelineOverflowsState] = useState(false);
+  const timelineOverflowsRef = useRef(false);
+  // The timeline reports on every content resize, so every streamed update. React can
+  // render a component again for a state set to its current value, so only a change is set.
+  const setTimelineOverflows = useCallback((overflows: boolean) => {
+    if (timelineOverflowsRef.current === overflows) return;
+    timelineOverflowsRef.current = overflows;
+    setTimelineOverflowsState(overflows);
+  }, []);
   const attachmentPreviewHandoffByMessageIdRef = useRef<Record<string, string[]>>({});
   const attachmentPreviewPromotionInFlightByMessageIdRef = useRef<Record<string, true>>({});
   const fanoutStateAtom = draftFanoutStateAtom(routeThreadKey);
@@ -2101,7 +2111,7 @@ export default function ChatView(props: ChatViewProps) {
     [serverProjection],
   );
   const serverRuntime = useMemo(
-    () => (serverProjection === null ? null : deriveThreadRuntime(serverProjection)),
+    () => (serverProjection === null ? null : deriveThreadStructureRuntime(serverProjection)),
     [serverProjection],
   );
   const runlessWorkStartedAt = useMemo(
@@ -2146,7 +2156,7 @@ export default function ChatView(props: ChatViewProps) {
     }
     return scopeThreadRef(parentSubagentEnvironmentId, parentSubagentThreadId);
   }, [parentSubagentEnvironmentId, parentSubagentThreadId]);
-  const parentSubagentThread = useThreadShell(parentSubagentThreadRef);
+  const parentSubagentThread = useQuietThreadShell(parentSubagentThreadRef);
   const parentThreadLink = useMemo(
     () =>
       parentSubagentThreadRef === null
@@ -2239,7 +2249,7 @@ export default function ChatView(props: ChatViewProps) {
     containerWidth: workspaceLayoutWidth ?? undefined,
     widthStorageKey: `control:preview-panel-width:${activeThreadKey}`,
   });
-  const activeThreadShell = useThreadShell(isServerThread ? activeThreadRef : null);
+  const activeThreadShell = useQuietThreadShell(isServerThread ? activeThreadRef : null);
   const timelineThreadError =
     serverRuntime?.status === "failed" &&
     serverRuntime.lastErrorClass === "usage_limit" &&
@@ -2902,70 +2912,6 @@ export default function ChatView(props: ChatViewProps) {
     },
     [openOrReuseProjectDraftThread],
   );
-
-  useEffect(() => {
-    if (!serverThread?.id) return;
-    const threadUpdatedAt = Date.parse(serverThread.updatedAt);
-    if (Number.isNaN(threadUpdatedAt)) return;
-    const effectiveLastVisitedAt = resolveThreadLastVisitedAt(
-      serverThread.lastVisitedAt,
-      activeThreadLocalLastVisitedAt,
-    );
-    const lastVisitedAt = effectiveLastVisitedAt ? Date.parse(effectiveLastVisitedAt) : NaN;
-    if (!Number.isNaN(lastVisitedAt) && lastVisitedAt >= threadUpdatedAt) return;
-
-    if (serverThread.lastVisitedAt !== undefined) {
-      // Server-tracked visited state: record the watermark server-side so it
-      // syncs across every device connected to the environment. Dedupe per
-      // watermark — the effect re-runs before the command's echo lands. The
-      // dedupe also keeps a mark-unread on the open thread sticky: the rewind
-      // leaves updatedAt untouched, so the already-dispatched key skips a
-      // fresh visit until new activity lands or the thread is reopened.
-      const dispatchKey = `${routeThreadKey}:${serverThread.updatedAt}`;
-      if (lastDispatchedVisitRef.current === dispatchKey) return;
-      const dispatch = () => {
-        lastDispatchedVisitRef.current = dispatchKey;
-        lastVisitDispatchAtRef.current = Date.now();
-        void visitThreadMutation({
-          environmentId: serverThread.environmentId,
-          input: { threadId: serverThread.id, visitedAt: serverThread.updatedAt },
-        });
-      };
-      // Unread prominence only flips on run completions (hasUnseenCompletion),
-      // so an unseen completion publishes immediately; mid-turn activity bumps
-      // — several per second while a turn streams — ride a trailing throttle,
-      // each rerun swapping the timer so the trailing dispatch carries the
-      // newest watermark.
-      const latestRunCompletedAtMs = serverThread.latestRun?.completedAt
-        ? Date.parse(serverThread.latestRun.completedAt)
-        : NaN;
-      const hasUnseenCompletion =
-        !Number.isNaN(latestRunCompletedAtMs) &&
-        (Number.isNaN(lastVisitedAt) || latestRunCompletedAtMs > lastVisitedAt);
-      const elapsed = Date.now() - lastVisitDispatchAtRef.current;
-      if (hasUnseenCompletion || elapsed >= VISIT_DISPATCH_THROTTLE_MS) {
-        dispatch();
-        return;
-      }
-      const timer = setTimeout(dispatch, VISIT_DISPATCH_THROTTLE_MS - elapsed);
-      return () => clearTimeout(timer);
-    }
-
-    markThreadVisited(
-      scopedThreadKey(scopeThreadRef(serverThread.environmentId, serverThread.id)),
-      serverThread.updatedAt,
-    );
-  }, [
-    activeThreadLocalLastVisitedAt,
-    markThreadVisited,
-    routeThreadKey,
-    serverThread?.environmentId,
-    serverThread?.id,
-    serverThread?.lastVisitedAt,
-    serverThread?.latestRun?.completedAt,
-    serverThread?.updatedAt,
-    visitThreadMutation,
-  ]);
 
   // Once a thread selects an environment, never substitute the primary
   // environment's config while the selected environment is still loading.
@@ -3871,6 +3817,36 @@ export default function ChatView(props: ChatViewProps) {
     }
     return urls;
   }, [attachmentPreviewHandoffByMessageId, serverAttachmentUrlById, serverVisibleTurnItems]);
+  const timelineAttempts = serverProjection?.attempts;
+  const timelineNodes = serverProjection?.nodes;
+  const timelinePlans = serverProjection?.plans;
+  const timelineEntriesInput = useMemo(
+    () => ({
+      optimisticMessages: optimisticUserMessages,
+      attachmentUrlById: timelineAttachmentUrlById,
+      ...(timelineAttempts === undefined ||
+      timelineNodes === undefined ||
+      timelinePlans === undefined
+        ? {}
+        : { attempts: timelineAttempts, nodes: timelineNodes, plans: timelinePlans }),
+    }),
+    [
+      optimisticUserMessages,
+      timelineAttachmentUrlById,
+      timelineAttempts,
+      timelineNodes,
+      timelinePlans,
+    ],
+  );
+  // The structure has no assistant or reasoning text, so those rows stay out of
+  // ChatView's own entries (anchoring, rewind, prompt history); ThreadTimeline
+  // and the Outputs panel read every row from the live turn items.
+  const serverTimelineRows = useMemo(
+    () => serverVisibleTurnItems.filter(isCompleteTurnItemRow),
+    [serverVisibleTurnItems],
+  );
+  const hasStreamedTimelineRows =
+    isServerThread && serverTimelineRows.length !== serverVisibleTurnItems.length;
   const timelineProjectionRef = useRef<{
     readonly threadKey: string | null;
     readonly projection: TimelineEntriesProjection;
@@ -3878,29 +3854,12 @@ export default function ChatView(props: ChatViewProps) {
   const serverTimelineEntries = useMemo(() => {
     const previous = timelineProjectionRef.current;
     const projection = deriveTimelineEntriesFromVisibleTurnItemsWithState(
-      {
-        visibleTurnItems: serverVisibleTurnItems,
-        optimisticMessages: optimisticUserMessages,
-        attachmentUrlById: timelineAttachmentUrlById,
-        ...(serverProjection === null
-          ? {}
-          : {
-              attempts: serverProjection.attempts,
-              nodes: serverProjection.nodes,
-              plans: serverProjection.plans,
-            }),
-      },
+      { ...timelineEntriesInput, visibleTurnItems: serverTimelineRows },
       previous?.threadKey === activeThreadKey ? previous.projection : null,
     );
     timelineProjectionRef.current = { threadKey: activeThreadKey, projection };
     return projection.entries;
-  }, [
-    activeThreadKey,
-    optimisticUserMessages,
-    serverVisibleTurnItems,
-    serverProjection,
-    timelineAttachmentUrlById,
-  ]);
+  }, [activeThreadKey, serverTimelineRows, timelineEntriesInput]);
   const draftTimelineEntries = useMemo(
     () =>
       optimisticUserMessages.map(
@@ -3919,15 +3878,9 @@ export default function ChatView(props: ChatViewProps) {
     () => timelineEntries.flatMap((entry) => (entry.kind === "message" ? [entry.message] : [])),
     [timelineEntries],
   );
-  const timelineHtmlRenders = useMemo(
-    () =>
-      timelineEntries.flatMap((entry) =>
-        entry.kind === "html-render" ? [{ runId: entry.runId, ...entry.htmlRender }] : [],
-      ),
-    [timelineEntries],
-  );
+  const timelineEmpty = timelineEntries.length === 0 && !hasStreamedTimelineRows;
   const displayedTimeline = resolveThreadSwitchTimeline({
-    loading: timelineEntries.length === 0 && threadSyncPhase !== null,
+    loading: timelineEmpty && threadSyncPhase !== null,
     activeThreadKey,
     nextEntries: timelineEntries,
     rememberedForActive: peekRememberedThreadTimeline<typeof timelineEntries>(activeThreadKey),
@@ -4045,7 +3998,7 @@ export default function ChatView(props: ChatViewProps) {
     activeThreadKey !== null && dockedDraftHeroThreadKey === activeThreadKey;
   const isDraftHeroState = resolveDraftHeroState({
     isLocalDraftThread,
-    hasTimelineEntries: timelineEntries.length > 0,
+    hasTimelineEntries: !timelineEmpty,
     isWorking,
     draftHeroDockRequested,
     backgroundSubmissionPending,
@@ -4194,21 +4147,6 @@ export default function ChatView(props: ChatViewProps) {
   const activeProjectCwd = activeProject?.workspaceRoot ?? null;
   const activeThreadWorktreePath = activeThread?.worktreePath ?? null;
   const activeWorkspaceRoot = activeThreadWorktreePath ?? activeProjectCwd ?? undefined;
-  useLayoutEffect(() => {
-    if (
-      threadDetailLoading ||
-      timelineEntries.length === 0 ||
-      timelineHasEphemeralPreviewUrls(timelineEntries)
-    ) {
-      return;
-    }
-    rememberReadyThreadTimeline({
-      threadKey: activeThreadKey,
-      entries: timelineEntries,
-      markdownCwd: gitCwd,
-      workspaceRoot: activeWorkspaceRoot ?? null,
-    });
-  }, [activeThreadKey, activeWorkspaceRoot, gitCwd, threadDetailLoading, timelineEntries]);
   const heldPaintContext = paintOnlyDisplayedTimeline
     ? peekHeldThreadTimeline<typeof timelineEntries>()
     : null;
@@ -6814,9 +6752,17 @@ export default function ChatView(props: ChatViewProps) {
     }
   }, []);
 
+  // timelineEntries leave out reasoning rows (their text is not in the
+  // structure), and reasoning counts as tool activity, like any work row.
+  const runningTurnHasReasoning =
+    activeRunningTurnId !== null &&
+    serverVisibleTurnItems.some(
+      (row) => row.item.type === "reasoning" && row.item.runId === activeRunningTurnId,
+    );
   useLayoutEffect(() => {
     if (timelineScrollModeRef.current !== "anchoring-new-turn") return;
     if (
+      (runningTurnHasReasoning && timelineAnchorMessageId !== null && timelineLiveFollowEnabled) ||
       shouldReleaseTimelineAnchorForToolActivity({
         anchorMessageId: timelineAnchorMessageId,
         liveFollowEnabled: timelineLiveFollowEnabled,
@@ -6828,6 +6774,7 @@ export default function ChatView(props: ChatViewProps) {
     }
   }, [
     activeRunningTurnId,
+    runningTurnHasReasoning,
     scrollToEnd,
     timelineAnchorMessageId,
     timelineEntries,
@@ -7171,8 +7118,8 @@ export default function ChatView(props: ChatViewProps) {
     if (activeThreadShell?.settledOverride === "settled") return false;
     const wokeAtMs = Date.parse(activeThreadWokeAt);
     if (Number.isNaN(wokeAtMs)) return false;
-    // Having the thread open counts as a visit at completedAt (the effect
-    // above stamps it); folding that floor in here keeps a completion-
+    // Having the thread open counts as a visit at completedAt
+    // (ThreadVisitWatermark stamps it); folding that floor in here keeps a completion-
     // triggered wake from flashing a banner for one frame before the stamp
     // lands. An unparseable stored visit counts as never-visited: corrupt
     // data must not eat the wake signal.
@@ -11027,10 +10974,12 @@ export default function ChatView(props: ChatViewProps) {
   };
   const rightPanelContent = activeThreadRef ? (
     shownRightPanelSurface.kind === "outputs" ? (
-      <OutputsPanel
+      <ThreadOutputsPanel
+        threadDetailRef={routeThreadDetailRef}
+        entriesInput={timelineEntriesInput}
+        draftEntries={isServerThread ? null : draftTimelineEntries}
+        activeThreadKey={activeThreadKey}
         environmentId={activeThread.environmentId}
-        messages={timelineMessages}
-        htmlRenders={timelineHtmlRenders}
         runs={serverProjection?.runs ?? []}
         checkpoints={turnDiffSummaries}
         renderWorkspaceFile={(path) =>
@@ -11441,7 +11390,15 @@ export default function ChatView(props: ChatViewProps) {
             {/* Messages Wrapper */}
             <div className="relative flex min-h-0 flex-1 flex-col bg-background">
               {/* Messages — LegendList handles virtualization and scrolling internally */}
-              <MessagesTimeline
+              <ThreadTimeline
+                threadDetailRef={routeThreadDetailRef}
+                entriesInput={timelineEntriesInput}
+                draftEntries={isServerThread ? null : draftTimelineEntries}
+                activeThreadKey={activeThreadKey}
+                syncing={threadSyncPhase !== null}
+                detailLoading={threadDetailLoading}
+                readyMarkdownCwd={gitCwd}
+                readyWorkspaceRoot={activeWorkspaceRoot ?? null}
                 citationRequest={paintOnlyDisplayedTimeline ? null : citationRequest}
                 citationHistoryLoading={threadDetailLoading}
                 {...(!paintOnlyDisplayedTimeline
@@ -11474,7 +11431,6 @@ export default function ChatView(props: ChatViewProps) {
                 isPreparingWorktree={!paintOnlyDisplayedTimeline && isPreparingWorktree}
                 footer={paintOnlyDisplayedTimeline ? null : threadStatusLine}
                 listRef={legendListRef}
-                timelineEntries={displayedTimeline.entries}
                 providerStatuses={
                   environmentById.get(
                     displayedThreadRef?.environmentId ?? activeThread.environmentId,
@@ -11906,6 +11862,7 @@ export default function ChatView(props: ChatViewProps) {
             {canOperatePreview && activeThreadRef && activeEnvironmentServerBrowser ? (
               <PreviewSessionSync threadRef={activeThreadRef} />
             ) : null}
+            <ThreadVisitWatermark threadRef={routeThreadRef} />
             {activeThreadRef &&
             activePreviewMiniPlayer &&
             previewMiniPlayerVisible &&
@@ -12137,6 +12094,119 @@ export default function ChatView(props: ChatViewProps) {
       )}
     </div>
   );
+}
+
+// The visit watermark is the one part of the chat view that follows the
+// shell's updatedAt, which ticks while a run streams. Keeping it in a leaf lets
+// ChatView read the quiet shell.
+function ThreadVisitWatermark(props: { readonly threadRef: ScopedThreadRef }) {
+  const serverThread = useThreadShell(props.threadRef);
+  const threadKey = scopedThreadKey(props.threadRef);
+  const markThreadVisited = useUiStateStore((store) => store.markThreadVisited);
+  const activeThreadLocalLastVisitedAt = useUiStateStore(
+    (store) => store.threadLastVisitedAtById[threadKey],
+  );
+  const visitThreadMutation = useAtomCommand(threadEnvironment.visit, { reportFailure: false });
+  const lastDispatchedVisitRef = useRef<string | null>(null);
+  const lastVisitDispatchAtRef = useRef(0);
+
+  useEffect(() => {
+    if (!serverThread?.id) return;
+    const threadUpdatedAt = Date.parse(serverThread.updatedAt);
+    if (Number.isNaN(threadUpdatedAt)) return;
+    const effectiveLastVisitedAt = resolveThreadLastVisitedAt(
+      serverThread.lastVisitedAt,
+      activeThreadLocalLastVisitedAt,
+    );
+    const lastVisitedAt = effectiveLastVisitedAt ? Date.parse(effectiveLastVisitedAt) : NaN;
+    if (!Number.isNaN(lastVisitedAt) && lastVisitedAt >= threadUpdatedAt) return;
+
+    if (serverThread.lastVisitedAt !== undefined) {
+      // Server-tracked visited state: record the watermark server-side so it
+      // syncs across every device connected to the environment. Dedupe per
+      // watermark — the effect re-runs before the command's echo lands. The
+      // dedupe also keeps a mark-unread on the open thread sticky: the rewind
+      // leaves updatedAt untouched, so the already-dispatched key skips a
+      // fresh visit until new activity lands or the thread is reopened.
+      const dispatchKey = `${threadKey}:${serverThread.updatedAt}`;
+      if (lastDispatchedVisitRef.current === dispatchKey) return;
+      const dispatch = () => {
+        lastDispatchedVisitRef.current = dispatchKey;
+        lastVisitDispatchAtRef.current = Date.now();
+        void visitThreadMutation({
+          environmentId: serverThread.environmentId,
+          input: { threadId: serverThread.id, visitedAt: serverThread.updatedAt },
+        });
+      };
+      // Unread prominence only flips on run completions (hasUnseenCompletion),
+      // so an unseen completion publishes immediately; mid-turn activity bumps
+      // — several per second while a turn streams — ride a trailing throttle,
+      // each rerun swapping the timer so the trailing dispatch carries the
+      // newest watermark.
+      const latestRunCompletedAtMs = serverThread.latestRun?.completedAt
+        ? Date.parse(serverThread.latestRun.completedAt)
+        : NaN;
+      const hasUnseenCompletion =
+        !Number.isNaN(latestRunCompletedAtMs) &&
+        (Number.isNaN(lastVisitedAt) || latestRunCompletedAtMs > lastVisitedAt);
+      const elapsed = Date.now() - lastVisitDispatchAtRef.current;
+      if (hasUnseenCompletion || elapsed >= VISIT_DISPATCH_THROTTLE_MS) {
+        dispatch();
+        return;
+      }
+      const timer = setTimeout(dispatch, VISIT_DISPATCH_THROTTLE_MS - elapsed);
+      return () => clearTimeout(timer);
+    }
+
+    markThreadVisited(
+      scopedThreadKey(scopeThreadRef(serverThread.environmentId, serverThread.id)),
+      serverThread.updatedAt,
+    );
+  }, [
+    activeThreadLocalLastVisitedAt,
+    markThreadVisited,
+    threadKey,
+    serverThread?.environmentId,
+    serverThread?.id,
+    serverThread?.lastVisitedAt,
+    serverThread?.latestRun?.completedAt,
+    serverThread?.updatedAt,
+    visitThreadMutation,
+  ]);
+  return null;
+}
+
+/** The Outputs panel reads the live rows: what the agent wrote is streamed text. */
+function ThreadOutputsPanel({
+  threadDetailRef,
+  entriesInput,
+  draftEntries,
+  activeThreadKey,
+  ...panelProps
+}: Omit<ComponentProps<typeof OutputsPanel>, "messages" | "htmlRenders"> & {
+  readonly threadDetailRef: ScopedThreadRef | null;
+  readonly entriesInput: LiveTimelineEntriesInput;
+  readonly draftEntries: ReadonlyArray<TimelineEntry> | null;
+  readonly activeThreadKey: string | null;
+}) {
+  const entries = useLiveTimelineEntries({
+    threadDetailRef,
+    activeThreadKey,
+    entriesInput,
+    draftEntries,
+  });
+  const messages = useMemo(
+    () => entries.flatMap((entry) => (entry.kind === "message" ? [entry.message] : [])),
+    [entries],
+  );
+  const htmlRenders = useMemo(
+    () =>
+      entries.flatMap((entry) =>
+        entry.kind === "html-render" ? [{ runId: entry.runId, ...entry.htmlRender }] : [],
+      ),
+    [entries],
+  );
+  return <OutputsPanel {...panelProps} messages={messages} htmlRenders={htmlRenders} />;
 }
 
 /** Keeps the thread's preview tabs synced while no browser panel is mounted. */

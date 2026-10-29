@@ -1,7 +1,7 @@
+import type { ThreadStructureTurnItem } from "@control/client-runtime/state/shell";
 import type {
   OrchestrationV2ProviderTurnTokenUsage,
   OrchestrationV2ProviderThread,
-  OrchestrationV2TurnItem,
   ThreadTokenUsageSnapshot,
 } from "@control/contracts";
 import * as DateTime from "effect/DateTime";
@@ -26,7 +26,7 @@ export type ContextWindowSnapshot = NullableContextWindowUsage & {
 /** Prefers the provider's live usage report (#8144); falls back to the last compaction item. */
 export function deriveLatestContextWindowSnapshot(
   entries: ReadonlyArray<{
-    readonly item: OrchestrationV2TurnItem;
+    readonly item: ThreadStructureTurnItem;
   }>,
   liveUsage?: OrchestrationV2ProviderTurnTokenUsage | null,
   providerThread?: Pick<OrchestrationV2ProviderThread, "contextUsage" | "updatedAt"> | null,

@@ -40,9 +40,9 @@ import {
   getProviderSkillsForSlashMenu,
   getProviderSlashCommandsForSlashMenu,
   isProviderSkillUserInvocable,
-  hasCompleteProviderWorkspaceSnapshot,
   hasCurrentProviderWorkspaceSnapshot,
   hasRefreshedProviderWorkspaceSnapshot,
+  providerWorkspaceSnapshotState,
   resolveProviderSkillsForCwd,
   resolveProviderSlashCommandsForCwd,
 } from "@control/client-runtime/providerSkills";
@@ -252,31 +252,28 @@ export function useComposerCommandMenu({
   });
   const registry = useContext(RegistryContext);
   const selectedProviderInstanceId = selectedProviderStatus?.instanceId;
-  const hasWorkspaceSnapshot = hasCompleteProviderWorkspaceSnapshot(
-    selectedProviderStatus,
-    projectCwd,
-  );
+  const workspaceSnapshotState = providerWorkspaceSnapshotState(selectedProviderStatus, projectCwd);
   // The last scan this composer asked for. A request inside the TTL is not
   // repeated, so a client clock ahead of the server's cannot loop rescans.
   const workspaceRefreshKeyRef = useRef<{ key: string; requestedAt: number } | null>(null);
-  const failedRefreshesRef = useRef<{ key: string; count: number } | null>(null);
+  // Failed scans per scope, so a cwd that never answers keeps its limit while others are used.
+  const failedRefreshesRef = useRef(new Map<string, number>());
+  // `armed`: the provider answers with workspace snapshots, so the retry fires on its own.
+  // Otherwise it waits for a published partial snapshot or the next edit.
   const [workspaceRefreshRetry, setWorkspaceRefreshRetry] = useState<{
     key: string;
     notBefore: number;
+    armed: boolean;
   } | null>(null);
   const workspaceRefreshScopeKey =
     environmentId && projectCwd && selectedProviderInstanceId
       ? `${environmentId}:${selectedProviderInstanceId}:${projectCwd}`
       : null;
-  const workspaceSlashCommandsPending =
-    selectedProviderStatus?.workspaceSnapshots?.some(
-      (snapshot) => snapshot.cwd === projectCwd && snapshot.slashCommandsPending === true,
-    ) ?? false;
   useEffect(() => {
     if (
-      !workspaceSlashCommandsPending ||
       !workspaceRefreshRetry ||
-      workspaceRefreshRetry.key !== workspaceRefreshScopeKey
+      workspaceRefreshRetry.key !== workspaceRefreshScopeKey ||
+      (!workspaceRefreshRetry.armed && workspaceSnapshotState !== "pending")
     )
       return;
     const timeout = setTimeout(
@@ -286,17 +283,32 @@ export function useComposerCommandMenu({
       Math.max(0, workspaceRefreshRetry.notBefore - Date.now()),
     );
     return () => clearTimeout(timeout);
-  }, [workspaceRefreshRetry, workspaceRefreshScopeKey, workspaceSlashCommandsPending]);
-  const hadWorkspaceSnapshotRef = useRef(false);
+  }, [workspaceRefreshRetry, workspaceRefreshScopeKey, workspaceSnapshotState]);
+  const lastWorkspaceSnapshotRef = useRef<{
+    key: string | null;
+    state: typeof workspaceSnapshotState;
+  } | null>(null);
   useEffect(() => {
-    if (hadWorkspaceSnapshotRef.current && !hasWorkspaceSnapshot) {
-      // A snapshot this cwd had is gone, so earlier failed scans no longer count.
-      workspaceRefreshKeyRef.current = null;
-      failedRefreshesRef.current = null;
-      setWorkspaceRefreshRetry(null);
+    const last = lastWorkspaceSnapshotRef.current;
+    lastWorkspaceSnapshotRef.current = {
+      key: workspaceRefreshScopeKey,
+      state: workspaceSnapshotState,
+    };
+    if (workspaceRefreshScopeKey === null || last?.key !== workspaceRefreshScopeKey) return;
+    // A finished snapshot shows the cwd answers, so earlier failed scans no longer count.
+    if (workspaceSnapshotState === "complete" && last.state !== "complete") {
+      failedRefreshesRef.current.delete(workspaceRefreshScopeKey);
     }
-    hadWorkspaceSnapshotRef.current = hasWorkspaceSnapshot;
-  }, [hasWorkspaceSnapshot]);
+    const lost =
+      (last.state === "complete" && workspaceSnapshotState !== "complete") ||
+      (last.state === "pending" && workspaceSnapshotState === "absent");
+    if (!lost) return;
+    // This cwd's snapshot was dropped (a reconfigure, or a rescan the server started over),
+    // so earlier scans and failed attempts say nothing about the next one.
+    workspaceRefreshKeyRef.current = null;
+    failedRefreshesRef.current.delete(workspaceRefreshScopeKey);
+    setWorkspaceRefreshRetry(null);
+  }, [workspaceRefreshScopeKey, workspaceSnapshotState]);
   useEffect(() => {
     if (!environmentId || !projectCwd || !selectedProviderInstanceId) return;
     const key = `${environmentId}:${selectedProviderInstanceId}:${projectCwd}`;
@@ -315,34 +327,44 @@ export function useComposerCommandMenu({
     if (retry?.key === key && now < retry.notBefore) return;
     const request = { key, requestedAt: now };
     workspaceRefreshKeyRef.current = request;
-    const retryLater = () => {
+    const retryLater = (armed: boolean) => {
       if (workspaceRefreshKeyRef.current !== request) return;
-      const failed = failedRefreshesRef.current;
-      const count = failed?.key === key ? failed.count + 1 : 1;
-      failedRefreshesRef.current = { key, count };
+      const count = (failedRefreshesRef.current.get(key) ?? 0) + 1;
+      failedRefreshesRef.current.set(key, count);
       // Keeping the request marker lets the TTL hold off the next scan.
       if (count >= WORKSPACE_SNAPSHOT_MAX_ATTEMPTS) return;
       workspaceRefreshKeyRef.current = null;
       setWorkspaceRefreshRetry({
         key,
         notBefore: Date.now() + WORKSPACE_SNAPSHOT_RETRY_COOLDOWN_MS,
+        armed,
       });
     };
     void refreshProviders({
       environmentId,
       input: { instanceId: selectedProviderInstanceId, cwd: projectCwd },
-    }).then((result) => {
-      const refreshed =
-        result._tag === "Success" &&
-        hasRefreshedProviderWorkspaceSnapshot(
-          registry.get(serverEnvironment.configValueAtom(environmentId)),
-          result.value.providers,
-          selectedProviderInstanceId,
-          projectCwd,
+    }).then(
+      (result) => {
+        if (result._tag !== "Success") return retryLater(true);
+        const answered = result.value.providers.find(
+          (provider) => provider.instanceId === selectedProviderInstanceId,
         );
-      if (!refreshed) retryLater();
-      else failedRefreshesRef.current = null;
-    }, retryLater);
+        if (
+          hasRefreshedProviderWorkspaceSnapshot(
+            registry.get(serverEnvironment.configValueAtom(environmentId)),
+            result.value.providers,
+            selectedProviderInstanceId,
+            projectCwd,
+          )
+        ) {
+          failedRefreshesRef.current.delete(key);
+          return;
+        }
+        // An answer without this cwd's snapshot comes from a provider without workspace discovery.
+        retryLater(providerWorkspaceSnapshotState(answered, projectCwd) !== "absent");
+      },
+      () => retryLater(true),
+    );
   }, [
     draftMessage,
     environmentId,

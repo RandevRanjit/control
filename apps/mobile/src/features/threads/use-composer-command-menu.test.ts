@@ -324,18 +324,142 @@ describe("workspace command discovery retry", () => {
       ...provider,
       workspaceSnapshots: [{ ...provider.workspaceSnapshots[0], slashCommandsPending: false }],
     };
+    const missing = { ...provider, workspaceSnapshots: [] };
     refreshProviders.mockResolvedValue({ _tag: "Success", value: { providers: [recovered] } });
-    // A reconfigure overtook the scan, so its answer never reached the merged config.
+    // A reconfigure overtook the scan, so its answer never reached the merged config,
+    // which the composer also reads its status from.
     mergedConfig.value = {
       environment: { capabilities: { providerWorkspaceSnapshotsOnDemand: true } },
-      providers: [provider],
+      providers: [missing],
     };
     await act(async () => {
-      root.render(createElement(Probe, { cwd: "/project-a" }));
+      root.render(createElement(Probe, { cwd: "/project-a", status: missing }));
     });
     expect(refreshProviders).toHaveBeenCalledTimes(1);
     await act(() => vi.advanceTimersByTimeAsync(10_000));
     expect(refreshProviders).toHaveBeenCalledTimes(2);
+  });
+
+  it("retries a first scan that never reached the server", async () => {
+    const missing = { ...provider, workspaceSnapshots: [] };
+    refreshProviders.mockRejectedValueOnce(new Error("Connection lost"));
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a", status: missing }));
+    });
+    expect(refreshProviders).toHaveBeenCalledTimes(1);
+    await act(() => vi.advanceTimersByTimeAsync(10_000));
+    expect(refreshProviders).toHaveBeenCalledTimes(2);
+  });
+
+  it("starts over when a reconfigure removes a pending snapshot after the last attempt", async () => {
+    const missing = { ...provider, workspaceSnapshots: [] };
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a" }));
+    });
+    for (let step = 0; step < 3; step += 1) {
+      await act(() => vi.advanceTimersByTimeAsync(10_000));
+    }
+    expect(refreshProviders).toHaveBeenCalledTimes(3);
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a", status: missing }));
+    });
+    expect(refreshProviders).toHaveBeenCalledTimes(4);
+    await act(() => vi.advanceTimersByTimeAsync(10_000));
+    expect(refreshProviders).toHaveBeenCalledTimes(5);
+  });
+
+  it("forgets a cwd's failed scans once its snapshot completes", async () => {
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a" }));
+    });
+    for (let step = 0; step < 3; step += 1) {
+      await act(() => vi.advanceTimersByTimeAsync(10_000));
+    }
+    expect(refreshProviders).toHaveBeenCalledTimes(3);
+    // Another composer's scan completes it.
+    const complete = {
+      ...provider,
+      workspaceSnapshots: provider.workspaceSnapshots.map((snapshot) => ({
+        ...snapshot,
+        checkedAt: new Date(Date.now()).toISOString(),
+        slashCommandsPending: false,
+      })),
+    };
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a", status: complete }));
+    });
+    // Once it is stale, a rescan that fails gets its cooldown retry again.
+    await act(() => vi.advanceTimersByTimeAsync(6 * 60_000));
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a", status: { ...complete } }));
+    });
+    expect(refreshProviders).toHaveBeenCalledTimes(4);
+    await act(() => vi.advanceTimersByTimeAsync(10_000));
+    expect(refreshProviders).toHaveBeenCalledTimes(5);
+  });
+
+  it("keeps a cwd's attempt limit across a successful scan of another cwd", async () => {
+    const withB = {
+      ...provider,
+      workspaceSnapshots: [
+        ...provider.workspaceSnapshots,
+        { cwd: "/project-b", checkedAt: new Date().toISOString(), slashCommands: [], skills: [] },
+      ],
+    };
+    refreshProviders.mockImplementation(({ input }: { input: { cwd: string } }) =>
+      Promise.resolve({
+        _tag: "Success",
+        value: { providers: [input.cwd === "/project-b" ? withB : provider] },
+      }),
+    );
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a" }));
+    });
+    for (let step = 0; step < 3; step += 1) {
+      await act(() => vi.advanceTimersByTimeAsync(10_000));
+    }
+    expect(refreshProviders).toHaveBeenCalledTimes(3);
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-b" }));
+    });
+    expect(refreshProviders).toHaveBeenCalledTimes(4);
+    // Back on the cwd that never answers: one more scan, then no retries.
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a" }));
+    });
+    await act(() => vi.advanceTimersByTimeAsync(30_000));
+    expect(refreshProviders).toHaveBeenCalledTimes(5);
+  });
+
+  it("keeps a cwd's attempt limit when another cwd's snapshot changes", async () => {
+    const current = {
+      ...provider,
+      workspaceSnapshots: [
+        ...provider.workspaceSnapshots,
+        {
+          cwd: "/project-b",
+          checkedAt: new Date().toISOString(),
+          slashCommands: [{ name: "compact" }],
+          skills: [],
+        },
+      ],
+    };
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a" }));
+    });
+    for (let step = 0; step < 3; step += 1) {
+      await act(() => vi.advanceTimersByTimeAsync(10_000));
+    }
+    expect(refreshProviders).toHaveBeenCalledTimes(3);
+    // /project-b's snapshot is complete and current, so it needs no scan.
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-b", status: current }));
+    });
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a", status: current }));
+    });
+    await act(() => vi.advanceTimersByTimeAsync(30_000));
+    expect(refreshProviders).toHaveBeenCalledTimes(3);
   });
 
   it("stops rescanning a cwd that never answers, such as a deleted worktree", async () => {

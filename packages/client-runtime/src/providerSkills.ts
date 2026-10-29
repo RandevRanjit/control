@@ -113,6 +113,16 @@ function resolveProviderWorkspaceSnapshot(
   return provider.workspaceSnapshots?.find((snapshot) => snapshot.cwd === cwd);
 }
 
+/** Where a cwd's workspace scan stands in a provider status: none yet, partial, or finished. */
+export function providerWorkspaceSnapshotState(
+  provider: ServerProvider | null | undefined,
+  cwd: string | null | undefined,
+): "absent" | "pending" | "complete" {
+  const snapshot = provider && resolveProviderWorkspaceSnapshot(provider, cwd);
+  if (!snapshot) return "absent";
+  return snapshot.slashCommandsPending ? "pending" : "complete";
+}
+
 export function hasCompleteProviderWorkspaceSnapshot(
   provider: ServerProvider | null | undefined,
   cwd: string | null | undefined,

@@ -150,6 +150,9 @@ Enable **Delete worktrees with deleted threads** to remove safe worktrees after 
 thread is deleted, including archived threads and worktrees left by earlier deletions. The
 server waits for sessions and terminals to stop and retries skipped worktrees after restart.
 Existing prompts for deleting a worktree manually remain available when this policy is off.
+Either way, a deleted thread's worktree with uncommitted changes (tracked edits or untracked
+files) stays on disk, even under **Edited tracked files**. The delete dialog says so when it can
+tell beforehand; otherwise a notice or the cleanup results show where the worktree was kept.
 
 Choose **Delete now** to run the enabled rules immediately. The latest results show which
 worktrees were removed or kept and why, plus any failures.

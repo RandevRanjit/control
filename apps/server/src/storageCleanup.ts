@@ -12,6 +12,7 @@ import type {
   ServerSettingsError,
   TerminalSummary,
   WorktreeCleanupRules,
+  WorktreeKeepWhen,
   StorageCleanupReport,
   StorageCleanupReportEntry,
 } from "@control/contracts";
@@ -273,31 +274,15 @@ const make = Effect.gen(function* () {
 
   const localChangesReason = Effect.fn("StorageCleanup.localChangesReason")(function* (
     cwd: string,
-    rules: WorktreeCleanupRules,
+    keepWhen: WorktreeKeepWhen,
   ) {
-    const status = yield* git.execute({
-      operation: "StorageCleanup.localChanges",
-      cwd,
-      args: [
-        "status",
-        "--porcelain=v1",
-        "-z",
-        "--ignore-submodules=none",
-        rules.worktreeKeepWhen === "tracked-changes"
-          ? "--untracked-files=no"
-          : "--untracked-files=all",
-      ],
-      maxOutputBytes: 64 * 1024,
+    const changes = yield* git.uncommittedChanges(cwd, {
+      trackedOnly: keepWhen === "tracked-changes",
     });
-    if (status.stdoutTruncated) return "local changes exceed the inspection limit";
-    const records = status.stdout.split("\0").filter(Boolean);
-    let count = 0;
-    for (let i = 0; i < records.length; i++) {
-      count++;
-      if (/^[RC]|^.[RC]/.test(records[i]!)) i++;
-    }
+    if (changes.truncated) return "local changes exceed the inspection limit";
+    const count = changes.files;
     if (count > 0) return `has uncommitted changes (${count} ${count === 1 ? "file" : "files"})`;
-    if (rules.worktreeKeepWhen !== "any-local-files") return null;
+    if (keepWhen !== "any-local-files") return null;
     const ignored = yield* git.execute({
       operation: "StorageCleanup.ignoredFiles",
       cwd,
@@ -378,6 +363,12 @@ const make = Effect.gen(function* () {
       if (!worktreeCleanupEnabled(settings)) continue;
       const worktreePath = path.resolve(thread.worktreePath!);
       const deleted = "workspaceRoot" in thread;
+      // Deleting a thread never takes its untracked files: only an inactive or
+      // merged worktree may be cleaned under "tracked-changes".
+      const keepWhen =
+        deleted && settings.worktreeKeepWhen === "tracked-changes"
+          ? "uncommitted-changes"
+          : settings.worktreeKeepWhen;
       const project = deleted
         ? { workspaceRoot: thread.workspaceRoot }
         : snapshot.projects.find((entry) => entry.id === thread.projectId);
@@ -417,7 +408,7 @@ const make = Effect.gen(function* () {
         const status = yield* git.statusDetailsLocal(worktreePath);
         if (!status.isRepo || status.branch !== thread.branch)
           return keep("repository or branch changed");
-        const changes = yield* localChangesReason(worktreePath, settings);
+        const changes = yield* localChangesReason(worktreePath, keepWhen);
         if (changes !== null) return keep(changes);
         const head = yield* git.resolveCommit({ cwd: worktreePath, revision: "HEAD" });
         const old =
@@ -534,7 +525,7 @@ const make = Effect.gen(function* () {
           head.commitSha
         )
           return keep("commit changed since check");
-        const finalChanges = yield* localChangesReason(worktreePath, settings);
+        const finalChanges = yield* localChangesReason(worktreePath, keepWhen);
         if (finalChanges !== null) return keep(finalChanges);
         const current = resolveWorktreeCleanup(
           yield* settingsService.getSettings,
@@ -549,7 +540,7 @@ const make = Effect.gen(function* () {
           return keep("settings changed since check");
         // Clean only untracked files; Git must still refuse removal if a tracked
         // edit arrives after our last status check.
-        if (settings.worktreeKeepWhen === "tracked-changes")
+        if (keepWhen === "tracked-changes")
           yield* cleanupGit(worktreePath, ["clean", "-ffdx"], "git clean");
         yield* cleanupGit(
           project.workspaceRoot,

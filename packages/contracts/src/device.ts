@@ -488,15 +488,14 @@ export const DeviceToolOpenInput = Schema.Struct({
   ),
   platform: Schema.optional(
     DevicePlatform.annotate({
-      description: "Required when deviceId is omitted and both platforms are available.",
+      description: "Needed without deviceId when both platforms exist.",
     }),
   ),
   hostId: Schema.optional(
     DeviceHostId.annotate({ description: "Device host from device_list. Defaults to local." }),
   ),
 }).annotate({
-  description:
-    "Boots the device if needed, starts its live stream, and opens the Device panel so the user can watch. Returns how to drive it with the agent-device CLI.",
+  description: "Boots and shows a device.",
 });
 export type DeviceToolOpenInput = typeof DeviceToolOpenInput.Type;
 
@@ -543,7 +542,7 @@ export const DeviceToolCloseInput = Schema.Struct({
   hostId: Schema.optional(DeviceHostId),
   shutdown: Schema.optional(
     Schema.Boolean.annotate({
-      description: "Also power the simulator or emulator off. Defaults to false.",
+      description: "Also turn it off. Default false.",
     }),
   ),
 });

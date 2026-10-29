@@ -9,19 +9,32 @@ import {
 
 describe("Control orchestration provider instructions", () => {
   it("distinguishes delegated subagents from ordinary top-level threads", () => {
-    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "Use `delegate_task`");
-    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "ordinary top-level Control conversations");
-    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "Never use them merely");
-    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "cross-provider");
-    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "call `delegate_task` again");
+    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "use `delegate_task`");
+    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "make new top-level threads");
+    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, '"Subagent", "delegate" and "parallel"');
+    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "another provider");
+    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "is a new `delegate_task`");
     assert.include(
       CONTROL_ORCHESTRATION_INSTRUCTIONS,
       "Do not use `thread_send` on `childThreadId`",
     );
   });
 
+  it("keeps Control's own rules: secrets, loose ends, local models, background output", () => {
+    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "Never ask for one in chat");
+    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "`loose_end_add`");
+    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "`local_model_run`");
+    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "--line-buffered");
+    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "control-thread://v1/<threadId>");
+  });
+
+  it("costs every thread well under half its former 7 KB", () => {
+    assert.isBelow(new TextEncoder().encode(CONTROL_ORCHESTRATION_INSTRUCTIONS).length, 3_400);
+  });
+
   it("documents structured schedules instead of JSON strings", () => {
     assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "structured object, never as JSON text");
+    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, '{"type":"webhook"}');
     assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, '"everyMs":3600000');
     assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "bindToCurrentThread=false");
   });
@@ -58,7 +71,7 @@ describe("Control orchestration provider instructions", () => {
     });
 
     assert.include(injected, "Control interaction mode: Default");
-    assert.include(injected, "Control collaborative browser");
+    assert.include(injected, "Control browser");
     assert.include(injected, "Control orchestration");
     assert.include(injected, "<user_request>\nInspect the repository.\n</user_request>");
   });
@@ -88,7 +101,7 @@ describe("Control orchestration provider instructions", () => {
       state: { interactionMode: "default", hasControlMcp: false },
     });
     assert.include(withoutMcp, "Control interaction mode: Default");
-    assert.notInclude(withoutMcp, "Control collaborative browser");
+    assert.notInclude(withoutMcp, "Control browser");
     assert.notInclude(withoutMcp, "Control orchestration");
   });
 });

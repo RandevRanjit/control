@@ -820,7 +820,7 @@ describe("ClaudeAdapterV2 native protocol logging", () => {
       };
       assert.equal(systemPrompt.type, "preset");
       assert.equal(systemPrompt.preset, "claude_code");
-      assert.include(systemPrompt.append ?? "", "Use `delegate_task`");
+      assert.include(systemPrompt.append ?? "", "use `delegate_task`");
       const logged = ClaudeAdapterV2.loggedClaudeQueryOptions(options);
       assert.equal(logged.hasMcpServers, true);
       assert.notInclude(JSON.stringify(logged), "secret-claude-token");

@@ -64,8 +64,7 @@ export const ThreadMetadataMcpAction = Schema.Literals([
   "link_pull_request",
   "unlink_pull_request",
 ]).annotate({
-  description:
-    "Metadata mutation: rename, regenerate_title, link_pull_request, or unlink_pull_request.",
+  description: "rename, regenerate_title, link_pull_request or unlink_pull_request.",
 });
 export type ThreadMetadataMcpAction = typeof ThreadMetadataMcpAction.Type;
 
@@ -80,12 +79,12 @@ export type ThreadMetadataMcpPullRequest = typeof ThreadMetadataMcpPullRequest.T
 
 export const ThreadMetadataMcpUpdateInput = Schema.Struct({
   threadId: Schema.optional(ThreadId).annotate({
-    description: "Thread to update. Omit to update the calling thread.",
+    description: "Omit for this thread.",
   }),
   action: ThreadMetadataMcpAction,
   title: Schema.optional(ThreadMetadataTitle),
   pullRequest: Schema.optional(ThreadMetadataMcpPullRequest).annotate({
-    description: "Pull request to link. Required only when action is link_pull_request.",
+    description: "For link_pull_request only.",
   }),
   clientRequestId: Schema.optional(ThreadMetadataClientRequestId),
 }).check(

@@ -23,7 +23,7 @@ export const WorktreeMcpHandoffInput = Schema.Struct({
   startFromOrigin: Schema.optional(
     Schema.Boolean.annotate({
       description:
-        "Fetch origin and start the worktree branch from the remote-tracking commit of baseRef instead of the local ref. Defaults to the server's 'new worktrees start from origin' setting.",
+        "Fetch and branch from origin's baseRef, not the local one. Default: the server setting.",
     }),
   ),
   path: Schema.optional(
@@ -37,8 +37,7 @@ export const WorktreeMcpHandoffInput = Schema.Struct({
   ),
   runSetupScript: Schema.optional(
     Schema.Boolean.annotate({
-      description:
-        "Run the project's configured setup script in the new worktree after handoff. Defaults to true.",
+      description: "Run the project's setup script there. Default true.",
     }),
   ),
   continuationPrompt: Schema.optional(

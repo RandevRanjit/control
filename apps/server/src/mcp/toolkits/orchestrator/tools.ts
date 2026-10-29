@@ -62,7 +62,7 @@ const threadMetadataDependencies = [
 
 const OrchestratorCapabilitiesTool = Tool.make("orchestrator_capabilities", {
   description:
-    "List the V2 provider instances and their current models from the same live catalog as the composer, including configured custom models, inherited runtime settings, and app-owned orchestration features available to this caller. For a separate top-level thread in a new or existing worktree, use thread_launch with workspaceStrategy.",
+    "List providers, models (custom ones included), options and runtime modes for `delegate_task`, from the composer's live catalog.",
   success: OrchestratorMcpCapabilitiesResult,
   failure: OrchestratorMcpFailure,
   failureMode: "return",
@@ -75,7 +75,7 @@ const OrchestratorCapabilitiesTool = Tool.make("orchestrator_capabilities", {
 
 export const DelegateTaskTool = Tool.make("delegate_task", {
   description:
-    "Needs an agent running inside a Control thread. Delegate one task to a Control-owned child agent/subagent of THIS thread and run it with only the supplied task prompt, without copying parent conversation history. Choose providers and models from orchestrator_capabilities, which uses the same live catalog as the composer. Prefer native subagent tools for same-provider work only when they support the chosen model. Use this for any model missing from the native tool, including same-provider work, for cross-provider work, or for explicitly Control-owned child tasks. For every Control delegated review round, call delegate_task again with the original brief, prior findings, responses, and unresolved objections in the task prompt. Track each round by its own taskId and use a distinct clientRequestId per round, stable across retries of that round. The childThreadId is backing storage, not the target for starting another delegated review round through thread_send. Provider, model, model options (see orchestrator_capabilities), runtime mode, and interaction mode inherit unless target overrides them. A requested runtimeMode must be one the target provider lists in orchestrator_capabilities runtimeModes; an inherited one steps down to the broadest mode it offers. Prefer mode='async' for long work; mode='wait' blocks until completion or timeout. timeoutMs on mode=wait is only the parent's wait budget and does not cancel the child. waitTimedOut on that wait call means the timeout fired; keep that taskId and read status on later task_status. An async child's completion wakes this thread through a notification, steered into active turns where supported or queued otherwise, so end the turn instead of polling or spawning watchers; use task_status only when the result is needed mid-turn.",
+    "Needs a Control thread. Start one child agent of this thread with only `task`: no parent history. Use it for another provider, a model your native tool lacks, or a Control-owned child. Provider, model, options and modes inherit unless `target` overrides them; a requested `runtimeMode` must be one the provider lists in `orchestrator_capabilities`, and an inherited one steps down to its broadest. Each review round is a new call with a new `clientRequestId`, never `thread_send` to `childThreadId`. Prefer `mode:'async'`: completion wakes this thread, so end your turn instead of polling. With `mode:'wait'`, `timeoutMs` only bounds the wait and does not cancel the child; on `waitTimedOut`, keep the `taskId` for `task_status`.",
   parameters: OrchestratorMcpDelegateTaskInput,
   success: OrchestratorMcpDelegateTaskResult,
   failure: OrchestratorMcpFailure,
@@ -88,7 +88,7 @@ export const DelegateTaskTool = Tool.make("delegate_task", {
 
 const TaskStatusTool = Tool.make("task_status", {
   description:
-    "Needs an agent running inside a Control thread. Read a Control-owned delegated task created by this parent thread. childRunId identifies the original delegated run. workState distinguishes working, waiting_for_children, and result_available; a completed turn with live nested work is not a completed task. summary is the final task result, including provider errors on failure, and remains stable after publication. hasPendingChildRuns reports later queued or executing turns in the backing child thread, even after the task is terminal; it does not reopen the task, and task_cancel stops those turns too. Turns held in a stopped queue wait for the user and do not count. latestTerminal* provides later non-monitor turn results. Reading a terminal result acknowledges its automatic parent delivery.",
+    "Needs a Control thread. Read one delegated task you started. `workState`: working, waiting_for_children or result_available; a finished turn with live child work is not done. `summary` is the final result, errors included. `hasPendingChildRuns`: later turns in its child thread, which `task_cancel` also stops. Reading a finished result marks it delivered.",
   parameters: OrchestratorMcpTaskStatusInput,
   success: OrchestratorMcpDelegateTaskResult,
   failure: OrchestratorMcpFailure,
@@ -102,7 +102,7 @@ const TaskStatusTool = Tool.make("task_status", {
 
 const TaskCancelTool = Tool.make("task_cancel", {
   description:
-    "Needs an agent running inside a Control thread. Stop a Control-owned delegated task and dispose its automatic parent delivery. Its child thread stops like a user Stop: the running turn is interrupted, queued turns are held, pull request watches end, and the tasks it delegated stop too. This includes later child-thread runs, even after the task is terminal. A terminal task returns its existing status, and published task results remain available.",
+    "Needs a Control thread. Stop one delegated task like a user Stop: interrupts its turn, holds its queued turns, ends its PR watches and stops its delegates, including later runs in its child thread. A finished task keeps its result.",
   parameters: OrchestratorMcpTaskCancelInput,
   success: OrchestratorMcpTaskCancelResult,
   failure: OrchestratorMcpFailure,
@@ -114,7 +114,7 @@ const TaskCancelTool = Tool.make("task_cancel", {
 
 export const ScheduleTaskTool = Tool.make("schedule_task", {
   description:
-    "Create persistent work in the app scheduler that runs even when no turn is active. Pass schedule as a STRUCTURED OBJECT, never JSON text. Timers: {type:'interval', everyMs:3600000} is hourly; {type:'fixed_time', timeOfDay:'09:00', weekdays:[1,2,3,4,5]} is weekday mornings; report the returned nextRunAt. Webhooks: {type:'webhook'} runs once per request to a generated URL. The run sees the request ONLY through prompt placeholders: {{body.path}} (e.g. {{body.action}}, {{body.release.tag_name}}), {{headers.name}}, {{query.name}}, {{body}}, or {{request}} (method, headers with credentials redacted, and body). For a sender that signs requests, first call request_secret so the user enters the secret privately (never ask for it in chat or invent one), then set signature with the returned secretRef, e.g. GitHub: {type:'webhook', signature:{header:'x-hub-signature-256', encoding:'hex', prefix:'sha256=', secretRef}}. The result's webhookUrl is the public URL to give the user; if it is absent, this environment has no Control Connect managed tunnel, so tell the user to enable Control Connect remote access rather than sharing a path. Omit projectId for this thread's project. In this thread's project, runs post into THIS thread by default (bindToCurrentThread=true), which suits an orchestrator that sees every trigger, delegates work, and can dedupe against what is in flight; use false only when the user wants a fresh top-level thread per run. Elsewhere each run launches a fresh thread. Provider, model, and runtime settings inherit from this thread, or from the project default when there is no calling thread.",
+    "Create scheduled work that runs with no turn active. `schedule` is an object, not text: {type:'interval',everyMs:3600000}, {type:'fixed_time',timeOfDay:'09:00',weekdays:[1,2,3,4,5]}, or {type:'webhook'}. A webhook run sees the request only through prompt placeholders: {{body.path}}, {{headers.name}}, {{query.name}}, {{body}}, {{request}}. For a sender that signs requests, get a `secretRef` from `request_secret` and set `signature`, e.g. GitHub: {header:'x-hub-signature-256',encoding:'hex',prefix:'sha256=',secretRef}. Report the returned `nextRunAt` or `webhookUrl`; no `webhookUrl` means Control Connect remote access is off. Omit `projectId` for this thread's project, where runs post into this thread unless `bindToCurrentThread=false`; elsewhere each run gets a fresh thread. Settings inherit from this thread, or the project default.",
   parameters: OrchestratorMcpScheduleTaskInput,
   success: OrchestratorMcpScheduleTaskResult,
   failure: OrchestratorMcpFailure,
@@ -128,7 +128,7 @@ export const ScheduleTaskTool = Tool.make("schedule_task", {
 const ListScheduledTasksTool = Tool.make("list_scheduled_tasks", {
   parameters: OrchestratorMcpListScheduledTasksInput,
   description:
-    "List recurring scheduled tasks in a project (omit projectId for the calling thread's project, or every project when there is no calling thread), including their id, schedule, prompt, enabled state, bound thread, next run time, and last run status. Use the returned scheduledTaskId with update_scheduled_task or delete_scheduled_task.",
+    "List scheduled tasks. Omit `projectId` for this thread's project (every project outside a thread). Pass a `scheduledTaskId` to update_scheduled_task or delete_scheduled_task.",
   success: OrchestratorMcpListScheduledTasksResult,
   failure: OrchestratorMcpFailure,
   failureMode: "return",
@@ -141,7 +141,7 @@ const ListScheduledTasksTool = Tool.make("list_scheduled_tasks", {
 
 const UpdateScheduledTaskTool = Tool.make("update_scheduled_task", {
   description:
-    "Update an existing scheduled task by scheduledTaskId (from list_scheduled_tasks). Only the provided fields change; omit a field to leave it as-is. Use enabled=false to pause a task without deleting it. Set bindToCurrentThread to move the task between posting into this thread and launching a fresh thread per run.",
+    "Update one scheduled task by `scheduledTaskId`. Only given fields change. `enabled=false` pauses it. `bindToCurrentThread` switches between posting here and a fresh thread per run.",
   parameters: OrchestratorMcpUpdateScheduledTaskInput,
   success: OrchestratorMcpScheduleTaskResult,
   failure: OrchestratorMcpFailure,
@@ -153,7 +153,7 @@ const UpdateScheduledTaskTool = Tool.make("update_scheduled_task", {
 
 const DeleteScheduledTaskTool = Tool.make("delete_scheduled_task", {
   description:
-    "Permanently delete a scheduled task by scheduledTaskId (from list_scheduled_tasks). The task stops running immediately. To keep it but stop runs, use update_scheduled_task with enabled=false instead.",
+    "Delete one scheduled task by `scheduledTaskId`. It stops at once. To pause instead, use update_scheduled_task with `enabled=false`.",
   parameters: OrchestratorMcpDeleteScheduledTaskInput,
   success: OrchestratorMcpDeleteScheduledTaskResult,
   failure: OrchestratorMcpFailure,
@@ -165,7 +165,7 @@ const DeleteScheduledTaskTool = Tool.make("delete_scheduled_task", {
 
 const RequestSecretTool = Tool.make("request_secret", {
   description:
-    "Ask the user for a secret (a token, API key, signing secret, password) through a private card in this thread, and wait for them to answer. The value is kept by the app and NEVER returned to you or shown in the transcript. When saved, the result carries a secretRef: pass it to a tool that accepts one (e.g. schedule_task's signature.secretRef). It works once. Never ask for secrets in chat, and never invent one.",
+    "Ask the user for a secret (token, API key, signing secret, password) on a private card in this thread, and wait. The value never reaches you or the transcript. A saved answer returns a `secretRef` for a tool that takes one, such as schedule_task's `signature.secretRef`; it works once. Never ask in chat or invent one.",
   parameters: OrchestratorMcpRequestSecretInput,
   success: OrchestratorMcpRequestSecretResult,
   failure: OrchestratorMcpFailure,
@@ -177,7 +177,7 @@ const RequestSecretTool = Tool.make("request_secret", {
 
 export const CreateThreadsTool = Tool.make("create_threads", {
   description:
-    "Needs an agent running inside a Control thread. Create one or more ORDINARY TOP-LEVEL Control conversations. This is not delegation and does not create child agents/subagents. For delegated work, choose models from orchestrator_capabilities. Prefer native subagents only when they support the chosen model; otherwise call delegate_task, including for same-provider work. Use create_threads for a batch of separate top-level threads sharing this checkout. Prefer thread_launch for a single thread. Both require the user to request separate/new/top-level threads or conversations. Each entry may override provider, model, options, runtime mode, and interaction mode; omitted settings inherit. Project, branch, and worktree always inherit and cannot be overridden here. For independent implementation or a PR stack in its own worktree, use thread_launch with workspaceStrategy instead of asking the agent to create a worktree in its prompt.",
+    "Needs a Control thread. Create new top-level threads sharing this checkout, only when the user asks for them. This is not delegation: for subagents use `delegate_task` or your native tool. One thread, or its own worktree: `thread_launch`. Each entry may override provider, model, options and modes; project, branch and worktree always inherit.",
   parameters: OrchestratorMcpCreateThreadsInput,
   success: OrchestratorMcpCreateThreadsResult,
   failure: OrchestratorMcpFailure,
@@ -190,7 +190,7 @@ export const CreateThreadsTool = Tool.make("create_threads", {
 
 const ThreadListTool = Tool.make("thread_list", {
   description:
-    "List Control threads in a project, newest first. Omit projectId for the calling thread's project. Filter by durable run status, title, or settled state (settled=true lists threads the user or auto-settlement moved out of the active list), or snoozed state, and paginate with the returned cursor. A snoozed thread wakes early when it asks for something, fails, or completes. pullRequests lists every pull request linked to each thread; linkedPullRequest is a legacy single link and can be null while pullRequests still has entries. To link a thread for the user, write `[title](control-thread://v1/<threadId>)` with the threadId exactly as returned, not URL-encoded; Control shows the thread's current title.",
+    "List threads in a project, newest first. Omit `projectId` for yours. Filter by run status, title, settled (moved out of the active list) or snoozed; page with the cursor. A snoozed thread wakes early when it asks for something, fails or completes. `pullRequests` lists every linked PR; `linkedPullRequest` is a legacy single link. Link a thread as `[title](control-thread://v1/<threadId>)`, id unencoded.",
   parameters: OrchestratorMcpThreadListInput,
   success: OrchestratorMcpThreadListResult,
   failure: OrchestratorMcpFailure,
@@ -204,7 +204,7 @@ const ThreadListTool = Tool.make("thread_list", {
 
 const GroupSiblingsTool = Tool.make("group_siblings", {
   description:
-    "List the other chats in this thread's Control group, across folders: each one's state, branch, worktree and the files its checkpoints changed. Use it to avoid editing what a sibling is editing and to see what it is doing. To tell a sibling something, use thread_send with mode='queue' so the note arrives after its current turn. Returns no siblings when this thread is not in a group.",
+    "List the other threads in this thread's Control group, across folders: state, branch, worktree and the files their checkpoints changed. Use it to avoid editing what a sibling edits. To tell one something, `thread_send` with mode='queue'. Empty outside a group.",
   success: OrchestratorMcpGroupSiblingsResult,
   failure: OrchestratorMcpFailure,
   failureMode: "return",
@@ -217,7 +217,7 @@ const GroupSiblingsTool = Tool.make("group_siblings", {
 
 const LooseEndAddTool = Tool.make("loose_end_add", {
   description:
-    "File a loose end in this chat: something you have handed the user to do, or a question you are waiting on them to answer, such as making accounts, sending drafted emails or saying which forums to post on. It stays with this chat until they tick it done or dismiss it, or you close it with loose_end_close. Nothing notifies them; the chat's count of open loose ends is the only signal. Not for your own todo list, unsent text, or a question you can ask now. Returns the id.",
+    "File a loose end in this thread: something you handed the user to do, or a question you are waiting on them to answer. It stays until they tick it done or dismiss it, or you call loose_end_close. Nothing notifies them; the thread's open count is the only signal. Not for your own todo list, unsent text, or a question you can ask now. Returns the id.",
   parameters: OrchestratorMcpLooseEndAddInput,
   success: OrchestratorMcpLooseEndIdResult,
   failure: OrchestratorMcpFailure,
@@ -230,8 +230,7 @@ const LooseEndAddTool = Tool.make("loose_end_add", {
   .annotate(Tool.Idempotent, false);
 
 const LooseEndListTool = Tool.make("loose_end_list", {
-  description:
-    "List this chat's loose ends, open and closed, oldest first: each one's line, reason, action, status and who closed it.",
+  description: "List this thread's loose ends, open and closed, oldest first.",
   success: OrchestratorMcpLooseEndListResult,
   failure: OrchestratorMcpFailure,
   failureMode: "return",
@@ -244,7 +243,7 @@ const LooseEndListTool = Tool.make("loose_end_list", {
 
 const LooseEndCloseTool = Tool.make("loose_end_close", {
   description:
-    "Close one of this chat's open loose ends as done, once you can see the thing is done. The user can reopen it.",
+    "Close one of this thread's open loose ends once you can see it is done. The user can reopen it.",
   parameters: OrchestratorMcpLooseEndCloseInput,
   success: OrchestratorMcpLooseEndIdResult,
   failure: OrchestratorMcpFailure,
@@ -260,7 +259,7 @@ const terminalChatDependencies = [...dependencies, FileSystem.FileSystem, Path.P
 
 const TerminalChatsTool = Tool.make("terminal_chats", {
   description:
-    "List the owner's terminal Claude Code chats in this thread's project folder (or projectId's), newest first: session id, title, last activity and size. Read only. Chats Control runs or has imported are not listed: a chat lives either in Control or in the terminal. Read one with terminal_chat_read.",
+    "List the owner's terminal Claude Code chats in this thread's project folder (or `projectId`'s), newest first. Read only. Chats Control runs or has imported are not listed. Read one with terminal_chat_read.",
   parameters: OrchestratorMcpTerminalChatsInput,
   success: OrchestratorMcpTerminalChatsResult,
   failure: OrchestratorMcpFailure,
@@ -274,7 +273,7 @@ const TerminalChatsTool = Tool.make("terminal_chats", {
 
 const TerminalChatReadTool = Tool.make("terminal_chat_read", {
   description:
-    "Read the latest user and assistant messages of one terminal Claude Code chat listed by terminal_chats, oldest first. Tool calls are left out and long messages are cut at 4,000 characters. Read only.",
+    "Read the latest user and assistant messages of one chat from terminal_chats, oldest first. Tool calls are left out; long messages are cut at 4,000 characters. Read only.",
   parameters: OrchestratorMcpTerminalChatReadInput,
   success: OrchestratorMcpTerminalChatReadResult,
   failure: OrchestratorMcpFailure,
@@ -288,7 +287,7 @@ const TerminalChatReadTool = Tool.make("terminal_chat_read", {
 
 const ThreadReadTool = Tool.make("thread_read", {
   description:
-    "Read durable state and a paginated timeline from any Control thread in this environment. The default messages view returns user messages, assistant messages, and proposed plans; activity returns all summarized timeline items. Reading an untruncated terminal assistant result from this parent thread's direct app-owned child acknowledges that child's automatic completion delivery. Continue with afterPosition=nextPosition. Recover long item text with itemId and textOffset=nextTextOffset until nextTextOffset is null; offsets count UTF-16 code units. The thread also reports its snooze state and, in pullRequests, every linked pull request; linkedPullRequest is a legacy single link and can be null while pullRequests still has entries. To link a thread for the user, write `[title](control-thread://v1/<threadId>)` with the threadId exactly as returned, not URL-encoded; Control shows the thread's current title.",
+    "Read any thread by id. `messages` (default): user and assistant messages and plans; `activity`: every timeline item. Page with `afterPosition=nextPosition`. Cut-off text: `itemId` with `textOffset=nextTextOffset` until it is null (UTF-16 offsets). Reading an untruncated final result of your direct child marks it delivered. `pullRequests` lists every linked PR; `linkedPullRequest` is a legacy single link. Link a thread as `[title](control-thread://v1/<threadId>)`, id unencoded.",
   parameters: OrchestratorMcpThreadReadInput,
   success: OrchestratorMcpThreadReadResult,
   failure: OrchestratorMcpFailure,
@@ -302,7 +301,7 @@ const ThreadReadTool = Tool.make("thread_read", {
 
 export const ThreadUpdateTool = Tool.make("thread_update", {
   description:
-    "Update metadata for a thread. Omit threadId to update this thread. Use action='rename' with title, action='regenerate_title' with no extra field, action='link_pull_request' with pullRequest, or action='unlink_pull_request'. Workspace and branch changes are intentionally not supported. clientRequestId makes retries idempotent.",
+    "Rename a thread (`action:'rename'` with `title`), regenerate its title, or link or unlink a PR (`pullRequest`). Omit `threadId` for this thread. Workspace and branch changes are not supported here. `clientRequestId` makes retries safe.",
   parameters: ThreadMetadataMcpUpdateInput,
   success: ThreadMetadataMcpUpdateResult,
   failure: OrchestratorMcpFailure,
@@ -315,7 +314,7 @@ export const ThreadUpdateTool = Tool.make("thread_update", {
 
 const ThreadSendTool = Tool.make("thread_send", {
   description:
-    "Send a message to any Control thread in this environment. The target cannot have broader permission modes than the caller. Do not use a delegated task's childThreadId to start another review round here; use delegate_task with the full review context and a new clientRequestId for that round. Thread messages do not create a new delegated task or reopen a completed task. mode='auto' starts an idle thread, steers a fully active turn, or queues behind a turn that is not yet steerable. Use queue for a separate follow-up turn, steer for an in-flight update, or restart to interrupt-and-restart the active turn. clientRequestId makes retries idempotent.",
+    "Send a message to any thread. The target cannot run with broader modes than yours. `mode:'auto'` starts an idle thread, steers a running turn, or queues. `queue`: a new turn. `steer`: a mid-turn update. `restart`: interrupt and restart. Do not use a delegated task's childThreadId to start another review round: use `delegate_task`. A send does not reopen a finished task. `clientRequestId` makes retries safe.",
   parameters: OrchestratorMcpThreadSendInput,
   success: OrchestratorMcpThreadSendResult,
   failure: OrchestratorMcpFailure,
@@ -328,7 +327,7 @@ const ThreadSendTool = Tool.make("thread_send", {
 
 const ThreadWaitTool = Tool.make("thread_wait", {
   description:
-    "Wait for a Control thread run to reach a terminal durable state. Without runId, the latest run at call time is selected; an idle thread returns immediately. Timeout does not interrupt work, so call again or use thread_read/list after timedOut=true. Waiting reports status only and does not acknowledge a delegated result.",
+    "Wait for a thread's run to finish. No `runId`: the latest at call time; an idle thread returns at once. A timeout does not interrupt the work: call again, or read the thread. Waiting does not mark a delegated result delivered.",
   parameters: OrchestratorMcpThreadWaitInput,
   success: OrchestratorMcpThreadWaitResult,
   failure: OrchestratorMcpFailure,
@@ -342,7 +341,7 @@ const ThreadWaitTool = Tool.make("thread_wait", {
 
 const ThreadInterruptTool = Tool.make("thread_interrupt", {
   description:
-    "Request interruption of a running turn in any Control thread in this environment. Without runId, the newest interruptible run is selected. Terminal runs and threads without an active turn return without another side effect. clientRequestId makes retries idempotent.",
+    "Interrupt a running turn in any thread. No `runId`: the newest interruptible run. No effect when idle. `clientRequestId` makes retries safe.",
   parameters: OrchestratorMcpThreadInterruptInput,
   success: OrchestratorMcpThreadInterruptResult,
   failure: OrchestratorMcpFailure,

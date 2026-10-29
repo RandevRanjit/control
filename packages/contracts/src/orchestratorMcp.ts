@@ -73,7 +73,7 @@ const OrchestratorMcpSchedule = Schema.Union([
   OrchestratorMcpScheduleFromJsonString,
 ]).annotate({
   description:
-    "Trigger object: {type:'interval', everyMs}, {type:'fixed_time', timeOfDay, weekdays?}, or {type:'webhook'} to run on each request to a generated URL. Never stringify it unless the provider requires the compatibility form.",
+    "An object, not text: {type:'interval',everyMs}, {type:'fixed_time',timeOfDay,weekdays?}, or {type:'webhook'}.",
 });
 
 /**
@@ -130,7 +130,7 @@ export const OrchestratorMcpTarget = Schema.Struct({
    */
   options: Schema.optional(
     OrchestratorMcpTargetOptions.annotate({
-      description: "Model option selections advertised by orchestrator_capabilities.",
+      description: "Options from orchestrator_capabilities.",
     }),
   ),
 });
@@ -184,13 +184,12 @@ export const OrchestratorMcpDelegateTaskInput = Schema.Struct({
   role: Schema.optional(OrchestratorMcpTaskRole),
   mode: Schema.optional(
     Schema.Literals(["async", "wait"]).annotate({
-      description:
-        "Defaults to async. Use wait only when this turn needs the child's result before you can continue.",
+      description: "Defaults to async. wait only when this turn needs the result to continue.",
     }),
   ),
   timeoutMs: Schema.optional(Schema.Number).annotate({
     description:
-      "Wait budget for mode=wait only. Default 10 minutes. Elapsing it returns waitTimedOut=true on that call and does not cancel the child.",
+      "mode=wait only. Default 10 minutes. On timeout, waitTimedOut=true; it does not cancel the child.",
   }),
   clientRequestId: Schema.optional(OrchestratorMcpClientRequestId),
   runtimeMode: Schema.optional(OrchestratorMcpRuntimeMode),
@@ -378,8 +377,7 @@ export const OrchestratorMcpLooseEndAddInput = Schema.Struct({
   ),
   action: Schema.optional(
     OrchestrationV2LooseEndAction.annotate({
-      description:
-        "At most one action: a link to open, a file to reveal or a command to copy (its value is the URL, absolute path or command).",
+      description: "One link to open, file to reveal or command to copy.",
     }),
   ),
   clientRequestId: Schema.optional(OrchestratorMcpClientRequestId),
@@ -651,9 +649,7 @@ export const OrchestratorMcpScheduleTaskInput = Schema.Struct({
   }),
   schedule: OrchestratorMcpSchedule,
   title: Schema.optional(OrchestratorMcpTitle),
-  enabled: Schema.optional(
-    Schema.Boolean.annotate({ description: "Whether the schedule starts enabled; defaults true." }),
-  ),
+  enabled: Schema.optional(Schema.Boolean.annotate({ description: "Default true." })),
   /**
    * When true (the default), the scheduled task fires into the calling thread
    * on each run instead of launching a fresh thread. This is the recurring
@@ -661,8 +657,7 @@ export const OrchestratorMcpScheduleTaskInput = Schema.Struct({
    */
   bindToCurrentThread: Schema.optional(
     Schema.Boolean.annotate({
-      description:
-        "True (default) posts each run into this thread; false creates a fresh top-level thread per run.",
+      description: "Default true: runs post here. false: a fresh thread per run.",
     }),
   ),
   clientRequestId: Schema.optional(OrchestratorMcpClientRequestId),
@@ -738,7 +733,7 @@ export const OrchestratorMcpRequestSecretInput = Schema.Struct({
   ).annotate({ description: "How long to wait for the user. Default 10 minutes." }),
   clientRequestId: Schema.optional(OrchestratorMcpClientRequestId).annotate({
     description:
-      "Reuse when retrying a call that lost its result, so the user sees one card and its answer is returned again. Use a new id to ask again after timed_out or cancelled.",
+      "Reuse on a retry so the user sees one card. A new id asks again after timed_out or cancelled.",
   }),
 });
 export type OrchestratorMcpRequestSecretInput = typeof OrchestratorMcpRequestSecretInput.Type;

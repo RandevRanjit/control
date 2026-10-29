@@ -24,8 +24,7 @@ const shared = {
 };
 const PreviewListTool = Tool.make("preview_list", {
   ...shared,
-  description:
-    "List this thread's preview tabs. Pages reflect the current server state and may shift as tabs change.",
+  description: "List this thread's preview tabs. Pages can shift as tabs change.",
   parameters: Schema.Struct({
     cursor: Schema.optional(NonNegativeInt),
     limit: Schema.optional(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 50 }))),
@@ -39,8 +38,7 @@ const PreviewListTool = Tool.make("preview_list", {
   .annotate(Tool.Destructive, false);
 const PreviewCloseTool = Tool.make("preview_close", {
   ...shared,
-  description:
-    "Close one preview tab owned by this thread through the normal server/host tab lifecycle. This does not wait for renderer cleanup.",
+  description: "Close one preview tab this thread owns.",
   parameters: Schema.Struct({ tabId: PreviewTabId }),
   success: Schema.Struct({}),
 }).annotate(Tool.Destructive, true);

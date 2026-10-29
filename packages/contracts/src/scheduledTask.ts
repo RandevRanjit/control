@@ -26,34 +26,34 @@ const TimeOfDay = TrimmedNonEmptyString.check(
 export const MIN_SCHEDULED_TASK_INTERVAL_MS = 60_000;
 
 const ScheduledTaskIntervalMs = Schema.Int.check(Schema.isGreaterThan(0)).annotate({
-  description: "Positive interval in milliseconds.",
+  description: "Milliseconds.",
 });
 
 const ScheduledTaskIntervalSchedule = Schema.Struct({
   type: Schema.Literal("interval").annotate({
-    description: "Select interval scheduling.",
+    description: "Interval.",
   }),
   everyMs: ScheduledTaskIntervalMs,
 }).annotate({
-  description: "Run repeatedly after a fixed number of milliseconds.",
+  description: "Every everyMs.",
 });
 
 const ScheduledTaskFixedTimeSchedule = Schema.Struct({
   type: Schema.Literal("fixed_time").annotate({
-    description: "Select a fixed local wall-clock time.",
+    description: "Fixed time.",
   }),
   timeOfDay: TimeOfDay,
   weekdays: Schema.optional(
     Schema.Array(
       Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 6 })).annotate({
-        description: "Weekday number where 0 is Sunday and 6 is Saturday.",
+        description: "0 Sunday to 6 Saturday.",
       }),
     ).annotate({
-      description: "Optional weekdays; omit to run every day.",
+      description: "Omit for every day.",
     }),
   ),
 }).annotate({
-  description: "Run at a fixed local wall-clock time on selected weekdays.",
+  description: "At a local time on chosen weekdays.",
 });
 
 const ScheduledTaskWebhookSignatureFields = {
@@ -61,10 +61,10 @@ const ScheduledTaskWebhookSignatureFields = {
     description: "Request header carrying the signature, such as x-hub-signature-256.",
   }),
   encoding: Schema.Literals(["hex", "base64"]).annotate({
-    description: "How the HMAC-SHA256 digest is encoded in the header.",
+    description: "HMAC-SHA256 digest encoding.",
   }),
   prefix: Schema.String.annotate({
-    description: "Text before the digest in the header value, such as 'sha256='. Empty for none.",
+    description: "Text before the digest, such as 'sha256='.",
   }),
 };
 
@@ -76,37 +76,36 @@ export type ScheduledTaskWebhookSignature = typeof ScheduledTaskWebhookSignature
 
 const ScheduledTaskWebhookSchedule = Schema.Struct({
   type: Schema.Literal("webhook").annotate({
-    description: "Run when the task's webhook URL receives a request.",
+    description: "Webhook.",
   }),
   signature: Schema.NullOr(ScheduledTaskWebhookSignature),
 }).annotate({
   description:
-    "Run on each request to the task's webhook URL. The prompt may use {{body.path}}, {{headers.name}}, {{query.name}}, {{body}} and {{request}} placeholders.",
+    "Runs on each request to the webhook URL; the prompt sees it only through {{body.path}}, {{headers.name}}, {{query.name}}, {{body}} or {{request}}.",
 });
 
 const ScheduledTaskUpsertWebhookSchedule = Schema.Struct({
   type: Schema.Literal("webhook").annotate({
-    description: "Run when the task's webhook URL receives a request.",
+    description: "Webhook.",
   }),
   signature: Schema.optional(
     Schema.NullOr(
       Schema.Struct({
         ...ScheduledTaskWebhookSignatureFields,
         secret: Schema.optional(TrimmedNonEmptyString).annotate({
-          description: "Shared signing secret. Omit to keep the stored secret.",
+          description: "Omit to keep the stored one.",
         }),
         secretRef: Schema.optional(SecretRef).annotate({
-          description:
-            "A secret the user entered through request_secret, used instead of secret. It is consumed by this save.",
+          description: "From request_secret, instead of secret. Used up by this save.",
         }),
       }),
     ),
   ).annotate({
-    description: "Signature check; omit or null to accept requests by URL token only.",
+    description: "Omit to accept requests by URL token only.",
   }),
 }).annotate({
   description:
-    "Run on each request to the task's webhook URL. The prompt may use {{body.path}}, {{headers.name}}, {{query.name}}, {{body}} and {{request}} placeholders.",
+    "Runs on each request to the webhook URL; the prompt sees it only through {{body.path}}, {{headers.name}}, {{query.name}}, {{body}} or {{request}}.",
 });
 
 /**
@@ -127,20 +126,20 @@ export type ScheduledTaskSchedule = typeof ScheduledTaskSchedule.Type;
 export const ScheduledTaskUpsertSchedule = Schema.Union([
   Schema.Struct({
     type: Schema.Literal("interval").annotate({
-      description: "Select interval scheduling.",
+      description: "Interval.",
     }),
     everyMs: ScheduledTaskIntervalMs.check(
       Schema.isGreaterThanOrEqualTo(MIN_SCHEDULED_TASK_INTERVAL_MS),
     ).annotate({
-      description: "Interval in milliseconds, with a minimum of 60000 (one minute).",
+      description: "At least 60000.",
     }),
   }).annotate({
-    description: "Run repeatedly after a fixed number of milliseconds.",
+    description: "Every everyMs.",
   }),
   ScheduledTaskFixedTimeSchedule,
   ScheduledTaskUpsertWebhookSchedule,
 ]).annotate({
-  description: "Writable trigger. Pass an object with type 'interval', 'fixed_time' or 'webhook'.",
+  description: "type 'interval', 'fixed_time' or 'webhook'.",
 });
 export type ScheduledTaskUpsertSchedule = typeof ScheduledTaskUpsertSchedule.Type;
 

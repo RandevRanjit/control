@@ -4,10 +4,25 @@ import { buildRuntimeInstructions } from "./RuntimeInstructions.ts";
 describe("buildRuntimeInstructions", () => {
   it("requires explicit registration of every PR and stack layer", () => {
     const instructions = buildRuntimeInstructions({ harness: "Codex" });
-    expect(instructions).toContain("When the control MCP server exposes link_pull_request");
-    expect(instructions).toContain("with the full PR URL immediately after creating a PR");
-    expect(instructions).toContain("For a stack, call it for every layer");
-    expect(instructions).toContain("call list_thread_pull_requests and link any PR");
+    expect(instructions).toContain("Link each PR you create or work on");
+    expect(instructions).toContain("one link_pull_request per PR, full URL, every stack layer");
+    expect(instructions).toContain("Host CLIs and APIs do not link for you.");
+    expect(instructions).toContain("If linking fails, say so.");
+    // Listing linked PRs as an end-of-work check found nothing to add in audited threads.
+    expect(instructions).not.toContain("list_thread_pull_requests");
+  });
+
+  it("waits on a PR only with the watch, and unwatches before handing back", () => {
+    const instructions = buildRuntimeInstructions({ harness: "Claude Code" });
+    expect(instructions).toContain("call watch_pull_request and end your turn");
+    expect(instructions).toContain("do not poll or run your own watcher");
+    expect(instructions).toContain("call unwatch_pull_request");
+  });
+
+  it("costs every thread well under half its former 1.6 KB", () => {
+    expect(
+      new TextEncoder().encode(buildRuntimeInstructions({ harness: "Claude Code" })).length,
+    ).toBeLessThan(1_050);
   });
 
   it("asks for file paths the chat can open", () => {

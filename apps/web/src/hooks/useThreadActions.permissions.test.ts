@@ -68,17 +68,14 @@ vi.mock("../state/use-atom-command", () => ({
     },
 }));
 vi.mock("../state/use-atom-query-runner", () => ({
-  useAtomQueryRunner: (family: string) =>
-    family === "status"
-      ? async () => AsyncResult.success({ hasWorkingTreeChanges: state.worktreeHasChanges })
-      : async (environmentId: string) =>
-          state.sessionLookupFails
-            ? AsyncResult.failure(Cause.fail(new Error("Session lookup failed")))
-            : AsyncResult.success({
-                authenticated: true,
-                scopes: [...(state.scopes.get(environmentId) ?? [])],
-                auth: { serverUpdateScope: "environment:maintain" },
-              }),
+  useAtomQueryRunner: () => async (environmentId: string) =>
+    state.sessionLookupFails
+      ? AsyncResult.failure(Cause.fail(new Error("Session lookup failed")))
+      : AsyncResult.success({
+          authenticated: true,
+          scopes: [...(state.scopes.get(environmentId) ?? [])],
+          auth: { serverUpdateScope: "environment:maintain" },
+        }),
 }));
 vi.mock("../state/threads", () => ({
   threadEnvironment: Object.fromEntries(
@@ -98,11 +95,8 @@ vi.mock("../state/threads", () => ({
   ),
 }));
 vi.mock("../state/vcs", () => ({
-  vcsEnvironment: {
-    removeWorktree: "removeWorktree",
-    refreshStatus: "refreshStatus",
-    status: "status",
-  },
+  vcsEnvironment: { removeWorktree: "removeWorktree", refreshStatus: "refreshStatus" },
+  readLocalVcsStatus: async () => ({ hasWorkingTreeChanges: state.worktreeHasChanges }),
 }));
 vi.mock("../state/entities", () => ({
   readEnvironmentSupportsPinning: () => true,

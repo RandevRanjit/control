@@ -160,6 +160,7 @@ describe("V2 find state", () => {
       input: {
         threadId,
         query: "needle",
+        math: true,
         skills: [],
         start: { entryId: "message:2", occurrence: 0 },
       },
@@ -186,7 +187,13 @@ describe("V2 find state", () => {
     expect(find.timelineProps.activeFindMatch).toEqual(firstMatch);
     expect(orchestrationEnvironment.threadFind).toHaveBeenLastCalledWith({
       environmentId: a,
-      input: { threadId, query: "COD4", skills: [], start: { entryId: "bottom", occurrence: 0 } },
+      input: {
+        threadId,
+        query: "COD4",
+        math: true,
+        skills: [],
+        start: { entryId: "bottom", occurrence: 0 },
+      },
     });
     const repeatedNavigationId = find.timelineProps.findNavigationId;
     find.timelineProps.findPositionReaderRef.current = () => ({
@@ -201,6 +208,7 @@ describe("V2 find state", () => {
       input: {
         threadId,
         query: "COD4",
+        math: true,
         skills: [],
         start: { entryId: "new-bottom", occurrence: 0 },
       },
@@ -302,6 +310,7 @@ describe("V2 find state", () => {
       input: {
         threadId,
         query: "COD4",
+        math: true,
         skills: [],
         start: { entryId: "first", occurrence: 1 },
         offset: 2,
@@ -339,7 +348,13 @@ describe("V2 find state", () => {
     await act(async () => vi.advanceTimersByTime(300));
     expect(orchestrationEnvironment.threadFind).toHaveBeenLastCalledWith({
       environmentId: a,
-      input: { threadId, query: "COD4", skills: [], start: { entryId: "second", occurrence: 0 } },
+      input: {
+        threadId,
+        query: "COD4",
+        math: true,
+        skills: [],
+        start: { entryId: "second", occurrence: 0 },
+      },
     });
     queries.results.set(a, {
       ...initial,
@@ -381,6 +396,7 @@ describe("V2 find state", () => {
       input: {
         threadId,
         query: "COD4",
+        math: true,
         skills: [],
         start: { entryId: "message:2", occurrence: 0 },
         offset: 1,
@@ -404,6 +420,7 @@ describe("V2 find state", () => {
       input: {
         threadId,
         query: "COD4",
+        math: true,
         skills: [],
         start: { entryId: "message:6", occurrence: 1 },
       },
@@ -416,6 +433,7 @@ describe("V2 find state", () => {
       input: {
         threadId,
         query: "COD4",
+        math: true,
         skills: [],
         start: { entryId: "message:6", occurrence: 0 },
         offset: 1,
@@ -430,6 +448,7 @@ describe("V2 find state", () => {
       input: {
         threadId,
         query: "COD4",
+        math: true,
         skills: [],
         start: { entryId: "message:7", occurrence: 0 },
         offset: -1,
@@ -453,6 +472,7 @@ describe("V2 find state", () => {
       input: {
         threadId,
         query: "COD4",
+        math: true,
         skills: [],
         start: { entryId: "message:6", occurrence: 0 },
         offset: 2,
@@ -485,6 +505,7 @@ describe("V2 find state", () => {
       input: {
         threadId,
         query: "COD4",
+        math: true,
         skills: [],
         start: { entryId: "message:6", occurrence: 0 },
       },
@@ -503,6 +524,7 @@ describe("V2 find state", () => {
       input: {
         threadId,
         query: "COD4",
+        math: true,
         skills: [],
         start: { entryId: "message:6", occurrence: 0 },
         offset: 1,
@@ -531,6 +553,7 @@ describe("V2 find state", () => {
       input: {
         threadId,
         query: "COD4",
+        math: true,
         skills: [],
         start: { entryId: "message:6", occurrence: 0 },
         offset: 1,
@@ -583,6 +606,7 @@ describe("V2 find state", () => {
       input: {
         threadId,
         query: "COD4",
+        math: true,
         skills: [],
         start: { entryId: "message:6", occurrence: 1 },
       },

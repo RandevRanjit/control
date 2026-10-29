@@ -274,8 +274,8 @@ export function AppearancePreferencesProvider(props: { readonly children: ReactN
     [updatePreferences],
   );
 
-  // Off by default, as on web.
-  const mathRenderingEnabled = storedPreferences?.mathRenderingEnabled === true;
+  // On by default, as on web.
+  const mathRenderingEnabled = storedPreferences?.mathRenderingEnabled !== false;
   const setMathRenderingEnabled = useCallback(
     (value: boolean) => {
       updatePreferences({ mathRenderingEnabled: value });

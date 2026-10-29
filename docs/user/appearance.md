@@ -31,8 +31,8 @@ applies to the web and desktop clients.
 
 ## Math
 
-Turn on **Render math** in **Settings → Appearance** to typeset LaTeX in a thread's messages and in
-Markdown previews. On the iPhone the switch is under **Settings → Appearance → Text**. It reads
+**Render math**, on by default in **Settings → Appearance**, typesets LaTeX in a thread's messages
+and in Markdown previews. On the iPhone the switch is under **Settings → Appearance → Text**. It reads
 `$…$`, `$$…$$`, `\(…\)`, and `\[…\]`, outside of code.
 Fenced `math` blocks also render. Formulas work in tables, including absolute-value bars.
 Dollar amounts such as `$5 and $10` stay text; write `\$` to keep any other dollar sign literal.

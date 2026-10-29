@@ -1354,7 +1354,15 @@ export const layer: Layer.Layer<
           // A provider turn is a sign that the session is still alive. Keep
           // its already-issued MCP credential valid even when the agent goes
           // a long time between browser-tool calls.
-          yield* McpSessionRegistry.touchActiveMcpThread(input.run.threadId);
+          const touchMcpCredential = McpSessionRegistry.touchActiveMcpThread(
+            input.run.threadId,
+          ).pipe(
+            Effect.ignoreCause({
+              log: true,
+              message: "Failed to refresh MCP credential liveness.",
+            }),
+          );
+          yield* touchMcpCredential;
           // A context read that fails costs the agent the apps' notes for
           // this turn, not the turn itself.
           const appContext = (yield* mcpAppModelContext
@@ -1410,6 +1418,16 @@ export const layer: Layer.Layer<
               ))
             : input.session.startTurn(turnInput);
           yield* Effect.andThen(shouldStart, startTurn).pipe(
+            // A turn can wait longer than the credential's liveness window
+            // (a long tool call, a question left open). Keep refreshing while
+            // ingestion runs; wait for acceptance so abandoned startup cannot
+            // leave a refresher on the already-detached ingestion fiber.
+            Effect.tap(() =>
+              Fiber.await(providerEventFiber).pipe(
+                Effect.raceFirst(touchMcpCredential.pipe(Effect.delay("1 hour"), Effect.forever)),
+                Effect.forkDetach,
+              ),
+            ),
             Effect.catchCause((cause) =>
               Effect.logError("orchestration V2 provider turn start failed", {
                 runId: input.run.id,

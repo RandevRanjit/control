@@ -71,13 +71,12 @@ export interface McpSessionRegistryOptions {
  *
  * Liveness is refreshed both by MCP traffic and by `touch` on every provider
  * turn, so a session that is still doing work never expires no matter how long
- * it goes between browser tool calls. This window therefore only bounds
- * credentials whose session died without a clean stop — the normal paths
- * (`stopSession`, `stopAll`) revoke eagerly and do not wait for it.
+ * it goes between browser tool calls. The normal paths (`stopSession`,
+ * `stopAll`) revoke eagerly and do not wait for it.
  *
- * The bound matters because `/mcp` is mounted outside the environment auth
- * stack and is reachable on whatever host the server binds to, so this token is
- * the only thing guarding the `control` toolkits on a remote-reachable server.
+ * `/mcp` is outside environment auth, so idle tokens stop authenticating.
+ * Keep expired records until explicit revocation: a trusted provider turn can
+ * refresh the token its subprocess still holds; MCP requests cannot.
  */
 const DEFAULT_LIVENESS_WINDOW_MS = 24 * 60 * 60 * 1_000;
 
@@ -112,15 +111,6 @@ const makeWithOptions = Effect.fn("McpSessionRegistry.make")(function* (
       .digest("SHA-256", new TextEncoder().encode(token))
       .pipe(Effect.map(bytesToHex), Effect.orDie);
 
-  const pruneDead = (records: ReadonlyMap<string, CredentialRecord>, timestamp: number) => {
-    const next = new Map(
-      Array.from(records).filter(
-        ([, record]) => timestamp - record.lastAliveAt <= livenessWindowMs,
-      ),
-    );
-    return next.size === records.size ? records : next;
-  };
-
   const issue: McpSessionRegistryShape["issue"] = Effect.fn("McpSessionRegistry.issue")(
     function* (request) {
       const issuedAt = yield* currentTimeMillis;
@@ -146,7 +136,7 @@ const makeWithOptions = Effect.fn("McpSessionRegistry.make")(function* (
         issuedAt,
       };
       yield* SynchronizedRef.update(state, ({ records }) => {
-        const next = new Map(pruneDead(records, issuedAt));
+        const next = new Map(records);
         next.set(tokenHash, { tokenHash, scope, lastAliveAt: issuedAt });
         return { records: next };
       });
@@ -171,10 +161,11 @@ const makeWithOptions = Effect.fn("McpSessionRegistry.make")(function* (
       const tokenHash = yield* hashToken(rawToken);
       const timestamp = yield* currentTimeMillis;
       return yield* SynchronizedRef.modify(state, ({ records }) => {
-        const current = pruneDead(records, timestamp);
-        const record = current.get(tokenHash);
-        if (!record) return [undefined, { records: current }] as const;
-        const next = new Map(current);
+        const record = records.get(tokenHash);
+        if (!record || timestamp - record.lastAliveAt > livenessWindowMs) {
+          return [undefined, { records }] as const;
+        }
+        const next = new Map(records);
         next.set(tokenHash, { ...record, lastAliveAt: timestamp });
         return [record.scope, { records: next }] as const;
       });
@@ -185,9 +176,8 @@ const makeWithOptions = Effect.fn("McpSessionRegistry.make")(function* (
     function* (threadId) {
       const timestamp = yield* currentTimeMillis;
       yield* SynchronizedRef.update(state, ({ records }) => {
-        const current = pruneDead(records, timestamp);
-        const next = new Map(current);
-        for (const [tokenHash, record] of current) {
+        const next = new Map(records);
+        for (const [tokenHash, record] of records) {
           if (record.scope.thread.threadId === threadId) {
             next.set(tokenHash, { ...record, lastAliveAt: timestamp });
           }

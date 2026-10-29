@@ -5,11 +5,11 @@ import {
   type ServerConfig,
   type ServerProvider,
 } from "@control/contracts";
+import { formatProviderSkillDisplayName } from "@control/shared/inlineSkills";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
   dedupeProviderSkillsByName,
-  formatProviderSkillDisplayName,
   getProviderSlashCommandsForSlashMenu,
   getProviderSkillsForSlashMenu,
   hasCompleteProviderWorkspaceSnapshot,

@@ -705,6 +705,23 @@ export function findSearchTokenRanges(text: string, query: string): SearchRange[
   return mergeRanges(ranges);
 }
 
+/**
+ * Start offsets of each non-overlapping occurrence of the whole of `query` in
+ * `text`, for find in thread. Folds case and accents as above, one unit per
+ * unit, so each match is `query.trim().length` units of `text` long.
+ */
+export function findTextOccurrences(text: string, query: string): number[] {
+  const needle = foldInPlace(query.trim());
+  if (needle.length === 0) return [];
+  const haystack = foldInPlace(text);
+  const offsets: number[] = [];
+  for (let index = haystack.indexOf(needle); index !== -1;) {
+    offsets.push(index);
+    index = haystack.indexOf(needle, index + needle.length);
+  }
+  return offsets;
+}
+
 export interface SearchTextPart {
   readonly text: string;
   readonly highlighted: boolean;

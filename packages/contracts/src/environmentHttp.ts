@@ -491,6 +491,8 @@ const EnvironmentOrchestrationThreadBoundedSnapshotQuery = Schema.Struct({
 
 const EnvironmentOrchestrationThreadHistoryQuery = Schema.Struct({
   cursor: TrimmedNonEmptyString,
+  /** A find jump: page through this entry when it is near, so one request reaches it. */
+  throughEntryId: Schema.optional(TrimmedNonEmptyString),
 });
 
 const EnvironmentOrchestrationThreadHistoryErrors = [

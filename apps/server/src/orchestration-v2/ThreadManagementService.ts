@@ -1,4 +1,8 @@
 import type {
+  OrchestrationV2SearchThreadInput,
+  OrchestrationV2SearchThreadResult,
+} from "@control/contracts";
+import type {
   ProjectionRecordField,
   ProjectionRecordFilter,
   ProjectionRecords,
@@ -271,6 +275,12 @@ export type ThreadManagementError = typeof ThreadManagementError.Type;
 type ThreadManagementFailure = ThreadManagementError | Orchestrator.OrchestratorV2Error;
 
 export interface ThreadManagementServiceShape {
+  readonly searchThreadStream: (
+    input: OrchestrationV2SearchThreadInput,
+  ) => Stream.Stream<OrchestrationV2SearchThreadResult, Orchestrator.OrchestratorV2Error>;
+  readonly searchThread: (
+    input: OrchestrationV2SearchThreadInput,
+  ) => Effect.Effect<OrchestrationV2SearchThreadResult, Orchestrator.OrchestratorV2Error>;
   readonly ensureLegacyTranscript: (
     threadId: ThreadId,
   ) => Effect.Effect<void, LegacyV1ThreadImporter.LegacyV1ThreadImportError>;
@@ -859,6 +869,16 @@ const make = Effect.gen(function* () {
 
   return ThreadManagementService.of({
     ensureLegacyTranscript,
+    searchThreadStream: (input) =>
+      Stream.unwrap(
+        ensureProjectionTranscript(input.threadId).pipe(
+          Effect.as(orchestrator.searchThreadStream(input)),
+        ),
+      ),
+    searchThread: (input) =>
+      ensureProjectionTranscript(input.threadId).pipe(
+        Effect.andThen(orchestrator.searchThread(input)),
+      ),
     dispatch,
     getTimelinePage: (threadId, options) =>
       ensureProjectionTranscript(threadId).pipe(

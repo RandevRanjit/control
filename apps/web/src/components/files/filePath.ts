@@ -1,8 +1,9 @@
-import { workspaceRelativeFilePath } from "@control/client-runtime/markdown-links";
 import type { ProjectEntry } from "@control/contracts";
-import { isWindowsAbsolutePath } from "@control/shared/path";
-
-import { isAbsolutePath } from "~/terminal-links";
+import {
+  isWindowsAbsolutePath,
+  isAbsolutePath,
+  workspaceRelativeFilePath,
+} from "@control/shared/path";
 
 export interface FileBreadcrumb {
   label: string;

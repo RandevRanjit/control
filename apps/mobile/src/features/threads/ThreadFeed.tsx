@@ -38,10 +38,8 @@ import {
 import { ComposerContextSheet } from "../../components/ComposerContextSheet";
 import { writeComposerContextClipboard } from "../../lib/composerContextClipboard";
 import { resolveAssetUrl } from "@control/client-runtime/state/assets";
-import {
-  formatFilePathPosition,
-  isMarkdownFileLinkLabel,
-} from "@control/client-runtime/markdown-links";
+import { formatFilePathPosition } from "@control/shared/fileLinks";
+import { isMarkdownFileLinkLabel } from "@control/shared/markdownLinks";
 import { getTextContent, type MarkdownNode } from "react-native-nitro-markdown/headless";
 import { formatAttachmentSize } from "@control/client-runtime/state/attachments";
 import { squashAtomCommandFailure } from "@control/client-runtime/state/runtime";

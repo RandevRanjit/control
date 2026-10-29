@@ -1,10 +1,10 @@
+import { fileBasename } from "@control/shared/path";
+import { formatFilePathPosition } from "@control/shared/fileLinks";
 import {
-  fileBasename,
-  formatFilePathPosition,
   inlineCodeFilePathCandidate,
   normalizeMarkdownLinkDestination,
   parseMarkdownFileLink,
-} from "@control/client-runtime/markdown-links";
+} from "@control/shared/markdownLinks";
 import { parseThreadLinkHref } from "@control/shared/threadLinks";
 import { videoMimeType } from "@control/shared/video";
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   findSearchTokenRanges,
+  findTextOccurrences,
   foldSearchQuery,
   pickedQuery,
   rankMessageMatches,
@@ -738,5 +739,25 @@ describe("scoreMessageMatch", () => {
     expect(scoreMessageMatch("İ Enable fts and model", "fts")).toMatchObject({ offset: 9 });
     expect(scoreMessageMatch("İ Enable fts and model", "model")?.quality).toBe(1);
     expect(scoreMessageMatch("Trip to İstanbul", "İstanbul")).toEqual({ quality: 1, offset: 8 });
+  });
+});
+
+describe("findTextOccurrences", () => {
+  it("finds non-overlapping occurrences of the whole query at source offsets", () => {
+    expect(findTextOccurrences("Deploy the Deployment", " deploy ")).toEqual([0, 11]);
+    expect(findTextOccurrences("aaaa", "aa")).toEqual([0, 2]);
+    expect(findTextOccurrences("İİİ needle", "needle")).toEqual([4]);
+    expect(findTextOccurrences("fix the sidebar", "the side")).toEqual([4]);
+  });
+
+  it("matches both Greek sigma forms, accents and curly apostrophes", () => {
+    expect(findTextOccurrences("ΟΣ ος οσ", "Σ")).toEqual([1, 4, 7]);
+    expect(findTextOccurrences("ΟΣ ος οσ", "ς")).toEqual([1, 4, 7]);
+    expect(findTextOccurrences("Café don’t", "cafe")).toEqual([0]);
+    expect(findTextOccurrences("Café don’t", "don't")).toEqual([5]);
+  });
+
+  it("finds nothing for a blank query", () => {
+    expect(findTextOccurrences("anything", "  ")).toEqual([]);
   });
 });

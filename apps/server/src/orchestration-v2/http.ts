@@ -141,14 +141,16 @@ export const layer = HttpApiBuilder.group(
         anchorThreadId?: Parameters<
           typeof threadManagement.getThreadSnapshotWindow
         >[1]["anchorThreadId"],
+        // A find jump may take up to two pages at once, so the window holds both.
+        pages = 1,
       ) {
         return yield* threadManagement
           .getThreadSnapshotWindow(threadId, {
-            rowLimit: THREAD_HISTORY_SNAPSHOT_ROW_LIMIT,
+            rowLimit: THREAD_HISTORY_SNAPSHOT_ROW_LIMIT * pages,
             userTurnLimit:
               anchorItemId === undefined
                 ? THREAD_HISTORY_PAGE_POLICY.maxUserTurns
-                : OLDER_THREAD_USER_TURN_LIMIT,
+                : OLDER_THREAD_USER_TURN_LIMIT * pages,
             ...(anchorItemId === undefined ? {} : { anchorItemId }),
             ...(anchorThreadId === undefined ? {} : { anchorThreadId }),
           })
@@ -235,11 +237,13 @@ export const layer = HttpApiBuilder.group(
             args.params.threadId,
             anchorItemId,
             ThreadId.make(decodedCursor.st),
+            args.query.throughEntryId === undefined ? 1 : 2,
           );
           const pageOrError = selectHistoryPageFromCursorOrError({
             items: snapshot.projection.visibleTurnItems,
             cursor: args.query.cursor,
             snapshotSequence: snapshot.snapshotSequence,
+            throughEntryId: args.query.throughEntryId,
           });
           if (pageOrError._tag === "invalid_cursor") {
             return yield* failEnvironmentInvalidRequest("invalid_history_cursor");

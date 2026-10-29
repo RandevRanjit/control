@@ -13,6 +13,10 @@ import { getSyntaxHighlighterPromise } from "../lib/syntaxHighlighting";
 import { GitHubIcon } from "./Icons";
 import { Button } from "./ui/button";
 import { setMarkdownTaskChecked } from "./files/filePreviewMode";
+import { useThreadFindHighlights } from "./chat/threadFindHighlights";
+import { searchableMessageSegments } from "@control/shared/threadFindText";
+import { findTextOccurrences } from "@control/shared/paletteSearch";
+import { MarkdownFindContext } from "./chat/markdownFindContext";
 
 vi.mock("@effect/atom-react", () => ({
   // The config-fields atom is mocked as its selector, so it reads the same config.
@@ -28,6 +32,10 @@ vi.mock("./chatMarkdownServerConfig", async (importOriginal) => {
       registry.get(actual.markdownServerConfigFieldsAtom(Atom.make(config) as never)),
   };
 });
+vi.mock("./chat/MermaidDiagram", () => ({
+  // Real Mermaid needs layout APIs jsdom lacks; a rendered diagram is an SVG.
+  MermaidDiagram: () => <svg aria-label="Diagram" />,
+}));
 vi.mock("../hooks/useTheme", () => ({ useTheme: () => ({ resolvedTheme: "dark" }) }));
 const settingsOverrides = vi.hoisted(() => ({ mathRenderingEnabled: false }));
 vi.mock("../hooks/useSettings", async (importOriginal) => {
@@ -1046,4 +1054,225 @@ describe("ChatMarkdown math", () => {
     expect(host.textContent).toContain("\\(\\notACommand{x}\\)");
     expect(host.querySelector('a[href="https://example.com"]')).toBeNull();
   });
+});
+
+describe("ChatMarkdown find in thread", () => {
+  function stubHighlights() {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    vi.stubGlobal(
+      "Highlight",
+      class extends Set<Range> {
+        constructor(...ranges: Range[]) {
+          super(ranges);
+        }
+      },
+    );
+    const highlights = new Map<string, Set<Range>>();
+    vi.stubGlobal("CSS", { highlights, escape: (value: string) => value });
+    return highlights;
+  }
+  const frame = () =>
+    act(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+  afterEach(() => {
+    settingsOverrides.mathRenderingEnabled = false;
+    vi.unstubAllGlobals();
+  });
+
+  it("opens a disclosure only when find selects a match inside it", async () => {
+    const highlights = stubHighlights();
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const openStates = () =>
+      [...container.querySelectorAll("[data-markdown-details-open]")].map((node) =>
+        node.getAttribute("data-markdown-details-open"),
+      );
+    function Probe({
+      activeOccurrence,
+      searching = true,
+    }: {
+      activeOccurrence: number;
+      searching?: boolean;
+    }) {
+      useThreadFindHighlights({
+        container,
+        query: searching ? "needle" : "",
+        activeRowId: "row",
+        activeOccurrence,
+        onActiveRange: () => {},
+      });
+      return (
+        <div data-timeline-row-id="row">
+          <div data-thread-find-text>
+            <MarkdownFindContext value={searching}>
+              <ChatMarkdown
+                cwd={undefined}
+                text={[
+                  "Visible needle.",
+                  "<details><summary>Unrelated</summary><p>nothing here</p></details>",
+                  "<details><summary>Outer</summary><details><summary>Inner</summary><p>needle</p></details></details>",
+                ].join("\n\n")}
+              />
+            </MarkdownFindContext>
+          </div>
+        </div>
+      );
+    }
+    try {
+      // Closed panels are unmounted until find starts, as in the app.
+      await act(() => root.render(<Probe activeOccurrence={0} searching={false} />));
+      expect(container.textContent).not.toContain("nothing here");
+      await act(() => root.render(<Probe activeOccurrence={0} />));
+      await frame();
+      // Selecting the visible match opens nothing; the folded one is counted but not painted.
+      expect(openStates()).toEqual(["false", "false", "false"]);
+      expect(container.textContent).toContain("nothing here");
+      expect(
+        [...(highlights.get("control-thread-find-active") ?? [])].map((range) => range.toString()),
+      ).toEqual(["needle"]);
+      expect(highlights.get("control-thread-find")?.size).toBe(0);
+
+      await act(() => root.render(<Probe activeOccurrence={1} />));
+      await frame();
+      await frame();
+      // Stepping to the folded match opens its two ancestors, not the unrelated one.
+      expect(openStates()).toEqual(["false", "true", "true"]);
+      expect(highlights.get("control-thread-find-active")?.size).toBe(1);
+    } finally {
+      await act(() => root.unmount());
+      container.remove();
+    }
+  });
+
+  it("keeps Mermaid diagrams rendered until find selects a match in their source", async () => {
+    const highlights = stubHighlights();
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const diagram = "```mermaid\ngraph TD; Alpha-->Beta\n```";
+    function Probe({ query }: { query: string }) {
+      useThreadFindHighlights({
+        container,
+        query,
+        activeRowId: "row",
+        activeOccurrence: 0,
+        onActiveRange: () => {},
+      });
+      return (
+        <div data-timeline-row-id="row">
+          <div data-thread-find-text>
+            <MarkdownFindContext value={true}>
+              <ChatMarkdown cwd={undefined} text={`Needle first.\n\n${diagram}\n\n${diagram}`} />
+            </MarkdownFindContext>
+          </div>
+        </div>
+      );
+    }
+    const diagrams = () => container.querySelectorAll('svg[aria-label="Diagram"]').length;
+    try {
+      await act(() => root.render(<Probe query="Needle" />));
+      await frame();
+      expect(diagrams()).toBe(2);
+      await act(() => root.render(<Probe query="Alpha" />));
+      await frame();
+      await frame();
+      // Only the diagram holding the selected match switches to source.
+      expect(diagrams()).toBe(1);
+      expect(
+        [...(highlights.get("control-thread-find-active") ?? [])].map((range) => range.toString()),
+      ).toEqual(["Alpha"]);
+    } finally {
+      await act(() => root.unmount());
+      container.remove();
+    }
+  });
+
+  it.each([
+    {
+      text: "```mermaid\ngraph TD; SearchSourceAlpha-->B\n```",
+      query: "SearchSourceAlpha",
+      count: 1,
+    },
+    {
+      text: "★ Insight ─────\nfirst line\nsecond line",
+      query: "first line second",
+      count: 0,
+      lineBreaks: true,
+    },
+    { text: '```ts title="src/needle.ts"\nconst a = 1;\n```', query: "needle", count: 0 },
+    { text: "```weirdlang\nconst a = 1;\n```", query: "weirdlang", count: 0 },
+    { text: "Use $test-control-app now", query: "Control App Testing", count: 1 },
+    { text: "`/tmp/file.ts:42`", query: "file.ts · L42", count: 1, user: true, lineBreaks: true },
+    { text: "> [!NOTE]\n> Searchable alert", query: "Searchable alert", count: 1 },
+    { text: "> [!NOTE]\n> Searchable alert", query: "Note", count: 0 },
+    {
+      text: "<details><summary>Folded</summary><p>Hidden needle</p></details>",
+      query: "Hidden needle",
+      count: 1,
+    },
+    // Math is source text with math off, and a typeset formula find skips with it on.
+    { text: "Solve $x + y$ for x", query: "x + y", count: 1 },
+    { text: "Solve $x + y$ for x", query: "x + y", count: 0, math: true },
+    { text: "Solve $x + y$ for x", query: "for x", count: 1, math: true },
+    { text: "$$\nneedle^2\n$$\n\nneedle", query: "needle", count: 1, math: true },
+  ])(
+    "highlights the indexed occurrences of $query in $text",
+    async ({ text, query, count, lineBreaks, user, math }) => {
+      const skills = [{ name: "test-control-app", displayName: "Control App Testing" }];
+      settingsOverrides.mathRenderingEnabled = math === true;
+      const highlights = stubHighlights();
+      const container = document.createElement("div");
+      document.body.append(container);
+      const root = createRoot(container);
+      function Probe() {
+        useThreadFindHighlights({
+          container,
+          query,
+          activeRowId: "row",
+          activeOccurrence: 0,
+          onActiveRange: () => {},
+        });
+        return (
+          <div data-timeline-row-id="row">
+            <div data-thread-find-text>
+              <MarkdownFindContext value={true}>
+                <ChatMarkdown
+                  text={text}
+                  cwd={undefined}
+                  skills={skills}
+                  lineBreaks={lineBreaks ?? false}
+                  parseRawHtml={!user}
+                />
+              </MarkdownFindContext>
+            </div>
+          </div>
+        );
+      }
+      try {
+        await act(() => root.render(<Probe />));
+        // MathTypeset is a lazy chunk; let it resolve and the formulas commit.
+        await act(async () => {
+          await import("./chat/MathTypeset");
+        });
+        await frame();
+        const ranges = [...highlights.values()].flatMap((value) => [...value]);
+        expect(ranges.map((range) => range.toString())).toEqual(
+          Array.from({ length: count }, () => query),
+        );
+        const segments =
+          searchableMessageSegments(
+            { role: user ? "user" : "assistant", text, streaming: false },
+            undefined,
+            skills,
+            math === true,
+          ) ?? [];
+        expect(
+          segments.reduce((sum, segment) => sum + findTextOccurrences(segment, query).length, 0),
+        ).toBe(count);
+      } finally {
+        await act(() => root.unmount());
+        container.remove();
+      }
+    },
+  );
 });

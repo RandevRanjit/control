@@ -37,7 +37,8 @@ export function InlineAudioPreview(props: {
   }, []);
 
   return (
-    <span ref={container} data-markdown-copy={props.copyMarkdown}>
+    // Find indexes no media text, so the player's labels must not highlight either.
+    <span ref={container} data-markdown-copy={props.copyMarkdown} data-thread-find-ignore="">
       <AudioPreview
         compact
         name={props.name}

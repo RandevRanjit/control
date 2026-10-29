@@ -628,7 +628,9 @@ export const makeEnvironmentThreadState = Effect.fn("EnvironmentThreadState.make
     );
   });
 
-  const loadEarlier = Effect.fn("EnvironmentThreadState.loadEarlier")(function* () {
+  const loadEarlier = Effect.fn("EnvironmentThreadState.loadEarlier")(function* (
+    throughEntryId?: string,
+  ) {
     const current = yield* SubscriptionRef.get(state);
     if (
       current.status === "deleted" ||
@@ -683,6 +685,7 @@ export const makeEnvironmentThreadState = Effect.fn("EnvironmentThreadState.make
         prepared: preparedOption.value,
         threadId,
         cursor: requestCursor,
+        throughEntryId,
       }).pipe(Effect.provideService(HttpClient.HttpClient, httpClient.value), Effect.result);
 
       if (Result.isFailure(pageResult)) {
@@ -777,7 +780,8 @@ export const makeEnvironmentThreadState = Effect.fn("EnvironmentThreadState.make
   if (Option.isSome(historyController)) {
     const scope = yield* Scope.Scope;
     const registration = yield* historyController.value.register(environmentId, threadId, {
-      loadEarlier: () => loadEarlier().pipe(Effect.forkIn(scope), Effect.flatMap(Fiber.join)),
+      loadEarlier: (throughEntryId) =>
+        loadEarlier(throughEntryId).pipe(Effect.forkIn(scope), Effect.flatMap(Fiber.join)),
     });
     yield* Effect.addFinalizer(() => historyController.value.unregister(registration));
   }

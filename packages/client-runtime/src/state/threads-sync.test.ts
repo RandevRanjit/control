@@ -254,7 +254,8 @@ const makeHarness = Effect.fn("TestEnvironmentThreads.makeHarness")(function* (o
 
   return {
     threadState,
-    loadEarlier: () => historyController.loadEarlier(TARGET.environmentId, THREAD_ID),
+    loadEarlier: (throughEntryId?: string) =>
+      historyController.loadEarlier(TARGET.environmentId, THREAD_ID, throughEntryId),
     inputs,
     observed,
     latest,
@@ -780,6 +781,7 @@ describe("EnvironmentThreads", () => {
       const harness = yield* makeHarness({
         historyHttpClient: HttpClient.make((request, url) => {
           expect(url.searchParams.get("cursor")).toBe("socket-history-cursor");
+          expect(url.searchParams.get("throughEntryId")).toBe(olderItem.id);
           return Effect.succeed(
             HttpClientResponse.fromWeb(
               request,
@@ -837,7 +839,7 @@ describe("EnvironmentThreads", () => {
         hasMoreHistory: true,
         latestLocalTurnOrdinal: 47,
       });
-      expect(yield* harness.loadEarlier()).toEqual({ _tag: "loaded" });
+      expect(yield* harness.loadEarlier(olderItem.id)).toEqual({ _tag: "loaded" });
       const expanded = yield* SubscriptionRef.get(harness.threadState);
       expect(
         Option.getOrThrow(expanded.data).turnItems.some((item) => item.id === olderItem.id),

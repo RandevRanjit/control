@@ -1,3 +1,4 @@
+import { shouldPreserveAssistantLineBreaks } from "@control/shared/markdownPipeline";
 import { ThreadId, type WorktreeSetupSnapshot } from "@control/contracts";
 import {
   CheckpointRef,
@@ -33,7 +34,6 @@ import {
   resolveAssistantMessageCopyState,
   resolveWorkGroupScrollIndex,
   shouldFollowWorkGroupAppend,
-  shouldPreserveAssistantLineBreaks,
   threadReadLabelPrefix,
   threadReadTargetId,
   threadReadTargetTitle,

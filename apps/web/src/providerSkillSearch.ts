@@ -1,7 +1,7 @@
+import { formatProviderSkillDisplayName } from "@control/shared/inlineSkills";
 import type { ServerProviderSkill } from "@control/contracts";
 import {
   dedupeProviderSkillsByName,
-  formatProviderSkillDisplayName,
   isProviderSkillUserInvocable,
 } from "@control/client-runtime/providerSkills";
 import {

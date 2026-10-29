@@ -239,6 +239,63 @@ describe("threadHistoryPaging", () => {
     expect([...older.items, ...recent.items]).toHaveLength(items.length);
   });
 
+  it("pages through a find match's message in one request when it is within two pages", () => {
+    const items = Array.from({ length: 45 }, (_, turn) => {
+      const user = makeRow(turn * 2);
+      const answer = makeRow(turn * 2 + 1);
+      return [
+        {
+          ...user,
+          item: {
+            ...user.item,
+            type: "user_message",
+            createdBy: "user",
+            creationSource: "web",
+            inputIntent: "turn_start",
+            messageId: MessageId.make(`prompt-${turn}`),
+            text: `Prompt ${turn}`,
+            attachments: [],
+          },
+        },
+        {
+          ...answer,
+          item: {
+            ...answer.item,
+            type: "assistant_message",
+            messageId: MessageId.make(`answer-${turn}`),
+            text: `Answer ${turn}`,
+            streaming: false,
+          },
+        },
+      ] as OrchestrationV2ProjectedTurnItem[];
+    }).flat();
+    const cursor = encodeThreadHistoryCursor({
+      snapshotSequence: 1,
+      sourceThreadId: THREAD,
+      sourceItemId: TurnItemId.make("absent"),
+      position: items.length,
+    });
+    const page = (throughEntryId?: string) =>
+      selectHistoryPageFromCursor({ items, cursor, snapshotSequence: 1, throughEntryId });
+
+    expect(page().items[0]?.sourceItemId).toBe("item-50");
+    const targeted = page("answer-10");
+    expect(targeted.items[0]?.sourceItemId).toBe("item-20");
+    expect(targeted.items.map((row) => row.sourceItemId)).toEqual(
+      items.slice(20).map((row) => row.sourceItemId),
+    );
+    expect(targeted.hasMoreHistory).toBe(true);
+    const earlier = selectHistoryPageFromCursor({
+      items,
+      cursor: targeted.nextCursor!,
+      snapshotSequence: 1,
+    });
+    expect([...earlier.items, ...targeted.items]).toHaveLength(items.length);
+    // Never more than two pages, and an unknown entry reads an ordinary page.
+    expect(page("answer-0").items[0]?.sourceItemId).toBe("item-10");
+    expect(page("another-thread-message")).toEqual(page());
+  });
+
   it("encodes opaque cursors with stable source identity", () => {
     const cursor = encodeThreadHistoryCursor({
       snapshotSequence: 9,

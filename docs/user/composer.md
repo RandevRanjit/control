@@ -80,6 +80,14 @@ running the send button shows which action it will take. Long-press it to use th
 other action for a single message, or hold `Cmd` while sending from a hardware
 keyboard. The button only offers Steer when the running agent supports it.
 
+## Redirect instead of approving
+
+The composer stays open while an approval waits. Sending a message there declines
+every approval the thread shows and steers the turn with your message, on web,
+desktop and mobile. Sending never approves anything; only **Accept** does. If the
+draft changes or another approval arrives while the decline is going through, the
+message stays in the composer so you can send it again.
+
 ## Queue messages offline on mobile
 
 Mobile keeps local copies of draft attachments, so you can preview them and queue

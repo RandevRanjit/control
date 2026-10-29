@@ -185,7 +185,11 @@ export interface ThreadComposerProps {
   readonly onNativePasteText: (paste: ComposerTextPaste) => Promise<void>;
   readonly onRemoveDraftImage: (imageId: string) => void;
   readonly onStopThread: () => void;
-  readonly onSendMessage: (followUp?: ActiveTurnComposerAction) => Promise<MessageId | null>;
+  /** `stillSendable` reports whether the draft is unchanged after any wait before sending. */
+  readonly onSendMessage: (
+    followUp?: ActiveTurnComposerAction,
+    stillSendable?: () => boolean,
+  ) => Promise<MessageId | null>;
   /** `/usage-limits` resolves locally; the host decides where the report shows. Null clears it. */
   readonly onShowUsageLimits: (report: UsageLimitsReport | null) => void;
   /**
@@ -380,6 +384,7 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
   const inputRef = props.editorRef ?? fallbackInputRef;
   const [isFocused, setIsFocused] = useState(false);
   const pendingPastedTextAttachmentCountRef = useRef(0);
+  const pendingNativeImagePasteCountRef = useRef(0);
   const [pendingPastedTextAttachmentCount, setPendingPastedTextAttachmentCount] = useState(0);
   const settingsSheetPresentation = useThreadSettingsSheetPresentation({
     editorRef: inputRef,
@@ -589,7 +594,12 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
   }, [onEditorFocusChange, onExpandedChange, settingsSheetPresentation.keepsComposerExpanded]);
   const handleSend = useCallback(
     async (followUp?: ActiveTurnComposerAction) => {
-      if (voiceInput.blocksSubmission || pendingPastedTextAttachmentCountRef.current > 0) return;
+      if (
+        voiceInput.blocksSubmission ||
+        pendingPastedTextAttachmentCountRef.current > 0 ||
+        pendingNativeImagePasteCountRef.current > 0
+      )
+        return;
       // Typed out in full rather than picked from the menu. Attachments mean the
       // user is sending a prompt, so those go through as usual.
       if (
@@ -603,13 +613,27 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
       const threadKey = scopedThreadKey(props.environmentId, props.selectedThread.id);
       if (inFlightThreadIdsRef.current.has(threadKey)) return;
       inFlightThreadIdsRef.current.add(threadKey);
+      const draftAtSend = getComposerDraftSnapshot(composerDraftKey);
+      const stillSendable = () => {
+        const draft = getComposerDraftSnapshot(composerDraftKey);
+        return (
+          pendingPastedTextAttachmentCountRef.current === 0 &&
+          pendingNativeImagePasteCountRef.current === 0 &&
+          draft.text === draftAtSend.text &&
+          draft.attachments.length === draftAtSend.attachments.length &&
+          draft.attachments.every(
+            (attachment, index) => attachment.id === draftAtSend.attachments[index]?.id,
+          )
+        );
+      };
       try {
-        await onSendMessage(followUp);
+        await onSendMessage(followUp, stillSendable);
       } finally {
         inFlightThreadIdsRef.current.delete(threadKey);
       }
     },
     [
+      composerDraftKey,
       props.draftMessage,
       props.draftAttachments.length,
       onChangeDraftMessage,
@@ -888,7 +912,12 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
                 selection={composerMenu.selection}
                 onChangeText={props.onChangeDraftMessage}
                 onSelectionChange={composerMenu.onSelectionChange}
-                onPasteImages={(uris) => void props.onNativePasteImages(uris)}
+                onPasteImages={(uris) => {
+                  pendingNativeImagePasteCountRef.current += 1;
+                  void props.onNativePasteImages(uris).finally(() => {
+                    pendingNativeImagePasteCountRef.current -= 1;
+                  });
+                }}
                 onPasteText={(paste) => {
                   const insertPaste = () => {
                     const insertion = replaceTextSelection({

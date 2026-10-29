@@ -15,7 +15,6 @@ import type {
   EnvironmentId,
   MessageId,
   ModelSelection,
-  ProviderApprovalDecision,
   ProviderInteractionMode,
   RuntimeMode,
   RuntimeRequestId,
@@ -24,7 +23,11 @@ import type {
   ThreadId,
   UsageLimitsReport,
 } from "@control/contracts";
-import type { ThreadUserInputQuestion } from "@control/client-runtime/state/thread-requests";
+import {
+  declinePendingApprovals,
+  type ApprovalResponder,
+  type ThreadUserInputQuestion,
+} from "@control/client-runtime/state/thread-requests";
 import {
   presentPendingBackgroundWork,
   presentProviderGoal,
@@ -171,6 +174,7 @@ export interface ThreadDetailScreenProps {
     | { readonly kind: "failed"; readonly reason: string; readonly onEditTask: () => void }
     | null;
   readonly activePendingApproval: PendingApproval | null;
+  readonly activePendingApprovals: ReadonlyArray<PendingApproval>;
   readonly respondingApprovalId: RuntimeRequestId | null;
   readonly activePendingUserInput: PendingUserInput | null;
   readonly activePendingUserInputDrafts: Record<string, PendingUserInputDraftAnswer>;
@@ -211,17 +215,17 @@ export interface ThreadDetailScreenProps {
   readonly onNativePasteText: (paste: ComposerTextPaste) => Promise<void>;
   readonly onRemoveDraftImage: (imageId: string) => void;
   readonly onStopThread: () => void;
-  readonly onSendMessage: (followUp?: ActiveTurnComposerAction) => Promise<MessageId | null>;
+  readonly onSendMessage: (
+    followUp?: ActiveTurnComposerAction,
+    beforeDispatch?: () => Promise<boolean>,
+  ) => Promise<MessageId | null>;
   readonly onReconnectEnvironment: () => void;
   /** Whether the model picker may offer providers other than this thread's. */
   readonly canSwitchThreadProvider: boolean;
   readonly onUpdateThreadModelSelection: (modelSelection: ModelSelection) => void;
   readonly onUpdateThreadRuntimeMode: (runtimeMode: RuntimeMode) => void;
   readonly onUpdateThreadInteractionMode: (interactionMode: ProviderInteractionMode) => void;
-  readonly onRespondToApproval: (
-    requestId: RuntimeRequestId,
-    decision: ProviderApprovalDecision,
-  ) => Promise<unknown>;
+  readonly onRespondToApproval: ApprovalResponder;
   readonly onSelectUserInputOption: (
     requestId: RuntimeRequestId,
     question: ThreadUserInputQuestion,
@@ -975,13 +979,35 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
     selectedThreadKey,
   ]);
 
+  const activePendingApprovalsRef = useRef(props.activePendingApprovals);
+  useLayoutEffect(() => {
+    activePendingApprovalsRef.current = props.activePendingApprovals;
+  }, [props.activePendingApprovals]);
   const handleSendMessage = useCallback(
-    async (followUp?: ActiveTurnComposerAction) => {
+    async (followUp?: ActiveTurnComposerAction, stillSendable?: () => boolean) => {
       const targetThreadKey = selectedThreadKey;
       const hasUserMessage = selectedThreadFeed.some(
         (entry) => entry.type === "message" && entry.message.role === "user",
       );
-      const messageId = await props.onSendMessage(followUp);
+      // Runs only once the send path has validated the draft and is about to deliver it, so an
+      // empty submit or a queued-message edit leaves approvals alone.
+      const approvalsToDecline = props.activePendingApprovals;
+      const declineBeforeDispatch =
+        approvalsToDecline.length > 0 && props.activePendingUserInput === null
+          ? async () =>
+              props.respondingApprovalId === null &&
+              (await declinePendingApprovals(approvalsToDecline, props.onRespondToApproval)) &&
+              selectedThreadKeyRef.current === targetThreadKey &&
+              // A draft edited or pasted into during the decline isn't what the user sent.
+              stillSendable?.() !== false &&
+              // An approval that arrived during the decline would block the redirect; the draft
+              // stays so the next send declines it too.
+              !activePendingApprovalsRef.current.some(
+                (approval) =>
+                  !approvalsToDecline.some((declined) => declined.requestId === approval.requestId),
+              )
+          : undefined;
+      const messageId = await props.onSendMessage(followUp, declineBeforeDispatch);
       if (messageId === null || selectedThreadKeyRef.current !== targetThreadKey) {
         return messageId;
       }
@@ -1005,7 +1031,11 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
     [
       anchorMessageId,
       clearUsageLimitsFor,
+      props.activePendingApprovals,
+      props.activePendingUserInput,
+      props.onRespondToApproval,
       props.onSendMessage,
+      props.respondingApprovalId,
       props.selectedThread.latestRun,
       props.selectedThreadQueueCount,
       selectedThreadFeed,
@@ -1363,7 +1393,11 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
                         editorRef={composerEditorRef}
                         draftMessage={props.draftMessage}
                         draftAttachments={props.draftAttachments}
-                        placeholder="Ask the repo agent, or run a command…"
+                        placeholder={
+                          props.activePendingApproval
+                            ? "Send a message to decline and redirect the agent"
+                            : "Ask the repo agent, or run a command…"
+                        }
                         contentMaxWidth={contentMaxWidth}
                         connectionState={props.connectionStateLabel}
                         environmentLabel={props.environmentLabel}
@@ -1384,7 +1418,12 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
                           props.creationState?.kind === "preparing" ? "Starting the task…" : null
                         }
                         draftKey={props.composerDraftKey ?? undefined}
-                        followUpBehavior={props.followUpBehavior}
+                        followUpBehavior={
+                          props.activePendingApprovals.length > 0 &&
+                          props.activePendingUserInput === null
+                            ? "steer"
+                            : props.followUpBehavior
+                        }
                         canSteerActiveTurn={props.canSteerActiveTurn}
                         queuedEdit={
                           props.queuedRunEdit === null

@@ -22,4 +22,5 @@ With nothing open, the panel shows Git. A tab remembers what it last showed. Whe
 than one page, file or shell, they show as a row under the tabs; middle-click one or use its menu to
 close it. `mod+t` opens a new page, or a new shell while Terminal is on show. The command palette
 has **Show outputs**, **Show folder**, **Show browser** and **Show Git**, plus **Show Git graph** and
-**Show Git diff**.
+**Show Git diff**. Each tab has a shortcut that shows it, or hides the panel when it's already on show:
+`mod+alt+o` Outputs, `mod+alt+f` Folder, `mod+shift+j` Browser, `mod+d` Git and `mod+j` Terminal.

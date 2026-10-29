@@ -777,42 +777,6 @@ describe("VcsStatusBroadcaster", () => {
     }).pipe(Effect.provide(layerTestFor(state)));
   });
 
-  it.effect("a refreshLocal stream starts from a fresh local status", () => {
-    const state = {
-      currentLocalStatus: baseLocalStatus,
-      currentRemoteStatus: baseRemoteStatus,
-      localStatusCalls: 0,
-      remoteStatusCalls: 0,
-      localInvalidationCalls: 0,
-      remoteInvalidationCalls: 0,
-    };
-
-    return Effect.gen(function* () {
-      const broadcaster = yield* VcsStatusBroadcaster.VcsStatusBroadcaster;
-      yield* broadcaster.getStatus({ cwd: "/repo" });
-      state.currentLocalStatus = { ...baseLocalStatus, hasWorkingTreeChanges: true };
-
-      const cached = yield* Stream.runHead(
-        broadcaster.streamStatus({ cwd: "/repo", includeRemote: false }),
-      );
-      const fresh = yield* Stream.runHead(
-        broadcaster.streamStatus({ cwd: "/repo", includeRemote: false, refreshLocal: true }),
-      );
-
-      assert.deepStrictEqual(Option.getOrThrow(cached), {
-        _tag: "snapshot",
-        local: baseLocalStatus,
-        remote: baseRemoteStatus,
-      });
-      assert.deepStrictEqual(Option.getOrThrow(fresh), {
-        _tag: "snapshot",
-        local: state.currentLocalStatus,
-        remote: baseRemoteStatus,
-      });
-      assert.equal(state.remoteStatusCalls, 1);
-    }).pipe(Effect.provide(layerTestFor(state)));
-  });
-
   it.effect("loads remote status once when periodic refreshes are disabled", () => {
     const state = {
       currentLocalStatus: baseLocalStatus,

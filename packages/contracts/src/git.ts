@@ -116,8 +116,6 @@ export const VcsStatusSubscriptionInput = Schema.Struct({
   ...VcsStatusInput.fields,
   /** Passive observers receive cached remote status without retaining its refresh loop. */
   includeRemote: Schema.optional(Schema.Boolean),
-  /** Re-read local status before the first snapshot instead of serving the cached one. */
-  refreshLocal: Schema.optional(Schema.Boolean),
 });
 export type VcsStatusSubscriptionInput = typeof VcsStatusSubscriptionInput.Type;
 
@@ -241,6 +239,17 @@ export const VcsRemoveWorktreeResult = Schema.UndefinedOr(
   Schema.Struct({ kept: Schema.optional(Schema.Boolean) }),
 );
 export type VcsRemoveWorktreeResult = typeof VcsRemoveWorktreeResult.Type;
+
+/**
+ * What removing the worktree at `cwd` would lose, by the rule removal applies:
+ * modified, staged and untracked files that aren't ignored, whatever the
+ * user's status settings. `truncated` means more than could be listed.
+ */
+export const VcsUncommittedChangesResult = Schema.Struct({
+  files: Schema.Number,
+  truncated: Schema.Boolean,
+});
+export type VcsUncommittedChangesResult = typeof VcsUncommittedChangesResult.Type;
 
 export const VcsCreateRefInput = Schema.Struct({
   cwd: TrimmedNonEmptyStringSchema,

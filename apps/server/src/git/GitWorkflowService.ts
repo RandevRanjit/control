@@ -25,6 +25,7 @@ import {
   type VcsPullResult,
   type VcsRemoveWorktreeInput,
   type VcsRemoveWorktreeResult,
+  type VcsUncommittedChangesResult,
   type GitResolvePullRequestResult,
   type GitRunStackedActionInput,
   type GitRunStackedActionResult,
@@ -119,6 +120,10 @@ export class GitWorkflowService extends Context.Service<
     readonly removeWorktree: (
       input: VcsRemoveWorktreeInput,
     ) => Effect.Effect<void, GitCommandError>;
+    /** What removing this worktree would lose, by the rule `removeWorktreeIfClean` applies. */
+    readonly uncommittedChanges: (
+      input: VcsStatusInput,
+    ) => Effect.Effect<VcsUncommittedChangesResult, GitCommandError>;
     /** Removes the worktree only when nothing uncommitted would be lost; otherwise reports `kept`. */
     readonly removeWorktreeIfClean: (
       input: VcsRemoveWorktreeInput,
@@ -453,6 +458,10 @@ export const make = Effect.gen(function* () {
     removeWorktree: (input) =>
       ensureGitCommand("GitWorkflowService.removeWorktree", input.cwd).pipe(
         Effect.andThen(git.removeWorktree(input)),
+      ),
+    uncommittedChanges: (input) =>
+      ensureGitCommand("GitWorkflowService.uncommittedChanges", input.cwd).pipe(
+        Effect.andThen(git.uncommittedChanges(input.cwd)),
       ),
     // A thread's delete reaches this through vcs.removeWorktree. A worktree that
     // is already gone has nothing to lose, so removal only prunes it. The caller's

@@ -281,6 +281,11 @@ export function createVcsEnvironmentAtoms<R, E>(
 
   return {
     listRefs,
+    /** What deleting a worktree would lose; the thread delete dialog reads it. */
+    uncommittedChanges: createEnvironmentRpcQueryAtomFamily(runtime, {
+      label: "environment-data:vcs:uncommitted-changes",
+      tag: WS_METHODS.vcsUncommittedChanges,
+    }),
     /** HEAD's history for the panel's Graph. */
     listCommits: createEnvironmentRpcQueryAtomFamily(runtime, {
       label: "environment-data:vcs:list-commits",

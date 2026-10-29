@@ -104,6 +104,7 @@ import {
   VcsPullResult,
   VcsRemoveWorktreeInput,
   VcsRemoveWorktreeResult,
+  VcsUncommittedChangesResult,
   GitResolvePullRequestResult,
   GitRunStackedActionInput,
   VcsStatusInput,
@@ -399,6 +400,7 @@ export const WS_METHODS = {
   vcsReadCommitFiles: "vcs.readCommitFiles",
   vcsCreateWorktree: "vcs.createWorktree",
   vcsRemoveWorktree: "vcs.removeWorktree",
+  vcsUncommittedChanges: "vcs.uncommittedChanges",
   vcsCreateRef: "vcs.createRef",
   vcsSwitchRef: "vcs.switchRef",
   vcsInit: "vcs.init",
@@ -1327,6 +1329,13 @@ const WsVcsRemoveWorktreeRpc = Rpc.make(WS_METHODS.vcsRemoveWorktree, {
   error: Schema.Union([GitCommandError, EnvironmentAuthorizationError]),
 });
 
+/** The delete dialog asks before removal; older servers lack it. */
+const WsVcsUncommittedChangesRpc = Rpc.make(WS_METHODS.vcsUncommittedChanges, {
+  payload: VcsStatusInput,
+  success: VcsUncommittedChangesResult,
+  error: Schema.Union([GitCommandError, EnvironmentAuthorizationError]),
+});
+
 const WsVcsCreateRefRpc = Rpc.make(WS_METHODS.vcsCreateRef, {
   payload: VcsCreateRefInput,
   success: VcsCreateRefResult,
@@ -1947,6 +1956,7 @@ export const WsRpcGroup = RpcGroup.make(
   WsVcsReadCommitFilesRpc,
   WsVcsCreateWorktreeRpc,
   WsVcsRemoveWorktreeRpc,
+  WsVcsUncommittedChangesRpc,
   WsVcsCreateRefRpc,
   WsVcsSwitchRefRpc,
   WsVcsInitRpc,

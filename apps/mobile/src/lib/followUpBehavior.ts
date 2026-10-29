@@ -10,4 +10,4 @@ import type { ActiveTurnComposerAction } from "@control/client-runtime/state/com
  */
 export type FollowUpBehavior = Extract<ActiveTurnComposerAction, "queue" | "steer">;
 
-export const DEFAULT_FOLLOW_UP_BEHAVIOR: FollowUpBehavior = "queue";
+export const DEFAULT_FOLLOW_UP_BEHAVIOR: FollowUpBehavior = "steer";

@@ -65,6 +65,7 @@ import {
   type ComponentProps,
   type ReactNode,
   useCallback,
+  useContext,
   useEffect,
   useId,
   useImperativeHandle,
@@ -75,6 +76,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { createPortal, flushSync } from "react-dom";
+import { RegistryContext } from "@effect/atom-react";
 import {
   clampCollapsedComposerCursor,
   type ComposerTrigger,
@@ -1140,6 +1142,7 @@ import {
   getProviderSkillsForSlashMenu,
   hasCompleteProviderWorkspaceSnapshot,
   hasCurrentProviderWorkspaceSnapshot,
+  hasRefreshedProviderWorkspaceSnapshot,
   resolveProviderSkillsForCwd,
   resolveProviderSlashCommandsForCwd,
 } from "@control/client-runtime/providerSkills";
@@ -2222,6 +2225,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
   const refreshProviders = useAtomCommand(serverEnvironment.refreshProviders, {
     reportFailure: false,
   });
+  const registry = useContext(RegistryContext);
   // The last scan this composer asked for. A request inside the TTL is not
   // repeated, so a client clock ahead of the server's cannot loop rescans.
   const workspaceRefreshKeyRef = useRef<{ key: string; requestedAt: number } | null>(null);
@@ -2302,10 +2306,10 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     }).then((result) => {
       const hasWorkspaceSnapshot =
         result._tag === "Success" &&
-        hasCompleteProviderWorkspaceSnapshot(
-          result.value.providers.find(
-            (provider) => provider.instanceId === selectedProviderEntry.instanceId,
-          ),
+        hasRefreshedProviderWorkspaceSnapshot(
+          registry.get(serverEnvironment.configValueAtom(environmentId)),
+          result.value.providers,
+          selectedProviderEntry.instanceId,
           gitCwd,
         );
       if (!hasWorkspaceSnapshot) retryLater();
@@ -2316,6 +2320,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     gitCwd,
     prompt,
     refreshProviders,
+    registry,
     selectedProviderEntry,
     workspaceRefreshRetry,
   ]);

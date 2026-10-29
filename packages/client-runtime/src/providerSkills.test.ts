@@ -2,6 +2,7 @@ import {
   PROVIDER_WORKSPACE_SNAPSHOT_TTL_MS,
   ProviderDriverKind,
   ProviderInstanceId,
+  type ServerConfig,
   type ServerProvider,
 } from "@control/contracts";
 import { describe, expect, it } from "vite-plus/test";
@@ -13,6 +14,7 @@ import {
   getProviderSkillsForSlashMenu,
   hasCompleteProviderWorkspaceSnapshot,
   hasCurrentProviderWorkspaceSnapshot,
+  hasRefreshedProviderWorkspaceSnapshot,
   resolveProviderSkillsForCwd,
   resolveProviderSlashCommandsForCwd,
   resolveProviderSkillSourceKind,
@@ -301,6 +303,49 @@ describe("workspace provider snapshots", () => {
     ).toBe(false);
     expect(hasCurrentProviderWorkspaceSnapshot(provider, "/workspace/project-b", scannedAt)).toBe(
       false,
+    );
+  });
+});
+
+describe("hasRefreshedProviderWorkspaceSnapshot", () => {
+  const cwd = "/workspace/project-a";
+  const config = (onDemand: boolean, providers: ReadonlyArray<ServerProvider>) =>
+    ({
+      environment: { capabilities: { providerWorkspaceSnapshotsOnDemand: onDemand } },
+      providers,
+    }) as unknown as ServerConfig;
+  const withoutSnapshot = { ...provider, workspaceSnapshots: [] };
+
+  it("trusts only the merged config from a server that sends snapshots on demand", () => {
+    expect(
+      hasRefreshedProviderWorkspaceSnapshot(
+        config(true, [withoutSnapshot]),
+        [provider],
+        provider.instanceId,
+        cwd,
+      ),
+    ).toBe(false);
+    expect(
+      hasRefreshedProviderWorkspaceSnapshot(
+        config(true, [provider]),
+        [provider],
+        provider.instanceId,
+        cwd,
+      ),
+    ).toBe(true);
+  });
+
+  it("trusts the reply from an older server", () => {
+    expect(
+      hasRefreshedProviderWorkspaceSnapshot(
+        config(false, [withoutSnapshot]),
+        [provider],
+        provider.instanceId,
+        cwd,
+      ),
+    ).toBe(true);
+    expect(hasRefreshedProviderWorkspaceSnapshot(null, [provider], provider.instanceId, cwd)).toBe(
+      true,
     );
   });
 });

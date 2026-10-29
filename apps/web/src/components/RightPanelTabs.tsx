@@ -852,7 +852,14 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
                         className="cursor-pointer flex min-w-0 items-center"
                         onClick={() => props.onActivate(surface)}
                       >
-                        <span className="truncate">{title}</span>
+                        <span className="truncate">
+                          {/* The chip's number already says which shell: `1 Terminal`, or the
+                              command it runs (`2 bun dev`), as design §5.6 draws. */}
+                          {surface.kind === "terminal" &&
+                          title === getTerminalLabel(surface.activeTerminalId)
+                            ? "Terminal"
+                            : title}
+                        </span>
                       </button>
                     }
                   />

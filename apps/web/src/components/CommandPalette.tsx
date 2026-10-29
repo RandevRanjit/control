@@ -56,6 +56,7 @@ import {
   FileDiffIcon,
   FileOutputIcon,
   GitGraphIcon,
+  SquareTerminalIcon,
   FileSearchIcon,
   FilesIcon,
   FolderGit2Icon,
@@ -141,6 +142,7 @@ import {
   type PanelTab,
   type RightPanelKind,
   selectActiveRightPanel,
+  selectThreadRightPanelState,
   useRightPanelStore,
 } from "../rightPanelStore";
 import { getLatestThreadForProject, sortThreads } from "../lib/threadSort";
@@ -1993,8 +1995,8 @@ function OpenCommandPaletteDialog(props: {
   }
 
   if (activeThread !== null) {
-    // The panel's tabs (design §5.1): back to what a tab last showed, else its view. Terminal is
-    // ⌘J's, which starts a shell.
+    // The panel's tabs (design §5.1): back to what a tab last showed, else its view. Terminal
+    // shows once the thread has a shell; ⌘J starts the first.
     const threadRef = scopeThreadRef(activeThread.environmentId, activeThread.id);
     const panelTabs: ReadonlyArray<
       readonly [
@@ -2039,6 +2041,23 @@ function OpenCommandPaletteDialog(props: {
         run: async () => {
           const store = useRightPanelStore.getState();
           if (!store.activateTab(threadRef, tab)) store.open(threadRef, kind);
+        },
+      });
+    }
+    const hasShell = selectThreadRightPanelState(
+      useRightPanelStore.getState().byThreadKey,
+      threadRef,
+    ).surfaces.some((surface) => surface.kind === "terminal");
+    if (hasShell) {
+      actionItems.push({
+        kind: "action",
+        value: "action:panel-terminal",
+        searchTerms: ["panel", "terminal", "shell"],
+        title: "Show terminal",
+        icon: <SquareTerminalIcon className={ITEM_ICON_CLASS} />,
+        shortcutCommand: "terminal.toggle",
+        run: async () => {
+          useRightPanelStore.getState().activateTab(threadRef, "terminal");
         },
       });
     }

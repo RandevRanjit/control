@@ -379,4 +379,18 @@ describe("Terminal's tabs", () => {
     await renderPanel({ surfaces: [terminal], activeSurfaceId: terminal.id }, "terminal");
     expect(chipTitles()).toHaveLength(1);
   });
+
+  it("say a shell's number once: the chip's, not again in its default name", async () => {
+    await renderPanel({ surfaces: [terminal], activeSurfaceId: terminal.id }, "terminal");
+    expect(chipTitles()).toEqual(["1Terminal"]);
+    await renderPanel(
+      {
+        surfaces: [terminal],
+        activeSurfaceId: terminal.id,
+        terminalLabelsById: new Map([["term-1", "bun dev"]]),
+      },
+      "terminal",
+    );
+    expect(chipTitles()).toEqual(["1bun dev"]);
+  });
 });

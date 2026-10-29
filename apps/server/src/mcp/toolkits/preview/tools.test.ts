@@ -36,7 +36,7 @@ it("exports provider-compatible object schemas with described parameters", () =>
     expect(
       tool.description?.length ?? 0,
       `${tool.name} should have a useful description`,
-    ).toBeGreaterThan(40);
+    ).toBeGreaterThan(25);
     expect(schema.type, `${tool.name} must export a top-level object schema`).toBe("object");
     expect(schema.anyOf, `${tool.name} must not export a root anyOf`).toBeUndefined();
     expect(schema.oneOf, `${tool.name} must not export a root oneOf`).toBeUndefined();

@@ -11,22 +11,22 @@ import {
 
 describe("orchestrator MCP tool guidance", () => {
   it("directs subagent requests to delegation instead of ordinary threads", () => {
-    assert.include(DelegateTaskTool.description ?? "", "child agent/subagent");
-    assert.include(DelegateTaskTool.description ?? "", "cross-provider");
+    assert.include(DelegateTaskTool.description ?? "", "Start one child agent");
+    assert.include(DelegateTaskTool.description ?? "", "another provider");
     assert.include(CreateThreadsTool.description ?? "", "not delegation");
-    assert.include(CreateThreadsTool.description ?? "", "call delegate_task");
+    assert.include(CreateThreadsTool.description ?? "", "use `delegate_task`");
     assert.include(DelegateTaskTool.description ?? "", "waitTimedOut");
     assert.include(DelegateTaskTool.description ?? "", "does not cancel the child");
-    assert.include(DelegateTaskTool.description ?? "", "keep that taskId");
-    assert.include(DelegateTaskTool.description ?? "", "call delegate_task again");
-    assert.include(DelegateTaskTool.description ?? "", "childThreadId is backing storage");
+    assert.include(DelegateTaskTool.description ?? "", "keep the `taskId`");
+    assert.include(DelegateTaskTool.description ?? "", "Each review round is a new call");
+    assert.include(DelegateTaskTool.description ?? "", "never `thread_send` to `childThreadId`");
     assert.include(
       OrchestratorToolkit.tools.thread_send.description ?? "",
       "Do not use a delegated task's childThreadId to start another review round",
     );
     assert.include(
       OrchestratorToolkit.tools.task_cancel.description ?? "",
-      "This includes later child-thread runs, even after the task is terminal",
+      "including later runs in its child thread",
     );
   });
 
@@ -68,7 +68,7 @@ describe("orchestrator MCP tool guidance", () => {
     assert.equal(schema.type, "object");
     assert.isString(schema.properties?.schedule?.description);
     assert.isAtLeast(schema.properties?.schedule?.anyOf?.length ?? 0, 2);
-    assert.include(ScheduleTaskTool.description ?? "", "STRUCTURED OBJECT");
+    assert.include(ScheduleTaskTool.description ?? "", "is an object, not text");
     assert.include(ScheduleTaskTool.description ?? "", "nextRunAt");
   });
 
@@ -86,6 +86,6 @@ describe("orchestrator MCP tool guidance", () => {
       "pullRequest",
       "clientRequestId",
     ]);
-    assert.include(ThreadUpdateTool.description ?? "", "Workspace and branch changes");
+    assert.include(ThreadUpdateTool.description ?? "", "Workspace and branch changes are not");
   });
 });

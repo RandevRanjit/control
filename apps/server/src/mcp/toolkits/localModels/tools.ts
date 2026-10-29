@@ -21,13 +21,13 @@ const shared = {
   ],
 };
 const ModelParameter = Schema.String.annotate({
-  description: "The model's id or name, as local_model_list gives it.",
+  description: "Id or name from local_model_list.",
 });
 
 const LocalModelListTool = Tool.make("local_model_list", {
   ...shared,
   description:
-    "List the local models on the owner's Mac and what each is doing: asleep, waking or ready. A model is a tool for private files that must not reach Claude, not a chat. needs is the memory a wake takes; a wake must leave 15 GB free with no swap in use, and one over 40 GB asks the owner first.",
+    "List the local models on the owner's Mac and their state: asleep, waking or ready. A model is a tool for private files that must not reach Claude, not a chat. `needs` is the memory a wake takes; a wake must leave 15 GB free with no swap in use, and one over 40 GB asks the owner first.",
   success: Schema.Struct({
     models: Schema.Array(
       Schema.Struct({
@@ -52,7 +52,7 @@ const LocalModelListTool = Tool.make("local_model_list", {
 const LocalModelWakeTool = Tool.make("local_model_wake", {
   ...shared,
   description:
-    "Wake a local model and return once it's ready. local_model_run wakes an asleep model itself, so call this only to have it ready ahead of time. A wake that would leave under 15 GB free, or while the Mac uses swap, is refused with the numbers; over 40 GB, the owner is asked in this chat first.",
+    "Wake a local model ahead of time; local_model_run wakes it itself. Refused, with the numbers, under 15 GB free or while the Mac swaps; over 40 GB, the owner is asked in this thread first.",
   parameters: Schema.Struct({ model: ModelParameter }),
   success: Schema.Struct({ model: Schema.String, state: LocalModelState }),
 }).annotate(Tool.Destructive, false);
@@ -60,7 +60,7 @@ const LocalModelWakeTool = Tool.make("local_model_wake", {
 const LocalModelSleepTool = Tool.make("local_model_sleep", {
   ...shared,
   description:
-    "Put a local model to sleep now, freeing its memory. Models also sleep by themselves after their idle minutes.",
+    "Put a local model to sleep now, freeing its memory. Models also sleep after their idle minutes.",
   parameters: Schema.Struct({ model: ModelParameter }),
   success: Schema.Struct({ model: Schema.String, state: LocalModelState }),
 }).annotate(Tool.Destructive, false);
@@ -68,7 +68,7 @@ const LocalModelSleepTool = Tool.make("local_model_sleep", {
 const LocalModelRunTool = Tool.make("local_model_run", {
   ...shared,
   description:
-    "Have a local model process files on the owner's Mac. CONTROL reads the files itself and sends them to the model with your instruction: their contents never enter your context, the transcript or any log, and only the model's answer comes back. Use it for private data, such as anonymising or summarising personal files before you work with them. Give files by absolute path; a folder means the files directly inside it, and images need a model that readsImages. An asleep model is woken first, under the same memory checks as local_model_wake. If the files don't fit the model's context, the call fails with the token counts.",
+    "Have a local model process files on the owner's Mac. Control reads the files itself: their contents never enter your context, the transcript or any log, and only the model's answer comes back. Use it for private data, such as anonymising personal files. Pass absolute paths; a folder means the files directly inside it; images need a model that `readsImages`. An asleep model is woken first, under local_model_wake's memory checks. Files that do not fit its context fail with the token counts.",
   parameters: Schema.Struct({
     model: ModelParameter,
     instruction: Schema.String.annotate({

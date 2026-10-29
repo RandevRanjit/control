@@ -24,7 +24,7 @@ const dependencies = [
 ];
 
 const REGISTER_EVERY_PR =
-  "Register every pull request you open for this thread, including each layer of a stack, right after creating it.";
+  "Register every PR you open for this thread, each stack layer included, right after creating it.";
 
 /**
  * Either the pull request's URL or its repository and number. Both forms
@@ -39,25 +39,22 @@ export const PullRequestTargetInput = Schema.Struct({
   ),
   url: Schema.optional(
     TrimmedNonEmptyString.annotate({
-      description:
-        "The pull request's web URL, for example https://github.com/owner/repo/pull/123. Preferred when you have it; host, repository and number are read from it.",
+      description: "The PR's web URL, such as https://github.com/owner/repo/pull/123. Preferred.",
     }),
   ),
   repository: Schema.optional(
     TrimmedNonEmptyString.annotate({
-      description:
-        "Repository path below the host, for example owner/repo. Required with number when url is omitted.",
+      description: "owner/repo. With `number` when there is no `url`.",
     }),
   ),
   number: Schema.optional(
     PositiveInt.annotate({
-      description: "Pull request number. Required with repository when url is omitted.",
+      description: "With `repository` when there is no `url`.",
     }),
   ),
   host: Schema.optional(
     TrimmedNonEmptyString.annotate({
-      description:
-        "Host the repository lives on, for example github.com. Defaults to the host of this thread's project.",
+      description: "Such as github.com. Default: this thread's project host.",
     }),
   ),
 });
@@ -248,7 +245,7 @@ export const ListThreadPullRequestsResult = Schema.Struct({
 export type ListThreadPullRequestsResult = typeof ListThreadPullRequestsResult.Type;
 
 const LinkPullRequestTool = Tool.make("link_pull_request", {
-  description: `${REGISTER_EVERY_PR} Links a pull request to this thread so Control tracks it, shows its status beside the thread, and settles the thread when it merges. Pass the URL, or repository plus number. Linking an already-linked pull request succeeds with alreadyLinked=true.`,
+  description: `${REGISTER_EVERY_PR} Control shows its status beside the thread and settles the thread on merge. Linking twice returns alreadyLinked=true.`,
   parameters: PullRequestTargetInput,
   success: LinkPullRequestResult,
   failure: PullRequestToolError,
@@ -262,7 +259,7 @@ const LinkPullRequestTool = Tool.make("link_pull_request", {
 
 const UnlinkPullRequestTool = Tool.make("unlink_pull_request", {
   description:
-    "Remove a pull request link from this thread, for example after closing a pull request you opened by mistake. Pass the URL, or repository plus number. Unlinking a pull request that is not linked succeeds with wasLinked=false.",
+    "Remove a PR link from this thread, such as after closing a PR opened by mistake. Succeeds with `wasLinked=false` when it was not linked.",
   parameters: PullRequestTargetInput,
   success: UnlinkPullRequestResult,
   failure: PullRequestToolError,
@@ -275,7 +272,8 @@ const UnlinkPullRequestTool = Tool.make("unlink_pull_request", {
   .annotate(Tool.OpenWorld, false);
 
 const ListThreadPullRequestsTool = Tool.make("list_thread_pull_requests", {
-  description: `List the pull requests linked to a thread (omit threadId for this thread) with their last known host state, and how they chain into stacks (bottom to top). ${REGISTER_EVERY_PR}`,
+  description:
+    "List PRs linked to a thread (omit `threadId` for this thread), with last known state and stack order (bottom to top).",
   parameters: Schema.Struct({
     threadId: Schema.optional(
       ThreadId.annotate({ description: "Thread to list. Omit for this thread." }),
@@ -293,7 +291,7 @@ const ListThreadPullRequestsTool = Tool.make("list_thread_pull_requests", {
 
 const WatchPullRequestTool = Tool.make("watch_pull_request", {
   description:
-    "Have Control watch an open pull request for this thread, linking it first if needed. Control checks it every two minutes and wakes you with a message when a check fails, the required checks pass, someone else comments or reviews, or the branch starts to conflict with its base. Use this to monitor or babysit a pull request instead of polling, sleeping, or running a watcher. Only comments posted after this call wake you, so handle the existing ones first, then end your turn. A wake is news, not a merge decision: check readiness yourself before merging. While Control watches, the thread stays in the user's Working list, not their inbox. When you hand the work back to the user, call unwatch_pull_request first so the thread returns to their inbox. Watching ends when the pull request merges or closes, when its thread settles or is archived, when Control fails to read it 8 times in a row (a host rate limit only delays it), when the user stops this thread, or when you call unwatch_pull_request. Unsettle the thread before starting a new watch. A subagent cannot watch: its parent thread owns the pull request.",
+    "Watch an open PR for this thread, linking it first if needed: monitor or babysit with this, never by polling, sleeping or a watcher. Control wakes you on a failed check, passed required checks, someone else's comment or review, or a conflict. Only later comments wake you, so handle existing ones, then end your turn. A wake is not a merge decision: check readiness yourself. While watched, the thread stays in the user's Working list; call unwatch_pull_request before handing back. The watch ends on merge or close, when the thread settles, is archived or stopped, or after 8 failed reads in a row. Unsettle the thread before a new watch. A subagent cannot watch: its parent owns the PR.",
   parameters: PullRequestTargetInput,
   success: WatchPullRequestResult,
   failure: PullRequestToolError,
@@ -306,8 +304,7 @@ const WatchPullRequestTool = Tool.make("watch_pull_request", {
   .annotate(Tool.OpenWorld, false);
 
 const UnwatchPullRequestTool = Tool.make("unwatch_pull_request", {
-  description:
-    "Stop Control from watching a pull request for this thread. The pull request stays linked. Pass the URL, or repository plus number.",
+  description: "Stop watching a PR for this thread. It stays linked.",
   parameters: PullRequestTargetInput,
   success: WatchPullRequestResult,
   failure: PullRequestToolError,

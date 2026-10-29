@@ -28,7 +28,7 @@ const WorktreeToolFailure = Schema.Union([WorktreeMcpFailure, OrchestratorMcpFai
 
 const WorktreeHandoffTool = Tool.make("worktree_handoff", {
   description:
-    "Needs an agent running inside a Control thread. Move this agent thread into a new git worktree. To launch a separate agent already bound to a new or existing worktree, use thread_launch with workspaceStrategy instead. Creates the worktree branch (optionally from origin), re-points the thread at the worktree, and by default runs the project's setup script there. Changing the workspace detaches the live provider session, so the current turn ends shortly after the handoff is recorded; call this as the last action of the turn. To keep working after the handoff, pass continuationPrompt with the remaining work: it is queued as the thread's next message and starts a new turn inside the worktree with the conversation preserved. Without it the thread stays idle until the next message. The worktree is not removed automatically when the thread is deleted. Fails if the thread is already attached to a worktree.",
+    "Needs a Control thread. Move THIS thread into a new git worktree on a new branch, optionally from origin. Runs the setup script by default. A separate agent in a worktree: `thread_launch` with `workspaceStrategy`. Call it last in your turn: the move ends the live session. `continuationPrompt` queues the remaining work as the next message there; without it, the thread waits. The worktree stays after the thread is deleted. Fails if this thread has a worktree.",
   parameters: WorktreeMcpHandoffInput,
   success: WorktreeMcpHandoffResult,
   failure: WorktreeToolFailure,
@@ -43,7 +43,7 @@ const WorktreeHandoffTool = Tool.make("worktree_handoff", {
 
 const WorktreeStatusTool = Tool.make("worktree_status", {
   description:
-    "Needs an agent running inside a Control thread. Report this agent thread's worktree binding: whether it is attached to a git worktree, the worktree path and branch, the project's main workspace root, and the server default for worktree_handoff's startFromOrigin. Call this before worktree_handoff to check whether a handoff is possible or has already happened.",
+    "Needs a Control thread. Report this thread's worktree: attached or not, path, branch, project root, and the `startFromOrigin` default. Check before `worktree_handoff`.",
   // No `parameters`: Tool.make defaults to Tool.EmptyParams, which serializes
   // to a top-level `type: "object"` JSON Schema. An explicit empty
   // Schema.Struct({}) serializes to `anyOf: [object, array]`, which is not a
@@ -61,7 +61,7 @@ const WorktreeStatusTool = Tool.make("worktree_status", {
 
 const WorktreeListTool = Tool.make("worktree_list", {
   description:
-    "List branch refs and their associated checkout paths for a thread's workspace (omit threadId for this thread) using the app's ref inventory. Detached worktrees without a branch are not included. Use worktree_status for the thread binding and worktree_handoff to create a new worktree.",
+    "List branch refs and checkout paths for a thread's workspace. Omit `threadId` for this thread. Detached worktrees with no branch are left out.",
   parameters: Schema.Struct({
     threadId: Schema.optional(ThreadId),
     query: VcsListRefsInput.fields.query,

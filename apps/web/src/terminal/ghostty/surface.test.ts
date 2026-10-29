@@ -1317,6 +1317,10 @@ describe("terminal font resolution", () => {
     expect(resolve).toHaveBeenCalledWith("Proportional Test");
   });
 
+  it("draws in IBM Plex Mono, a cell-width face, until another is picked", () => {
+    expect(terminalFontFamily().startsWith('"BloomPlex", ')).toBe(true);
+  });
+
   it("keeps the glyph fallbacks behind a custom text face", () => {
     expect(terminalFontFamily()).toBe(DEFAULT_TERMINAL_FONT_FAMILY);
     expect(terminalFontFamily("  ")).toBe(DEFAULT_TERMINAL_FONT_FAMILY);

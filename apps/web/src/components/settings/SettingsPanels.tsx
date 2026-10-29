@@ -1643,7 +1643,7 @@ function TerminalFontRow() {
     <FontFamilySettingsRow
       {...searchableSetting("terminal-font")}
       description="Terminal output. A font whose letters differ in width gets one letter per cell."
-      defaultFamily="Regrade"
+      defaultFamily="IBM Plex Mono"
       defaultValue={DEFAULT_UNIFIED_SETTINGS.fontFamilyTerminal}
       value={settings.fontFamilyTerminal}
       onValueChange={(fontFamilyTerminal) => updateSettings({ fontFamilyTerminal })}

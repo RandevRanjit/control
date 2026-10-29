@@ -11,6 +11,7 @@ export const APP_TERMINAL_FACES: ReadonlyArray<{
   readonly label: string;
 }> = [
   { family: "BloomPlex", label: "IBM Plex Mono" },
+  { family: "BloomRegrade", label: "Regrade" },
   { family: "Departure", label: "Departure Mono" },
 ];
 

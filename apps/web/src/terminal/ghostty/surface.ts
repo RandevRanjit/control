@@ -28,11 +28,10 @@ const TERMINAL_GLYPH_FALLBACKS =
   '"Symbols Nerd Font Mono", "Symbols Nerd Font", "JetBrainsMono Nerd Font", ' +
   '"JetBrainsMono NF", "FiraCode Nerd Font", "Hack Nerd Font", "MesloLGS NF", ' +
   '"CaskaydiaCove Nerd Font", "PowerlineSymbols", monospace';
-// CONTROL's interface face, Regrade, drawn on the cell grid one letter per cell (the
-// owner's pick, 22 Oct); the fallbacks cover what it lacks, such as box drawing. Concrete
-// names only: an unknown keyword (like ui-monospace) makes canvas font shorthand parsing
-// reject the whole string.
-export const DEFAULT_TERMINAL_FONT_FAMILY = '"BloomRegrade", ' + TERMINAL_GLYPH_FALLBACKS;
+// CONTROL's mono face, IBM Plex Mono, as design §5.6 draws the shell (owner, 29 Oct); the
+// fallbacks cover what it lacks, such as box drawing. Concrete names only: an unknown keyword
+// (like ui-monospace) makes canvas font shorthand parsing reject the whole string.
+export const DEFAULT_TERMINAL_FONT_FAMILY = '"BloomPlex", ' + TERMINAL_GLYPH_FALLBACKS;
 const CONTENT_PADDING = 4;
 const MIN_SCROLLBAR_THUMB_HEIGHT = 18;
 /** Half a blink cycle: the visible and hidden phases are equally long. */

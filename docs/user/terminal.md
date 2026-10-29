@@ -11,7 +11,7 @@ history. A client can show less scrollback than the server keeps.
 
 ## Font and size
 
-The terminal uses Regrade, CONTROL's own font, by default. Settings › Typography ›
+The terminal uses IBM Plex Mono, CONTROL's mono font, by default. Settings › Typography ›
 Terminal font lists CONTROL's fonts first, then the ones installed on your computer.
 **Load…** adds a font file to try: it stays on that device until you **Remove** it.
 A font whose letters differ in width is drawn one letter per cell, so columns still

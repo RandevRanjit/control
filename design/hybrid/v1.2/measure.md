@@ -187,7 +187,7 @@ Colours are the computed values, Field then Night; `@n%` is alpha. Padding is to
 | breadcrumb | `.dp-crumb` | 314, 97.3, 87.9, 11.5 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | — | 0 | 0 |
 | tree row | `.dp-f` | 6, 88, 288, 26 | Regrade 14/20.3 400 | #333964 / #c1c6d5 | — | 6px | 0 8 0 8 |
 | tree row, picked | `.dp-f[data-on]` | 6, 400, 288, 26 | Regrade 14/20.3 400 | #333964 / #c1c6d5 | #dae1f0 / #232222 | 6px | 0 8 0 24 |
-| git mark | `.dp-gs[data-g="M"]` | 222, 96, 14, 10 | Plex 10/10 500 | #2b5a17 / #7daf4e | — | 0 | 0 |
+| git mark | `.dp-gs[data-g="M"]` | 222, 96, 14, 10 | Plex 10/10 500 | #c6911d / #fccf47 | — | 0 | 0 |
 | ignored row name | `.dp-dim .dp-nm` | 50, 277.3, 166, 11.5 | Plex 11.5/11.5 400 | #525a7c / #a9aebf | — | 0 | 0 |
 
 ## Right panel: Browser

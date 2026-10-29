@@ -665,8 +665,8 @@ html[data-theme="night"] .t3-d { --diff-rem-wash: rgb(239 68 68 / .10); --diff-r
 .dp-kw { color: var(--lilac-deep); }
 .dp-st { color: var(--green-deep); }
 .dp-gs { font: 500 10px/1 var(--f-mono); text-align: center; }
-.dp-gs[data-g="M"] { color: var(--tv-write); }
-.dp-gs[data-g="A"] { color: var(--tv-read); }
+.dp-gs[data-g="M"] { color: var(--tv-run); }   /* amber, deeper in Field; green only ever means added (owner, 29 Oct) */
+.dp-gs[data-g="A"] { color: var(--diff-add-mark); }
 .dp-dim .dp-nm { color: var(--text-caption); }
 .dp-crumb { display: inline-flex; align-items: center; gap: 6px; font: 400 11.5px/1 var(--f-mono); color: var(--text-secondary); }
 .dp-crumb b { font-weight: 500; }

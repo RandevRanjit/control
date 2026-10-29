@@ -310,8 +310,9 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
   short sha, the message body, then its files as rows with Git's letter and `+n −n`; a file opens in Folder. **Show older** loads 60 more, up to 200.
 - **Summary, 26.** `4 files +38 −12`. Plus is in the green mark, minus in the red mark (Plex 11.5 / 520). Everywhere
   counts show, a side with nothing is left out, and a binary file shows none.
-- **Changed files.** 24 high, radius 8. A status letter (M, A, D, R) after the chevron, in place of T3's icons,
-  then the file's icon (§20.3; owner, 29 Oct), the path in Plex 11.5, and `+n −n` at the right, added before removed everywhere. Copy path shows on the row's
+- **Changed files.** 24 high, radius 8. A status letter (M, A, D, R) after the chevron, in place of T3's icons: **M**
+  and **R** amber (`--tv-run`, deeper in Field), **A** the added green, **D** the removed red, so green only ever means
+  added (owner, 29 Oct). Then the file's icon (§20.3; owner, 29 Oct), the path in Plex 11.5, and `+n −n` at the right, added before removed everywhere. Copy path shows on the row's
   hover only.
 - **Diff.** Plex 11 / 16 on `--deep`, radius 6. Line numbers sit on `--sunken`.
   - Added lines take Bloom's green wash, with words on `--green-word`.
@@ -346,7 +347,7 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
   built 29 Oct). The breadcrumb names folders only;
   the open file's name is its tab's (29 Oct).
 - **Tree.** Rows are 26 high and step in 16 px per level, with chevrons on folders and file icons on files.
-  - Git's mark sits next to the age at the right: **M** in the write green, **A** in the read blue. A folder holding
+  - Git's mark sits next to the age at the right, in Diff's letter inks (§5.2): **M** amber, **A** green, **D** red. A folder holding
     changes takes a dot (built 29 Oct; the age isn't built). The marks come from the working tree's status, mapped
     from the repository's paths onto the folder's.
   - Ignored folders (`dist`) are dimmed, with `ignored` in place of an age.

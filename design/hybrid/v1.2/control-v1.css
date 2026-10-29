@@ -971,9 +971,10 @@ html[data-theme="night"] .t3-d { --diff-rem-wash: rgb(239 68 68 / .10); --diff-r
 
 .dp-gs { font: 500 10px/1 var(--f-mono); text-align: center; }
 
-.dp-gs[data-g="M"] { color: var(--tv-write); }
+.dp-gs[data-g="M"] { color: var(--tv-run); }
 
-.dp-gs[data-g="A"] { color: var(--tv-read); }
+/* amber, deeper in Field; green only ever means added (owner, 29 Oct) */
+.dp-gs[data-g="A"] { color: var(--diff-add-mark); }
 
 .dp-dim .dp-nm { color: var(--text-caption); }
 
@@ -1481,7 +1482,7 @@ html[data-theme="night"] .t3-d { --diff-rem-wash: rgb(239 68 68 / .10); --diff-r
 .s-sc-root .s-sc-sep { height: 1px; margin: 6px 4px; background: var(--seam); }
 
 /* Git › Graph, ported to the app's screens.css */
-.s-sc-root .dp-gs[data-g="D"] { color: var(--tv-error); }
+.s-sc-root .dp-gs[data-g="D"] { color: var(--diff-rem-mark); }
 
 .s-sc-root .s-gg-list { flex: 1; min-height: 0; overflow: hidden; padding: 2px 6px 8px; }
 

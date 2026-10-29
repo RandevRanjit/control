@@ -27,7 +27,19 @@ const state = vi.hoisted(() => ({
   linkedPullRequest: null as ThreadLinkedPullRequest | null,
 }));
 
-vi.mock("@effect/atom-react", () => ({ useAtomValue: () => serverConfig }));
+vi.mock("@effect/atom-react", () => ({
+  // The config-fields atom is mocked as its selector, so it reads the same config.
+  useAtomValue: (atom: unknown) => (typeof atom === "function" ? atom(serverConfig) : serverConfig),
+}));
+vi.mock("./chatMarkdownServerConfig", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./chatMarkdownServerConfig")>();
+  const { Atom, AtomRegistry } = await import("effect/reactivity");
+  const registry = AtomRegistry.make();
+  return {
+    markdownServerConfigFieldsAtom: () => (config: unknown) =>
+      registry.get(actual.markdownServerConfigFieldsAtom(Atom.make(config) as never)),
+  };
+});
 vi.mock("../hooks/useTheme", () => ({ useTheme: () => ({ resolvedTheme: "dark" }) }));
 vi.mock("../hooks/useSettings", () => ({
   getClientSettings: () => DEFAULT_CLIENT_SETTINGS,

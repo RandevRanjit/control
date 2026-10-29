@@ -84,9 +84,10 @@ keyboard. The button only offers Steer when the running agent supports it.
 
 The composer stays open while an approval waits. Sending a message there declines
 every approval the thread shows and steers the turn with your message, on web,
-desktop and mobile. Sending never approves anything; only **Accept** does. If the
-draft changes or another approval arrives while the decline is going through, the
-message stays in the composer so you can send it again.
+desktop and mobile. Sending never approves anything; only **Approve** does. If the
+draft changes, or a new approval or question arrives after you press send, the
+message stays in the composer and the new request waits for you; send again once
+you have seen it.
 
 ## Queue messages offline on mobile
 

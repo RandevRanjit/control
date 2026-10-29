@@ -24,7 +24,7 @@ import type {
   UsageLimitsReport,
 } from "@control/contracts";
 import {
-  declinePendingApprovals,
+  declineForRedirect,
   type ApprovalResponder,
   type ThreadUserInputQuestion,
 } from "@control/client-runtime/state/thread-requests";
@@ -980,9 +980,11 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
   ]);
 
   const activePendingApprovalsRef = useRef(props.activePendingApprovals);
+  const activePendingUserInputRef = useRef(props.activePendingUserInput);
   useLayoutEffect(() => {
     activePendingApprovalsRef.current = props.activePendingApprovals;
-  }, [props.activePendingApprovals]);
+    activePendingUserInputRef.current = props.activePendingUserInput;
+  }, [props.activePendingApprovals, props.activePendingUserInput]);
   const handleSendMessage = useCallback(
     async (followUp?: ActiveTurnComposerAction, stillSendable?: () => boolean) => {
       const targetThreadKey = selectedThreadKey;
@@ -994,18 +996,26 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
       const approvalsToDecline = props.activePendingApprovals;
       const declineBeforeDispatch =
         approvalsToDecline.length > 0 && props.activePendingUserInput === null
-          ? async () =>
-              props.respondingApprovalId === null &&
-              (await declinePendingApprovals(approvalsToDecline, props.onRespondToApproval)) &&
-              selectedThreadKeyRef.current === targetThreadKey &&
-              // A draft edited or pasted into during the decline isn't what the user sent.
-              stillSendable?.() !== false &&
-              // An approval that arrived during the decline would block the redirect; the draft
-              // stays so the next send declines it too.
-              !activePendingApprovalsRef.current.some(
-                (approval) =>
-                  !approvalsToDecline.some((declined) => declined.requestId === approval.requestId),
-              )
+          ? async () => {
+              if (props.respondingApprovalId !== null) return false;
+              // A question or an approval the user never saw, arriving before or during the
+              // decline, keeps the draft so the owner sees the new request first.
+              const redirect = await declineForRedirect({
+                shownApprovalIds: approvalsToDecline.map((approval) => approval.requestId),
+                readPending: () => ({
+                  approvals: activePendingApprovalsRef.current,
+                  userInputCount: activePendingUserInputRef.current === null ? 0 : 1,
+                }),
+                respond: props.onRespondToApproval,
+              });
+              return (
+                redirect.declined &&
+                redirect.blocked === null &&
+                selectedThreadKeyRef.current === targetThreadKey &&
+                // A draft edited or pasted into during the decline isn't what the user sent.
+                stillSendable?.() !== false
+              );
+            }
           : undefined;
       const messageId = await props.onSendMessage(followUp, declineBeforeDispatch);
       if (messageId === null || selectedThreadKeyRef.current !== targetThreadKey) {

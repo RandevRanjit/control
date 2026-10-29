@@ -31,6 +31,7 @@ import { threadSearchPullRequests } from "@control/shared/threadPullRequests";
 import {
   backfillMessageSearch,
   indexedMessageCondition,
+  indexedMessageText,
   messageSearchReady,
 } from "./messageSearchIndex.ts";
 
@@ -237,7 +238,8 @@ export const messageHitsQuery = (
       AND messages.message_id NOT LIKE 'async-answer:%'
       AND NOT EXISTS (
         SELECT 1 FROM json_each(${substrings}) AS token
-        WHERE instr(lower(json_extract(messages.payload_json, '$.text')), token.value) = 0
+        -- The text as the index stores it, so "don't" finds "don’t" in a scan too.
+        WHERE instr(lower(${indexedMessageText(sql, "messages.payload_json")}), token.value) = 0
       )
     -- The index's own rowid, so FTS5 returns hits newest first and stops at
     -- the limit; ordering by the messages table's rowid sorts every hit.

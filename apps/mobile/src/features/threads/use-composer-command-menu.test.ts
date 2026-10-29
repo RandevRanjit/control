@@ -3,8 +3,10 @@ import {
   EnvironmentId,
   ProviderDriverKind,
   ProviderInstanceId,
+  ThreadId,
   type ServerProvider,
 } from "@control/contracts";
+import type { EnvironmentThreadShell } from "@control/client-runtime/state/shell";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
@@ -36,6 +38,7 @@ vi.mock("../../state/use-atom-command", () => ({
   useAtomCommand: () => refreshProviders,
 }));
 
+import { makeThreadShellFixture } from "../../test-fixtures";
 import {
   buildComposerSlashCommandItems,
   resolveComposerCommandSelection,
@@ -511,5 +514,80 @@ describe("workspace command discovery retry", () => {
     await act(() => vi.advanceTimersByTimeAsync(20_000));
     expect(refreshProviders).toHaveBeenCalledTimes(1);
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe("thread mentions", () => {
+  let root: Root;
+  let mentioned: ReadonlyArray<string> = [];
+  const environmentId = EnvironmentId.make("environment-test");
+  const HOUR_MS = 60 * 60 * 1000;
+  const openedAt = Date.parse("2026-10-29T08:00:00.000Z");
+
+  function Probe({ threadShells }: { threadShells: ReadonlyArray<EnvironmentThreadShell> }) {
+    const { items } = useComposerCommandMenu({
+      draftMessage: "@deploy",
+      ownerKey: null,
+      environmentId,
+      threadShells,
+      projectCwd: null,
+      selectedProviderStatus: null,
+      hasThread: true,
+      hasCompactableConversation: false,
+      onChangeDraftMessage: () => {},
+    });
+    mentioned = items.flatMap((item) => (item.type === "thread" ? [item.thread.threadId] : []));
+    return null;
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    const document = { nodeType: 9, addEventListener() {}, removeEventListener() {} };
+    const container = {
+      nodeType: 1,
+      tagName: "DIV",
+      namespaceURI: "http://www.w3.org/1999/xhtml",
+      ownerDocument: document,
+      addEventListener() {},
+      removeEventListener() {},
+    };
+    vi.stubGlobal("document", document);
+    vi.stubGlobal("window", { document, HTMLIFrameElement: EventTarget });
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    root = createRoot(container as unknown as HTMLElement);
+  });
+
+  afterEach(async () => {
+    await act(async () => {
+      root.unmount();
+    });
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it("ranks threads written in since the composer opened newest first", async () => {
+    vi.setSystemTime(openedAt);
+    await act(async () => {
+      root.render(createElement(Probe, { threadShells: [] }));
+    });
+    vi.setSystemTime(openedAt + 3 * HOUR_MS);
+    const shell = (id: string, writtenAt: number) =>
+      makeThreadShellFixture({
+        environmentId,
+        id: ThreadId.make(id),
+        title: "Deploy fix",
+        latestUserAuthoredMessageAt: new Date(writtenAt).toISOString(),
+      });
+    await act(async () => {
+      root.render(
+        createElement(Probe, {
+          threadShells: [
+            shell("earlier", openedAt + HOUR_MS),
+            shell("latest", openedAt + 2 * HOUR_MS),
+          ],
+        }),
+      );
+    });
+    expect(mentioned).toEqual(["latest", "earlier"]);
   });
 });

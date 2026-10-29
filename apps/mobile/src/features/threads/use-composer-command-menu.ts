@@ -211,8 +211,6 @@ export function useComposerCommandMenu({
   readonly onUsageLimits?: () => void;
 }) {
   const [selection, setSelection] = useState(() => composerSelectionAtEnd(draftMessage));
-  // Thread mentions rank by recency as of when the composer mounted.
-  const [now] = useState(() => Date.now());
   const previousOwnerKeyRef = useRef(ownerKey);
   const onSelectionChange = useCallback((nextSelection: ComposerEditorSelection) => {
     setSelection(nextSelection);
@@ -546,7 +544,8 @@ export function useComposerCommandMenu({
             environmentId,
             excludeThreadId: currentThreadId,
             query: trigger.query,
-            now,
+            // Recency as of this search: a composer stays open for hours.
+            now: Date.now(),
           })
         : [];
       return [

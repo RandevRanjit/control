@@ -901,6 +901,32 @@ it.layer(layerTest)("ThreadSearch while the index backfills", (it) => {
     }),
   );
 
+  it.effect("finds a curly apostrophe from a straight one without the index", () =>
+    Effect.gen(function* () {
+      const projections = yield* ProjectionStore.ProjectionStoreV2;
+      const search = yield* ThreadSearch.ThreadSearch;
+      const sql = yield* SqlClient.SqlClient;
+      const project = ProjectId.make("project:apostrophes");
+      const threadId = ThreadId.make("thread:apostrophes");
+      yield* createProject(project);
+      yield* Effect.forEach(
+        // As an iOS keyboard types it.
+        [thread(threadId, project), message(threadId, "curly", "user", "I don’t trust the cache")],
+        projections.apply,
+        { discard: true },
+      );
+      const threadIds = (query: string) =>
+        search.search({ query }).pipe(Effect.map(({ matches }) => matches.map((m) => m.threadId)));
+      assert.deepEqual(yield* threadIds("don't"), [threadId]);
+      yield* sql`
+        INSERT INTO orchestration_v2_message_search_backfill (next_rowid, last_rowid)
+        SELECT 0, max(rowid) FROM orchestration_v2_projection_messages
+      `;
+      assert.deepEqual(yield* threadIds("don't"), [threadId]);
+      yield* search.backfillIndex;
+    }),
+  );
+
   it.effect("reports an unreadable match as a decode failure", () =>
     Effect.gen(function* () {
       const projections = yield* ProjectionStore.ProjectionStoreV2;

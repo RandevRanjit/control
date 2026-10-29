@@ -746,6 +746,8 @@ export function createEnvironmentRpcCommand<
     readonly tag: TTag;
     readonly execute?: (
       input: Input,
+      registry: AtomRegistry.AtomRegistry,
+      environmentId: EnvironmentIdType,
     ) => Effect.Effect<
       EnvironmentRpcSuccess<TTag>,
       EnvironmentRpcFailure<TTag> | EnvironmentRpcUnavailableError,
@@ -762,7 +764,6 @@ export function createEnvironmentRpcCommand<
         readonly input: NoInfer<Input>;
       },
       registry: AtomRegistry.AtomRegistry,
-      result: EnvironmentRpcSuccess<TTag>,
     ) => Effect.Effect<void, never, R>;
     readonly onSettled?: (
       target: {
@@ -786,12 +787,15 @@ export function createEnvironmentRpcCommand<
       // Routing requires consent on the origin as well as the actual destination.
       // The transport check below deliberately checks the destination again.
       return permissions.authorize(registry, environmentId, input).pipe(
-        Effect.andThen(() => options.execute?.(input) ?? requestGuarded(options.tag, input)),
+        Effect.andThen(
+          () =>
+            options.execute?.(input, registry, environmentId) ?? requestGuarded(options.tag, input),
+        ),
         Effect.provideService(RpcPermissionGuard, {
           authorize: (id, method, payload) =>
             createCommandPermissions(runtime, method).authorize(registry, id, payload),
         }),
-        Effect.tap((result) => options.onSuccess?.(target, registry, result) ?? Effect.void),
+        Effect.tap(() => options.onSuccess?.(target, registry) ?? Effect.void),
         Effect.ensuring(options.onSettled?.(target, registry) ?? Effect.void),
       );
     },

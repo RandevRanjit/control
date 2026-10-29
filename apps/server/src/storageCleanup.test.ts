@@ -526,6 +526,22 @@ describe("storage cleanup reports and local file policies", () => {
       }),
     ),
   );
+  it.live("keeps a worktree whose changes overflow the status output", () =>
+    runCleanupTest(
+      Effect.gen(function* () {
+        const { service, fs, worktree, deleteThread } = yield* cleanupFixture;
+        deleteThread();
+        for (let i = 0; i < 1000; i++)
+          yield* fs.writeFileString(`${worktree}/${String(i).padStart(96, "0")}.txt`, "");
+        const report = yield* service.runNow;
+        expect(report.entries[0]).toMatchObject({
+          outcome: "kept",
+          reason: "Local changes exceed the inspection limit",
+        });
+        expect(yield* fs.exists(worktree)).toBe(true);
+      }),
+    ),
+  );
   it.live("preserves tracked edits written after the final status check", () =>
     runCleanupTest(
       Effect.gen(function* () {

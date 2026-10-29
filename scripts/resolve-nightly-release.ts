@@ -96,7 +96,7 @@ export const resolveNightlyTargetVersion = (version: string) => {
   return Effect.succeed(`${major}.${minor}.${Number(patch) + 1}`);
 };
 
-/** Prerelease trains that share nightly's run-number versioning. */
+/** Prerelease trains that share nightly's date-and-run versioning. */
 export const PrereleaseChannel = Schema.Literals(["nightly", "preview"]);
 export type PrereleaseChannel = typeof PrereleaseChannel.Type;
 
@@ -118,8 +118,9 @@ export const resolveNightlyReleaseMetadata = (
   channel: PrereleaseChannel = "nightly",
 ) => {
   const shortSha = sha.slice(0, 12);
-  // From 0.1.2 the version is the run alone; versions before it carry the date too.
-  const version = `${baseVersion}-${channel}.${runNumber}`;
+  // Installs up to 0.1.1 take only dated nightlies as updates (updateChannels.ts),
+  // so the date stays until the 0.1.3 bump; from 0.1.2 every parser reads both forms.
+  const version = `${baseVersion}-${channel}.${date}.${runNumber}`;
   // The page already shows the tag and commit, so the name says only which build and when.
   const day = `${Number(date.slice(6, 8))} ${MONTHS[Number(date.slice(4, 6)) - 1]}`;
   return {

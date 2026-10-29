@@ -48,10 +48,10 @@ describe("branding logic", () => {
         fallbackStageLabel: "Alpha",
       }),
     ).toBe("Nightly");
-    // From 0.1.2 a nightly's version drops the date.
+    // From 0.1.3 a nightly's version drops the date.
     expect(
       resolveServerBackedAppStageLabel({
-        primaryServerVersion: "0.1.2-nightly.56",
+        primaryServerVersion: "0.1.3-nightly.56",
         fallbackStageLabel: "Alpha",
       }),
     ).toBe("Nightly");

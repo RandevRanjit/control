@@ -65,15 +65,15 @@ it.effect("accepts legacy nightly tags when selecting the previous nightly", () 
   }),
 );
 
-it.effect("reads nightly tags without a date, as from 0.1.2", () =>
+it.effect("reads nightly tags without a date, as from 0.1.3", () =>
   Effect.gen(function* () {
-    const previous = yield* resolvePreviousReleaseTag("nightly", "v0.1.2-nightly.57", [
-      "v0.1.1-nightly.20261029.55",
-      "v0.1.2-nightly.56",
-      "v0.1.1",
+    const previous = yield* resolvePreviousReleaseTag("nightly", "v0.1.3-nightly.57", [
+      "v0.1.2-nightly.20261030.55",
+      "v0.1.3-nightly.56",
+      "v0.1.2",
     ]);
 
-    assert.equal(previous, "v0.1.2-nightly.56");
+    assert.equal(previous, "v0.1.3-nightly.56");
   }),
 );
 

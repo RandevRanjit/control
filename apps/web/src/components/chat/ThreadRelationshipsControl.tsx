@@ -24,7 +24,12 @@ import {
   canDetachThreadProviderSession,
   resolveLatestMergeBackRun,
 } from "@control/client-runtime/state/thread-workflows";
-import type { EnvironmentId, OrchestrationV2ThreadShell, ThreadId } from "@control/contracts";
+import type {
+  EnvironmentId,
+  OrchestrationV2Subagent,
+  OrchestrationV2ThreadShell,
+  ThreadId,
+} from "@control/contracts";
 import { deriveSubagentElapsedMs } from "@control/shared/orchestrationTiming";
 import { groupBy } from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -209,6 +214,10 @@ export function ThreadRelationshipsPanel(props: {
             subagent.childThreadId,
             {
               ...projectedSubagentsToRuntime([subagent])[0]!,
+              id: subagent.id,
+              threadId: subagent.threadId,
+              nativeTaskRef: subagent.nativeTaskRef,
+              nativeStatus: subagent.status,
               driver: subagent.driver,
               providerInstanceId: subagent.providerInstanceId,
               origin: subagent.origin,
@@ -316,12 +325,18 @@ export function ThreadRelationshipsPanel(props: {
     setBusyAction(null);
   };
 
-  const stopSubagent = async (childThreadId: ThreadId) => {
+  const stopSubagent = async (
+    childThreadId: ThreadId,
+    agent: Pick<OrchestrationV2Subagent, "id" | "origin" | "threadId">,
+  ) => {
     if (stoppingThreadId !== null) return;
     setStoppingThreadId(childThreadId);
     const result = await interruptTurn({
       environmentId: props.environmentId,
-      input: { threadId: childThreadId },
+      input:
+        agent.origin === "provider_native"
+          ? { threadId: agent.threadId, subagentId: agent.id }
+          : { threadId: childThreadId },
     });
     setStoppingThreadId(null);
     if (result._tag === "Failure") {
@@ -386,7 +401,13 @@ export function ThreadRelationshipsPanel(props: {
               );
               const failed = status === "failed" || status === "error";
               const canStop =
-                agent?.origin === "app_owned" &&
+                agent &&
+                (agent.origin === "app_owned" ||
+                  (agent.origin === "provider_native" &&
+                    agent.driver === "claudeAgent" &&
+                    agent.nativeTaskRef?.strength === "strong" &&
+                    agent.nativeTaskRef.nativeId !== null &&
+                    ["pending", "running", "waiting"].includes(agent.nativeStatus))) &&
                 agent.startedAt &&
                 ["pending", "running", "waiting"].includes(agent.status);
               const trailingVisibilityClass = canStop
@@ -554,7 +575,7 @@ export function ThreadRelationshipsPanel(props: {
                               tone="destructive"
                               aria-label={`Stop subagent ${threadTitle}`}
                               disabled={stoppingThreadId !== null}
-                              onClick={() => void stopSubagent(threadId)}
+                              onClick={() => void stopSubagent(threadId, agent)}
                             />
                           }
                         >

@@ -148,16 +148,26 @@ it.effect("production mcp layer lists worktree tools over http", () =>
 
       // Every thread pays for the advertised input schemas, so they carry no
       // JSON noise; decoding still uses the full schema.
-      const advertised = JSON.stringify(
-        (
-          JSON.parse(bodyText.match(/\{.*\}/s)![0]) as {
-            result: { tools: Array<{ inputSchema: unknown }> };
-          }
-        ).result.tools.map((tool) => tool.inputSchema),
-      );
+      const rawTools = (
+        JSON.parse(bodyText.match(/\{.*\}/s)![0]) as {
+          result: { tools: Array<{ name: string; inputSchema: unknown }> };
+        }
+      ).result.tools;
+      const advertised = JSON.stringify(rawTools.map((tool) => tool.inputSchema));
       expect(advertised).not.toContain('"additionalProperties":true');
       expect(advertised).not.toContain(`"maximum":${Number.MAX_SAFE_INTEGER}`);
       expect(advertised).not.toContain('"contentMediaType":"application/json"');
+
+      // Where null means something other than omitted, agents must still be able to send it.
+      type Properties = { properties: Record<string, { anyOf?: Array<unknown> } & Properties> };
+      const inputOf = (name: string) =>
+        rawTools.find((tool) => tool.name === name)!.inputSchema as Properties;
+      expect(inputOf("thread_queue").properties.beforeRunId!.anyOf).toContainEqual({
+        type: "null",
+      });
+      expect(
+        inputOf("schedule_task").properties.schedule!.properties.signature!.anyOf,
+      ).toContainEqual({ type: "null" });
 
       // Action tools replace the single-purpose tools they merged.
       expect(toolNames).toEqual(

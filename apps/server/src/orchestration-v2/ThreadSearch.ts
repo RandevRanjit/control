@@ -68,6 +68,8 @@ const SearchRequest = Schema.Struct({
   projectId: Schema.NullOr(ProjectId),
   /** Threads the caller already lists, left out before the hit limit. */
   excludedThreadIds: TokenList,
+  /** A scan's next page: only messages older than this rowid. */
+  before: Schema.NullOr(Schema.Number),
 });
 const SearchRow = Schema.Struct({
   messageRowid: Schema.Number,
@@ -107,7 +109,7 @@ const MESSAGE_SCAN_LIMIT = 20_000;
 function buildMessageSearch(
   query: string,
   hasIndex: boolean,
-): Omit<typeof SearchRequest.Type, "projectId" | "excludedThreadIds"> | null {
+): Omit<typeof SearchRequest.Type, "projectId" | "excludedThreadIds" | "before"> | null {
   const { long, short } = messageSearchTokens(query);
   if (long.length === 0) return null;
   // Two-character CJK words are too short for trigrams.
@@ -173,7 +175,7 @@ export function buildSearchSnippet(text: string, matchStart: number): string {
 // "café"). Exported so a test can check the query plan.
 export const messageHitsQuery = (
   sql: SqlClient.SqlClient,
-  { match, substrings, projectId, excludedThreadIds }: typeof SearchRequest.Encoded,
+  { match, substrings, projectId, excludedThreadIds, before }: typeof SearchRequest.Encoded,
 ) => sql`
     WITH eligible AS MATERIALIZED (
       SELECT threads.thread_id, threads.project_id
@@ -206,6 +208,7 @@ export const messageHitsQuery = (
             AND messages.rowid > (
               SELECT coalesce(max(rowid), 0) FROM orchestration_v2_projection_messages
             ) - ${MESSAGE_SCAN_LIMIT}
+            AND (${before} IS NULL OR messages.rowid < ${before})
         `
         : sql`
           SELECT
@@ -239,9 +242,7 @@ export const messageHitsQuery = (
     -- The index's own rowid, so FTS5 returns hits newest first and stops at
     -- the limit; ordering by the messages table's rowid sorts every hit.
     ORDER BY "messageRowid" DESC
-    -- A scan may carry no SQL filter for a word, so the matcher sees its
-    -- whole window rather than the newest hits.
-    LIMIT ${match === null ? MESSAGE_SCAN_LIMIT : MESSAGE_HIT_LIMIT}
+    LIMIT ${MESSAGE_HIT_LIMIT}
   `;
 
 const TitleCandidateRow = Schema.Struct({
@@ -365,16 +366,35 @@ export const make = Effect.gen(function* () {
       right.quality - left.quality ||
       Number(left.row.source !== "user") - Number(right.row.source !== "user") ||
       newer(left, right);
+    const matchMessage = messageMatcher(input.query);
     const rows = yield* read(
       Effect.gen(function* () {
         const messageSearch = buildMessageSearch(input.query, yield* messageSearchReady(sql));
-        return messageSearch === null
-          ? []
-          : yield* searchRows({
-              ...messageSearch,
-              projectId: input.projectId,
-              excludedThreadIds: [...(input.excludedThreadIds ?? [])],
-            });
+        if (messageSearch === null) return [];
+        const request = {
+          ...messageSearch,
+          projectId: input.projectId,
+          excludedThreadIds: [...(input.excludedThreadIds ?? [])],
+          before: null,
+        };
+        if (messageSearch.match !== null) return yield* searchRows(request);
+        // A scan may hold no SQL filter for a word ("İstanbul"), so it reads its
+        // window a page at a time and keeps the messages the matcher accepts,
+        // until it has the newest hits.
+        const hits: Array<typeof SearchRow.Type> = [];
+        let before: number | null = null;
+        while (hits.length < MESSAGE_HIT_LIMIT) {
+          const page: ReadonlyArray<typeof SearchRow.Type> = yield* searchRows({
+            ...request,
+            before,
+          });
+          for (const row of page) {
+            if (matchMessage(row.text.replace(MARKDOWN_LINK, "$1")) !== null) hits.push(row);
+          }
+          if (page.length < MESSAGE_HIT_LIMIT) break;
+          before = page.at(-1)!.messageRowid;
+        }
+        return hits.slice(0, MESSAGE_HIT_LIMIT);
       }),
     );
     const best = new Map<ThreadId, Hit>();
@@ -383,7 +403,6 @@ export const make = Effect.gen(function* () {
     // for "rust") never add to a whole word's count.
     const hitCounts = new Map<ThreadId, number>();
     const hitCount = (threadId: ThreadId) => hitCounts.get(threadId) ?? 1;
-    const matchMessage = messageMatcher(input.query);
     for (const row of rows) {
       const text = row.text.replace(MARKDOWN_LINK, "$1");
       const match = matchMessage(text);

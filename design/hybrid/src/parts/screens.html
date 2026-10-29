@@ -111,6 +111,7 @@
 .s-sc-root .s-sc-pk .gi { width: 14px; height: 14px; color: var(--text-secondary); }
 .s-sc-root .s-sc-pk .gi:last-child { width: 12px; height: 12px; color: var(--text-caption); }
 .s-sc-root .s-sc-num { flex: none; width: 64px; justify-content: flex-end; }
+.s-sc-root .s-sc-unit { flex: none; margin-left: 6px; font: var(--w-reg) 11.5px/1 var(--f-chrome); color: var(--text-caption); }
 .s-sc-root .s-sc-scope { display: flex; align-items: center; gap: 6px; padding: 0 4px; font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-caption); }
 .s-sc-root .s-sc-scope .s-sc-pk { height: 24px; font-size: 12px; }
 
@@ -305,7 +306,7 @@
 
   <h3 class="bl-sub"><span class="id">SC2</span>Settings</h3>
   <div class="bl-prose">
-    <p>The gear holds down and the sidebar becomes Settings' pages, under the same top row and a search field. A page is a column of groups: each row a label with a line under it, and its control at the right, a picker, a switch or a number. Every page takes these rows. The layers mark after a label says a project can override it, as now. Three pages wore another meaning's icon (§20): Providers drew Agents' bot, Integrations Plugins' blocks and Source control the branch. Here Providers becomes Claude, the only provider, with the spark; Integrations takes a puzzle piece and Source control a fork. Page names are written properly: Scheduled tasks, Source control.</p>
+    <p>The gear holds down and the sidebar becomes Settings' pages, under the same top row and a search field. A page is a column of groups: each row a label with a line under it, and its control at the right, a picker, a switch or a number. Every page takes these rows. The layers mark after a label shows only where a project's own value is in play: here the repository's <code>control.json</code> on Workspace (owner, 29 Oct). A number names its unit. Three pages wore another meaning's icon (§20): Providers drew Agents' bot, Integrations Plugins' blocks and Source control the branch. Here Providers becomes Claude, the only provider, with the spark; Integrations takes a puzzle piece and Source control a fork. Page names are written properly: Scheduled tasks, Source control.</p>
   </div>
   <figure class="fig" data-fig="settings"><div data-win="settings"></div><figcaption class="cap"><span class="id">SC2</span><b>General.</b><span>Groups are on the raised tone, radius 14, rows 56 high with a seam between. Pickers are wells, 28 high, radius 10; switches are Bloom's. The column is 640 wide, centred. Reset restores this device's defaults, after saying which settings it resets.</span></figcaption></figure>
 
@@ -456,22 +457,22 @@ function settingsSide() {
 }
 /* a row: label, its line, its control; `own` marks a setting a project can override (the app's layers mark) */
 const row = (label, line, control, own) => `<div class="s-sc-row"><div class="s-sc-l"><b>${label}${own ? G('layers') : ''}</b><span>${line}</span></div>${control}</div>`;
-const num = v => `<span class="s-sc-pk s-sc-num t-num">${v}</span>`;
+const num = (v, unit) => `<span class="s-sc-pk s-sc-num t-num">${v}</span>${unit ? `<span class="s-sc-unit">${unit}</span>` : ''}`;
 const both = (...c) => `<span class="s-sc-pks">${c.join('')}</span>`;
 function settingsMain() {
   const scope = `<div class="s-sc-scope">Applying settings for ${pk('All projects')}across ${pk('All environments')}</div>`;
   const threads = `<div class="s-sc-h">New threads</div><div class="s-sc-grp">`
-    + row('Model', 'Default model for new threads. Projects can override it.', both(pk('Claude Opus 5.5', CL()), pk('Max', T('brain'))), 1)
-    + row('Permissions', 'Default permissions for new threads. Projects can override them.', pk('Full access', T('lockopen')), 1)
+    + row('Model', 'Default model for new threads. Projects can override it.', both(pk('Claude Opus 5.5', CL()), pk('Max', T('brain'))))
+    + row('Permissions', 'Default permissions for new threads. Projects can override them.', pk('Full access', T('lockopen')))
     + row('Workspace', 'Where new threads start. Projects and their <code>control.json</code> can override it.', pk('Current checkout'), 1)
-    + row('Submodules', 'How new worktrees populate git submodules.', pk('Recursive'), 1) + `</div>`;
+    + row('Submodules', 'How new worktrees populate git submodules.', pk('Recursive')) + `</div>`;
   const org = `<div class="s-sc-h">Organization</div><div class="s-sc-grp">`
     + row('Project grouping', 'Combine matching repositories across environments.', sw(true))
     + row('Project order', 'Order of projects in the sidebar project picker and command palette.', pk('Last user message'))
-    + row('Auto-compact idle threads', 'Compact a big thread once it has sat idle, while its prompt cache is still warm.', sw(true), 1)
-    + row('Minutes idle before auto-compact', 'Past an hour its prompt cache has gone cold, so it compacts on your next send instead.', num('25'), 1)
-    + row('Context size before auto-compact', 'Only threads holding at least this many thousand tokens of context compact.', num('250'), 1)
-    + row('Daily housekeeping', 'Once a day at this hour, clear old debug logs, shell snapshots, session env and todos from <code>~/.claude</code>.', both(num('04:00'), sw(true))) + `</div>`;
+    + row('Auto-compact idle threads', 'Compact a big thread once it has sat idle, while its prompt cache is still warm.', sw(true))
+    + row('Minutes idle before auto-compact', 'Past an hour its prompt cache has gone cold, so it compacts on your next send instead.', num('25', 'min'))
+    + row('Context size before auto-compact', 'Only threads holding at least this many thousand tokens of context compact.', num('250', 'k tokens'))
+    + row('Daily housekeeping', 'Once a day at this hour, clear old debug logs, shell snapshots, session env and todos from <code>~/.claude</code>.', both(num('4', ':00'), sw(true))) + `</div>`;
   return `<div class="s-sc-hd">General<span class="sp"></span><span class="pill ghost sm">Reset</span></div><div class="s-sc-body"><div class="s-sc-col">${scope}${threads}${org}</div></div>`;
 }
 

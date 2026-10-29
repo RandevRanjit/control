@@ -10,9 +10,10 @@ show and ignore the selection. Everything else is stored on a server. Choose one
 edit its settings, or leave **All environments** to edit every connected environment at once.
 Offline environments keep their current values; this is a bulk edit, not a synced global default.
 
-Choose a project to override settings for it on the selected environments. A layers icon beside
-each server row's title shows where the value comes from: the built-in default, the environment,
-or a project override. Click it to see that chain on every selected environment. An override can
+Choose a project to override settings for it on the selected environments. A layers icon beside a
+server row's title marks a project's own value: the project's override, its repository's
+`control.json`, or projects overriding the environment's value. Rows that follow the environment or
+the built-in default carry none. Click the icon to see the chain on every selected environment. An override can
 be reset to inherit again. Settings that cannot be overridden by a project are shown read-only
 while a project is selected.
 

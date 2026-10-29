@@ -2091,12 +2091,15 @@ function BoundedIntInput({
   min,
   max,
   onCommit,
+  unit,
   "aria-label": ariaLabel,
 }: {
   value: number;
   min: number;
   max: number;
   onCommit: (value: number) => void;
+  /** What the number counts, after the field: `min`, `k tokens`, `:00`. */
+  unit: string;
   "aria-label": string;
 }) {
   // Local draft so the field can be emptied mid-edit; the setting only moves
@@ -2107,26 +2110,29 @@ function BoundedIntInput({
   }, [value]);
 
   return (
-    <Input
-      size="sm"
-      type="number"
-      min={min}
-      max={max}
-      className="w-full sm:w-24"
-      value={draft}
-      onChange={(event) => {
-        setDraft(event.target.value);
-        // Number(), not parseInt: "3.5" must be rejected (not truncated to a
-        // committed 3 while the field shows 3.5) — commit only when the
-        // persisted value matches the displayed one.
-        const parsed = Number(event.target.value);
-        if (Number.isInteger(parsed) && parsed >= min && parsed <= max) {
-          onCommit(parsed);
-        }
-      }}
-      onBlur={() => setDraft(String(value))}
-      aria-label={ariaLabel}
-    />
+    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <Input
+        size="sm"
+        type="number"
+        min={min}
+        max={max}
+        className="w-full sm:w-24"
+        value={draft}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          // Number(), not parseInt: "3.5" must be rejected (not truncated to a
+          // committed 3 while the field shows 3.5) — commit only when the
+          // persisted value matches the displayed one.
+          const parsed = Number(event.target.value);
+          if (Number.isInteger(parsed) && parsed >= min && parsed <= max) {
+            onCommit(parsed);
+          }
+        }}
+        onBlur={() => setDraft(String(value))}
+        aria-label={ariaLabel}
+      />
+      <span className="shrink-0">{unit}</span>
+    </span>
   );
 }
 
@@ -2414,6 +2420,7 @@ export function GeneralSettingsPanel() {
                   min={MIN_AUTO_COMPACT_IDLE_MINUTES}
                   max={MAX_AUTO_COMPACT_IDLE_MINUTES}
                   onCommit={(minutes) => updateSettings({ autoCompactIdleMinutes: minutes })}
+                  unit="min"
                   aria-label="Minutes idle before auto-compact"
                 />
               }
@@ -2431,6 +2438,7 @@ export function GeneralSettingsPanel() {
                   onCommit={(thousands) =>
                     updateSettings({ autoCompactMinTokens: thousands * 1000 })
                   }
+                  unit="k tokens"
                   aria-label="Thousand tokens of context before auto-compact"
                 />
               }
@@ -2450,6 +2458,7 @@ export function GeneralSettingsPanel() {
                   min={0}
                   max={23}
                   onCommit={(hour) => updateSettings({ housekeepingHour: hour })}
+                  unit=":00"
                   aria-label="Hour of daily housekeeping"
                 />
               ) : null}
@@ -2618,6 +2627,7 @@ export function GeneralSettingsPanel() {
                     min={MIN_SIDEBAR_AUTO_SETTLE_AFTER_DAYS}
                     max={MAX_SIDEBAR_AUTO_SETTLE_AFTER_DAYS}
                     onCommit={(days) => updateSettings({ sidebarAutoSettleAfterDays: days })}
+                    unit="days"
                     aria-label="Days of inactivity before auto-settle"
                   />
                 }

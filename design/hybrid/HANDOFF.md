@@ -1212,8 +1212,8 @@ in the 1.2 export: `v1.2/index.html` renders them after the panels, and `control
    a search, to another. The foot is a field: type a link or number and press Enter to link it, and ⌘K's Link pull
    request puts the cursor there. The panel's separate pull-request chips go.
 2. **Settings (SC2)** takes the sidebar's place under the held gear: a search field, then the pages. Every page is a
-   column of groups, a row a label with its line and its control at the right; the layers mark says a project can
-   override it. Providers is **Claude**, with Claude's mark; Integrations takes a puzzle piece and Source control a fork.
+   column of groups, a row a label with its line and its control at the right. The layers mark sits only on rows where
+   a project's own value is in play (owner, 29 Oct). Providers is **Claude**, with Claude's mark; Integrations takes a puzzle piece and Source control a fork.
    Page names are in sentence case.
 3. **Usage (SC3)** keeps every part the app has, in D's skin: the head's environments, providers, Cost/Tokens/Limits and
    period; the total and each provider's share beside the daily line; totals; cost (or tokens) by type; the ranked

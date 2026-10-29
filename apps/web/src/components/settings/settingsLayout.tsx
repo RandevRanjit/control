@@ -427,8 +427,15 @@ export function SettingsRow({
           : customized
             ? { state: "environment", summary: "Set on the environment" }
             : { state: "default", summary: "Built-in default" };
+  // The layers mark shows only where a project's own value is in play: its override, the
+  // repository's control.json, projects overriding the environment, or environments that differ.
+  const projectValueInPlay =
+    inheritance.state === "overridden" ||
+    inheritance.state === "mixed" ||
+    source === "control.json" ||
+    overridingProjects.length > 0;
   const renderedInheritance =
-    context && serverScoped && settingKeys.length > 0 ? (
+    context && serverScoped && settingKeys.length > 0 && projectValueInPlay ? (
       <SettingInheritance
         state={inheritance.state}
         summary={inheritance.summary}

@@ -1244,6 +1244,8 @@ html[data-theme="night"] .t3-d { --diff-rem-wash: rgb(239 68 68 / .10); --diff-r
 
 .s-sc-root .s-sc-num { flex: none; width: 64px; justify-content: flex-end; }
 
+.s-sc-root .s-sc-unit { flex: none; margin-left: 6px; font: var(--w-reg) 11.5px/1 var(--f-chrome); color: var(--text-caption); }
+
 .s-sc-root .s-sc-scope { display: flex; align-items: center; gap: 6px; padding: 0 4px; font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-caption); }
 
 .s-sc-root .s-sc-scope .s-sc-pk { height: 24px; font-size: 12px; }

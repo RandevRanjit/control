@@ -663,6 +663,42 @@ export function nativeMarkdownMathSegments(
   return segments;
 }
 
+// TeX fonts run small beside the text face; web sets KaTeX at the same 1.21em.
+export const MATH_FONT_SCALE = 1.21;
+// DM Sans, the thread face, in ems.
+const TEXT_FACE_ASCENDER = 0.992;
+const TEXT_FACE_DESCENDER = 0.31;
+
+/**
+ * Fits inline formulas, sized in ems as markdownMathSvg returns them, into iOS text
+ * with a fixed lineHeight. React Native lifts that text by half of the room lineHeight
+ * adds over the font's own height (RCTApplyBaselineOffset), and sets inline views a full
+ * room below the unlifted baseline (measured on iOS 26 at 16 and 22 pt), so formulas
+ * rise by `raise` to meet the text. Padding keeps a formula taller than the line inside
+ * the text, where a table cell would otherwise clip it.
+ */
+export function inlineMathLayout(
+  formulas: ReadonlyArray<{ readonly height: number; readonly depth: number }>,
+  fontSize: number,
+  lineHeight: number,
+) {
+  const descender = fontSize * TEXT_FACE_DESCENDER;
+  const room = Math.max(0, lineHeight - fontSize * (TEXT_FACE_ASCENDER + TEXT_FACE_DESCENDER));
+  // From the text baseline to the bottom of its line.
+  const below = descender + room / 2;
+  const size = fontSize * MATH_FONT_SCALE;
+  let paddingTop = 0;
+  let paddingBottom = 0;
+  for (const formula of formulas) {
+    paddingTop = Math.max(
+      paddingTop,
+      (formula.height - formula.depth) * size - (lineHeight - below),
+    );
+    paddingBottom = Math.max(paddingBottom, formula.depth * size - below);
+  }
+  return { raise: room * 1.5, paddingTop, paddingBottom };
+}
+
 function isBreakNode(node: MarkdownNode): boolean {
   return node.type === "soft_break" || node.type === "line_break";
 }

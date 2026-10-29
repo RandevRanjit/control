@@ -28,6 +28,16 @@ function text(markdown: string) {
     .join("");
 }
 
+describe("formula ranges cache", () => {
+  it("parses a source once and reuses its ranges", () => {
+    const source = "Set $HOME, then $x$ and \\(y\\).";
+    const first = markdownMathRanges(source);
+    expect(first.map((range) => range.tex)).toEqual(["x", "y"]);
+    expect(markdownMathRanges(source)).toBe(first);
+    expect(markdownMathRanges(`${source} `)).not.toBe(first);
+  });
+});
+
 describe("chat math parsing", () => {
   it("keeps GFM autolink destinations intact while restoring literal dollars", () => {
     const source = "Query www.example.com/?$select=id and $x$.";

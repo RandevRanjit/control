@@ -15,16 +15,25 @@ export function parseMarkdownWithMath(source: string) {
   return mathParser.parse(source);
 }
 
+type MathRange = {
+  readonly start: number;
+  readonly end: number;
+  readonly source: string;
+  readonly tex: string;
+  readonly display: boolean;
+  readonly inTable: boolean;
+};
+
+// The composer asks for one draft's ranges several times per keystroke (chips, cursor
+// mapping, the document); the last few sources parse once.
+const rangesBySource = new Map<string, ReadonlyArray<MathRange>>();
+const RANGES_CACHE_SIZE = 8;
+
 /** Closed, parser-owned formulas with authored source for editors. */
-export function markdownMathRanges(source: string, tree?: Root) {
-  const ranges: Array<{
-    start: number;
-    end: number;
-    source: string;
-    tex: string;
-    display: boolean;
-    inTable: boolean;
-  }> = [];
+export function markdownMathRanges(source: string, tree?: Root): ReadonlyArray<MathRange> {
+  const cached = tree ? undefined : rangesBySource.get(source);
+  if (cached) return cached;
+  const ranges: MathRange[] = [];
   if (!mayContainMath(source)) return ranges;
   const visit = (node: Root | Root["children"][number], inTable = false) => {
     const table = inTable || node.type === "tableCell";
@@ -47,6 +56,11 @@ export function markdownMathRanges(source: string, tree?: Root) {
     } else if ("children" in node) node.children.forEach((child) => visit(child, table));
   };
   visit(tree ?? parseMarkdownWithMath(source));
+  if (!tree) {
+    rangesBySource.set(source, ranges);
+    if (rangesBySource.size > RANGES_CACHE_SIZE)
+      rangesBySource.delete(rangesBySource.keys().next().value!);
+  }
   return ranges;
 }
 

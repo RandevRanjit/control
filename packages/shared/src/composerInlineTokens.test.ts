@@ -219,4 +219,11 @@ describe("collectComposerInlineTokens", () => {
       "$real-skill",
     ]);
   });
+
+  it("treats TeX as prose when the caller has math off", () => {
+    const source = "\\[\\text{use $browser and @README.md here}\\] then $real-skill ";
+    expect(
+      collectComposerInlineTokens(source, { math: false }).map((token) => token.source),
+    ).toEqual(["$browser", "@README.md", "$real-skill"]);
+  });
 });

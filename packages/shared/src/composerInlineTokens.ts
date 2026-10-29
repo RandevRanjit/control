@@ -18,6 +18,8 @@ export type ComposerInlineToken =
 
 export interface CollectComposerInlineTokensOptions {
   readonly preserveTrailingFrom?: ReadonlyArray<ComposerInlineToken>;
+  /** False when the client renders no math: TeX is prose, and no Markdown parse runs. */
+  readonly math?: boolean;
 }
 
 /**
@@ -152,7 +154,7 @@ export function collectComposerInlineTokens(
 
   // TeX can contain literal skill and file tokens, especially inside \text{}.
   // They remain formula source rather than becoming composer context chips.
-  const math = matches.length > 0 ? markdownMathRanges(text) : [];
+  const math = matches.length > 0 && options.math !== false ? markdownMathRanges(text) : [];
   return matches
     .filter(
       (match) => !math.some((formula) => match.start < formula.end && match.end > formula.start),

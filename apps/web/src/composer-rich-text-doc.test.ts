@@ -3,8 +3,9 @@ import StarterKit from "@tiptap/starter-kit";
 import { TaskList } from "@tiptap/extension-task-list";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { EditorState, TextSelection } from "@tiptap/pm/state";
-import { describe, expect, it } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 
+import { setComposerMathAware } from "./composer-editor-mentions";
 import { collapseExpandedComposerCursor } from "./composer-logic";
 
 import {
@@ -86,6 +87,9 @@ function roundTrip(value: string) {
 }
 
 describe("editable math source", () => {
+  beforeEach(() => setComposerMathAware(true));
+  afterEach(() => setComposerMathAware(false));
+
   it.each([
     "Area $x_i^2$ after",
     "before \\(\\frac{1}{2}\\) after",
@@ -172,10 +176,30 @@ function roundTripPlain(value: string) {
 
 describe("editable math source without styling", () => {
   it("keeps skill and file tokens inside a formula as text", () => {
-    const source = "\\[\n\\text{use $browser, @README.md and $deploy}\n\\]";
+    setComposerMathAware(true);
+    try {
+      const source = "\\[\n\\text{use $browser, @README.md and $deploy}\n\\]";
+      const map = roundTripPlain(source);
+      expect(map.value).toBe(source);
+      expect(map.runs.some((run) => run.kind === "token")).toBe(false);
+    } finally {
+      setComposerMathAware(false);
+    }
+  });
+});
+
+describe("composer with Render math off", () => {
+  it("reads TeX as ordinary Markdown, as it did before math rendering", () => {
+    const source = "\\[\n\\text{use $browser and $deploy now}\n\\]";
     const map = roundTripPlain(source);
     expect(map.value).toBe(source);
-    expect(map.runs.some((run) => run.kind === "token")).toBe(false);
+    expect(map.runs.filter((run) => run.kind === "token")).toHaveLength(2);
+    // A math fence stays a code block rather than editable formula text.
+    const fence = "```math\nx_i + y_i\n```";
+    const doc = schema.nodeFromJSON(
+      buildDocJson(fence, (name) => ({ label: name, description: null })),
+    );
+    expect(doc.firstChild?.type.name).toBe("codeBlock");
   });
 });
 

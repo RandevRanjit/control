@@ -48,7 +48,9 @@ import {
 import {
   collectComposerPromptInlineTokens,
   selectionTouchesMentionBoundary,
+  setComposerMathAware,
 } from "~/composer-editor-mentions";
+import { useClientSettings } from "~/hooks/useSettings";
 import {
   buildDocJson,
   ComposerBlockExtensions,
@@ -775,9 +777,15 @@ type TiptapEditor = NonNullable<ReturnType<typeof useEditor>>;
 export function ComposerPromptEditorTiptap(props: ComposerPromptEditorProps) {
   // Extensions are creation-time: flipping the setting remounts the editor.
   // Both halves initialize from the controlled Markdown value, so the draft
-  // survives the flip.
+  // survives the flip. Render math works the same way: set before the editor
+  // builds its document, so its chips and the cursor helpers agree.
+  const mathEnabled = useClientSettings((settings) => settings.mathRenderingEnabled);
+  setComposerMathAware(mathEnabled);
   return (
-    <ComposerPromptEditorTiptapInner key={props.richTextEnabled ? "rich" : "plain"} {...props} />
+    <ComposerPromptEditorTiptapInner
+      key={`${props.richTextEnabled ? "rich" : "plain"}:${mathEnabled ? "math" : "text"}`}
+      {...props}
+    />
   );
 }
 

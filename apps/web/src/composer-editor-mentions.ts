@@ -75,8 +75,21 @@ function forEachMentionMatch(
   });
 }
 
+// Mirrors Settings › Appearance › Render math for the composer's pure helpers, so chips,
+// cursor mapping and the editor document agree. Off, TeX is prose and is never parsed.
+// ComposerPromptEditorTiptap sets it, and remounts the editor when it flips.
+let composerMathAware = false;
+
+export function setComposerMathAware(value: boolean): void {
+  composerMathAware = value;
+}
+
+export function isComposerMathAware(): boolean {
+  return composerMathAware;
+}
+
 export function collectComposerPromptInlineTokens(text: string) {
-  const tokens = collectComposerInlineTokens(text);
+  const tokens = collectComposerInlineTokens(text, { math: composerMathAware });
   const citations = collectAssistantCitations(text);
   const references = collectComposerContextReferences(text);
   if (citations.length === 0 && references.length === 0) return tokens;

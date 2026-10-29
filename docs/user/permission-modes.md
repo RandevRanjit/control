@@ -24,4 +24,7 @@ Providers enforce permissions differently. Some read-only actions can proceed in
 **Auto** uses automatic review on Claude; providers without an equivalent
 fall back to asking.
 
+Claude can still ask in **Full access** when its settings disable bypass permissions or require
+approval for an action.
+
 See the [provider guides](./install.md#providers) for setup and provider-specific limits.

@@ -24,16 +24,22 @@ const adaptor = liteAdaptor();
 RegisterHTMLHandler(adaptor);
 // Roughly KaTeX's macro set on web. No `html` or `action` package, so a formula can
 // emit no links or styles; errors throw, so broken TeX stays readable as source.
-const document = mathjax.document("", {
-  InputJax: new TeX({
-    packages: ["base", "ams", "newcommand", "boldsymbol", "braket", "cancel", "color"],
-    formatError: (_jax: unknown, error: Error) => {
-      throw error;
-    },
-  }),
-  // Inline paths: react-native-svg draws each formula on its own, with no shared defs.
-  OutputJax: new SVG({ fontCache: "none" }),
-});
+const makeDocument = () =>
+  mathjax.document("", {
+    InputJax: new TeX({
+      packages: ["base", "ams", "newcommand", "boldsymbol", "braket", "cancel", "color"],
+      formatError: (_jax: unknown, error: Error) => {
+        throw error;
+      },
+    }),
+    // Inline paths: react-native-svg draws each formula on its own, with no shared defs.
+    OutputJax: new SVG({ fontCache: "none" }),
+  });
+let document = makeDocument();
+// MathJax keeps definitions for the document's life. A formula that makes one gets a
+// fresh document after it (about 1 ms), so it can't change the formulas that follow.
+const DEFINITION_PATTERN =
+  /\\(?:(?:re)?new(?:command|environment)|[egx]?def|let|DeclareMathOperator)(?![a-zA-Z])/;
 
 const VIEW_BOX_PATTERN = /viewBox="(-?[\d.]+) (-?[\d.]+) ([\d.]+) ([\d.]+)"/;
 // Threads remount messages while scrolling; cached output keeps that from typesetting
@@ -56,6 +62,8 @@ function typeset(tex: string, display: boolean): MarkdownMathSvg | null {
     return { xml, width, height, depth: height + top / 1000 };
   } catch {
     return null;
+  } finally {
+    if (DEFINITION_PATTERN.test(tex)) document = makeDocument();
   }
 }
 

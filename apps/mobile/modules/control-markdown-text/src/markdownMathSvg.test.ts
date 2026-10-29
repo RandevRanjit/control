@@ -20,6 +20,14 @@ describe("markdownMathSvg", () => {
   it("emits no links, whatever the TeX asks for", () => {
     expect(markdownMathSvg("\\href{https://example.com}{x}", false)).toBeNull();
   });
+
+  it("keeps a formula's definitions out of the formulas after it", () => {
+    const plain = markdownMathSvg("\\frac{p}{q}", false)!.width;
+    markdownMathSvg("\\newcommand{\\frac}[2]{redefined}\\frac{a}{b}", false);
+    markdownMathSvg("\\def\\shout{LOUD}\\shout", false);
+    expect(markdownMathSvg("\\frac{x}{y}", false)!.width).toBeCloseTo(plain, 1);
+    expect(markdownMathSvg("\\shout", false)).toBeNull();
+  });
 });
 
 describe("inlineMathLayout", () => {

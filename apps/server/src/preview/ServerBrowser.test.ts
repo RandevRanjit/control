@@ -63,12 +63,23 @@ function makeSession() {
   return {
     on: vi.fn(),
     detach: vi.fn(async () => {}),
-    send: vi.fn(async (method: string, _input?: unknown): Promise<Record<string, unknown>> => {
+    send: vi.fn(async (method: string, input?: unknown): Promise<Record<string, unknown>> => {
       if (method === "Page.getNavigationHistory") return { currentIndex: 0, entries: [{}] };
       if (method === "Page.getLayoutMetrics") return { cssVisualViewport: { pageX: 0, pageY: 0 } };
       if (method === "Page.captureScreenshot") {
         await stillGate?.promise;
         return { data: "ZnJhbWU=" };
+      }
+      if (method === "Page.getFrameTree") return { frameTree: { frame: { id: "main" } } };
+      // Snapshots read password fields from their own isolated world in each frame.
+      if (method === "Page.createIsolatedWorld") {
+        return {
+          executionContextId:
+            (input as { worldName?: string }).worldName === "control-preview" ? 1 : 7,
+        };
+      }
+      if (method === "Runtime.evaluate" && (input as { contextId?: number }).contextId === 1) {
+        return { result: { value: [] } };
       }
       return { result: { value: "evaluated" } };
     }),
@@ -93,6 +104,7 @@ function makeContext(onClose?: (context: BrowserContext) => void) {
     setDefaultNavigationTimeout: vi.fn(),
     context: () => context,
     mainFrame: () => page,
+    frames: () => [page],
     url: () => url,
     title: vi.fn(async () => "test page"),
     viewportSize: () => viewport,

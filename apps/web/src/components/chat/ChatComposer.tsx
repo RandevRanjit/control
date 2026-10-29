@@ -1513,6 +1513,7 @@ export interface ChatComposerHandle {
     selectedProviderModels: ReadonlyArray<ServerProvider["models"][number]>;
     interactionMode: ProviderInteractionMode;
     interactionModeEnabled: boolean;
+    shownPendingApprovalIds: ReadonlyArray<RuntimeRequestId>;
   };
   /** Validate the fully composed text immediately before a provider turn starts. */
   validateProviderInput: (providerInput: string) => boolean;
@@ -2853,7 +2854,10 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
   );
 
   const isComposerApprovalState = activePendingApproval !== null;
-  const composerSuggestionsVisible = composerMenuOpen && !isComposerApprovalState;
+  // A send declines the pending approvals to redirect the agent, so it steers the waiting turn
+  // instead of queueing behind it.
+  const followUpBehavior = pendingApprovals.length > 0 ? "steer" : settings.followUpBehavior;
+  const composerSuggestionsVisible = composerMenuOpen;
   const composerSuggestionListVisible = composerSuggestionsVisible && composerMenuItems.length > 0;
   const activePendingUserInput = pendingUserInputs[0] ?? null;
   const isChoiceOnlyPendingQuestion =
@@ -2862,8 +2866,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     isComposerApprovalState ||
     pendingUserInputs.length > 0 ||
     (!isComposerCollapsedMobile && showPlanFollowUpPrompt && activeProposedPlan !== null);
-  const showCollapsedMobilePromptRow =
-    isComposerCollapsedMobile && !isComposerApprovalState && pendingUserInputs.length === 0;
+  const showCollapsedMobilePromptRow = isComposerCollapsedMobile && pendingUserInputs.length === 0;
   const showComposerAttachAction =
     fileStagingLimit !== null &&
     (!activePendingProgress ||
@@ -4249,7 +4252,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
               resolveComposerDispatchMode({
                 running: phase === "running",
                 alternateModifier: false,
-                activeTurnDefault: settings.followUpBehavior,
+                activeTurnDefault: followUpBehavior,
               }),
             submissionIntent,
           );
@@ -4271,7 +4274,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
       isSendDisabled,
       noProviderAvailable,
       onSend,
-      settings.followUpBehavior,
+      followUpBehavior,
       phase,
       promptRef,
       shouldBlurMobileComposerOnSubmit,
@@ -4285,11 +4288,11 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
         resolveComposerDispatchMode({
           running: phase === "running",
           alternateModifier: event.metaKey || event.ctrlKey,
-          activeTurnDefault: settings.followUpBehavior,
+          activeTurnDefault: followUpBehavior,
         }),
       );
     },
-    [phase, settings.followUpBehavior, submitComposer],
+    [phase, followUpBehavior, submitComposer],
   );
   const submitCitationAndSend = useCallback(() => {
     submitComposer(
@@ -4297,10 +4300,10 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
       resolveComposerDispatchMode({
         running: phase === "running",
         alternateModifier: false,
-        activeTurnDefault: settings.followUpBehavior,
+        activeTurnDefault: followUpBehavior,
       }),
     );
-  }, [phase, settings.followUpBehavior, submitComposer]);
+  }, [phase, followUpBehavior, submitComposer]);
   const compactThreadContext = useCallback(() => {
     if (
       !readEnvironmentScope(environmentId, AuthOrchestrationOperateScope) ||
@@ -4384,7 +4387,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
       if (event.shiftKey || event.altKey || event.metaKey || event.ctrlKey || event.isComposing) {
         return false;
       }
-      if (isComposerApprovalState || pendingUserInputs.length > 0) return false;
+      if (pendingUserInputs.length > 0) return false;
       // A composer holding an image, file, picked element, preview
       // annotation, or review comment is not empty. Recalling text into it
       // would send the old prompt with the new context, which is never what
@@ -4424,7 +4427,6 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
       composerImagesRef,
       composerPreviewAnnotations.length,
       composerReviewComments.length,
-      isComposerApprovalState,
       pendingUserInputs.length,
       promptRef,
       replacePromptFromHistory,
@@ -4482,7 +4484,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
         resolveComposerDispatchMode({
           running: phase === "running",
           alternateModifier: submissionIntent === "alternate",
-          activeTurnDefault: settings.followUpBehavior,
+          activeTurnDefault: followUpBehavior,
         }),
         submissionIntent,
       );
@@ -5691,11 +5693,11 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
       if (isCommandPaletteOpen() || isRevertingCheckpoint) {
         return;
       }
-      if (pendingUserInputs.length > 0 && !isComposerApprovalState) {
+      if (pendingUserInputs.length > 0) {
         setIsStashMenuOpen((open) => !open);
         return;
       }
-      if (isComposerApprovalState || projectSelectionRequired || activePendingProgress !== null) {
+      if (projectSelectionRequired || activePendingProgress !== null) {
         return;
       }
       void stashCurrentPrompt();
@@ -5704,7 +5706,6 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     return () => window.removeEventListener("keydown", handler, true);
   }, [
     activePendingProgress,
-    isComposerApprovalState,
     isComposerModelPickerOpen,
     keybindings,
     pendingUserInputs.length,
@@ -5775,7 +5776,6 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
       !options?.skipImageInlineChip &&
       (options?.selection !== undefined ||
         isConnecting ||
-        isComposerApprovalState ||
         pendingUserInputs.length > 0 ||
         projectSelectionRequired ||
         stripInlineContextReferences(promptRef.current).trim().length > 0);
@@ -6130,7 +6130,6 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
       if (
         text.length === 0 ||
         isConnecting ||
-        isComposerApprovalState ||
         pendingUserInputs.length > 0 ||
         projectSelectionRequired ||
         (options?.citationCommentAnchor && !composerEditorRef.current)
@@ -6166,7 +6165,6 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     },
     [
       applyPromptReplacement,
-      isComposerApprovalState,
       isConnecting,
       pendingUserInputs.length,
       projectSelectionRequired,
@@ -6244,7 +6242,6 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
         const canAnswer =
           canOperateThread &&
           !isConnecting &&
-          !isComposerApprovalState &&
           !activePendingIsResponding &&
           activePendingProgress?.activeQuestion?.allowCustomAnswer !== false;
         const text = `${records
@@ -6287,7 +6284,6 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     composerDraftTarget,
     environmentId,
     expandMobileComposer,
-    isComposerApprovalState,
     isComposerCollapsedMobile,
     isConnecting,
     questionAttachmentTarget,
@@ -6556,6 +6552,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
         });
       },
       getSendContext: () => ({
+        shownPendingApprovalIds: pendingApprovals.map((approval) => approval.requestId),
         prompt: promptRef.current,
         images: composerImagesRef.current,
         files: composerFilesRef.current,
@@ -6597,6 +6594,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     [
       activeThread,
       addComposerAttachments,
+      pendingApprovals,
       foldPastedText,
       composerDraftTarget,
       composerCursor,
@@ -6899,15 +6897,13 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
             </ComposerBanner.Attachment>
           ) : null}
         </ComposerBanner.Column>
-        {!isComposerApprovalState ? (
-          <ComposerStashBadge
-            count={stashQueue.length}
-            menuOpen={isStashMenuOpen}
-            pulseKey={stashPulse.key}
-            pulsing={stashPulse.active}
-            onToggleMenu={toggleStashMenu}
-          />
-        ) : null}
+        <ComposerStashBadge
+          count={stashQueue.length}
+          menuOpen={isStashMenuOpen}
+          pulseKey={stashPulse.key}
+          pulsing={stashPulse.active}
+          onToggleMenu={toggleStashMenu}
+        />
       </ComposerBanner.Dock>
       <div className="relative">
         <ComposerSurface.Main
@@ -6997,12 +6993,11 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                 // Design v1's draft box (§4.6), padded 16 16 10. Its text follows
                 // Settings → Appearance (the owner's call over the design's Plex).
                 "t3-ed relative",
-                isComposerApprovalState && "pb-3 sm:pb-4",
                 isComposerCollapsedMobile && "hidden",
                 isComposerResting && "py-2 sm:py-2",
               )}
             >
-              {isStashMenuOpen && !composerMenuOpen && !isComposerApprovalState && (
+              {isStashMenuOpen && !composerMenuOpen && (
                 <ComposerCommandMenuLayer anchor={composerMenuAnchor}>
                   <ComposerStashMenu
                     entries={stashQueue}
@@ -7046,7 +7041,6 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
               )}
 
               {!isComposerCollapsedMobile &&
-                !isComposerApprovalState &&
                 pendingUserInputs.length === 0 &&
                 editingQueuedAttachments !== null &&
                 editingQueuedAttachments.length > 0 && (
@@ -7082,7 +7076,6 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                 )}
 
               {!isComposerCollapsedMobile &&
-                !isComposerApprovalState &&
                 (uncommittedSnapShotIds.length > 0 ||
                   composerVideos.length > 0 ||
                   expandedComposerImages.length > 0) && (
@@ -7330,83 +7323,77 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                   </div>
                 )}
 
-              {!isComposerCollapsedMobile &&
-                !isComposerApprovalState &&
-                composerOtherFiles.length > 0 && (
-                  <div className="mb-3 flex flex-col gap-1">
-                    {composerOtherFiles.map((file) => {
-                      const fileCanUpload =
-                        supportsAttachmentUploads &&
-                        maxFileAttachmentBytes !== null &&
-                        file.sizeBytes <= maxFileAttachmentBytes;
-                      const upload = fileCanUpload ? uploadsByImageId[file.id] : undefined;
-                      const needsReattach = composerFileNeedsReattach(file);
-                      const canReattachFile =
-                        fileStagingLimit !== null && file.sizeBytes <= fileStagingLimit;
-                      return (
-                        <div
-                          key={file.id}
-                          className="flex min-w-0 items-center gap-2 py-1 text-sm text-foreground"
+              {!isComposerCollapsedMobile && composerOtherFiles.length > 0 && (
+                <div className="mb-3 flex flex-col gap-1">
+                  {composerOtherFiles.map((file) => {
+                    const fileCanUpload =
+                      supportsAttachmentUploads &&
+                      maxFileAttachmentBytes !== null &&
+                      file.sizeBytes <= maxFileAttachmentBytes;
+                    const upload = fileCanUpload ? uploadsByImageId[file.id] : undefined;
+                    const needsReattach = composerFileNeedsReattach(file);
+                    const canReattachFile =
+                      fileStagingLimit !== null && file.sizeBytes <= fileStagingLimit;
+                    return (
+                      <div
+                        key={file.id}
+                        className="flex min-w-0 items-center gap-2 py-1 text-sm text-foreground"
+                      >
+                        <PierreEntryIcon pathValue={file.name} kind="file" theme={resolvedTheme} />
+                        <button
+                          type="button"
+                          disabled={needsReattach}
+                          className="min-w-0 flex-1 truncate text-left hover:underline focus-visible:outline-2"
+                          onClick={() => setPreviewFileId(file.id)}
                         >
-                          <PierreEntryIcon
-                            pathValue={file.name}
-                            kind="file"
-                            theme={resolvedTheme}
-                          />
-                          <button
-                            type="button"
-                            disabled={needsReattach}
-                            className="min-w-0 flex-1 truncate text-left hover:underline focus-visible:outline-2"
-                            onClick={() => setPreviewFileId(file.id)}
-                          >
-                            {file.name}
-                          </button>
-                          <span className="shrink-0 text-xs text-secondary-label">
-                            {needsReattach
-                              ? canReattachFile
-                                ? "Attach again"
-                                : "Remove to send"
-                              : upload?.status === "uploading"
-                                ? formatAttachmentUploadProgress(upload.progress)
-                                : formatAttachmentSize(file.sizeBytes)}
-                          </span>
-                          {!needsReattach && upload?.status === "failed" ? (
-                            <Tooltip>
-                              <TooltipTrigger
-                                render={
-                                  <Button
-                                    variant="ghost"
-                                    size="icon-xs"
-                                    onClick={() =>
-                                      retryAttachmentUpload({
-                                        environmentId,
-                                        image: file,
-                                        draftTarget: attachmentDraftTarget,
-                                      })
-                                    }
-                                    disabled={!canOperateThread}
-                                    aria-label={`Retry upload for ${file.name}`}
-                                  />
-                                }
-                              >
-                                <RefreshIcon />
-                              </TooltipTrigger>
-                              <TooltipPopup side="top">{upload.reason}</TooltipPopup>
-                            </Tooltip>
-                          ) : null}
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            onClick={() => removeComposerFileFromDraft(file.id)}
-                            aria-label={`Remove ${file.name}`}
-                          >
-                            <XIcon />
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                          {file.name}
+                        </button>
+                        <span className="shrink-0 text-xs text-secondary-label">
+                          {needsReattach
+                            ? canReattachFile
+                              ? "Attach again"
+                              : "Remove to send"
+                            : upload?.status === "uploading"
+                              ? formatAttachmentUploadProgress(upload.progress)
+                              : formatAttachmentSize(file.sizeBytes)}
+                        </span>
+                        {!needsReattach && upload?.status === "failed" ? (
+                          <Tooltip>
+                            <TooltipTrigger
+                              render={
+                                <Button
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  onClick={() =>
+                                    retryAttachmentUpload({
+                                      environmentId,
+                                      image: file,
+                                      draftTarget: attachmentDraftTarget,
+                                    })
+                                  }
+                                  disabled={!canOperateThread}
+                                  aria-label={`Retry upload for ${file.name}`}
+                                />
+                              }
+                            >
+                              <RefreshIcon />
+                            </TooltipTrigger>
+                            <TooltipPopup side="top">{upload.reason}</TooltipPopup>
+                          </Tooltip>
+                        ) : null}
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={() => removeComposerFileFromDraft(file.id)}
+                          aria-label={`Remove ${file.name}`}
+                        >
+                          <XIcon />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               <div
                 className={cn("relative", isComposerResting && "flex min-w-0 items-center gap-1")}
@@ -7467,13 +7454,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                     }
                     editorRef={composerEditorRef}
                     richTextEnabled={settings.composerRichTextEnabled}
-                    value={
-                      isComposerApprovalState
-                        ? ""
-                        : activePendingProgress
-                          ? activePendingProgress.customAnswer
-                          : prompt
-                    }
+                    value={activePendingProgress ? activePendingProgress.customAnswer : prompt}
                     cursor={composerCursor}
                     contextRecords={composerContextRecords}
                     buildContextClipboardFragment={buildContextClipboardFragment}
@@ -7485,7 +7466,6 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                       showMobilePendingAnswerActions && "max-sm:pb-12",
                       isComposerResting &&
                         "my-0 max-h-8 min-h-8 overflow-hidden py-0 whitespace-pre! leading-8",
-                      isComposerApprovalState && "min-h-10",
                     )}
                     placeholderClassName={cn(
                       "leading-4.5",
@@ -7502,7 +7482,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                     onPaste={onComposerPaste}
                     placeholder={
                       isComposerApprovalState
-                        ? "Resolve this approval request to continue"
+                        ? "Send a message to decline and redirect the agent"
                         : activePendingProgress
                           ? isChoiceOnlyPendingQuestion
                             ? "Choose an option above"
@@ -7517,7 +7497,6 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                     }
                     disabled={
                       isConnecting ||
-                      isComposerApprovalState ||
                       projectSelectionRequired ||
                       isChoiceOnlyPendingQuestion ||
                       activePendingIsResponding
@@ -7563,7 +7542,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
             />
 
             {/* Bottom toolbar */}
-            {isComposerCollapsedMobile || isComposerApprovalState ? null : (
+            {isComposerCollapsedMobile ? null : (
               <div
                 data-chat-composer-footer="true"
                 data-chat-composer-footer-compact={isComposerFooterCompact ? "true" : "false"}
@@ -7648,7 +7627,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                     pendingAction={pendingPrimaryAction}
                     isRunning={phase === "running"}
                     canInterrupt={canInterrupt}
-                    followUpBehavior={settings.followUpBehavior}
+                    followUpBehavior={followUpBehavior}
                     alternateShortcutLabel={shortcutLabelForCommand(
                       keybindings,
                       "composer.sendAlternate",

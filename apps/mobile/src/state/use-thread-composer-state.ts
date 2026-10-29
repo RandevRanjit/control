@@ -521,7 +521,10 @@ export function useThreadComposerState() {
   }, [editQueuedRun, selectedEnvironmentRuntime?.serverConfig, selectedThreadShell]);
 
   const onSendMessage = useCallback(
-    async (followUpOverride?: ActiveTurnComposerAction) => {
+    async (
+      followUpOverride?: ActiveTurnComposerAction,
+      beforeDispatch?: () => Promise<boolean>,
+    ) => {
       if (
         selectedThreadShell &&
         selectedEnvironmentRuntime?.connectionState === "connected" &&
@@ -589,15 +592,35 @@ export function useThreadComposerState() {
       const provider = serverConfig?.providers.find(
         (entry) => entry.instanceId === modelSelection.instanceId,
       );
+      if (beforeDispatch !== undefined) {
+        if (!(await beforeDispatch())) return null;
+        // A context paste still landing, or any draft or settings change while approvals were
+        // declined, means this snapshot is no longer what the user sent.
+        if (appAtomRegistry.get(composerContextImportsAtom)[threadKey]) return null;
+        const current = getComposerDraftSnapshot(threadKey);
+        if (
+          current.text !== draft.text ||
+          JSON.stringify(current.context) !== JSON.stringify(draft.context) ||
+          JSON.stringify(current.modelSelection) !== JSON.stringify(draft.modelSelection) ||
+          current.runtimeMode !== draft.runtimeMode ||
+          current.interactionMode !== draft.interactionMode ||
+          current.attachments.length !== attachments.length ||
+          current.attachments.some((attachment, index) => attachment.id !== attachments[index]?.id)
+        )
+          return null;
+      }
+
       // Resolved here rather than at drain time: the outbox can deliver minutes
       // later, and the choice belongs to the moment the user pressed send.
       // Steering travels as "auto" so a turn that ends in the meantime degrades
       // to a queued run on the server instead of failing the delivery and
       // bouncing the message back into the draft.
+      // A redirect declined approvals to steer the waiting turn, not to queue behind it.
+      const activeTurnDefault = beforeDispatch !== undefined ? "steer" : followUpBehavior;
       const followUpAction = resolveComposerDispatchMode({
         running: activeThreadBusy && canSteerActiveTurn,
-        alternateModifier: followUpOverride !== undefined && followUpOverride !== followUpBehavior,
-        activeTurnDefault: followUpBehavior,
+        alternateModifier: followUpOverride !== undefined && followUpOverride !== activeTurnDefault,
+        activeTurnDefault,
       });
       const followUpDispatchMode =
         followUpAction === "auto" ? null : followUpAction === "queue" ? "queue" : "auto";

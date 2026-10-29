@@ -38,6 +38,12 @@ receives them on the environment's machine. Provider and model limits still
 apply, including images already in the conversation. A video attachment gives
 the agent a file path; it does not enable native video input.
 
+Claude reads an attached PDF's pages directly, not just its file path. A thread
+can hold about 100 PDF pages and 28 MB of PDFs and images at once; compacting the
+thread frees that room. A PDF that would go past it, or whose pages CONTROL
+can't count safely (encrypted or compressed page lists, for example), reaches
+Claude as a file path, which Claude can still open itself.
+
 Uploads begin when you add an attachment. All uploads must finish before the
 message can send. Retry or remove a failed upload. On web and desktop, reloading
 before an upload finishes requires you to attach that file again.

@@ -14,6 +14,7 @@ import type {
 import type { AskUserQuestionInput } from "@anthropic-ai/claude-agent-sdk/sdk-tools";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import {
+  type ChatAttachment,
   ChatAttachmentId,
   ChatFileAttachment,
   ChatImageAttachment,
@@ -26,7 +27,7 @@ import {
   type ModelSelection,
   NodeId,
   type OrchestrationV2AppThread,
-  type OrchestrationV2ProviderThread,
+  OrchestrationV2ProviderThread,
   ProjectId,
   ProviderInstanceId,
   type ProviderApprovalDecision,
@@ -1792,7 +1793,7 @@ describe("ClaudeAdapterV2 resume compaction", () => {
 });
 
 describe("ClaudeAdapterV2 attachments", () => {
-  it.effect("forwards images and references generic files on sends and steering", () =>
+  it.effect("forwards images and native PDFs with their paths on sends and steering", () =>
     Effect.scoped(
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
@@ -1802,6 +1803,7 @@ describe("ClaudeAdapterV2 attachments", () => {
           prefix: "control-claude-v2-attachments-",
         });
         const offeredMessages: Array<SDKUserMessage> = [];
+        let failOffer = false;
         const adapter = ClaudeAdapterV2.makeClaudeAdapterV2({
           instanceId: ClaudeAdapterV2.CLAUDE_DEFAULT_INSTANCE_ID,
           settings: DEFAULT_CLAUDE_SETTINGS,
@@ -1816,9 +1818,21 @@ describe("ClaudeAdapterV2 attachments", () => {
             open: () =>
               Effect.succeed({
                 messages: Stream.never,
-                offer: (message) =>
-                  Effect.sync(() => {
-                    offeredMessages.push(message);
+                offer: (message, onQueued) =>
+                  Effect.suspend(() => {
+                    if (failOffer) {
+                      failOffer = false;
+                      return Effect.fail(
+                        new ClaudeAdapterV2.ClaudeAgentSdkQueryRunnerError({
+                          method: "offer",
+                          cause: "rejected offer",
+                        }),
+                      );
+                    }
+                    return Effect.sync(() => {
+                      offeredMessages.push(message);
+                      onQueued?.();
+                    });
                   }),
                 setModel: () => Effect.void,
                 setPermissionMode: () => Effect.void,
@@ -1866,9 +1880,12 @@ describe("ClaudeAdapterV2 attachments", () => {
           path.join(attachmentsDir, attachmentRelativePath(attachment)!),
           Uint8Array.from([1, 2, 3, 4]),
         );
+        const pdfBytes = Buffer.from(
+          "%PDF-1.7\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Count 1 /Kids [3 0 R] >> endobj\n3 0 obj << /Type /Page /Parent 2 0 R >> endobj\n%%EOF",
+        );
         yield* fileSystem.writeFile(
           path.join(attachmentsDir, attachmentRelativePath(document)!),
-          Uint8Array.from([5, 6, 7, 8]),
+          pdfBytes,
         );
         const attemptId = RunAttemptId.make("attempt-claude-attachments");
         const now = yield* DateTime.now;
@@ -1896,9 +1913,18 @@ describe("ClaudeAdapterV2 attachments", () => {
           attachmentsDir,
           attachmentRelativePath(attachment)!,
         );
+        const expectedDocumentBlock = {
+          type: "document",
+          source: {
+            type: "base64",
+            media_type: "application/pdf",
+            data: pdfBytes.toString("base64"),
+          },
+        } as const;
         const expectedDocumentPath = path.join(attachmentsDir, attachmentRelativePath(document)!);
         assert.deepEqual(offeredMessages[0]?.message.content, [
           expectedImageBlock,
+          expectedDocumentBlock,
           {
             type: "text",
             text: `Ultrathink:\nWhat's in this image?\n\n[Attached image "diagram.png" is saved at: ${expectedAttachmentPath}]\n\n[Attached file "requirements.pdf" is saved at: ${expectedDocumentPath}]`,
@@ -1926,11 +1952,153 @@ describe("ClaudeAdapterV2 attachments", () => {
         assert.equal(offeredMessages[1]?.priority, "now");
         assert.deepEqual(offeredMessages[1]?.message.content, [
           expectedImageBlock,
+          expectedDocumentBlock,
           {
             type: "text",
             text: `Ultrathink:\nFocus on the diagram labels.\n\n[Attached image "diagram.png" is saved at: ${expectedAttachmentPath}]\n\n[Attached file "requirements.pdf" is saved at: ${expectedDocumentPath}]`,
           },
         ]);
+
+        // PDFs whose page count is not certain, or that would push Claude past
+        // its page or request limits, stay path-only.
+        const documentPath = expectedDocumentPath;
+        for (const scenario of [
+          "pages",
+          "bytes",
+          "invalid",
+          "invalid-page-tree",
+          "object-stream",
+          "encrypted",
+          "cyclic-tree",
+          "unterminated-string",
+          "missing-eof",
+          "escaped-name",
+          "incremental",
+          "compressed-bomb",
+          "indirect-count",
+          "indirect-type",
+          "indirect-kids",
+          "indirect-101-pages",
+          "aggregate-pages",
+          "retained-pages",
+          "delivery-failure",
+          "pasted-text",
+          "text-only",
+        ]) {
+          let attachments: ReadonlyArray<ChatAttachment> = [document];
+          if (
+            ["pages", "aggregate-pages", "retained-pages", "delivery-failure"].includes(scenario)
+          ) {
+            const pages = scenario === "pages" ? 101 : scenario === "delivery-failure" ? 30 : 60;
+            const large = Buffer.from(
+              `%PDF-1.7\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Count ${pages} >> endobj\n${Array.from({ length: pages }, (_, i) => `${i + 3} 0 obj << /Type /Page /Parent 2 0 R >> endobj`).join("\n")}\n%%EOF`,
+            );
+            yield* fileSystem.writeFile(documentPath, large);
+            if (scenario === "aggregate-pages") {
+              const second = {
+                ...document,
+                id: ChatAttachmentId.make("second-pdf"),
+                name: "second.pdf",
+              };
+              yield* fileSystem.copyFile(
+                documentPath,
+                path.join(attachmentsDir, attachmentRelativePath(second)!),
+              );
+              attachments = [document, second];
+            }
+          } else if (scenario.startsWith("indirect-")) {
+            const raw =
+              scenario === "indirect-count" || scenario === "indirect-101-pages"
+                ? `%PDF-1.7\n1 0 obj ${scenario === "indirect-count" ? 1 : 101} endobj\n2 0 obj << /Type /Catalog /Pages 3 0 R >> endobj\n3 0 obj << /Type /Pages /Count 1 0 R /Kids [${Array.from({ length: scenario === "indirect-count" ? 1 : 101 }, (_, i) => `${i + 4} 0 R`).join(" ")}] >> endobj\n4 0 obj << /Type /Page /Parent 3 0 R >> endobj\n${scenario === "indirect-count" ? "" : Array.from({ length: 100 }, (_, i) => `${i + 5} 0 obj << /Type 105 0 R /Parent 3 0 R >> endobj`).join("\n")}\n105 0 obj /Page endobj\n%%EOF`
+                : scenario === "indirect-type"
+                  ? pdfBytes
+                      .toString()
+                      .replace(
+                        "%%EOF",
+                        "4 0 obj << /Type 5 0 R >> endobj\n5 0 obj /Annot endobj\n%%EOF",
+                      )
+                  : pdfBytes
+                      .toString()
+                      .replace("/Kids [3 0 R]", "/Kids 4 0 R")
+                      .replace("%%EOF", "4 0 obj [3 0 R] endobj\n%%EOF");
+            yield* fileSystem.writeFileString(documentPath, raw);
+          } else if (scenario === "bytes") {
+            yield* fileSystem.truncate(documentPath, 20 * 1024 * 1024 + 1);
+          } else if (scenario === "invalid") {
+            yield* fileSystem.writeFileString(documentPath, "This is not a PDF");
+          } else if (scenario === "invalid-page-tree") {
+            yield* fileSystem.writeFileString(
+              documentPath,
+              "%PDF-1.7\n1 0 obj\n<< /Type /Catalog /Pages 42 >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF",
+            );
+          } else if (
+            ["object-stream", "encrypted", "cyclic-tree", "compressed-bomb"].includes(scenario)
+          ) {
+            const suffix =
+              scenario === "encrypted"
+                ? "/Encrypt 9 0 R"
+                : scenario === "cyclic-tree"
+                  ? "/Count 0 /Kids [2 0 R]"
+                  : "/Type /ObjStm /Filter /FlateDecode /Length 1000000000";
+            yield* fileSystem.writeFile(
+              documentPath,
+              Buffer.concat([
+                pdfBytes.subarray(0, pdfBytes.length - 5),
+                Buffer.from(`\n4 0 obj << ${suffix} >> stream\nx\nendstream endobj\n%%EOF`),
+              ]),
+            );
+          } else if (
+            ["unterminated-string", "missing-eof", "escaped-name", "incremental"].includes(scenario)
+          ) {
+            const raw = pdfBytes.toString();
+            yield* fileSystem.writeFileString(
+              documentPath,
+              scenario === "missing-eof"
+                ? raw.slice(0, -5)
+                : scenario === "escaped-name"
+                  ? raw.replace("/Type /Page ", "/Type /Pa#67e ")
+                  : raw.replace(
+                      "%%EOF",
+                      scenario === "incremental" ? "/Prev 42\n%%EOF" : "(unfinished\n%%EOF",
+                    ),
+            );
+          } else if (scenario === "pasted-text") {
+            yield* fileSystem.writeFile(documentPath, pdfBytes);
+            attachments = [{ ...document, source: { _tag: "pasted-text" } }];
+          } else {
+            attachments = [];
+            yield* fileSystem.remove(documentPath);
+          }
+          const steering = {
+            threadId,
+            runId: RunId.make("run-claude-attachments"),
+            providerThread,
+            providerTurnId,
+            message: {
+              createdBy: "user" as const,
+              creationSource: "web" as const,
+              messageId: MessageId.make(`message-${scenario}`),
+              text: "Continue.",
+              attachments,
+            },
+          };
+          if (scenario === "delivery-failure") {
+            failOffer = true;
+            assert.isTrue(Exit.isFailure(yield* runtime.steerTurn(steering).pipe(Effect.exit)));
+          }
+          yield* runtime.steerTurn(steering);
+
+          const sent = offeredMessages.at(-1)!.message.content;
+          const documents =
+            typeof sent === "string" ? [] : sent.filter((block) => block.type === "document");
+          assert.lengthOf(
+            documents,
+            ["aggregate-pages", "delivery-failure"].includes(scenario) ? 1 : 0,
+            scenario,
+          );
+          if (scenario === "text-only") assert.equal(sent, "Ultrathink:\nContinue.");
+          else assert.include(JSON.stringify(sent), documentPath);
+        }
       }).pipe(Effect.provide(Layer.merge(IdAllocator.layer, NodeServices.layer))),
     ),
   );
@@ -2298,6 +2466,9 @@ describe("ClaudeAdapterV2 native session identity", () => {
 });
 
 const encodeJsonString = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const providerThreadJson = Schema.fromJsonString(Schema.toCodecJson(OrchestrationV2ProviderThread));
+const encodeProviderThreadJson = Schema.encodeEffect(providerThreadJson);
+const decodeProviderThreadJson = Schema.decodeUnknownEffect(providerThreadJson);
 
 describe("ClaudeAdapterV2 background wake turns", () => {
   const WAKE_NATIVE_SESSION = "native-thread-claude-wake";
@@ -2492,6 +2663,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
       toolUseId: string,
     ) => Effect.Effect<boolean, ClaudeAdapterV2.ClaudeAgentSdkQueryRunnerError>;
     readonly stopTask?: (taskId: string) => Effect.Effect<void>;
+    readonly forkSession?: ClaudeAdapterV2.ClaudeAgentSdkQueryRunnerShape["forkSession"];
     readonly environment?: NodeJS.ProcessEnv;
     readonly settings?: ClaudeSettings;
     readonly setPermissionMode?: ClaudeAdapterV2.ClaudeAgentSdkQuerySession["setPermissionMode"];
@@ -2615,7 +2787,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
                 close: options?.close?.(sdkMessages) ?? Effect.void,
               };
             }),
-          forkSession: () => Effect.die("unused forkSession"),
+          forkSession: options?.forkSession ?? (() => Effect.die("unused forkSession")),
           subagentLaunchToolUseId: () => Effect.succeed(null),
           assertComplete: Effect.void,
         },
@@ -2667,6 +2839,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
         runtime,
         providerThread,
         threadId,
+        attachmentsDir,
         sdkMessages,
         processQueues,
         offerAndWait,
@@ -2691,6 +2864,359 @@ describe("ClaudeAdapterV2 background wake turns", () => {
       };
     });
   const makeWakeHarness = makeWakeHarnessWithOptions();
+
+  const pdfWithPages = (pages: number, sizeBytes: number) => {
+    const head = Buffer.from(
+      `%PDF-1.7\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Count ${pages} >> endobj\n${Array.from({ length: pages }, (_, i) => `${i + 3} 0 obj << /Type /Page /Parent 2 0 R >> endobj`).join("\n")}\n`,
+    );
+    return Buffer.concat([
+      head,
+      Buffer.alloc(sizeBytes - head.length - 5, 32),
+      Buffer.from("%%EOF"),
+    ]);
+  };
+
+  it.effect.each(["release-after", "cancel-after", "release-before", "resume-pending"] as const)(
+    "keeps attachment reservations across compaction: %s boundary",
+    (outcome) =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const idAllocator = yield* IdAllocator.IdAllocatorV2;
+        const backgrounding = yield* Deferred.make<void>();
+        const release = yield* Deferred.make<void>();
+        const harness = yield* makeWakeHarnessWithOptions({
+          backgroundTasks: () =>
+            Deferred.succeed(backgrounding, undefined).pipe(
+              Effect.andThen(Deferred.await(release)),
+              Effect.as(true),
+            ),
+        });
+        const document = ChatFileAttachment.make({
+          type: "file",
+          id: ChatAttachmentId.make("compacting-document"),
+          name: "compacting.pdf",
+          mimeType: "application/pdf",
+          sizeBytes: 19 * 1024 * 1024,
+        });
+        yield* fileSystem.writeFile(
+          path.join(harness.attachmentsDir, attachmentRelativePath(document)!),
+          pdfWithPages(60, document.sizeBytes),
+        );
+        const input = makeClaudeTestTurnInput({
+          threadId: harness.threadId,
+          providerThread: harness.providerThread,
+          now: yield* DateTime.now,
+          attemptId: RunAttemptId.make("compacting-reservation"),
+          text: "Audit with a subagent.",
+          attachments: [],
+        });
+        yield* harness.runtime.startTurn(input);
+        yield* harness.offerAndWait(
+          claudeSdkFrame({
+            type: "system",
+            subtype: "task_started",
+            task_id: "compacting-task",
+            tool_use_id: "compacting-tool",
+            description: "Audit",
+            subagent_type: "general-purpose",
+            is_backgrounded: false,
+            task_type: "local_agent",
+            prompt: "Audit.",
+            uuid: "00000000-0000-4000-8000-000000000811",
+            session_id: WAKE_NATIVE_SESSION,
+          }),
+        );
+        const steer = harness.runtime.steerTurn({
+          threadId: harness.threadId,
+          runId: input.runId,
+          providerThread: harness.providerThread,
+          providerTurnId: idAllocator.derive.providerTurn({
+            driver: ClaudeAdapterV2.CLAUDE_PROVIDER,
+            nativeTurnId: `turn:${input.attemptId}`,
+          }),
+          message: {
+            createdBy: "user",
+            creationSource: "web",
+            messageId: MessageId.make("compacting-steer"),
+            text: "Read this PDF.",
+            attachments: [document],
+          },
+        });
+        const pending = yield* Effect.forkScoped(steer);
+        yield* Deferred.await(backgrounding);
+        assert.lengthOf(harness.offeredMessages, 1);
+        yield* harness.offerAndWait(
+          claudeSdkFrame({
+            type: "system",
+            subtype: "status",
+            status: "compacting",
+            uuid: "00000000-0000-4000-8000-000000000812",
+            session_id: WAKE_NATIVE_SESSION,
+          }),
+        );
+        if (outcome === "release-before") {
+          yield* Deferred.succeed(release, undefined);
+          yield* Fiber.join(pending);
+        }
+        yield* harness.offerAndWait(
+          claudeSdkFrame({
+            type: "system",
+            subtype: "compact_boundary",
+            compact_metadata: { trigger: "auto", pre_tokens: 1500, post_tokens: 400 },
+            uuid: "00000000-0000-4000-8000-000000000813",
+            session_id: WAKE_NATIVE_SESSION,
+          }),
+        );
+        if (outcome === "cancel-after") {
+          yield* Fiber.interrupt(pending);
+          assert.isTrue(Exit.hasInterrupts(yield* Fiber.await(pending)));
+        } else if (outcome === "release-after") {
+          yield* Deferred.succeed(release, undefined);
+          yield* Fiber.join(pending);
+        }
+        // Flush the budget update through the event stream before trying again.
+        yield* harness.offerAndWait(
+          makeResultFrame({ uuid: "00000000-0000-4000-8000-000000000814", result: "Read." }),
+        );
+        yield* Queue.take(harness.terminalReceipts);
+        const updates = harness.events.flatMap((event) =>
+          event.type === "provider_thread.updated" ? [event.providerThread] : [],
+        );
+        const persisted = yield* decodeProviderThreadJson(
+          yield* encodeProviderThreadJson(updates.at(-1)!),
+        );
+        const usage = persisted.nativeMetadata?.claudeAttachmentBudget;
+        const undelivered = outcome === "cancel-after" || outcome === "resume-pending";
+        assert.equal(usage?.pagesUsed, undelivered ? 0 : 60);
+        if (undelivered) assert.equal(usage?.bytesUsed, 0);
+        else assert.isAbove(usage?.bytesUsed ?? 0, 25 * 1024 * 1024);
+        const next = outcome === "resume-pending" ? yield* makeWakeHarness : harness;
+        const providerThread =
+          outcome === "resume-pending"
+            ? yield* next.runtime.resumeThread({ providerThread: persisted })
+            : persisted;
+        if (outcome === "resume-pending") {
+          assert.lengthOf(harness.offeredMessages, 1);
+          yield* fileSystem.copyFile(
+            path.join(harness.attachmentsDir, attachmentRelativePath(document)!),
+            path.join(next.attachmentsDir, attachmentRelativePath(document)!),
+          );
+        }
+        yield* next.runtime.startTurn(
+          makeClaudeTestTurnInput({
+            threadId: next.threadId,
+            providerThread,
+            now: yield* DateTime.now,
+            attemptId: RunAttemptId.make("after-compacting-reservation"),
+            text: "Read this PDF again.",
+            attachments: [document],
+            providerTurnOrdinal: 2,
+            nativeThreadHasTurns: true,
+          }),
+        );
+        if (outcome === "resume-pending") {
+          assert.equal(next.getOpenedOptions()?.resume, WAKE_NATIVE_SESSION);
+        }
+        const delivered = next.offeredMessages.slice(outcome === "resume-pending" ? 0 : 1);
+        const documents = delivered.flatMap((message) =>
+          Array.isArray(message.message.content)
+            ? message.message.content.filter((block) => block.type === "document")
+            : [],
+        );
+        assert.lengthOf(documents, 1);
+        assert.isBelow(
+          Buffer.byteLength(encodeJsonString(delivered.map((message) => message.message.content))),
+          32_000_000,
+        );
+      }).pipe(Effect.scoped, Effect.provide(Layer.merge(IdAllocator.layer, NodeServices.layer))),
+  );
+
+  it.effect.each([
+    "resume",
+    "legacy",
+    "compacted",
+    "preserved-segment",
+    "preserved-messages",
+    "failed",
+    "stopped",
+    "fork",
+  ] as const)("restores retained attachment counters after %s", (outcome) =>
+    Effect.gen(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const document = ChatFileAttachment.make({
+        type: "file",
+        id: ChatAttachmentId.make("budget-document"),
+        name: "budget.pdf",
+        mimeType: "application/pdf",
+        sizeBytes: 19 * 1024 * 1024,
+      });
+      const image = ChatImageAttachment.make({
+        type: "image",
+        id: ChatAttachmentId.make("budget-image"),
+        name: "budget.png",
+        mimeType: "image/png",
+        sizeBytes: 4 * 1024 * 1024,
+      });
+      const persisted = yield* Effect.scoped(
+        Effect.gen(function* () {
+          const harness = yield* makeWakeHarness;
+          yield* fileSystem.writeFile(
+            path.join(harness.attachmentsDir, attachmentRelativePath(document)!),
+            pdfWithPages(100, document.sizeBytes),
+          );
+          yield* harness.runtime.startTurn(
+            makeClaudeTestTurnInput({
+              threadId: harness.threadId,
+              providerThread: harness.providerThread,
+              now: yield* DateTime.now,
+              attemptId: RunAttemptId.make("spend-attachment-budget"),
+              text: "Read this PDF.",
+              attachments: [document],
+            }),
+          );
+          const first = harness.offeredMessages[0]?.message.content;
+          assert.isArray(first);
+          if (Array.isArray(first)) assert.equal(first[0]?.type, "document");
+          if (
+            ["compacted", "preserved-segment", "preserved-messages", "failed", "stopped"].includes(
+              outcome,
+            )
+          ) {
+            yield* harness.offerAndWait(
+              claudeSdkFrame({
+                type: "system",
+                subtype: "status",
+                status: "compacting",
+                uuid: "00000000-0000-4000-8000-000000000801",
+                session_id: WAKE_NATIVE_SESSION,
+              }),
+            );
+            yield* harness.offerAndWait(
+              claudeSdkFrame(
+                outcome === "compacted" ||
+                  outcome === "preserved-segment" ||
+                  outcome === "preserved-messages"
+                  ? {
+                      type: "system",
+                      subtype: "compact_boundary",
+                      compact_metadata: {
+                        trigger: "auto",
+                        pre_tokens: 1500,
+                        post_tokens: 400,
+                        ...(outcome === "preserved-segment"
+                          ? {
+                              preserved_segment: {
+                                head_uuid: harness.promptUuid(0),
+                                tail_uuid: harness.promptUuid(0),
+                                anchor_uuid: "00000000-0000-4000-8000-000000000802",
+                              },
+                            }
+                          : outcome === "preserved-messages"
+                            ? {
+                                preserved_messages: {
+                                  anchor_uuid: "00000000-0000-4000-8000-000000000802",
+                                  uuids: [harness.promptUuid(0)],
+                                },
+                              }
+                            : {}),
+                      },
+                      uuid: "00000000-0000-4000-8000-000000000802",
+                      session_id: WAKE_NATIVE_SESSION,
+                    }
+                  : {
+                      type: "system",
+                      subtype: "status",
+                      status: null,
+                      ...(outcome === "failed"
+                        ? { compact_result: "failed", compact_error: "Could not compact." }
+                        : {}),
+                      uuid: "00000000-0000-4000-8000-000000000802",
+                      session_id: WAKE_NATIVE_SESSION,
+                    },
+              ),
+            );
+          }
+          yield* harness.offerAndWait(
+            makeResultFrame({ uuid: "00000000-0000-4000-8000-000000000803", result: "Read." }),
+          );
+          yield* Queue.take(harness.terminalReceipts);
+          const event = harness.events.findLast(
+            (entry) => entry.type === "provider_thread.updated",
+          );
+          if (event?.type !== "provider_thread.updated")
+            return yield* Effect.die("Missing persisted thread");
+          const budget = event.providerThread.nativeMetadata?.claudeAttachmentBudget;
+          if (outcome === "compacted") assert.deepEqual(budget, { bytesUsed: 0, pagesUsed: 0 });
+          else {
+            assert.equal(budget?.pagesUsed, 100);
+            assert.isAbove(budget?.bytesUsed ?? 0, 25 * 1024 * 1024);
+          }
+          // Exercise the same schema boundary as the persisted provider thread.
+          return yield* decodeProviderThreadJson(
+            yield* encodeProviderThreadJson({
+              ...event.providerThread,
+              ...(outcome === "legacy" ? { nativeMetadata: null } : {}),
+            }),
+          );
+        }),
+      );
+      const inherited =
+        outcome === "fork"
+          ? yield* Effect.scoped(
+              Effect.gen(function* () {
+                const harness = yield* makeWakeHarnessWithOptions({
+                  forkSession: () => Effect.succeed({ sessionId: "forked-native-session" }),
+                });
+                const forked = yield* harness.runtime.forkThread({
+                  sourceProviderThread: persisted,
+                  targetThreadId: harness.threadId,
+                });
+                return yield* decodeProviderThreadJson(yield* encodeProviderThreadJson(forked));
+              }),
+            )
+          : persisted;
+      const resumed = yield* makeWakeHarness;
+      const providerThread = yield* resumed.runtime.resumeThread({ providerThread: inherited });
+      yield* fileSystem.writeFileString(
+        path.join(resumed.attachmentsDir, attachmentRelativePath(document)!),
+        "%PDF-1.7\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Count 1 >> endobj\n3 0 obj << /Type /Page /Parent 2 0 R >> endobj\n%%EOF",
+      );
+      yield* fileSystem.writeFile(
+        path.join(resumed.attachmentsDir, attachmentRelativePath(image)!),
+        Buffer.alloc(image.sizeBytes, 1),
+      );
+      yield* resumed.runtime.startTurn(
+        makeClaudeTestTurnInput({
+          threadId: resumed.threadId,
+          providerThread,
+          now: yield* DateTime.now,
+          attemptId: RunAttemptId.make("resume-attachment-budget"),
+          text: "Read the PDF and both images.",
+          attachments: [document, image, image],
+          nativeThreadHasTurns: true,
+        }),
+      );
+      assert.equal(
+        resumed.getOpenedOptions()?.resume,
+        outcome === "fork" ? "forked-native-session" : WAKE_NATIVE_SESSION,
+      );
+      const content = resumed.offeredMessages[0]?.message.content;
+      assert.isArray(content);
+      if (!Array.isArray(content)) return;
+      const native = outcome === "legacy" || outcome === "compacted";
+      assert.equal(content.filter((block) => block.type === "document").length, native ? 1 : 0);
+      assert.equal(content.filter((block) => block.type === "image").length, native ? 2 : 0);
+      assert.isBelow(Buffer.byteLength(encodeJsonString(content)), 32_000_000);
+      if (outcome === "fork") {
+        assert.deepEqual(
+          inherited.nativeMetadata?.claudeAttachmentBudget,
+          persisted.nativeMetadata?.claudeAttachmentBudget,
+        );
+      }
+    }).pipe(Effect.scoped, Effect.provide(Layer.merge(IdAllocator.layer, NodeServices.layer))),
+  );
 
   describe("Claude settings restrictions", () => {
     it.effect("resolves cached managed policy from the configured home through the real SDK", () =>

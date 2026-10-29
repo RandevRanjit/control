@@ -4,10 +4,12 @@ import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { describe, it } from "@effect/vitest";
+import { assert, describe, it } from "@effect/vitest";
 import { ProviderSessionId, ThreadId } from "@control/contracts";
 import { HostProcessPlatform } from "@control/shared/hostProcess";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 
 import { signalProcessGroup } from "../../process/processGroup.ts";
@@ -15,6 +17,7 @@ import * as ProviderEventLoggers from "../../provider/ProviderEventLoggers.ts";
 import {
   ClaudeAgentSdkQueryRunner,
   layerQueryRunner,
+  makeClaudeUserMessage,
   spawnClaudeProcessGroup,
 } from "./ClaudeAdapterV2.ts";
 
@@ -121,6 +124,49 @@ describe.skipIf(HostProcessPlatform.defaultValue() === "win32")("Claude CLI proc
       // A dying server's descriptors close; the kernel would do this for it.
       for (const pipe of child.stdio) pipe?.destroy();
       yield* Effect.promise(() => turnStopped);
+    }).pipe(Effect.scoped),
+  );
+
+  // A send's attachment budget is committed once its prompt is queued. The
+  // protocol log after it can be interrupted; the commit must not be lost.
+  it.effect("reports a queued prompt before the interruptible protocol log", () =>
+    Effect.gen(function* () {
+      const cli = fakeClaudeCli("cat > /dev/null");
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => NodeFS.rmSync(NodePath.dirname(cli), { recursive: true, force: true })),
+      );
+      const logging = yield* Deferred.make<void>();
+      let queued = false;
+      const session = yield* openFakeCli(cli).pipe(
+        Effect.provide(
+          layerQueryRunner.pipe(
+            Layer.provide(
+              Layer.succeed(ProviderEventLoggers.ProviderEventLoggers, {
+                ...ProviderEventLoggers.NoOpProviderEventLoggers,
+                native: {
+                  filePath: "/tmp/claude-queued-delivery.log",
+                  write: () =>
+                    queued
+                      ? Deferred.succeed(logging, undefined).pipe(Effect.andThen(Effect.never))
+                      : Effect.void,
+                  close: () => Effect.void,
+                },
+              }),
+            ),
+            Layer.provide(NodeServices.layer),
+          ),
+        ),
+      );
+      const offering = yield* session
+        .offer(makeClaudeUserMessage({ text: "Inspect the attachment." }), () => {
+          queued = true;
+        })
+        .pipe(Effect.forkChild);
+      yield* Deferred.await(logging);
+      yield* Fiber.interrupt(offering);
+      assert.isTrue(queued);
+      queued = false;
+      yield* session.close;
     }).pipe(Effect.scoped),
   );
 });

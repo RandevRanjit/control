@@ -58,6 +58,7 @@ import {
 } from "@control/shared/claudeCompaction";
 import {
   type ChatAttachment,
+  PROVIDER_SEND_TURN_MAX_FILE_BYTES,
   ClaudeSettings,
   defaultInstanceIdForDriver,
   LocalModelError,
@@ -435,7 +436,11 @@ export interface ClaudeAgentSdkQueryOpenInput {
 
 export interface ClaudeAgentSdkQuerySession {
   readonly messages: Stream.Stream<SDKMessage, ClaudeAgentSdkQueryRunnerError>;
-  readonly offer: (message: SDKUserMessage) => Effect.Effect<void, ClaudeAgentSdkQueryRunnerError>;
+  /** onQueued runs once the message is in the CLI's queue, even if the offer is then interrupted. */
+  readonly offer: (
+    message: SDKUserMessage,
+    onQueued?: () => void,
+  ) => Effect.Effect<void, ClaudeAgentSdkQueryRunnerError>;
   readonly setModel: (model: string) => Effect.Effect<void, ClaudeAgentSdkQueryRunnerError>;
   readonly setPermissionMode: (
     mode: PermissionMode,
@@ -719,6 +724,8 @@ export function makeClaudeAgentSdkProtocolLogger(input: {
   };
 }
 
+const encodeClaudeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 export const layerQueryRunner: Layer.Layer<
   ClaudeAgentSdkQueryRunner,
   never,
@@ -788,8 +795,12 @@ export const layerQueryRunner: Layer.Layer<
               }),
             ),
           ),
-          offer: (message) =>
-            Queue.offer(promptQueue, message).pipe(
+          offer: (message, onQueued) =>
+            Effect.uninterruptibleMask((restore) =>
+              restore(Queue.offer(promptQueue, message)).pipe(
+                Effect.tap(() => Effect.sync(() => onQueued?.())),
+              ),
+            ).pipe(
               Effect.asVoid,
               Effect.tap(() =>
                 logProtocolEvent({
@@ -1528,6 +1539,143 @@ export function makeClaudeUserMessage(input: {
   };
 }
 
+// Never decode streams just to enforce a provider limit. Only accept an explicit,
+// uncompressed page tree whose /Count agrees with the visible page objects.
+const estimateClaudePdfPages = (bytes: Buffer): number | null => {
+  if (bytes.length > 20 * 1024 * 1024 || bytes.subarray(0, 5).toString() !== "%PDF-") return null;
+  if (!bytes.subarray(-1024).includes("%%EOF")) return null;
+  let pages = 0;
+  let count = 0;
+  let catalog = false;
+  let pageTree = false;
+  let previous = "";
+  const delimiter = (byte: number) =>
+    byte <= 32 || "()<>[]{}/%".includes(String.fromCharCode(byte));
+  for (let i = 0; i < bytes.length;) {
+    const byte = bytes[i]!;
+    if (byte === 37) {
+      while (i < bytes.length && bytes[i] !== 10 && bytes[i] !== 13) i++;
+      continue;
+    }
+    if (byte <= 32) {
+      i++;
+      continue;
+    }
+    if (previous === "/Type" && byte !== 47) return null;
+    if (previous === "/Kids") {
+      if (byte !== 91) return null;
+      previous = "";
+    }
+    if (byte === 40) {
+      let depth = 1;
+      for (i++; i < bytes.length && depth > 0; i++) {
+        if (bytes[i] === 92) i++;
+        else if (bytes[i] === 40) depth++;
+        else if (bytes[i] === 41) depth--;
+      }
+      if (depth !== 0) return null;
+      previous = "";
+      continue;
+    }
+    if (byte === 60 && bytes[i + 1] !== 60) {
+      i = bytes.indexOf(62, i + 1);
+      if (i < 0) return null;
+      i++;
+      previous = "";
+      continue;
+    }
+    if (byte === 60 && bytes[i + 1] === 60) {
+      i += 2;
+      previous = "";
+      continue;
+    }
+    if (delimiter(byte) && byte !== 47) {
+      i++;
+      continue;
+    }
+    const start = i++;
+    while (i < bytes.length && !delimiter(bytes[i]!)) i++;
+    if (i - start > 64) return null;
+    const token = bytes.toString("latin1", start, i);
+    if (token.includes("#") || ["/ObjStm", "/XRef", "/Encrypt", "/Prev"].includes(token))
+      return null;
+    if (token === "stream") {
+      i = bytes.indexOf("endstream", i);
+      if (i < 0) return null;
+      i += 9;
+      previous = "";
+      continue;
+    }
+    if (previous === "/Type") {
+      if (token === "/Page") pages++;
+      if (token === "/Catalog") catalog = true;
+      if (token === "/Pages") pageTree = true;
+    }
+    if (previous === "/Count") {
+      if (!/^[1-9]\d{0,8}$/.test(token)) return null;
+      let next = i;
+      while (next < bytes.length) {
+        if (bytes[next]! <= 32) next++;
+        else if (bytes[next] === 37) {
+          while (next < bytes.length && bytes[next] !== 10 && bytes[next] !== 13) next++;
+        } else break;
+      }
+      // A second scalar is an indirect reference, not a direct page count.
+      if (next < bytes.length && !delimiter(bytes[next]!)) return null;
+      count = Math.max(count, Number(token));
+    }
+    previous = token;
+  }
+  return catalog && pageTree && pages > 0 && count === pages ? pages : null;
+};
+
+const CLAUDE_ATTACHMENT_MAX_BYTES = 28 * 1024 * 1024;
+const CLAUDE_ATTACHMENT_MAX_PAGES = 100;
+
+// Claude keeps native documents and images in the session and resends them on
+// every request. Base64 adds a third to the payload, so leave room below
+// Anthropic's 32 MB request limit for text, instructions, and SDK framing. The
+// SDK does not expose document/context-window capabilities, so use the 100-page
+// limit that also applies to models with less than a 1M-token context window.
+const makeClaudeAttachmentBudget = (used?: { pagesUsed: number; bytesUsed: number }) => ({
+  committed: { pages: used?.pagesUsed ?? 0, bytes: used?.bytesUsed ?? 0 },
+  pending: { pages: 0, bytes: 0 },
+  compacting: null as { pages: number; bytes: number } | null,
+  get remainingPages() {
+    return CLAUDE_ATTACHMENT_MAX_PAGES - this.committed.pages - this.pending.pages;
+  },
+  get remainingBytes() {
+    return CLAUDE_ATTACHMENT_MAX_BYTES - this.committed.bytes - this.pending.bytes;
+  },
+});
+
+const reserveClaudePdfBudget = (
+  budget: ReturnType<typeof makeClaudeAttachmentBudget>,
+  persist: Effect.Effect<void>,
+) =>
+  Effect.acquireRelease(
+    Effect.sync(() => ({
+      budget,
+      pages: 0,
+      bytes: 0,
+      delivered: false,
+      commit() {
+        if (this.delivered) return;
+        this.delivered = true;
+        budget.pending.pages -= this.pages;
+        budget.pending.bytes -= this.bytes;
+        budget.committed.pages += this.pages;
+        budget.committed.bytes += this.bytes;
+      },
+    })),
+    (reservation) =>
+      Effect.sync(() => {
+        if (reservation.delivered) return;
+        budget.pending.pages -= reservation.pages;
+        budget.pending.bytes -= reservation.bytes;
+      }).pipe(Effect.andThen(persist)),
+  );
+
 const makeClaudeUserMessageWithAttachments = Effect.fnUntraced(function* (input: {
   readonly text: string;
   readonly attachments: ReadonlyArray<ChatAttachment>;
@@ -1535,15 +1683,20 @@ const makeClaudeUserMessageWithAttachments = Effect.fnUntraced(function* (input:
   readonly uuid?: SDKUserMessage["uuid"];
   readonly attachmentsDir: string;
   readonly fileSystem: FileSystem.FileSystem;
+  readonly pdfReservation: Effect.Success<ReturnType<typeof reserveClaudePdfBudget>>;
   readonly skillNames?: ReadonlySet<string>;
 }) {
   if (input.attachments.length === 0) {
-    return makeClaudeUserMessage({
+    const message = makeClaudeUserMessage({
       text: input.text,
       ...(input.skillNames === undefined ? {} : { skillNames: input.skillNames }),
       ...(input.priority === undefined ? {} : { priority: input.priority }),
       ...(input.uuid === undefined ? {} : { uuid: input.uuid }),
     });
+    const bytes = Buffer.byteLength(encodeClaudeJson(message.message.content));
+    input.pdfReservation.budget.pending.bytes += bytes;
+    input.pdfReservation.bytes += bytes;
+    return message;
   }
 
   // The model's tools cannot dereference inlined pixels. Appending the
@@ -1564,10 +1717,25 @@ const makeClaudeUserMessageWithAttachments = Effect.fnUntraced(function* (input:
     content.push({ type: "text", text: dispatch.leadingText });
   }
 
-  for (const attachment of input.attachments) {
-    if (attachment.type === "file") {
-      continue;
-    }
+  // Reserve all text and actual image bytes before considering any document,
+  // including images that follow it in attachment order.
+  const images = new Map<number, ClaudeUserContentBlock>();
+  const textBytes = Buffer.byteLength(
+    encodeClaudeJson(
+      dispatch
+        ? [
+            ...(dispatch.leadingText === undefined
+              ? []
+              : [{ type: "text", text: dispatch.leadingText }]),
+            { type: "text", text: dispatch.commandText },
+          ]
+        : [{ type: "text", text: textWithAttachmentPaths }],
+    ),
+  );
+  input.pdfReservation.budget.pending.bytes += textBytes;
+  input.pdfReservation.bytes += textBytes;
+  for (const [index, attachment] of input.attachments.entries()) {
+    if (attachment.type !== "image") continue;
     if (!isSupportedClaudeImageMimeType(attachment.mimeType)) {
       return yield* new ProviderAdapter.ProviderAdapterProtocolError({
         driver: CLAUDE_PROVIDER,
@@ -1596,7 +1764,12 @@ const makeClaudeUserMessageWithAttachments = Effect.fnUntraced(function* (input:
           }),
       ),
     );
-    content.push({
+    // Over budget, the image stays path-only; its path is already in the text.
+    const retainedBytes = 4 * Math.ceil(bytes.length / 3) + 128;
+    if (retainedBytes > input.pdfReservation.budget.remainingBytes) continue;
+    input.pdfReservation.budget.pending.bytes += retainedBytes;
+    input.pdfReservation.bytes += retainedBytes;
+    images.set(index, {
       type: "image",
       source: {
         type: "base64",
@@ -1604,6 +1777,64 @@ const makeClaudeUserMessageWithAttachments = Effect.fnUntraced(function* (input:
         data: Buffer.from(bytes).toString("base64"),
       },
     });
+  }
+  // A PDF goes as a native document when its page count is certain and it fits
+  // the budget; otherwise it stays path-only and Claude reads it from disk.
+  for (const [index, attachment] of input.attachments.entries()) {
+    if (attachment.type === "file") {
+      if (
+        input.pdfReservation.budget.remainingPages <= 0 ||
+        attachment.mimeType.toLowerCase().split(";", 1)[0]?.trim() !== "application/pdf" ||
+        ("source" in attachment && attachment.source?._tag === "pasted-text")
+      )
+        continue;
+      const attachmentPath = resolveAttachmentPath({
+        attachmentsDir: input.attachmentsDir,
+        attachment,
+      });
+      if (attachmentPath === null) continue;
+      const remainingBytes = Math.min(
+        PROVIDER_SEND_TURN_MAX_FILE_BYTES,
+        20 * 1024 * 1024,
+        Math.floor(((input.pdfReservation.budget.remainingBytes - 1024) * 3) / 4),
+      );
+      const info = yield* input.fileSystem
+        .stat(attachmentPath)
+        .pipe(Effect.orElseSucceed(() => null));
+      if (info?.type !== "File" || Number(info.size) > remainingBytes || remainingBytes <= 0)
+        continue;
+      const bytes = yield* input.fileSystem
+        .stream(attachmentPath, { bytesToRead: remainingBytes + 1 })
+        .pipe(
+          Stream.runCollect,
+          Effect.map((chunks) => Buffer.concat(chunks)),
+          Effect.orElseSucceed(() => null),
+        );
+      if (bytes === null || bytes.length > remainingBytes) continue;
+      const pageCount = estimateClaudePdfPages(bytes);
+      if (pageCount === null) {
+        yield* Effect.logDebug("Claude PDF page count is unknown; keeping attachment path-only.");
+        continue;
+      }
+      const retainedBytes = 4 * Math.ceil(bytes.length / 3) + 128;
+      if (
+        pageCount <= 0 ||
+        pageCount > input.pdfReservation.budget.remainingPages ||
+        retainedBytes > input.pdfReservation.budget.remainingBytes
+      )
+        continue;
+      input.pdfReservation.budget.pending.pages += pageCount;
+      input.pdfReservation.pages += pageCount;
+      input.pdfReservation.budget.pending.bytes += retainedBytes;
+      input.pdfReservation.bytes += retainedBytes;
+      content.push({
+        type: "document",
+        source: { type: "base64", media_type: "application/pdf", data: bytes.toString("base64") },
+      });
+      continue;
+    }
+    const image = images.get(index);
+    if (image !== undefined) content.push(image);
   }
 
   // Images go before the command block: a text block after them still
@@ -3620,6 +3851,9 @@ export function makeClaudeAdapterV2(
           );
         });
         const openedNativeThreads = yield* Ref.make(new Set<string>());
+        // Native PDF and image bytes each Claude session still holds; persisted
+        // on its provider thread so a resume keeps counting.
+        const pdfBudgets = new Map<string, ReturnType<typeof makeClaudeAttachmentBudget>>();
         const latestPlanByKind = yield* Ref.make(new Map<string, OrchestrationV2PlanArtifact>());
         const planIdsByNativeItem = yield* Ref.make(
           new Map<string, OrchestrationV2PlanArtifact["id"]>(),
@@ -3900,8 +4134,44 @@ export function makeClaudeAdapterV2(
         const runtimeContext = yield* Effect.context<never>();
         const runPromise = Effect.runPromiseWith(runtimeContext);
 
-        const emitProviderEvent = (event: ProviderAdapter.ProviderAdapterV2Event) =>
-          Queue.offer(events, event).pipe(Effect.asVoid);
+        const emitProviderEvent = (event: ProviderAdapter.ProviderAdapterV2Event) => {
+          if (event.type === "provider_thread.updated") {
+            const budget = pdfBudgets.get(event.providerThread.nativeThreadRef?.nativeId ?? "");
+            if (budget !== undefined) {
+              event = {
+                ...event,
+                providerThread: {
+                  ...event.providerThread,
+                  nativeMetadata: {
+                    ...event.providerThread.nativeMetadata,
+                    claudeAttachmentBudget: {
+                      bytesUsed: budget.committed.bytes,
+                      pagesUsed: budget.committed.pages,
+                    },
+                  },
+                },
+              };
+            }
+          }
+          return Queue.offer(events, event).pipe(Effect.asVoid);
+        };
+
+        const persistAttachmentBudget = Effect.fnUntraced(function* (nativeThreadId: string) {
+          const providerThread = (yield* Ref.get(lastProviderThreadByNativeThread)).get(
+            nativeThreadId,
+          );
+          if (providerThread === undefined) return;
+          const active = yield* Ref.get(activeTurn);
+          yield* emitProviderEvent({
+            type: "provider_thread.updated",
+            driver: CLAUDE_PROVIDER,
+            providerThread: {
+              ...providerThread,
+              status: active?.nativeThreadId === nativeThreadId ? "active" : providerThread.status,
+              updatedAt: yield* DateTime.now,
+            },
+          });
+        });
 
         // Claude emits retry progress but no recovered frame; the next
         // assistant message is the first reliable evidence of recovery.
@@ -6681,7 +6951,38 @@ export function makeClaudeAdapterV2(
             }
           }
 
+          if (message.type === "system" && message.subtype === "status") {
+            const budget = pdfBudgets.get(context.nativeThreadId);
+            if (budget !== undefined) {
+              // Offers made while compaction runs are outside the history it
+              // removes, so only what was committed when it began is dropped.
+              if (message.status === "compacting") budget.compacting ??= { ...budget.committed };
+              else if (
+                message.compact_result === "failed" ||
+                (message.compact_result === undefined &&
+                  message.status === null &&
+                  message.permissionMode === undefined)
+              )
+                budget.compacting = null;
+            }
+          }
+
           if (message.type === "system" && message.subtype === "compact_boundary") {
+            const budget = pdfBudgets.get(context.nativeThreadId);
+            if (budget !== undefined) {
+              // Aggregate persisted usage cannot identify attachments in a
+              // preserved segment. Retain it conservatively on partial compacts.
+              if (
+                message.compact_metadata.preserved_segment === undefined &&
+                message.compact_metadata.preserved_messages === undefined
+              ) {
+                const compacted = budget.compacting ?? { ...budget.committed };
+                budget.committed.pages -= compacted.pages;
+                budget.committed.bytes -= compacted.bytes;
+              }
+              budget.compacting = null;
+              yield* persistAttachmentBudget(context.nativeThreadId);
+            }
             const now = yield* DateTime.now;
             const nativeItemId = message.uuid;
             const postTokens = message.compact_metadata.post_tokens;
@@ -8403,6 +8704,16 @@ export function makeClaudeAdapterV2(
             if (!goalsByNativeThread.has(nativeThreadId)) {
               goalsByNativeThread.set(nativeThreadId, turnInput.providerThread.goal ?? null);
             }
+            if (!pdfBudgets.has(nativeThreadId)) {
+              // Older sessions did not record retained attachments. Keep their
+              // existing native-image allowance rather than disabling images.
+              const used = turnInput.providerThread.nativeMetadata?.claudeAttachmentBudget;
+              pdfBudgets.set(nativeThreadId, makeClaudeAttachmentBudget(used));
+            }
+            const pdfReservation = yield* reserveClaudePdfBudget(
+              pdfBudgets.get(nativeThreadId)!,
+              persistAttachmentBudget(nativeThreadId),
+            );
             // Continuation turns attach to the wake output the CLI already
             // produced instead of prompting it again: drain the buffered wake
             // messages into this turn and let any still-streaming messages
@@ -8418,6 +8729,7 @@ export function makeClaudeAdapterV2(
                     attachments: turnInput.message.attachments,
                     attachmentsDir,
                     fileSystem,
+                    pdfReservation,
                     skillNames: yield* userInvocableSkillNames(turnInput.runtimePolicy.cwd),
                     uuid: promptUuid,
                   });
@@ -8523,7 +8835,11 @@ export function makeClaudeAdapterV2(
               // afterwards with correct attribution.
               // Counted only here, so a turn that failed to start does not age reports.
               yield* startUserTurnForWakeReports(nativeThreadId);
-              yield* querySession.query.offer(userMessage);
+              yield* Effect.uninterruptibleMask((restore) =>
+                restore(querySession.query.offer(userMessage, () => pdfReservation.commit())).pipe(
+                  Effect.tap(() => Effect.sync(() => pdfReservation.commit())),
+                ),
+              );
               return;
             }
             const drained = yield* Ref.modify(wakeBuffers, (current) => {
@@ -8587,6 +8903,7 @@ export function makeClaudeAdapterV2(
           },
           (effect, turnInput) =>
             effect.pipe(
+              Effect.scoped,
               Effect.mapError(
                 (cause) =>
                   new ProviderAdapter.ProviderAdapterTurnStartError({
@@ -8780,6 +9097,14 @@ export function makeClaudeAdapterV2(
                 detail: `Claude provider turn ${turnInput.providerTurnId} is not the active turn.`,
               });
             }
+            const pdfReservation = yield* reserveClaudePdfBudget(
+              pdfBudgets.get(existing.nativeThreadId) ??
+                makeClaudeAttachmentBudget({
+                  pagesUsed: CLAUDE_ATTACHMENT_MAX_PAGES,
+                  bytesUsed: CLAUDE_ATTACHMENT_MAX_BYTES,
+                }),
+              persistAttachmentBudget(existing.nativeThreadId),
+            );
             const userMessage = yield* makeClaudeUserMessageWithAttachments({
               text: applyClaudePromptEffortPrefix(
                 turnInput.message.text,
@@ -8789,6 +9114,7 @@ export function makeClaudeAdapterV2(
               priority: "now",
               attachmentsDir,
               fileSystem,
+              pdfReservation,
               skillNames: yield* userInvocableSkillNames(currentTurn.input.runtimePolicy.cwd),
             });
             yield* backgroundForegroundSubagents(existing);
@@ -8809,10 +9135,15 @@ export function makeClaudeAdapterV2(
               next.add(turnInput.providerTurnId);
               return next;
             });
-            yield* existing.query.offer(userMessage);
+            yield* Effect.uninterruptibleMask((restore) =>
+              restore(existing.query.offer(userMessage, () => pdfReservation.commit())).pipe(
+                Effect.tap(() => Effect.sync(() => pdfReservation.commit())),
+              ),
+            );
           },
           (effect, turnInput) =>
             effect.pipe(
+              Effect.scoped,
               Effect.mapError(
                 (cause) =>
                   new ProviderAdapter.ProviderAdapterSteerRunError({
@@ -9210,7 +9541,11 @@ export function makeClaudeAdapterV2(
                 return updated;
               });
               const now = yield* DateTime.now;
-              return makeProviderThread({
+              // Native forks retain document/image history. Inherit full current
+              // usage even at an earlier fork point; this is conservative.
+              const claudeAttachmentBudget =
+                forkInput.sourceProviderThread.nativeMetadata?.claudeAttachmentBudget;
+              const forkedThread = makeProviderThread({
                 idAllocator,
                 providerInstanceId: adapterOptions.instanceId,
                 appThreadId: forkInput.targetThreadId,
@@ -9225,6 +9560,9 @@ export function makeClaudeAdapterV2(
                 },
                 now,
               });
+              return claudeAttachmentBudget === undefined
+                ? forkedThread
+                : { ...forkedThread, nativeMetadata: { claudeAttachmentBudget } };
             },
             (effect, forkInput) =>
               effect.pipe(

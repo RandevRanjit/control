@@ -858,6 +858,31 @@ describe("V2 thread find", () => {
     createProject(projectId).pipe(Effect.andThen(queriedPages), Effect.provide(layerTest)),
   );
 
+  it.effect("a scan from before the page's index still keeps only matching rows", () =>
+    Effect.gen(function* () {
+      const projection = yield* setup;
+      yield* putItems([item("a", 1, "needle"), item("b", 2, "hay"), item("c", 3, "needle")]);
+      const query = { query: "needle", limit: 10 };
+      assert.deepEqual(
+        (yield* projection.getTimelinePage(threadId, query)).items.map((row) => row.sourceItemId),
+        ["a", "c"],
+      );
+      // Applied without an event, so the cached scan stays current and sees the older
+      // index, as a scan does when the timeline changes before the page reads it.
+      yield* projection.apply({
+        id: EventId.make("earlier"),
+        threadId,
+        occurredAt: at(1),
+        type: "turn-item.updated",
+        payload: item("earlier", 0, "hay"),
+      });
+      assert.deepEqual(
+        (yield* projection.getTimelinePage(threadId, query)).items.map((row) => row.sourceItemId),
+        ["a", "c"],
+      );
+    }).pipe(Effect.provide(layerTest)),
+  );
+
   it.effect("memory timeline pages keep only the rows find matches", () =>
     queriedPages.pipe(Effect.provide(ProjectionStore.layerMemory)),
   );

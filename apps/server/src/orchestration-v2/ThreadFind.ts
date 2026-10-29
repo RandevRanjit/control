@@ -168,15 +168,24 @@ export function findProjectedThreadItems(
   return resultForSelection(selectMatch(docs, input), docs, snapshotSequence);
 }
 
-/** The memory projection's `findPositions`. */
-export function findProjectedPositions(
+/**
+ * Identifies a timeline row across reads. Positions renumber when rows are hidden or
+ * inserted between a scan and the page that applies it; source ids do not.
+ */
+export const findRowKey = (row: Pick<FindRow, "sourceThreadId" | "sourceItemId">) =>
+  `${row.sourceThreadId}\u0000${row.sourceItemId}`;
+
+/** The memory projection's `findRows`. */
+export function findProjectedRows(
   items: readonly OrchestrationV2ProjectedTurnItem[],
   query: string,
   cwd?: string,
 ) {
   return new Set(
     searchableRows(items).flatMap((row) =>
-      countSegments(parseText(textKey(row.item, cwd, [], false)), query) > 0 ? [row.position] : [],
+      countSegments(parseText(textKey(row.item, cwd, [], false)), query) > 0
+        ? [findRowKey(row)]
+        : [],
     ),
   );
 }
@@ -474,8 +483,8 @@ export const makeThreadFind = Effect.fn("makeThreadFind")(function* (
       }),
     );
   return {
-    /** Timeline positions of the rows containing the query, for filtered timeline pages. */
-    findPositions: (threadId: ThreadId, query: string) =>
+    /** `findRowKey`s of the rows containing the query, for filtered timeline pages. */
+    findRows: (threadId: ThreadId, query: string) =>
       scan({ threadId, query }).pipe(
         Effect.flatMap((scanned) =>
           "documents" in scanned ? Effect.succeed(scanned.documents) : scanned.finish,
@@ -483,7 +492,7 @@ export const makeThreadFind = Effect.fn("makeThreadFind")(function* (
         Effect.map(
           (documents) =>
             new Set(
-              documents.flatMap((document) => (document.count > 0 ? [document.position] : [])),
+              documents.flatMap((document) => (document.count > 0 ? [findRowKey(document)] : [])),
             ),
         ),
       ),

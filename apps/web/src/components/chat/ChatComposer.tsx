@@ -6204,11 +6204,23 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     return setContextInsertionHandler(composerDraftTarget, insertContextReferencesAtCaret);
   }, [composerDraftTarget, insertContextReferencesAtCaret, setContextInsertionHandler]);
 
-  // File-tree drags land as mentions. Handled in the capture phase so the
-  // editor never sees the drop; the load-bearing rules (native stop, "move"
-  // effect, no eager focus) live in makeComposerMentionDragHandlers.
+  // File-tree drags land as mentions, pull request rows as their context chip.
+  // Handled in the capture phase so the editor never sees the drop; the
+  // load-bearing rules (native stop, "move" effect, no eager focus) live in
+  // makeComposerMentionDragHandlers.
   const composerMentionDragHandlers = makeComposerMentionDragHandlers({
     insertMentionAtEnd: (text) => insertComposerTextAtEnd(text, { ensureLeadingBoundary: true }),
+    insertPullRequestAtEnd: (pullRequest) => {
+      const comment = buildPullRequestReferenceContext(pullRequest);
+      const inserted = insertComposerTextAtEnd(
+        `${formatInlineContextReference(reviewCommentContextReference(comment))} `,
+        { ensureLeadingBoundary: true },
+      );
+      if (inserted) {
+        addComposerDraftReviewComment(composerDraftTarget, comment, { appendReference: false });
+      }
+      return inserted;
+    },
     setDragActive: setIsDragOverComposer,
     onInsertRejected: () => {
       toastManager.add({

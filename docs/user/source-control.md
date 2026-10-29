@@ -215,7 +215,8 @@ Thread badges show a stack's layer count or the current review number with a cou
 links. Clicking a badge with more than one review opens **Git → PR**. On mobile, the Git overview lists linked reviews and their stacks; tap a review to open it.
 Linking and unlinking are available in the web and desktop clients.
 
-**Git → PR** lists the thread's reviews on top and groups stacks. Unlink a review from its
+**Git → PR** lists the thread's reviews on top and groups stacks. Drag one of them into the
+composer to add it as context, the same chip `#` adds. Unlink a review from its
 row menu. An unlinked stack layer stays out of later syncs. Open linked reviews refresh on the server;
 closed reviews refresh periodically so reopening one on the host is detected. Merged reviews refresh
 when requested. A settled thread's reviews stop refreshing until you unsettle it. With **Auto-settle merged threads** enabled, a thread can settle after every linked

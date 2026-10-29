@@ -849,6 +849,10 @@ export const OrchestrationV2ProviderThreadNativeMetadata = Schema.Struct({
   updatedAt: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
   /** Version 2 scopes provider-derived item ids by provider instance. */
   itemIdentityVersion: Schema.optional(Schema.Literal(2)),
+  /** Native PDFs and images Claude still holds in its history, so later sends stay under its limits. */
+  claudeAttachmentBudget: Schema.optional(
+    Schema.Struct({ bytesUsed: NonNegativeInt, pagesUsed: NonNegativeInt }),
+  ),
 });
 export type OrchestrationV2ProviderThreadNativeMetadata =
   typeof OrchestrationV2ProviderThreadNativeMetadata.Type;

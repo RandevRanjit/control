@@ -30,13 +30,19 @@ const state = vi.hoisted(() => ({
     session: { status: "ready" | "stopped" } | null;
     latestTurn: null;
   }[],
-  requests: [] as { action: string; environmentId: string; input: { threadId?: string } }[],
+  requests: [] as {
+    action: string;
+    environmentId: string;
+    input: { threadId?: string; force?: boolean };
+  }[],
   localEffects: [] as string[],
   confirm: vi.fn<(message: string) => Promise<boolean>>(),
   toasts: [] as string[],
   afterRequest: undefined as ((action: string) => void) | undefined,
   sessionLookupFails: false,
   worktreeHasChanges: false,
+  /** An older server has no uncommitted-changes check. */
+  changesCheckFails: false,
   removeResult: undefined as { kept?: boolean } | undefined,
 }));
 
@@ -71,7 +77,9 @@ vi.mock("../state/use-atom-query-runner", () => ({
   useAtomQueryRunner: (family: string) =>
     family === "uncommittedChanges"
       ? async () =>
-          AsyncResult.success({ files: state.worktreeHasChanges ? 1 : 0, truncated: false })
+          state.changesCheckFails
+            ? AsyncResult.failure(Cause.fail(new Error("Unknown method vcs.uncommittedChanges")))
+            : AsyncResult.success({ files: state.worktreeHasChanges ? 1 : 0, truncated: false })
       : async (environmentId: string) =>
           state.sessionLookupFails
             ? AsyncResult.failure(Cause.fail(new Error("Session lookup failed")))
@@ -241,6 +249,7 @@ beforeEach(() => {
   state.afterRequest = undefined;
   state.sessionLookupFails = false;
   state.worktreeHasChanges = false;
+  state.changesCheckFails = false;
   state.removeResult = undefined;
 });
 
@@ -407,5 +416,26 @@ describe("deleting a thread whose worktree has uncommitted changes", () => {
       "removeWorktree",
     ]);
     expect(state.toasts).toEqual(["Kept worktree"]);
+  });
+
+  it("removes a clean worktree without forcing it", async () => {
+    expect((await useThreadActions().deleteThread(target))._tag).toBe("Success");
+    expect(state.confirm.mock.calls[0]![0]).toContain("Delete the worktree too?");
+    const removal = state.requests.find((request) => request.action === "removeWorktree");
+    expect(removal?.input.force).toBeUndefined();
+  });
+
+  it("keeps the worktree when the server cannot check it", async () => {
+    state.changesCheckFails = true;
+    expect((await useThreadActions().deleteThread(target))._tag).toBe("Success");
+    expect(state.confirm.mock.calls[0]![0]).toBe(
+      [
+        "Couldn't check its worktree for uncommitted changes, so it stays on disk:",
+        "/worktrees/thread",
+        "",
+        "Delete the thread?",
+      ].join("\n"),
+    );
+    expect(state.requests.map((request) => request.action)).toEqual(["stopSession", "delete"]);
   });
 });

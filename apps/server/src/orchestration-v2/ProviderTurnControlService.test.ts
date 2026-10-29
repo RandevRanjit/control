@@ -14,6 +14,7 @@ import {
   RunId,
   ThreadId,
 } from "@control/contracts";
+import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -165,6 +166,7 @@ it.effect(
         makeProjection({ now, threadId, providerThread, providerTurnId, attemptId }),
       );
       const interruptedThread = yield* Ref.make<OrchestrationV2ProviderThread | null>(null);
+      const stoppedSubagents = yield* Ref.make<ReadonlyArray<string>>([]);
       const providerSession = {
         id: oldSessionId,
         driver,
@@ -202,6 +204,11 @@ it.effect(
             ],
             { discard: true },
           ),
+        stopSubagent: ({ providerThread: target, nativeTaskId }) =>
+          Ref.update(stoppedSubagents, (current) => [
+            ...current,
+            `${target.providerSessionId}:${nativeTaskId}`,
+          ]),
         respondToRuntimeRequest: () => Effect.die("unused respondToRuntimeRequest"),
         readThreadSnapshot: () => Effect.die("unused readThreadSnapshot"),
         rollbackThread: () => Effect.die("unused rollbackThread"),
@@ -324,5 +331,38 @@ it.effect(
       assert.equal(interrupted?.providerSessionId, oldSessionId);
       assert.equal(interrupted?.id, providerThreadId);
       assert.equal(interrupted?.nativeThreadRef?.nativeId, "native-thread:restart-session");
+
+      // A subagent Stop recorded before the thread moved to a new session
+      // still reaches the old one while it lives. Once it is gone, the
+      // Stop reports the subagent as already stopped, so the worker settles
+      // it instead of retrying. A target that never existed still fails.
+      const stopSubagent = (providerSessionId: ProviderSessionId, turnId = providerTurnId) =>
+        Effect.gen(function* () {
+          const control = yield* ProviderTurnControlService.ProviderTurnControlServiceV2;
+          return yield* Effect.exit(
+            control.interrupt({
+              threadId,
+              providerSessionId,
+              providerThreadId,
+              providerTurnId: turnId,
+              subagent: { id: NodeId.make("node:subagent"), nativeTaskId: "native-task" },
+            }),
+          );
+        }).pipe(Effect.provide(layerControl));
+      assert.isTrue(Exit.isSuccess(yield* stopSubagent(oldSessionId)));
+      assert.deepEqual(yield* Ref.get(stoppedSubagents), [`${oldSessionId}:native-task`]);
+      const gone = yield* stopSubagent(unrelatedSessionId);
+      assert.isTrue(Exit.isFailure(gone));
+      assert.match(
+        Exit.isFailure(gone) ? Cause.pretty(gone.cause) : "",
+        /treating as already stopped/,
+      );
+      const invalid = yield* stopSubagent(
+        oldSessionId,
+        ProviderTurnId.make("provider-turn:restart-session:unknown"),
+      );
+      assert.isTrue(Exit.isFailure(invalid));
+      assert.match(Exit.isFailure(invalid) ? Cause.pretty(invalid.cause) : "", /no longer valid/);
+      assert.deepEqual(yield* Ref.get(stoppedSubagents), [`${oldSessionId}:native-task`]);
     }),
 );

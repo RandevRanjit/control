@@ -9,10 +9,10 @@ describe("updateChannels", () => {
     expect(resolveDefaultDesktopUpdateChannel("0.0.41-nightly.20260911.7")).toBe("nightly");
   });
 
-  it("reads versions from 0.1.2 on, which drop the date", () => {
-    expect(resolveDefaultDesktopUpdateChannel("0.1.2-nightly.56")).toBe("nightly");
-    expect(isNightlyDesktopVersion("0.1.2-preview.3")).toBe(true);
-    expect(resolveDefaultDesktopUpdateChannel("0.1.2-preview.3")).toBe("latest");
+  it("reads versions from 0.1.3 on, which drop the date", () => {
+    expect(resolveDefaultDesktopUpdateChannel("0.1.3-nightly.56")).toBe("nightly");
+    expect(isNightlyDesktopVersion("0.1.3-preview.3")).toBe(true);
+    expect(resolveDefaultDesktopUpdateChannel("0.1.3-preview.3")).toBe("latest");
   });
 
   it("only matches the first prerelease identifier", () => {

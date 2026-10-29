@@ -1,6 +1,6 @@
 import type { DesktopUpdateChannel } from "@control/contracts";
 
-// Nightlies before 0.1.2 carry the date: X.Y.Z-nightly.YYYYMMDD.N; later ones X.Y.Z-nightly.N.
+// Nightlies carry the date until the 0.1.3 bump (X.Y.Z-nightly.YYYYMMDD.N), then X.Y.Z-nightly.N.
 const NIGHTLY_VERSION_PATTERN = /^[^-+]+-nightly\.(?:\d{8}\.)?\d+$/;
 // Preview builds are the maintainers' test train, cut by hand from unreleased
 // branches to exercise the release flow. They share nightly's branding but

@@ -2249,7 +2249,7 @@ export function resolveDesktopUpdateChannel(version: string): "latest" | "nightl
 }
 
 // Pull request builds (`-pr.<n>.`) and the maintainers' preview train
-// (`-preview.<run>`) are downloaded by hand and never through an
+// (`-preview.<date>.<run>`, the date dropping at 0.1.3) are downloaded by hand and never through an
 // updater. Building them without a publish config means electron-builder
 // emits no `latest*.yml`/`nightly*.yml` manifests or blockmaps for them and
 // the app ships without `app-update.yml`, so neither a stable nor a nightly

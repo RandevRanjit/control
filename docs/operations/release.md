@@ -8,9 +8,8 @@
 `docs`, `design` or Markdown) and on demand. One run at a time; a push during a run waits, and only
 the newest waiting push builds next. On a macOS arm64 runner it:
 
-1. versions the build `X.Y.Z-nightly.<run>`, where `X.Y.Z` is the patch after
-   `apps/desktop/package.json`'s version (`scripts/resolve-nightly-release.ts`). Nightlies before
-   0.1.2 also carry the date (`X.Y.Z-nightly.YYYYMMDD.<run>`), so the version parsers accept both;
+1. versions the build `X.Y.Z-nightly.YYYYMMDD.<run>`, where `X.Y.Z` is the patch after
+   `apps/desktop/package.json`'s version (`scripts/resolve-nightly-release.ts`);
 2. builds the DMG and zip with `--signed`: electron-builder signs with the Developer ID and
    notarises the app;
 3. signs, notarises and staples the DMG, which electron-builder leaves unsigned, then re-stamps its

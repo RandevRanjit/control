@@ -44,8 +44,8 @@ it("names a nightly release by its run and day, not its full version", () => {
     resolveNightlyReleaseMetadata("9.9.10", "20260413", 321, "abcdef1234567890"),
     {
       baseVersion: "9.9.10",
-      version: "9.9.10-nightly.20260413.321",
-      tag: "v9.9.10-nightly.20260413.321",
+      version: "9.9.10-nightly.321",
+      tag: "v9.9.10-nightly.321",
       name: "Nightly 321 · 13 Apr",
       shortSha: "abcdef123456",
     },
@@ -57,8 +57,8 @@ it("derives preview metadata under its own prerelease identifier", () => {
     resolveNightlyReleaseMetadata("9.9.10", "20260413", 321, "abcdef1234567890", "preview"),
     {
       baseVersion: "9.9.10",
-      version: "9.9.10-preview.20260413.321",
-      tag: "v9.9.10-preview.20260413.321",
+      version: "9.9.10-preview.321",
+      tag: "v9.9.10-preview.321",
       name: "Preview 321 · 13 Apr (maintainer test build, do not install)",
       shortSha: "abcdef123456",
     },

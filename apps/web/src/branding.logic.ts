@@ -1,4 +1,5 @@
-const NIGHTLY_SERVER_VERSION_PATTERN = /^[^-+]+-(?:nightly|preview)\.\d{8}\.\d+$/;
+// Before 0.1.2 a nightly's version carries the date: X.Y.Z-nightly.YYYYMMDD.N.
+const NIGHTLY_SERVER_VERSION_PATTERN = /^[^-+]+-(?:nightly|preview)\.(?:\d{8}\.)?\d+$/;
 
 export function formatAppDisplayName(input: {
   readonly baseName: string;

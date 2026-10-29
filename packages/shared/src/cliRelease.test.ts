@@ -66,6 +66,8 @@ describe("cliRelease", () => {
     expect(cliReleaseChannelOf("1.2.3")).toBe("stable");
     expect(cliReleaseChannelOf("1.2.3-nightly.20260911.4")).toBe("nightly");
     expect(cliReleaseChannelOf("1.2.3-preview.20260911.4")).toBe("preview");
+    expect(cliReleaseChannelOf("0.1.2-nightly.56")).toBe("nightly");
+    expect(cliReleaseChannelOf("0.1.2-preview.3")).toBe("preview");
     // A prerelease that is not one of our trains is not silently a nightly.
     expect(cliReleaseChannelOf("1.2.3-rc.1")).toBe("stable");
   });

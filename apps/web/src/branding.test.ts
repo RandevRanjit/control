@@ -48,6 +48,13 @@ describe("branding logic", () => {
         fallbackStageLabel: "Alpha",
       }),
     ).toBe("Nightly");
+    // From 0.1.2 a nightly's version drops the date.
+    expect(
+      resolveServerBackedAppStageLabel({
+        primaryServerVersion: "0.1.2-nightly.56",
+        fallbackStageLabel: "Alpha",
+      }),
+    ).toBe("Nightly");
   });
 
   it("updates the display name for nightly primary server versions", () => {
@@ -78,7 +85,7 @@ describe("branding logic", () => {
         baseName: "Control",
         fallbackDisplayName: "Control",
         fallbackStageLabel: "Alpha",
-        primaryServerVersion: "0.0.28-nightly.20260616",
+        primaryServerVersion: "0.0.28-nightly",
       }),
     ).toBe("Control");
   });

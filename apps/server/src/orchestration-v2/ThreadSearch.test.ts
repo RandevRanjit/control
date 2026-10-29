@@ -142,7 +142,7 @@ it.layer(layerTest)("ThreadSearch", (it) => {
       for (const match of ['"needle"', null]) {
         const plan = yield* sql<{
           readonly detail: string;
-        }>`EXPLAIN QUERY PLAN ${ThreadSearch.messageHitsQuery(sql, { match, substrings: "[]", projectId: null, excludedThreadIds: "[]" })}`;
+        }>`EXPLAIN QUERY PLAN ${ThreadSearch.messageHitsQuery(sql, { match, substrings: "[]", projectId: null, excludedThreadIds: "[]", before: null })}`;
         assert.isFalse(
           plan.some((row) => row.detail.includes("TEMP B-TREE")),
           plan.map((row) => row.detail).join("\n"),

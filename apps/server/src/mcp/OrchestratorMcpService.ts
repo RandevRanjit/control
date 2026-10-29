@@ -1948,26 +1948,39 @@ const make = Effect.gen(function* () {
         });
         let workspaceStrategy: OrchestrationV2ThreadLaunchWorkspaceStrategy | undefined;
         // A child gets its own worktree unless it asks to share. Without an
-        // explicit ask, a parent with no commit to start from shares instead.
+        // explicit ask, a parent folder outside Git shares instead; any other
+        // Git failure is reported rather than quietly sharing.
         if (input.isolation !== "shared") {
           const project = yield* requireProject(parent.thread.projectId);
-          const base = yield* gitDriver
-            .resolveCommit({
-              cwd: parent.thread.worktreePath ?? project.workspaceRoot,
-              revision: "HEAD",
-            })
-            .pipe(Effect.option);
-          if (Option.isSome(base)) {
+          const cwd = parent.thread.worktreePath ?? project.workspaceRoot;
+          const outsideGit =
+            input.isolation === undefined &&
+            !(yield* gitDriver
+              .execute({
+                operation: "OrchestratorMcpService.delegateTask.isInsideWorkTree",
+                cwd,
+                args: ["rev-parse", "--is-inside-work-tree"],
+                allowNonZeroExit: true,
+              })
+              .pipe(
+                Effect.map((result) => result.exitCode === 0 && result.stdout.trim() === "true"),
+                Effect.mapError(() =>
+                  failure("invalid_request", "Unable to read the parent checkout."),
+                ),
+              ));
+          if (!outsideGit) {
+            const base = yield* gitDriver
+              .resolveCommit({ cwd, revision: "HEAD" })
+              .pipe(
+                Effect.mapError(() =>
+                  failure("invalid_request", "Unable to resolve the parent checkout commit."),
+                ),
+              );
             workspaceStrategy = {
               type: "worktree",
-              baseRef: base.value.commitSha,
+              baseRef: base.commitSha,
               startFromOrigin: false,
             };
-          } else if (input.isolation === "worktree") {
-            return yield* failure(
-              "invalid_request",
-              "Unable to resolve the parent checkout commit.",
-            );
           }
         }
         const result = yield* threadManagement

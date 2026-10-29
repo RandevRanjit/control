@@ -28,6 +28,7 @@ import {
   ThreadId,
 } from "@control/contracts";
 import * as Cause from "effect/Cause";
+import { ChildProcessSpawner } from "effect/process";
 import * as Deferred from "effect/Deferred";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -2497,17 +2498,19 @@ it.effect.each(
       { failSetup: false, failResolve: false, cancelSetup: true, cancelAsync: true },
       { failSetup: false, failResolve: false, omitIsolation: true },
       { failSetup: false, failResolve: true, omitIsolation: true },
+      { failSetup: false, failResolve: false, omitIsolation: true, outsideGit: true },
     ].map((failures) => ({
       driver,
       cancelSetup: false,
       cancelAsync: false,
       omitIsolation: false,
+      outsideGit: false,
       ...failures,
     })),
   ),
 )(
-  "prepares $driver delegated worktrees before execution, setup failure=$failSetup, commit failure=$failResolve, cancellation=$cancelSetup, async=$cancelAsync, isolation omitted=$omitIsolation",
-  ({ driver, failSetup, failResolve, cancelSetup, cancelAsync, omitIsolation }) =>
+  "prepares $driver delegated worktrees before execution, setup failure=$failSetup, commit failure=$failResolve, cancellation=$cancelSetup, async=$cancelAsync, isolation omitted=$omitIsolation, outside Git=$outsideGit",
+  ({ driver, failSetup, failResolve, cancelSetup, cancelAsync, omitIsolation, outsideGit }) =>
     Effect.gen(function* () {
       const setupEntered = yield* Deferred.make<void>();
       const allowSetup = yield* Deferred.make<void>();
@@ -2525,6 +2528,15 @@ it.effect.each(
               }),
             )
           : Effect.succeed({ commitSha: "parent-local-commit" }),
+      );
+      const execute = vi.fn(() =>
+        Effect.succeed({
+          exitCode: ChildProcessSpawner.ExitCode(outsideGit ? 128 : 0),
+          stdout: outsideGit ? "" : "true\n",
+          stderr: outsideGit ? "fatal: not a git repository" : "",
+          stdoutTruncated: false,
+          stderrTruncated: false,
+        }),
       );
       const harness = makeHarness({
         closeTerminal: () => Deferred.succeed(terminalClosed, undefined).pipe(Effect.asVoid),
@@ -2587,7 +2599,7 @@ it.effect.each(
       const layerService = OrchestratorMcpService.layer.pipe(
         Layer.provide(NodeCrypto.layer),
         Layer.provide(harness.layer),
-        Layer.provide(Layer.mock(GitVcsDriver.GitVcsDriver)({ resolveCommit })),
+        Layer.provide(Layer.mock(GitVcsDriver.GitVcsDriver)({ resolveCommit, execute })),
         Layer.provide(Layer.mock(ScheduledTasks.ScheduledTaskService)({})),
         Layer.provide(Layer.mock(SecretRequests.SecretRequests)({})),
       );
@@ -2638,12 +2650,12 @@ it.effect.each(
           ...(omitIsolation ? {} : { isolation: "worktree" as const }),
           clientRequestId: "isolated-child",
         };
-        if (failResolve && omitIsolation) {
-          // A parent with no commit to start from shares its checkout instead.
+        if (outsideGit) {
+          // A parent folder outside Git shares its checkout instead.
           const shared = yield* service.delegateTask(scope, input);
           const child = yield* threads.getThreadProjection(shared.childThreadId);
           assert.equal(child.thread.lineage.parentThreadId, parentThreadId);
-          assert.equal(resolveCommit.mock.calls.length, 1);
+          assert.equal(resolveCommit.mock.calls.length, 0);
           assert.equal(harness.createWorktree.mock.calls.length, 0);
           return;
         }

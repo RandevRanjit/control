@@ -569,6 +569,10 @@ export default function DiffPanel({
     }
     return getDiffLineStat(renderableFiles);
   }, [renderableFiles, selectedGitSource, selectedTurn]);
+  const diffFileCount =
+    !selectedTurn && selectedGitSource?.files
+      ? selectedGitSource.files.length
+      : renderableFiles.length;
   const fileTreeEntries = useMemo(() => diffFileTreeEntries(renderableFiles), [renderableFiles]);
   const selectedDiffFileKey = selectedFilePath
     ? (codeViewFiles.find((candidate) => candidate.filePath === selectedFilePath)?.fileKey ?? null)
@@ -913,6 +917,12 @@ export default function DiffPanel({
       </div>
       <div className="flex shrink-0 items-center gap-1 [-webkit-app-region:no-drag]">
         {codeViewFiles.length > 0 || (!selectedTurn && selectedGitSource?.files?.length) ? (
+          // Design §5.2's summary: `4 files +38 −12`.
+          <span className="font-mono text-2xs text-muted-foreground tabular-nums">
+            {diffFileCount} {diffFileCount === 1 ? "file" : "files"}
+          </span>
+        ) : null}
+        {codeViewFiles.length > 0 || (!selectedTurn && selectedGitSource?.files?.length) ? (
           <DiffStatLabel
             additions={diffLineStat.additions}
             deletions={diffLineStat.deletions}
@@ -1151,21 +1161,16 @@ export default function DiffPanel({
                         />
                       );
                     }}
-                    {...(lazySource
-                      ? {
-                          unsafeCSSExtra:
-                            "[data-additions-count], [data-deletions-count] { display: none; }",
-                          renderHeaderMetadata: (fileDiff: FileDiffMetadata) => {
-                            const stat = fileStats.get(resolveFileDiffPath(fileDiff));
-                            return stat ? (
-                              <DiffStatLabel
-                                additions={stat.additions}
-                                deletions={stat.deletions}
-                              />
-                            ) : null;
-                          },
-                        }
-                      : {})}
+                    // Our counts, not Pierre's: a lazy file's come from its stat before its
+                    // hunks load, and a binary file says nothing rather than `+0 -0`.
+                    unsafeCSSExtra="[data-additions-count], [data-deletions-count] { display: none; }"
+                    renderHeaderMetadata={(fileDiff: FileDiffMetadata) => {
+                      const stat =
+                        fileStats.get(resolveFileDiffPath(fileDiff)) ?? getDiffLineStat([fileDiff]);
+                      return (
+                        <DiffStatLabel additions={stat.additions} deletions={stat.deletions} />
+                      );
+                    }}
                     onRevealSearchMatch={unfoldDiffFile}
                     renderHeaderPrefix={(fileDiff, fileKey) => {
                       const unavailable = fileDiff.cacheKey?.endsWith(":pending") === true;

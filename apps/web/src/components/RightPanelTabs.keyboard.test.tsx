@@ -215,7 +215,15 @@ describe("right panel new-tab shortcut", () => {
 
 describe("right panel tabs", () => {
   it("shows a tab's views as chips only once it holds more than one", async () => {
-    await renderPanel({ surfaces: [terminal, browserA], activeSurfaceId: terminal.id }, "terminal");
+    await renderPanel(
+      {
+        surfaces: [terminal, browserA],
+        activeSurfaceId: browserA.id,
+        deviceAvailable: false,
+        browserAvailable: false,
+      },
+      "browser",
+    );
     expect(container.querySelector("[data-right-panel-subtabs]")).toBeNull();
     await renderPanel(
       {
@@ -363,5 +371,12 @@ describe("Folder's tabs", () => {
   it("show the row with the tree alone, so the first file doesn't move it", async () => {
     await renderPanel({ surfaces: [tree], activeSurfaceId: tree.id }, "folder");
     expect(chipTitles()).toEqual(["Files"]);
+  });
+});
+
+describe("Terminal's tabs", () => {
+  it("show the one shell as a tab, so the row says which shell is on show", async () => {
+    await renderPanel({ surfaces: [terminal], activeSurfaceId: terminal.id }, "terminal");
+    expect(chipTitles()).toHaveLength(1);
   });
 });

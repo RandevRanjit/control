@@ -371,6 +371,10 @@ export default function FileBrowserPanel({
     vcsEnvironment.status({ environmentId, input: { cwd } }),
   ).data;
   const workingTree = gitStatus?.isRepo ? gitStatus.workingTree : null;
+  const gitChanges = useMemo(
+    () => (workingTree ? fileTreeGitStatus(workingTree) : []),
+    [workingTree],
+  );
   useEffect(() => {
     model.setGitStatus([
       ...entries
@@ -379,9 +383,9 @@ export default function FileBrowserPanel({
           path: treePath(entry),
           status: "ignored" as const,
         })),
-      ...(workingTree ? fileTreeGitStatus(workingTree) : []),
+      ...gitChanges,
     ]);
-  }, [entries, model, workingTree]);
+  }, [entries, gitChanges, model]);
   useEffect(() => {
     if (!selectedPath) return;
     const controller = new AbortController();
@@ -577,6 +581,12 @@ export default function FileBrowserPanel({
             </Tooltip>
           </>
         )}
+        {gitChanges.length > 0 ? (
+          // Design §5.4's `4 changed`: what the tree's marks add up to.
+          <span className="shrink-0 font-mono text-2xs text-muted-foreground tabular-nums">
+            {gitChanges.length} changed
+          </span>
+        ) : null}
         {directoryPaths.length > 0 ? (
           <Tooltip>
             <TooltipTrigger

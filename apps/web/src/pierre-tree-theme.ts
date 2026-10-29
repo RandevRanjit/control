@@ -15,7 +15,12 @@ export const PIERRE_TREE_UNSAFE_CSS = `
     --trees-git-added-color-override: var(--tv-read);
     /* Ignored rows dim to the caption ink, still readable on Field's pale ground. */
     --trees-git-ignored-color-override: var(--text-caption);
+    --trees-focus-ring-color-override: var(--focus);
   }
+  /* A clicked row shows as picked by its tone; the ring is for the keyboard. */
+  button[data-type='item'][data-item-focused='true']:not(:focus-visible)::before { outline: none; }
+  /* A changed folder's dot in the full write green, as its files' M. */
+  [data-item-contains-git-change='true'] > [data-item-section='git'] { opacity: 1; }
   button[data-type='item'] { border-radius: 5px; }
   svg[data-icon-name='control-tree-icon-loading'] { opacity: 0.6; }
   @media (prefers-reduced-motion: no-preference) {

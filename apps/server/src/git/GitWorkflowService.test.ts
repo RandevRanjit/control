@@ -1,10 +1,18 @@
-import { assert, describe, expect, it, vi } from "@effect/vitest";
+import { assert, expect, it, vi } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 
-import { VcsRepositoryDetectionError } from "@control/contracts";
+import {
+  VcsRepositoryDetectionError,
+  type GitPreparePullRequestThreadResult,
+  type GitRunStackedActionResult,
+  type VcsCreateRefResult,
+  type VcsSwitchRefResult,
+} from "@control/contracts";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as FileSystem from "effect/FileSystem";
@@ -30,7 +38,7 @@ function layer(input: {
   );
 }
 
-describe("GitWorkflowService", () => {
+it.layer(NodeServices.layer)("GitWorkflowService", (it) => {
   it.effect("reports a non-Git VCS repository as not a Git repository", () =>
     Effect.gen(function* () {
       const workflow = yield* GitWorkflowService.GitWorkflowService;
@@ -267,5 +275,77 @@ describe("GitWorkflowService", () => {
         ),
       ),
     ),
+  );
+
+  it.effect.each(["switch", "create-and-switch", "feature-branch"] as const)(
+    "holds a %s from a nested project until a local PR checkout of the same repository is done",
+    (operation) =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "control-pr-lease-" });
+        const nested = `${root}/nested-project`;
+        const reached = yield* Deferred.make<void>();
+        const release = yield* Deferred.make<void>();
+        const events: string[] = [];
+        // The nested project reports the same checkout under another spelling of its root.
+        const handleFor = (cwd: string) =>
+          ({
+            kind: "git",
+            repository: { rootPath: cwd === root ? root : `${root}/.` },
+          }) as VcsDriverRegistry.VcsDriverHandle;
+        const workflow = yield* GitWorkflowService.make.pipe(
+          Effect.provideService(
+            VcsDriverRegistry.VcsDriverRegistry,
+            VcsDriverRegistry.VcsDriverRegistry.of({
+              get: () => Effect.die("unused"),
+              detect: () => Effect.die("unused"),
+              resolve: ({ cwd }) => Effect.succeed(handleFor(cwd)),
+            }),
+          ),
+          Effect.provideService(GitManager.GitManager, {
+            preparePullRequestThread: () =>
+              Deferred.succeed(reached, undefined).pipe(
+                Effect.andThen(Deferred.await(release)),
+                Effect.andThen(Effect.sync(() => events.push("checkout"))),
+                Effect.as({} as GitPreparePullRequestThreadResult),
+              ),
+            runStackedAction: () =>
+              Effect.sync(() => events.push("feature-branch")).pipe(
+                Effect.as({} as GitRunStackedActionResult),
+              ),
+          } as unknown as GitManager.GitManager["Service"]),
+          Effect.provideService(GitVcsDriver.GitVcsDriver, {
+            switchRef: () =>
+              Effect.sync(() => events.push("switch")).pipe(Effect.as({} as VcsSwitchRefResult)),
+            createRef: () =>
+              Effect.sync(() => events.push("create-and-switch")).pipe(
+                Effect.as({} as VcsCreateRefResult),
+              ),
+          } as unknown as GitVcsDriver.GitVcsDriver["Service"]),
+        );
+
+        const preparing = yield* Effect.forkChild(
+          workflow.preparePullRequestThread({ cwd: root, reference: "91", mode: "local" }),
+        );
+        yield* Deferred.await(reached);
+        const mutating = yield* Effect.forkChild(
+          operation === "switch"
+            ? workflow.switchRef({ cwd: nested, refName: "main" })
+            : operation === "create-and-switch"
+              ? workflow.createRef({ cwd: nested, refName: "second-client", switchRef: true })
+              : workflow.runStackedAction({
+                  cwd: nested,
+                  actionId: "second-client-feature-branch",
+                  action: "commit",
+                  featureBranch: true,
+                }),
+          { startImmediately: true },
+        );
+        yield* Deferred.succeed(release, undefined);
+        yield* Fiber.join(preparing);
+        yield* Fiber.join(mutating);
+
+        expect(events).toEqual(["checkout", operation]);
+      }).pipe(Effect.scoped),
   );
 });

@@ -742,7 +742,8 @@ it.effect(
       });
       yield* send(threadId, "owner", "start_immediately");
       const now = yield* DateTime.now;
-      const run = (yield* orchestrator.getThreadProjection(threadId)).runs[0]!;
+      const { runs, thread } = yield* orchestrator.getThreadProjection(threadId);
+      const run = runs[0]!;
       yield* projections.apply({
         id: EventId.make("event:orphaned-native-child:completed"),
         type: "run.updated",
@@ -761,6 +762,50 @@ it.effect(
             strength: "strong" as const,
           };
           const childThreadId = ThreadId.make(`thread:orphaned-native-child:${name}`);
+          // Its child thread shows the subagent's status through a runless root turn.
+          yield* projections.apply({
+            id: EventId.make(`event:orphaned-native-child:${name}:child-thread`),
+            type: "thread.created",
+            threadId: childThreadId,
+            occurredAt: now,
+            payload: {
+              ...thread,
+              id: childThreadId,
+              title: name,
+              lineage: {
+                parentThreadId: threadId,
+                relationshipToParent: "subagent",
+                rootThreadId: threadId,
+              },
+              createdBy: "agent",
+              creationSource: "provider",
+            },
+          });
+          const childRootNodeId = NodeId.make(`node:orphaned-native-child:${name}:child-root`);
+          yield* projections.apply({
+            id: EventId.make(`event:orphaned-native-child:${name}:child-root`),
+            type: "node.updated",
+            threadId: childThreadId,
+            nodeId: childRootNodeId,
+            occurredAt: now,
+            payload: {
+              id: childRootNodeId,
+              threadId: childThreadId,
+              runId: null,
+              rootNodeId: childRootNodeId,
+              parentNodeId: null,
+              kind: "root_turn",
+              status: "running",
+              countsForRun: false,
+              providerThreadId: null,
+              providerTurnId: null,
+              nativeItemRef: nativeTaskRef,
+              runtimeRequestId: null,
+              checkpointScopeId: null,
+              startedAt: now,
+              completedAt: null,
+            },
+          });
           yield* projections.apply({
             id: EventId.make(`event:orphaned-native-child:${name}:node`),
             type: "node.updated",
@@ -847,19 +892,19 @@ it.effect(
               result: null,
             },
           });
-          return id;
+          return { id, childThreadId };
         });
       const orphaned = yield* startSubagent("orphaned");
       const sibling = yield* startSubagent("sibling");
       const providerThreadId = run.providerThreadId!;
-      const settle = (subagentId: NodeId) =>
+      const settle = (subagent: { readonly id: NodeId }) =>
         orchestrator.dispatch({
           type: "thread.background-work.settle",
-          commandId: CommandId.make(`settle:${subagentId}`),
+          commandId: CommandId.make(`settle:${subagent.id}`),
           threadId,
           providerThreadId,
           providerTurnId: ProviderTurnId.make("turn:orphaned-native-child"),
-          subagentId,
+          subagentId: subagent.id,
         });
       const alert = Effect.gen(function* () {
         const shell = (yield* projections.getThreadShell(threadId))!;
@@ -874,17 +919,23 @@ it.effect(
       });
       const statuses = Effect.gen(function* () {
         const projection = yield* orchestrator.getThreadProjection(threadId);
-        return [orphaned, sibling].map((id) => [
-          projection.nodes.find((node) => node.id === id)?.status,
-          projection.turnItems.find((item) => item.nodeId === id)?.status,
-        ]);
+        const result = [];
+        for (const { id, childThreadId } of [orphaned, sibling]) {
+          const child = yield* orchestrator.getThreadProjection(childThreadId);
+          result.push([
+            projection.nodes.find((node) => node.id === id)?.status,
+            projection.turnItems.find((item) => item.nodeId === id)?.status,
+            child.nodes.find((node) => node.kind === "root_turn" && node.runId === null)?.status,
+          ]);
+        }
+        return result;
       });
       assert.deepEqual(yield* alert, { pending: ["orphaned", "sibling"], phase: "running" });
 
       yield* settle(orphaned);
       assert.deepEqual(yield* statuses, [
-        ["interrupted", "interrupted"],
-        ["running", "running"],
+        ["interrupted", "interrupted", "interrupted"],
+        ["running", "running", "running"],
       ]);
       assert.deepEqual(yield* alert, { pending: ["sibling"], phase: "running" });
 

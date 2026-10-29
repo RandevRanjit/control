@@ -2,7 +2,7 @@
  * The sidebar header: one row holding search, then new group and new thread as
  * icons at the end. Search owns the row's text and spans it.
  */
-import { CirclePlusIcon, SearchIcon, SquarePenIcon, XIcon } from "lucide-react";
+import { SearchIcon, SquarePenIcon, XIcon } from "lucide-react";
 import {
   type ComponentProps,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -16,8 +16,6 @@ import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 
 export interface SidebarThreadHeaderProps {
   /** Without projects there are no chats to group, so those controls stay out. */
-  hasProjects: boolean;
-  onNewGroup: () => void;
   /** Receives the click so Shift+click can skip the project picker. */
   onNewThread: (event: ReactMouseEvent) => void;
   newThreadDisabled: boolean;
@@ -36,8 +34,6 @@ export interface SidebarThreadHeaderProps {
 }
 
 export function SidebarThreadHeader({
-  hasProjects,
-  onNewGroup,
   onNewThread,
   newThreadDisabled,
   newThreadShortcutLabel,
@@ -104,11 +100,6 @@ export function SidebarThreadHeader({
           </Button>
         ) : null}
       </div>
-      {hasProjects ? (
-        <SidebarHeaderIconButton label="New group" onClick={onNewGroup}>
-          <CirclePlusIcon className="t3g" />
-        </SidebarHeaderIconButton>
-      ) : null}
       <SidebarHeaderIconButton
         label="New thread"
         tooltip={

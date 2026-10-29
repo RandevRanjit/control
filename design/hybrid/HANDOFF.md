@@ -110,10 +110,10 @@ Top to bottom (box numbers are in `measure.md` §Sidebar):
 1. **Top row, 52 high.** Traffic lights (16, 20). The sidebar toggle at x 96 and the **settings** button (the gear) at x 124,
    both 28 × 28. Then the **stair logo** (27 × 17, ink), centred in the space left to the right of the settings button.
    There is no wordmark.
-2. **Search row, 38.** A 176 × 32 field (radius 10, on the card tone `--hy-card`, `#DAE1F0` / `#232222`), then two
-   icon buttons: **New group** (a circle with a plus, in place of T3's project filter; owner, 11 Oct) and **New thread**
-   (the pen). There is no folder button: the pen's *New thread in…* picker ends with **Add folder…**, which adds a
-   folder and starts a chat in it (owner, 16 Oct).
+2. **Search row, 38.** A 32 high field filling the row (radius 10, on the card tone `--hy-card`, `#DAE1F0` / `#232222`),
+   then one icon button, **New thread** (the pen). There is no folder button: the pen's *New thread in…* picker ends with
+   **Add folder…**, which adds a folder and starts a chat in it (owner, 16 Oct). **New group** is in ⌘K, on a group's
+   right-click menu and under a chat's *Move to group*, not on this row (owner, 29 Oct).
 3. **Update note** (from C), 240 × 34, radius 10, on `--overlay`.
    - It reads: spark glyph, `Claude 2.1.295 is out` (the version in Plex 520), then an **Update** pill at the right.
    - It shows only while an update exists. The button updates every idle chat now and queues the working ones
@@ -123,24 +123,23 @@ Top to bottom (box numbers are in `measure.md` §Sidebar):
      (letter-spacing .02em). The count sits at the right in Plex 10.5, with a chevron.
    - **Folder row, 22**, indented 16. A 12 px folder icon that draws 10 px (**0.8 of the 12 px pearl**), then the
      folder name in Plex 11.
-   - **Chat card**: 224 × 78, radius 10, padding 8 10, indented to x 24. Three lines:
-     - **Line 1 (20).**
-       - The project mark: 16 px square, radius 25 %, the project's monogram in Plex 7.5 / 600 on its identity tint.
-       - The project name in Regrade 12 / 500.
-       - The **bead bar** (compact, 48 × 5), then the **lamp** (15 px) at the far right.
-     - **Line 2 (19).** The chat name in Plex 12.5 / 500 (`STATISTICS`). At the right, the **tokens processed** in this
-       chat, Plex 10, caption ink (`64k`). It is static, with no "tokens" word.
-     - **Line 3 (17).** Left to right:
-       - the **state words** in Regrade 11 (`needs you`, `working`, `interrupted`);
-       - ` · `, then the git info: the **branch icon** + `main`, or the **worktree icon** + its name
-         (`site-v2`), in Plex 10.5. The order is always *state, then git*.
-       - at the right, the **model** (`Opus 5.5`, Plex 10) and the **effort meter**: five stacked horizontal bars, each
-         9 × 1.5 with 1 px gaps, lit from the bottom. Lit bars are `--text-label`; unlit bars are `--seam`. 1 = low,
-         2 = medium, 3 = high, 4 = xhigh, 5 = max (all five lit).
+   - **Chat card**: 224 wide, radius 10, padding 7 10 7 12, indented to x 24. One line, and a second only when there is
+     something unusual to say, so most cards are 32 high and the rest 49 (owner, 29 Oct: *"those look the cleanest"*).
+     - **Line 1 (18).** The **lamp** (10 px), the chat name in Regrade 13 / 520 strong ink, the pin, the loose-ends mail
+       mark with its count, then the **tokens processed** in this chat at the right, Plex 10.5, caption ink (`64k`, no
+       "tokens" word). On hover the tokens give way to the card's actions (snooze, Settle).
+     - **Line 2 (15)**, indented to the name, Plex 10.5 caption, only for what is unusual:
+       - the **state words** when the chat isn't idle (`needs you`, `working`, `interrupted`);
+       - the **branch icon** or **worktree icon** + its name when it isn't `main` or `master` (`site-v2`);
+       - the **model** when it isn't the folder's default (`Sonnet 5.5`; the default is the one a new chat starts on).
+       - A loose chat also names its folder first: its 12 px mark and name, since no folder row sits over it.
+     - The project mark and name, the bead bar and the effort meter are not on the card: the folder row says the
+       folder, the lamp says the state, and the model's effort is in the composer.
      - The **selected** card fills with `--selection` (`#E7EDFF` / `#373F5B`) and takes a soft inset lip and occlusion
        (`--t3-rowsh`). A needs-you card carries a 6 % arm wash.
    - A **Loose** heading over chats that belong to no group.
-5. **Fold strip, 38.** **Snoozed** (the alarm clock) and **Settled** (the tick), each with a count pearl. Archive is
+5. **Fold strip, 38.** **Snoozed** (the alarm clock) and **Settled** (the tick), each with a count pearl when it holds
+   any (an empty fold shows none; owner, 29 Oct). Archive is
    merged into Settled: *"settled and archived are the same thing for me"*. A click opens the fold in place of the
    list.
 6. **Usage, 90.** `5H 71% 01:10` and `7D 22% Sun`: the key in Plex 10.5 / 500, the percent in Plex 11 / 600 and the
@@ -1037,8 +1036,8 @@ and nothing pings. It is desktop only, because the phone and the browser have no
   - **Sections**: **Needs you** (needs you and choose on return), **Working** (every chat with a turn running,
     background agents and auto-compact's turn included) and **Done** (done, failed or limited since you last opened
     the chat). A section with no chats isn't shown. Each heading is 28 high: Regrade 12 / 520 in label ink, with the
-    count in Plex 11 / 500, caption ink. Under it come the sidebar's cards (§3.4) at the panel's width, unchanged:
-    project mark, project, compact bead bar and lamp; the chat's name and its tokens, with the Loose ends mark (§17.3)
+    count in Plex 11 / 500, caption ink. Under it come three-line cards at the panel's width, which keep the folder on
+    the card since no folder row sits over them: project mark, project, compact bead bar and lamp; the chat's name and its tokens, with the Loose ends mark (§17.3)
     if it has one; state words, git, model and effort. In each section the newest change is first. A hovered card
     takes `--hy-card`.
   - **With nothing in any section**: `Nothing running.` (Regrade 13 / 500, secondary ink) over `No chat needs you,
@@ -1136,7 +1135,7 @@ CONTROL's marks its own (§20.3): *"there is no reason to change the control loc
 | Search | `Search` | sidebar search field |
 | Command palette | `Command` | the ⌘K button (§19.5) |
 | New chat | `SquarePen` | search row |
-| New group | `CirclePlus` | search row |
+| New group | `CirclePlus` | ⌘K |
 | Add | `Plus` | terminal tabs |
 | Folder, `Local` | `Folder` | folder rows; the strip |
 | Add folder | `FolderPlus` | the pen's picker |
@@ -1191,8 +1190,8 @@ The owner chose on 20 Oct to cut one current export, so the app builds from one 
 exported with `extract.cjs v1.2 simple`. Everything in the window that changed since 1.1 is below; the figures in
 §16–§19 (lock, Loose ends, local models, menu bar) aren't in the export, as before.
 
-1. **The search row** is a 176 × 32 field, then **New group** (the circle with a plus) and **New chat** (§3). 1.1's two
-   folder buttons are gone.
+1. **The search row** is the field, then **New chat** (§3). 1.1's two folder buttons are gone, and New group moved to
+   ⌘K and a group's menu (29 Oct).
 2. **The ⌘K button** sits first in the head's toggles (§19.5). The loads row narrows from 680 to 640.
 3. **Every icon is Lucide's** at §20's sizes: the gear for settings, `GitBranch` and `FolderGit2` on the cards,
    `AlarmClock` on the Snoozed fold, the head pills' icons and the panel's tab icons (§20.2). The stair logo, the spark,

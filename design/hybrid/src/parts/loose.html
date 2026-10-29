@@ -200,7 +200,7 @@ Bloom.section('loose', { init(el) {
   /* the card's mark: line 2, before the tokens */
   el.querySelectorAll('.t3-card').forEach(c => {
     const n = COUNTS[c.querySelector('.t3-ttl').textContent];
-    if (n) c.querySelector('.d-sw').insertAdjacentHTML('beforebegin', `<span class="s-le-cm" title="${n} loose end${n > 1 ? 's' : ''}">${G('mail')}<b>${n}</b></span>`);
+    if (n) c.querySelector('.d-tok').insertAdjacentHTML('beforebegin', `<span class="s-le-cm" title="${n} loose end${n > 1 ? 's' : ''}">${G('mail')}<b>${n}</b></span>`);
   });
   Hy.wire(el);
   requestAnimationFrame(() => Hy.dashes(el));

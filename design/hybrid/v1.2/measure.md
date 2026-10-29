@@ -24,7 +24,7 @@ Colours are the computed values, Field then Night; `@n%` is alpha. Padding is to
 | settings button | `.d-set` | 124, 12, 28, 28 | Regrade 14/20.3 400 | #525a7c / #a9aebf | — | 10px | 0 |
 | logo | `.d-logo` | 184.5, 17.5, 27, 17 | — | #262b5b / #f5ebe4 | — | 0 | 0 |
 | search row | `.t3-srch` | 0, 52, 256, 38 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 8 6 8 |
-| search field | `.t3-sf` | 8, 52, 176, 32 | Regrade 14/14 500 | #525a7c / #a9aebf | #dae1f0 / #232222 | 10px | 0 8 0 8 |
+| search field | `.t3-sf` | 8, 52, 208, 32 | Regrade 14/14 500 | #525a7c / #a9aebf | #dae1f0 / #232222 | 10px | 0 8 0 8 |
 | update note | `.hy-upd` | 8, 90, 240, 34 | Regrade 11.5/13.8 400 | #262b5b / #ebdcd5 | #edf1f9 / #424141 | 10px | 6 6 6 12 |
 | update note, version | `.hy-upd b` | 77.2, 98.6, 48.3, 15 | Plex 11.5/13.8 520 | #262b5b / #f5ebe4 | — | 0 | 0 |
 | update button | `.hy-upd .pill` | 183, 96, 59, 22 | Regrade 12/12 520 | #262b5b / #f5ebe4 | #e3e9f4 / #424141 | 999px | 0 10 0 10 |
@@ -35,24 +35,20 @@ Colours are the computed values, Field then Night; `@n%` is alpha. Padding is to
 | folder row | `.hy-ph` | 8, 170, 240, 22 | Plex 11/11 400 | #414970 / #c1c6d5 | — | 0 | 0 10 0 16 |
 | folder icon | `.hy-ph .gi` | 24, 175, 12, 12 | — | #525a7c / #a9aebf | — | 0 | 0 |
 | folder name | `.hy-ph > span` | 42, 175.5, 39.6, 11 | Plex 11/11 400 | #414970 / #c1c6d5 | — | 0 | 0 |
-| card | `.t3-card` | 24, 194, 224, 78 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | #d90e0b @6% / #ff4438 @6% | 10px | 8 10 8 10 |
-| card, selected | `.t3-card[data-act]` | 24, 494, 224, 78 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | #e7edff / #373f5b | 10px | 8 10 8 10 |
-| line 1 | `.t3-l1` | 34, 202, 204, 20 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 |
-| project mark | `.t3-fav` | 34, 204, 16, 16 | Plex 7.5/7.5 600 | #e3e9f4 / #383737 | #209993 / #66c4be | 25% | 0 |
-| project name | `.t3-pj` | 56, 206, 107, 12 | Regrade 12/12 500 | #333964 / #c1c6d5 | — | 0 | 0 |
-| state bar (bead bar) | `.t3-l1 .sbar` | 169, 209.5, 48, 5 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | #cdd7ed / #242323 | 0 | 0 |
-| lamp | `.t3-l1 .lamp` | 223, 204.5, 15, 15 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 |
-| line 2 | `.d-l2` | 34, 225, 204, 19 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 |
-| chat name | `.t3-ttl` | 34, 225.5, 178, 18 | Plex 12.5/18 500 | #262b5b / #ebdcd5 | — | 0 | 0 |
-| tokens | `.d-tok` | 220, 229.5, 18, 10 | Plex 10/10 400 | #525a7c / #a9aebf | — | 0 | 0 |
-| line 3 | `.t3-l3` | 34, 247, 204, 17 | Regrade 11/16 400 | #525a7c / #a9aebf | — | 0 | 0 |
-| state words | `.t3-l3 > span:first-child` | 34, 247.5, 48.7, 16 | Regrade 11/16 400 | #525a7c / #a9aebf | — | 0 | 0 |
-| branch glyph | `.t3-l3 .gi` | 94.7, 249.5, 12, 12 | — | #525a7c / #a9aebf | — | 0 | 0 |
-| branch / worktree | `.t3-brn` | 111.7, 247.5, 25.2, 16 | Plex 10.5/16 400 | #525a7c / #a9aebf | — | 0 | 0 |
-| model | `.d-model` | 167, 249.8, 71, 11.5 | Plex 10/10 400 | #525a7c / #a9aebf | — | 0 | 0 0 0 8 |
-| effort meter | `.d-eff` | 229, 249.8, 9, 11.5 | Plex 10/10 400 | #525a7c / #a9aebf | — | 0 | 0 |
-| effort bar | `.d-eff i` | 229, 249.8, 9, 1.5 | Plex 10/10 400 | #525a7c / #a9aebf | #b9c2d9 / #4f4e4e | 0.5px | 0 |
-| effort bar, lit | `.d-eff i.on` | 229, 252.3, 9, 1.5 | Plex 10/10 400 | #525a7c / #a9aebf | #414970 / #c1c6d5 | 0.5px | 0 |
+| card | `.t3-card` | 24, 194, 224, 49 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | #d90e0b @6% / #ff4438 @6% | 10px | 7 10 7 12 |
+| card, one line | `.t3-card.d-card:not(:has(.t3-l3))` | 24, 347, 224, 32 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 10px | 7 10 7 12 |
+| card, selected | `.t3-card[data-act]` | 24, 441, 224, 49 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | #e7edff / #373f5b | 10px | 7 10 7 12 |
+| line 1 | `.t3-l1` | 36, 201, 202, 18 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 |
+| lamp | `.t3-l1 .lamp` | 36, 205, 10, 10 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 |
+| chat name | `.t3-ttl` | 54, 201, 157.1, 18 | Regrade 13/18 520 | #262b5b / #f5ebe4 | — | 0 | 0 |
+| tokens | `.d-tok` | 219.1, 204.8, 18.9, 10.5 | Plex 10.5/10.5 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| line 2 | `.t3-l3` | 36, 221, 202, 15 | Plex 10.5/15 400 | #525a7c / #a9aebf | — | 0 | 0 0 0 18 |
+| state words | `.d-sw0` | 54, 221, 56.7, 15 | Plex 10.5/15 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| branch glyph | `.t3-l3 .gi` | 106.1, 469.5, 12, 12 | — | #525a7c / #a9aebf | — | 0 | 0 |
+| branch / worktree | `.t3-brn` | 122.1, 468, 44.1, 15 | Plex 10.5/15 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| model | `.d-model` | 87.2, 274.3, 63, 10.5 | Plex 10.5/10.5 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| loose chat's folder | `.d-pj` | 54, 892, 47.5, 15 | Plex 10.5/15 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| project mark | `.d-pj .t3-fav` | 54, 893.5, 12, 12 | Plex 6/6 600 | #e3e9f4 / #383737 | #65955a / #93c089 | 25% | 0 |
 | fold strip | `.hy-folds` | 0, 777, 256, 38 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 8 14 4 12 |
 | fold (Snoozed) | `.hy-fold` | 12, 785, 93.6, 26 | Regrade 11.5/11.5 520 | #414970 / #c1c6d5 | — | 999px | 0 4 0 8 |
 | fold count | `.hy-fold .pearl.count` | 85.6, 790, 16, 16 | Plex 8.96/8.96 600 | #262b5b / #f5ebe4 | #e3e9f4 / #424141 | 999px | 0 5.12 0 5.12 |

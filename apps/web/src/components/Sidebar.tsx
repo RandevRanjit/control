@@ -14,6 +14,7 @@ import {
 import { discardComposerDraft } from "../lib/discardComposerDraft";
 import { requestCustomSnooze } from "./CustomSnoozeDialog";
 import { useSupportsMultiplePullRequests } from "~/hooks/useSupportsMultiplePullRequests";
+import { resolveProjectSettings } from "@control/shared/projectSettings";
 import { resolveThreadCurrentPullRequestLink } from "@control/shared/threadPullRequests";
 import { useAtomValue } from "@effect/atom-react";
 import { replaceComposerContextReferences } from "@control/shared/composerContextReferences";
@@ -58,6 +59,7 @@ import {
 } from "@control/client-runtime/environment";
 import {
   AuthOrchestrationOperateScope,
+  DEFAULT_MODEL,
   type EnvironmentMachineKind,
   GroupId,
   type ScopedThreadRef,
@@ -145,7 +147,7 @@ import { useStableUntilKeyChanges } from "../hooks/useStableUntilKeyChanges";
 import { useTerminalFocus } from "../hooks/useTerminalFocus";
 import { isCommandPaletteOpen, openCommandPalette } from "../commandPaletteBus";
 import { startNewThreadFromContext } from "../lib/chatThreadActions";
-import { useClientSettings } from "../hooks/useSettings";
+import { useClientSettings, useEnvironmentSettings } from "../hooks/useSettings";
 import { useCopyToClipboard } from "../hooks/useCopyToClipboard";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useNowMinute } from "../hooks/useNowMinute";
@@ -177,9 +179,9 @@ import type { SidebarThreadSummary } from "../types";
 import { isScratchProject } from "@control/client-runtime/state/projects";
 import type { EnvironmentProject } from "@control/client-runtime/state/shell";
 import { cn, newGroupId } from "~/lib/utils";
-import { EffortMeter, Glyph, Lamp, StateBar } from "./control/bloom";
+import { Glyph, Lamp } from "./control/bloom";
 import { openLooseEnds } from "./looseEnds/LooseEnds";
-import { effortLevel, projectMonogram, projectTint, resolveCardState } from "./control/cardState";
+import { cardNotes, projectMonogram, projectTint, resolveCardState } from "./control/cardState";
 import { EnvironmentMachineIcon } from "./EnvironmentMachineIcon";
 import {
   buildDraftActionMenuItems,
@@ -780,7 +782,8 @@ function SidebarFoldButton({
     >
       {props.fold === "snoozed" ? <AlarmClockIcon className="gi" /> : <CheckIcon className="gi" />}
       {props.fold === "snoozed" ? "Snoozed" : "Settled"}
-      <span className="pearl count">{props.count}</span>
+      {/* An empty fold says nothing (owner, 29 Oct). */}
+      {props.count > 0 ? <span className="pearl count">{props.count}</span> : null}
     </button>
   );
 }
@@ -1164,6 +1167,8 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
   scratchMachineLabel: string | null;
   project: EnvironmentProject | null;
   projectDisplayName: string | null;
+  /** Listed under its folder's row, so the card leaves the folder out. */
+  inFolder: boolean;
   providerEntryByInstanceId: ReadonlyMap<string, ProviderInstanceEntry>;
   timestampFormat: TimestampFormat;
   onThreadClick: (event: ReactMouseEvent, threadRef: ScopedThreadRef) => void;
@@ -1385,6 +1390,16 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
   const modelLabel = selectedModel
     ? getTriggerDisplayModelLabel(selectedModel)
     : thread.modelSelection.model;
+  // The model a new chat in this folder starts on; the card names its own only when it differs.
+  const defaultModel = useEnvironmentSettings(
+    thread.environmentId,
+    useCallback(
+      (settings) =>
+        resolveProjectSettings(settings, thread.projectId, props.project).settings
+          .defaultModelSelection?.model ?? DEFAULT_MODEL,
+      [thread.projectId, props.project],
+    ),
+  );
 
   const detailsTooltip = (
     <SidebarThreadTooltip
@@ -1969,7 +1984,12 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
   });
   const cardTint = props.project?.tint ?? projectTint(thread.projectId);
   const cardMonogram = projectMonogram(props.projectDisplayName ?? "");
-  const cardEffort = effortLevel(thread.modelSelection);
+  const cardNoted = cardNotes({
+    state: cardState,
+    branch: thread.branch,
+    model: thread.modelSelection.model,
+    defaultModel,
+  });
 
   return (
     <li
@@ -1980,7 +2000,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
         // The card's 2 px design margin sits on the row instead (content-visibility
         // contains the card's own), on top only: the flex list doesn't collapse
         // margins, and every row above it already ends without one.
-        "mt-0.5 list-none [content-visibility:auto] [contain-intrinsic-size:auto_78px]",
+        "mt-0.5 list-none [content-visibility:auto] [contain-intrinsic-size:auto_32px]",
         sortable?.isDragging && "relative z-20",
       )}
     >
@@ -1998,7 +2018,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
               data-act={props.isActive ? "" : undefined}
               aria-busy={isRegeneratingTitle || undefined}
               // The card is indented (.t3d-in), so it must not also take the full width.
-              className={cn(rowSurfaceClassName, "t3-card t3d-in w-auto")}
+              className={cn(rowSurfaceClassName, "t3-card d-card t3d-in w-auto")}
               onClick={handleClick}
               onDoubleClick={handleDoubleClick}
               onKeyDown={handleKeyDown}
@@ -2007,24 +2027,38 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
           }
         >
           {accessibleTitle}
-          {/* Design v1's card (§3.4): mark, project, bar and lamp; the chat;
-              then state, git, model and effort. */}
-          <div className="t3-l1 relative z-10">
+          {/* The card (§3, owner 29 Oct): the lamp, the chat, its pin, loose ends and tokens on one
+              line; a second line only for what's unusual (cardNotes), and a loose chat's folder. */}
+          <div className="t3-l1 s-le-root relative z-10">
+            <Lamp st={cardState.lamp} />
+            {title}
+            {isRegeneratingTitle ? (
+              <span role="status" className="sr-only">
+                Regenerating title
+              </span>
+            ) : null}
             {draftIndicator}
-            <span className="t3-fav" style={{ background: `var(--id-${cardTint})` }}>
-              {cardMonogram}
-            </span>
-            <span className="t3-pj">{props.projectDisplayName}</span>
             {thread.pinnedAt != null ? (
               <span className="t3-pinm">
                 <PinIcon className="t3g" />
               </span>
             ) : null}
+            {/* Loose ends (§17.3): the mark opens the chat with its popover up; the card's own click navigates. */}
+            {thread.openLooseEndCount ? (
+              <button
+                type="button"
+                className="s-le-cm"
+                aria-label={`${thread.openLooseEndCount} loose ${thread.openLooseEndCount === 1 ? "end" : "ends"} open`}
+                onClick={() => openLooseEnds(threadRef)}
+              >
+                <MailIcon className="gi" />
+                <b>{thread.openLooseEndCount}</b>
+              </button>
+            ) : null}
             {sortable?.isDragging ? (
               dragDestination
             ) : (
               <>
-                <StateBar st={cardState.st} />
                 <span
                   className={cn(
                     "group/sidebar-status-slot relative flex h-5 shrink-0 items-stretch justify-end",
@@ -2053,7 +2087,11 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
                         </span>
                       </button>
                     ) : null}
-                    <Lamp st={cardState.lamp} />
+                    {thread.tokensProcessed === undefined ? null : (
+                      <span className="d-tok">
+                        {formatContextWindowTokens(thread.tokensProcessed)}
+                      </span>
+                    )}
                   </span>
                   {props.settlementSupported || showSnoozeButton || hasUnsentDraft ? (
                     <span
@@ -2121,49 +2159,32 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
                 release click still fires and is consumed. */}
             {props.sweepAction !== null ? dragDestination : null}
           </div>
-          <div className="d-l2 s-le-root">
-            {title}
-            {isRegeneratingTitle ? (
-              <span role="status" className="sr-only">
-                Regenerating title
-              </span>
-            ) : null}
-            {/* Loose ends (§17.3): the mark opens the chat with its popover up; the card's own click navigates. */}
-            {thread.openLooseEndCount ? (
-              <button
-                type="button"
-                className="s-le-cm"
-                aria-label={`${thread.openLooseEndCount} loose ${thread.openLooseEndCount === 1 ? "end" : "ends"} open`}
-                onClick={() => openLooseEnds(threadRef)}
-              >
-                <MailIcon className="gi" />
-                <b>{thread.openLooseEndCount}</b>
-              </button>
-            ) : null}
-            {thread.tokensProcessed === undefined ? null : (
-              <span className="d-sw">
-                <span className="d-tok">{formatContextWindowTokens(thread.tokensProcessed)}</span>
-              </span>
-            )}
-          </div>
-          <div className="t3-l3">
-            <span className="d-sw0">{cardState.words}</span>
-            {thread.branch ? (
-              <>
-                <span>·</span>
-                {thread.worktreePath ? (
-                  <FolderGit2Icon className="gi" />
-                ) : (
-                  <GitBranchIcon className="gi" />
-                )}
-                <span className="t3-brn">{thread.branch}</span>
-              </>
-            ) : null}
-            <span className="d-model">
-              {modelLabel.replace(/^Claude /, "")}
-              {cardEffort === null ? null : <EffortMeter level={cardEffort} />}
-            </span>
-          </div>
+          {props.inFolder && !cardNoted.words && !cardNoted.branch && !cardNoted.model ? null : (
+            <div className="t3-l3">
+              {props.inFolder ? null : (
+                <span className="d-pj">
+                  <span className="t3-fav" style={{ background: `var(--id-${cardTint})` }}>
+                    {cardMonogram}
+                  </span>
+                  <span>{props.projectDisplayName}</span>
+                </span>
+              )}
+              {cardNoted.words ? <span className="d-sw0">{cardNoted.words}</span> : null}
+              {cardNoted.branch ? (
+                <span>
+                  {thread.worktreePath ? (
+                    <FolderGit2Icon className="gi" />
+                  ) : (
+                    <GitBranchIcon className="gi" />
+                  )}
+                  <span className="t3-brn">{cardNoted.branch}</span>
+                </span>
+              ) : null}
+              {cardNoted.model ? (
+                <span className="d-model">{modelLabel.replace(/^Claude /, "")}</span>
+              ) : null}
+            </div>
+          )}
           {props.jumpLabel ? <JumpHintBadge label={props.jumpLabel} /> : null}
         </TooltipTrigger>
         {detailsTooltip}
@@ -4713,6 +4734,26 @@ export default function Sidebar() {
     [copyBranchToClipboard, copyPathToClipboard, openProjectSettings, projectByKey],
   );
 
+  /** Asks for a name and tint, then creates the group; null when cancelled or failed. */
+  const createGroup = useCallback(
+    async (environmentId = primaryEnvironmentId) => {
+      if (environmentId === null) return null;
+      const details = await requestGroupDetails(null);
+      if (details === null) return null;
+      const groupId = newGroupId();
+      const created = await mutateGroup({
+        environmentId,
+        input: { type: "group.create", groupId, ...details },
+      });
+      if (created._tag === "Failure") {
+        reportGroupFailure("Could not create group", created);
+        return null;
+      }
+      return groupId;
+    },
+    [mutateGroup, primaryEnvironmentId, reportGroupFailure],
+  );
+
   const handleGroupContextMenu = useCallback(
     (group: EnvironmentGroup, position: { x: number; y: number }) => {
       void (async () => {
@@ -4722,6 +4763,8 @@ export default function Sidebar() {
         const clicked = await settlePromise(() =>
           api.contextMenu.show(
             [
+              // New group lives here and in ⌘K; the sidebar's top row keeps only the pen (owner, 29 Oct).
+              { id: "new", label: "New group…" },
               { id: "edit", label: "Edit" },
               // The lock sheet, in Group mode with this group ticked (HANDOFF §16.2).
               { id: "lock", label: "Lock…" },
@@ -4733,6 +4776,10 @@ export default function Sidebar() {
           ),
         );
         if (clicked._tag === "Failure" || clicked.value === null) return;
+        if (clicked.value === "new") {
+          await createGroup(group.environmentId);
+          return;
+        }
         if (clicked.value === "lock") {
           openLockSheet({ mode: "Group", groupKeys: [groupKeyOf(group)] });
           return;
@@ -4759,27 +4806,7 @@ export default function Sidebar() {
         );
       })();
     },
-    [mutateGroup, reportGroupFailure],
-  );
-
-  /** Asks for a name and tint, then creates the group; null when cancelled or failed. */
-  const createGroup = useCallback(
-    async (environmentId = primaryEnvironmentId) => {
-      if (environmentId === null) return null;
-      const details = await requestGroupDetails(null);
-      if (details === null) return null;
-      const groupId = newGroupId();
-      const created = await mutateGroup({
-        environmentId,
-        input: { type: "group.create", groupId, ...details },
-      });
-      if (created._tag === "Failure") {
-        reportGroupFailure("Could not create group", created);
-        return null;
-      }
-      return groupId;
-    },
-    [mutateGroup, primaryEnvironmentId, reportGroupFailure],
+    [createGroup, mutateGroup, reportGroupFailure],
   );
 
   const moveThreadToGroup = useCallback(
@@ -5219,8 +5246,6 @@ export default function Sidebar() {
           // header and would otherwise paint across the search row's outline.
           <div className="relative z-[1]">
             <SidebarThreadHeader
-              hasProjects={projectGroups.length > 0}
-              onNewGroup={() => void createGroup()}
               onNewThread={handleNewThreadClick}
               newThreadDisabled={projects.length === 0}
               newThreadShortcutLabel={newThreadShortcutLabel}
@@ -5354,6 +5379,7 @@ export default function Sidebar() {
                         thread: EnvironmentThreadShell,
                         section: SidebarSection,
                         sortable?: SortableThreadRowBag,
+                        inFolder = false,
                       ) => {
                         const threadKey = scopedThreadKey(
                           scopeThreadRef(thread.environmentId, thread.id),
@@ -5440,6 +5466,7 @@ export default function Sidebar() {
                                 `${thread.environmentId}:${thread.projectId}`,
                               ) ?? null
                             }
+                            inFolder={inFolder}
                             providerEntryByInstanceId={
                               providerEntriesByEnvironment.get(thread.environmentId) ??
                               EMPTY_PROVIDER_ENTRIES
@@ -5565,6 +5592,7 @@ export default function Sidebar() {
                                       thread,
                                       thread.pinnedAt != null ? "pinned" : "active",
                                       bag,
+                                      true,
                                     )
                                   }
                                 </DraggableGroupedThreadRow>,

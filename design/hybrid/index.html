@@ -1169,6 +1169,18 @@ html[data-theme="night"] .t3w.t3-native, html[data-theme="night"] .t3-pal { --t3
 .t3-d .d-sw > * { grid-area: 1 / 1; }
 .t3-d .d-model { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; padding-left: 8px; font: 400 10px/1 var(--f-mono); color: var(--text-caption); white-space: nowrap; flex: none; }
 .t3-d .d-sw0 { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+/* the sidebar's card (owner, 29 Oct): one line; a second only for what's unusual, or a loose chat's folder */
+.t3-card.d-card { height: auto; display: flex; flex-direction: column; row-gap: 2px; padding: 7px 10px 7px 12px; }
+.t3-card.d-card .t3-l1 { gap: 8px; height: 18px; }
+.t3-card.d-card .t3-l1 .lamp { --d: 10px; }
+.t3-card.d-card .t3-ttl { flex: 1; min-width: 0; font: var(--w-med) 13px/18px var(--f-chrome); color: var(--text-strong); opacity: 1; }
+.t3-card.d-card .d-tok { font: 400 10.5px/1 var(--f-mono); color: var(--text-caption); font-variant-numeric: tabular-nums; }
+.t3-card.d-card .t3-l3 { gap: 8px; padding-left: 18px; font: 400 10.5px/15px var(--f-mono); color: var(--text-caption); }
+.t3-card.d-card .t3-l3 > span { display: inline-flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; }
+.t3-card.d-card .t3-l3 > span > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.t3-card.d-card .t3-l3 .t3-brn { opacity: 1; font-size: inherit; }
+.t3-card.d-card .d-pj .t3-fav { width: 12px; height: 12px; font-size: 6px; }
+.t3-card.d-card .d-model { margin-left: 0; padding-left: 0; font-size: inherit; flex: none; }
 .d-eff { display: inline-grid; grid-template-rows: repeat(5, 1.5px); row-gap: 1px; width: 9px; }
 .d-eff i { border-radius: .5px; background: var(--seam); }
 .d-eff i.on { background: var(--text-label); }
@@ -3099,6 +3111,7 @@ const CHATS = [
   { n: 'STATISTICS', title: 'Statistics week 6 notes', g: 'thesis', p: 'thesis', st: 'needs', sub: 'needs you', chip: 'BASH', age: '2m', diff: '' },
   { n: 'LINEAR_ALGEBRA', title: 'Linear algebra past paper', g: 'thesis', p: 'thesis', st: 'done', sub: 'done · main', age: '14m' },
   { n: 'SIGNALS_101', title: 'Signals problem set 4', g: 'thesis', p: 'thesis', st: 'intr', sub: 'interrupted · main', age: '3h' },
+  { n: 'LIT_REVIEW', title: 'Literature review', g: 'thesis', p: 'thesis', st: 'idle', sub: 'idle · main', age: '2d' },
   { n: 'INTERNSHIPS', title: 'Internship applications', g: 'thesis', p: 'scratch', st: 'idle', sub: 'idle', age: '1d', place: 'snoozed', wake: 'Mon 09:00' },
   { n: 'ORBIT-WEBSITE', title: 'Release size in one place', g: 'orbit', p: 'orbit', st: 'working', sub: 'working', wt: 2, age: 'now', sel: true, diff: '+42 −13',
     wts: [['site-v2', '+38 −12', true], ['download-size', '+4 −1']] },
@@ -3327,22 +3340,26 @@ function t3Win(skin = 'native') {
 /* ---------- D, version 1: A's sidebar cards inside groups › folders, A's frame, a threaded centre, B's panel (design/hybrid/HANDOFF.md) ---------- */
 /* D's lamps: working and housekeeping take the background lamp (the band in a ring); the bars keep their state */
 const dlamp = st => ['working', 'house'].includes(st) ? 'bg' : st;
-/* the model and its effort (5 steps: low, medium, high, xhigh, max) per chat */
-const MODEL = { 'STATISTICS': ['Opus 5.5', 4], 'LINEAR_ALGEBRA': ['Sonnet 5.5', 3], 'SIGNALS_101': ['Opus 5.5', 5], 'ORBIT-WEBSITE': ['Opus 5.5', 5],
-  'ORBIT-1-MARKET': ['Sonnet 5.5', 2], 'PORTFOLIO-SCROLL': ['Opus 5.5', 4], 'CONTROL': ['Opus 5.5', 5], 'DESIGN-EXPLORATION': ['Opus 5.5', 5],
-  'DEPS-AUDIT': ['Haiku 5.5', 2], 'RELAY MAIN': ['Sonnet 5.5', 3], 'CV-BUILD': ['Opus 5.5', 3] };
-const effort = n => `<span class="d-eff" role="img" aria-label="effort ${n} of 5">${[5, 4, 3, 2, 1].map(i => `<i${i <= n ? ' class="on"' : ''}></i>`).join('')}</span>`;
-function dline3(c) {
-  const b = BRANCH[c.n], words = c.sub.replace(/ · main$/, ''), [m, e] = MODEL[c.n] || ['Opus 5.5', 3];
-  const git = c.p === 'scratch' ? '' : b ? `<span>·</span>${G('wt')}<span class="t3-brn">${b[1]}</span>` : `<span>·</span>${G('branch')}<span class="t3-brn">main</span>`;
-  return `<div class="t3-l3"><span class="d-sw0">${words}</span>${git}<span class="d-model">${m}${effort(e)}</span></div>`;
+/* each chat's model; a new chat starts on the default, and a card names its model only when it differs */
+const DEFAULT_MODEL = 'Opus 5.5';
+const MODEL = { 'LINEAR_ALGEBRA': 'Sonnet 5.5', 'ORBIT-1-MARKET': 'Sonnet 5.5', 'DEPS-AUDIT': 'Haiku 5.5', 'RELAY MAIN': 'Sonnet 5.5' };
+/* line 2 names only what is unusual (owner, 29 Oct): a state other than idle, a branch other than main, a model other
+   than the default; and a loose chat's folder, since no folder row sits over it */
+function dnotes(c, loose) {
+  const b = BRANCH[c.n], m = MODEL[c.n] || DEFAULT_MODEL;
+  const notes = (loose ? `<span class="d-pj">${fav(c.p)}<span>${PROJECTS[c.p].name}</span></span>` : '')
+    + (c.st === 'idle' ? '' : `<span class="d-sw0">${c.sub.replace(/ · main$/, '')}</span>`)
+    + (b && c.p !== 'scratch' ? `<span>${G('wt')}<span class="t3-brn">${b[1]}</span></span>` : '')
+    + (m === DEFAULT_MODEL ? '' : `<span class="d-model">${m}</span>`);
+  return notes ? `<div class="t3-l3">${notes}</div>` : '';
 }
-/* line 2's right end: the tokens this chat has processed, static (pass 5) */
-const dswap = c => `<span class="d-sw"><span class="d-tok" title="tokens processed in this chat">${Bloom.sample(c.n).tok}</span></span>`;
-const dcard = c => `<div class="t3-card t3d-in"${c.sel ? ' data-act' : ''} data-st="${c.st}"><div class="t3-l1">${fav(c.p)}<span class="t3-pj">${PROJECTS[c.p].name}</span>${c.pin ? `<span class="t3-pinm">${T('pin')}</span>` : ''}${BAR(c.st, { form: 'compact' })}${Bloom.lamp(dlamp(c.st))}</div>`
-  + `<div class="d-l2"><span class="t3-ttl">${c.n}</span>${dswap(c)}</div>${dline3(c)}</div>`;
+/* the card: lamp, the chat, its pin and the tokens it has processed on one line; on hover the tokens give way to the actions */
+const dcard = (c, loose = false) => `<div class="t3-card d-card t3d-in"${c.sel ? ' data-act' : ''} data-st="${c.st}"><div class="t3-l1">${Bloom.lamp(dlamp(c.st))}<span class="t3-ttl">${c.n}</span>${c.pin ? `<span class="t3-pinm">${T('pin')}</span>` : ''}<span class="d-tok" title="tokens processed in this chat">${Bloom.sample(c.n).tok}</span></div>`
+  + `${dnotes(c, loose)}</div>`;
 /* settled and archived are one place for the owner */
-const dfolds = () => `<div class="hy-folds"><span class="hy-fold">${G('snooze')}Snoozed${Bloom.pearl({ n: snoozed().length })}</span><span class="hy-fold">${G('tick')}Settled${Bloom.pearl({ n: 415 })}</span></div>`;
+/* an empty fold shows no count (owner, 29 Oct) */
+const dfold = (g, label, n) => `<span class="hy-fold">${G(g)}${label}${n ? Bloom.pearl({ n }) : ''}</span>`;
+const dfolds = () => `<div class="hy-folds">${dfold('snooze', 'Snoozed', snoozed().length)}${dfold('tick', 'Settled', 415)}</div>`;
 const LOGO = `<svg class="d-logo" width="27" height="17" viewBox="0 0 19 12" role="img" aria-label="CONTROL"><polyline points="1,11 1,9 4,9 4,6 7,6 7,3 10,3 10,6 13,6 13,9 16,9 16,11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="translate(1 -1)"/></svg>`;
 function dside() {
   let list = '';
@@ -3351,12 +3368,12 @@ function dside() {
     list += grow(g, rows.length);
     for (const p of [...new Set(rows.map(c => c.p))]) {
       const pr = rows.filter(c => c.p === p);
-      list += projHead(p, pr.length) + pr.map(dcard).join('');
+      list += projHead(p, pr.length) + pr.map(c => dcard(c)).join('');
     }
   }
-  list += `<div class="hy-lh">Loose</div>` + loose().map(dcard).join('');
+  list += `<div class="hy-lh">Loose</div>` + loose().map(c => dcard(c, true)).join('');
   return `<aside class="t3-side"><div class="t3-top"><span class="lights"><i></i><i></i><i></i></span><span class="t3-tg">${T('pleft')}</span><span class="t3-ib d-set">${T('settings')}</span><span class="t3-wm d-wm">${LOGO}</span></div>`
-    + `<div class="t3-srch"><span class="t3-sf">${T('search')}Search</span><span class="t3-ib">${T('groupplus')}</span><span class="t3-ib">${T('pen')}</span></div>`
+    + `<div class="t3-srch"><span class="t3-sf">${T('search')}Search</span><span class="t3-ib">${T('pen')}</span></div>`
     + `<div class="hy-upd">${G('spark')}<span>Claude <b class="t-num">2.1.295</b> is out</span><span class="pill sm">Update</span></div>`
     + `<div class="t3-list">${list}</div>${dfolds()}${usage()}`
     + `<div class="t3-foot"><div class="t3-util"><span class="t3-ib">${T('chart')}</span></div></div></aside>`;
@@ -3784,7 +3801,7 @@ Bloom.section('loose', { init(el) {
   /* the card's mark: line 2, before the tokens */
   el.querySelectorAll('.t3-card').forEach(c => {
     const n = COUNTS[c.querySelector('.t3-ttl').textContent];
-    if (n) c.querySelector('.d-sw').insertAdjacentHTML('beforebegin', `<span class="s-le-cm" title="${n} loose end${n > 1 ? 's' : ''}">${G('mail')}<b>${n}</b></span>`);
+    if (n) c.querySelector('.d-tok').insertAdjacentHTML('beforebegin', `<span class="s-le-cm" title="${n} loose end${n > 1 ? 's' : ''}">${G('mail')}<b>${n}</b></span>`);
   });
   Hy.wire(el);
   requestAnimationFrame(() => Hy.dashes(el));

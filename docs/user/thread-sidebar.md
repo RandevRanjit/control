@@ -66,6 +66,13 @@ scroll position instead of following the thread to its new place in the list.
 
 Pinning does not prevent automatic settlement. Settling a thread removes its pin.
 
+On web and desktop, a thread's card is one line: its status ring, title, pin, open loose ends
+and the tokens it has processed. A second line appears only for something unusual: a state
+other than idle, a branch other than `main` or `master`, or a model other than the one a new
+thread in that folder starts on. A loose thread also names its folder there. To make a group,
+use **New group** in the command palette, on a group's right-click menu, or under a thread's
+**Move to group**.
+
 On web and desktop, drag a thread between sections to change its state. Drag a thread up into
 the pinned section to pin it at the spot you drop it; drag a pinned thread down into the active
 list to unpin it. Dropping a thread on **Settled** in the strip at the foot of the sidebar settles it.
@@ -135,7 +142,7 @@ without deleting the conversation. **Un-settle thread** restores it to active wo
 and prevents automatic settlement until new activity resumes the usual rules.
 
 On web and desktop, **Snoozed** and **Settled** sit in a strip at the foot of the sidebar,
-each with its count. Click one to show its threads in place of the list, and click it again
+each with its count when it holds any. Click one to show its threads in place of the list, and click it again
 to go back. A row's **Wake** or **Un-settle** button, or its menu, returns a thread to the list.
 
 To keep connecting fast, especially from the phone, CONTROL first loads only the 25 most

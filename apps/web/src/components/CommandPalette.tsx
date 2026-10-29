@@ -64,6 +64,7 @@ import {
   ChartNoAxesColumnIcon,
   CheckIcon,
   ChevronRightIcon,
+  CirclePlusIcon,
   CornerLeftUpIcon,
   FileDiffIcon,
   FileOutputIcon,
@@ -88,6 +89,8 @@ import {
   TextSearchIcon,
 } from "lucide-react";
 import { requestThreadFindOpen } from "./chat/threadFindActionBus";
+import { requestGroupDetails } from "./GroupDialog";
+import { useOrchestrationCommand } from "../state/use-orchestration-command";
 import {
   useCallback,
   useDeferredValue,
@@ -163,6 +166,7 @@ import { getLatestThreadForProject, sortThreads } from "../lib/threadSort";
 import {
   cn,
   getLocalFileManagerName,
+  newGroupId,
   isMacPlatform,
   isWindowsPlatform,
   newProjectId,
@@ -776,6 +780,10 @@ function OpenCommandPaletteDialog(props: {
   const { environments } = useEnvironments();
   const desktopLocalBootstraps = useDesktopLocalBootstraps();
   const primaryEnvironmentId = usePrimaryEnvironmentId();
+  const createGroup = useOrchestrationCommand(
+    projectEnvironment.mutateGroup,
+    "Could not create group",
+  );
   const availableSettingsSearchItems = useAvailableSettingsSearchItems();
   const { activeDraftThread, activeThread, defaultProjectRef, handleNewThread } =
     useHandleNewThread();
@@ -2049,6 +2057,25 @@ function OpenCommandPaletteDialog(props: {
       icon: <SquarePenIcon className={ITEM_ICON_CLASS} />,
       addonIcon: <SquarePenIcon className={ADDON_ICON_CLASS} />,
       groups: [{ value: "projects", label: "Projects", items: newThreadPickerItems }],
+    });
+  }
+
+  // New group lives here and on a group's menu; the sidebar's top row keeps only the pen (owner, 29 Oct).
+  if (projects.length > 0 && primaryEnvironmentId !== null) {
+    actionItems.push({
+      kind: "action",
+      value: "action:new-group",
+      searchTerms: ["new group", "group", "create"],
+      title: "New group",
+      icon: <CirclePlusIcon className={ITEM_ICON_CLASS} />,
+      run: async () => {
+        const details = await requestGroupDetails(null);
+        if (details === null) return;
+        await createGroup({
+          environmentId: primaryEnvironmentId,
+          input: { type: "group.create", groupId: newGroupId(), ...details },
+        });
+      },
     });
   }
 

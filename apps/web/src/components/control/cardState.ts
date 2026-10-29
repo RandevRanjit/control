@@ -9,8 +9,28 @@ export interface CardStateView {
   readonly st: CardState;
   /** The lamp's state class: working wears the background lamp (§6.1). */
   readonly lamp: CardState;
-  /** Line 3's state words. */
+  /** The state words, on line 2 when the state isn't idle. */
   readonly words: string;
+}
+
+/**
+ * What a card's second line names: only what is unusual (owner, 29 Oct). A state other than idle,
+ * a branch other than main or master, a model other than the default; with none, the card is one line.
+ */
+export function cardNotes(input: {
+  readonly state: CardStateView;
+  readonly branch: string | null;
+  readonly model: string;
+  readonly defaultModel: string;
+}) {
+  return {
+    words: input.state.st === "idle" ? null : input.state.words,
+    branch:
+      input.branch === null || input.branch === "main" || input.branch === "master"
+        ? null
+        : input.branch,
+    model: input.model !== input.defaultModel,
+  };
 }
 
 export function resolveCardState(input: {

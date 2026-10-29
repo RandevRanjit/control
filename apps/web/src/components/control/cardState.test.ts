@@ -1,7 +1,13 @@
 import { ProviderInstanceId } from "@control/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
-import { effortLevel, projectMonogram, projectTint, resolveCardState } from "./cardState";
+import {
+  cardNotes,
+  effortLevel,
+  projectMonogram,
+  projectTint,
+  resolveCardState,
+} from "./cardState";
 
 const base = {
   isUnread: false,
@@ -51,5 +57,40 @@ describe("card details", () => {
     expect(projectTint("project-a")).toBe(projectTint("project-a"));
     expect(projectMonogram("orbit-website")).toBe("OR");
     expect(projectMonogram("rx2")).toBe("RX");
+  });
+});
+
+describe("cardNotes", () => {
+  const idle = resolveCardState({ ...base, status: "ready" });
+  const usual = {
+    state: idle,
+    branch: "main",
+    model: "claude-opus-5-5",
+    defaultModel: "claude-opus-5-5",
+  };
+
+  it("says nothing for an idle chat on main with the default model, so the card is one line", () => {
+    expect(cardNotes(usual)).toEqual({ words: null, branch: null, model: false });
+    expect(cardNotes({ ...usual, branch: "master" })).toEqual({
+      words: null,
+      branch: null,
+      model: false,
+    });
+    expect(cardNotes({ ...usual, branch: null })).toEqual({
+      words: null,
+      branch: null,
+      model: false,
+    });
+  });
+
+  it("names only what is unusual: another state, another branch, another model", () => {
+    expect(
+      cardNotes({
+        state: resolveCardState({ ...base, status: "working" }),
+        branch: "site-v2",
+        model: "claude-sonnet-5-5",
+        defaultModel: "claude-opus-5-5",
+      }),
+    ).toEqual({ words: "working", branch: "site-v2", model: true });
   });
 });

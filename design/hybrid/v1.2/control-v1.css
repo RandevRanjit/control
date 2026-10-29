@@ -250,43 +250,9 @@ html[data-motion="reduce"] .toggle > i { transition: background-color var(--d-qu
   background: linear-gradient(to right, var(--sb-ramp)) 0 0 / var(--tile) 100% repeat-x;
   transform: translateX(calc(var(--k) * var(--tile) * -1)); }
 
-.sbar:is(.compact, .tip, .beads) { --bd: 5px; --bp: 8px; --sb-h: var(--bd); border-radius: 0;
-  -webkit-mask: radial-gradient(circle closest-side, #000 calc(100% - .6px), transparent 100%) 0 0 / var(--bp) 100% space;
-          mask: radial-gradient(circle closest-side, #000 calc(100% - .6px), transparent 100%) 0 0 / var(--bp) 100% space; }
-
-.sbar.compact { --tile-base: 240px; }
-
-:is(.sbar, .sb-old)[data-st="needs"] { --sb-ramp: var(--sb-needs); --rp: var(--T-beat); --tm: .5; }
-
-:is(.sbar, .sb-old)[data-st="failed"] { --sb-ramp: var(--sb-failed); --rp: var(--T-breath); --tm: .75; }
-
-:is(.sbar, .sb-old)[data-st="done"] { --sb-ramp: var(--sb-done); --rp: var(--T-breath); --tm: .75; }
-
 :is(.sbar, .sb-old)[data-st="working"] { --sb-ramp: var(--sb-working); }
 
-:is(.sbar, .sb-old)[data-st="bg"] { --sb-ramp: var(--sb-working); }
-
-:is(.sbar, .sb-old)[data-st="choose"] { --sb-ramp: var(--sb-choose); }
-
-:is(.sbar, .sb-old)[data-st="house"] { --sb-ramp: var(--sb-house); --rp: var(--T2); }
-
-.sbar[data-st="house"] { opacity: .7; }
-
-.sbar[data-st="outside"]::before { width: 100%; transform: none; background: var(--ink-4); opacity: .55;
-  -webkit-mask: linear-gradient(to right, #000 0 70%, transparent 70% 78%, #000 78%); mask: linear-gradient(to right, #000 0 70%, transparent 70% 78%, #000 78%); }
-
-/* open: a gap, like the lamp */
-.sbar:is(.compact, .tip, .beads)[data-st="outside"] {      /* bead forms: open beads, rings like the lamp, instead of a gap that would cut a bead in half */
-  -webkit-mask: radial-gradient(circle closest-side, transparent calc(100% - var(--bd) * .3 - .5px), #000 calc(100% - var(--bd) * .3), #000 calc(100% - .6px), transparent 100%) 0 0 / var(--bp) 100% space;
-          mask: radial-gradient(circle closest-side, transparent calc(100% - var(--bd) * .3 - .5px), #000 calc(100% - var(--bd) * .3), #000 calc(100% - .6px), transparent 100%) 0 0 / var(--bp) 100% space; }
-
-.sbar:is(.compact, .tip, .beads)[data-st="outside"]::before { -webkit-mask: none; mask: none; opacity: .8; }
-
-.sbar[data-st="idle"]::before { content: none; }
-
 html[data-motion="full"] .sbar:not(.still)::before { animation: sb-flow var(--rp) linear infinite; animation-delay: calc(var(--k) * var(--rp) * -1); }
-
-html[data-motion="full"] .sbar[data-st="outside"]::before { animation: none; }
 
 /* ---------- 19. pearl: the bead material at app size, 8-20 px (BRIEF-2 §5) ----------
    Bloom.pearl({tint:'mint'}) | Bloom.pearl({st:'done'}) | Bloom.pearl({n:412}) | Bloom.tally(['needs','working','done'])
@@ -506,10 +472,6 @@ html[data-motion="full"] .sbar[data-st="outside"]::before { animation: none; }
   -webkit-mask: linear-gradient(90deg, transparent calc(50% - var(--rw) / 2), #000 0 calc(50% + var(--rw) / 2), transparent 0);
           mask: linear-gradient(90deg, transparent calc(50% - var(--rw) / 2), #000 0 calc(50% + var(--rw) / 2), transparent 0); }
 
-.sbar[data-st="intr"] { --sb-ramp: var(--sb-working); --k: .3; opacity: .55; }
-
-html[data-motion="full"] .sbar[data-st="intr"]::before { animation: none; }
-
 /* ==================================================================
    T3's frame (S1, A). One set of rules on --t3-* variables: .t3-native takes T3's own palette
    (apps/web/src/index.css at the fork point; Tailwind v4 stock values), .t3-bloom maps the same
@@ -560,8 +522,6 @@ html[data-motion="full"] .sbar[data-st="intr"]::before { animation: none; }
 
 .t3-fav { width: 16px; height: 16px; flex: none; border-radius: 25%; display: grid; place-items: center; font: 600 7.5px/1 var(--t3-mono); color: var(--t3-card); }
 
-.t3-pj { font: 500 12px/1 var(--t3-font); color: var(--t3-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
-
 .t3-pinm { color: var(--t3-ico); display: inline-flex; }
 
 .t3-pinm .t3g { width: 12px; height: 12px; }
@@ -577,8 +537,6 @@ html[data-motion="full"] .sbar[data-st="intr"]::before { animation: none; }
 .t3-bloom .t3-l3 { font-size: 11px; }
 
 .t3-bloom .t3-l3 .t3-brn { opacity: 1; font-family: var(--f-mono); font-size: 10.5px; }
-
-.t3-bloom .t3-l1 .sbar { width: 48px; flex: none; }
 
 .t3-bloom .t3-l1 .lamp { --d: 15px; }
 
@@ -706,23 +664,32 @@ html[data-motion="full"] .sbar[data-st="intr"]::before { animation: none; }
 
 .t3-d .d-logo { display: block; }
 
-.t3-d .d-l2 { display: flex; align-items: center; gap: 8px; min-width: 0; }
-
-.t3-d .d-l2 .t3-ttl { flex: 1; min-width: 0; }
-
-.t3-d .d-sw { flex: none; display: grid; justify-items: end; font: 400 10px/1 var(--f-mono); color: var(--text-caption); font-variant-numeric: tabular-nums; }
-
-.t3-d .d-sw > * { grid-area: 1 / 1; }
-
 .t3-d .d-model { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; padding-left: 8px; font: 400 10px/1 var(--f-mono); color: var(--text-caption); white-space: nowrap; flex: none; }
 
 .t3-d .d-sw0 { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 
-.d-eff { display: inline-grid; grid-template-rows: repeat(5, 1.5px); row-gap: 1px; width: 9px; }
+/* the sidebar's card (owner, 29 Oct): one line; a second only for what's unusual, or a loose chat's folder */
+.t3-card.d-card { height: auto; display: flex; flex-direction: column; row-gap: 2px; padding: 7px 10px 7px 12px; }
 
-.d-eff i { border-radius: .5px; background: var(--seam); }
+.t3-card.d-card .t3-l1 { gap: 8px; height: 18px; }
 
-.d-eff i.on { background: var(--text-label); }
+.t3-card.d-card .t3-l1 .lamp { --d: 10px; }
+
+.t3-card.d-card .t3-ttl { flex: 1; min-width: 0; font: var(--w-med) 13px/18px var(--f-chrome); color: var(--text-strong); opacity: 1; }
+
+.t3-card.d-card .d-tok { font: 400 10.5px/1 var(--f-mono); color: var(--text-caption); font-variant-numeric: tabular-nums; }
+
+.t3-card.d-card .t3-l3 { gap: 8px; padding-left: 18px; font: 400 10.5px/15px var(--f-mono); color: var(--text-caption); }
+
+.t3-card.d-card .t3-l3 > span { display: inline-flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; }
+
+.t3-card.d-card .t3-l3 > span > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+
+.t3-card.d-card .t3-l3 .t3-brn { opacity: 1; font-size: inherit; }
+
+.t3-card.d-card .d-pj .t3-fav { width: 12px; height: 12px; font-size: 6px; }
+
+.t3-card.d-card .d-model { margin-left: 0; padding-left: 0; font-size: inherit; flex: none; }
 
 /* D's centre: the thread */
 .t3-col.d-col { gap: 0; }

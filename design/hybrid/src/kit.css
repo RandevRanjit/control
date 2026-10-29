@@ -492,6 +492,18 @@ html[data-theme="night"] .t3w.t3-native, html[data-theme="night"] .t3-pal { --t3
 .t3-d .d-sw > * { grid-area: 1 / 1; }
 .t3-d .d-model { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; padding-left: 8px; font: 400 10px/1 var(--f-mono); color: var(--text-caption); white-space: nowrap; flex: none; }
 .t3-d .d-sw0 { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+/* the sidebar's card (owner, 29 Oct): one line; a second only for what's unusual, or a loose chat's folder */
+.t3-card.d-card { height: auto; display: flex; flex-direction: column; row-gap: 2px; padding: 7px 10px 7px 12px; }
+.t3-card.d-card .t3-l1 { gap: 8px; height: 18px; }
+.t3-card.d-card .t3-l1 .lamp { --d: 10px; }
+.t3-card.d-card .t3-ttl { flex: 1; min-width: 0; font: var(--w-med) 13px/18px var(--f-chrome); color: var(--text-strong); opacity: 1; }
+.t3-card.d-card .d-tok { font: 400 10.5px/1 var(--f-mono); color: var(--text-caption); font-variant-numeric: tabular-nums; }
+.t3-card.d-card .t3-l3 { gap: 8px; padding-left: 18px; font: 400 10.5px/15px var(--f-mono); color: var(--text-caption); }
+.t3-card.d-card .t3-l3 > span { display: inline-flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; }
+.t3-card.d-card .t3-l3 > span > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.t3-card.d-card .t3-l3 .t3-brn { opacity: 1; font-size: inherit; }
+.t3-card.d-card .d-pj .t3-fav { width: 12px; height: 12px; font-size: 6px; }
+.t3-card.d-card .d-model { margin-left: 0; padding-left: 0; font-size: inherit; flex: none; }
 .d-eff { display: inline-grid; grid-template-rows: repeat(5, 1.5px); row-gap: 1px; width: 9px; }
 .d-eff i { border-radius: .5px; background: var(--seam); }
 .d-eff i.on { background: var(--text-label); }

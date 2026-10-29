@@ -361,7 +361,7 @@ function prView() {
     + `<div class="s-sc-fact">${T('eye')}<span>Watching: the agent wakes when checks finish or someone comments</span></div></div>`
     + `<div class="s-sc-acts"><span class="pill sm primary s-sc-off">Merge</span><span class="pill ghost sm">Close</span><span class="hy-soft">Merge waits on the checks</span></div></div>`;
   const files = `<div class="hy-dsum"><span>4 files</span><span class="t-num hy-pn">+38</span><span class="t-num hy-mn">−12</span></div>`
-    + FILES.map(([s, f, a, r]) => `<div class="hy-df"><span></span><span>${s}</span><span>${f}</span><span class="t-num"><span class="hy-pn">${a}</span> <span class="hy-mn">${r}</span></span></div>`).join('');
+    + FILES.map(([s, f, a, r]) => `<div class="hy-df"><span></span><span>${s}</span>${G('file')}<span>${f}</span><span class="t-num"><span class="hy-pn">${a}</span> <span class="hy-mn">${r}</span></span></div>`).join('');
   const linked = fold(true, 'Linked to this thread', 1) + prl(['merged', 46, 'Download page: one price table', 'merged · 3d']);
   const others = fold(true, 'Open in orbit-website', 2) + OTHERS.map(prl).join('');
   return `<div class="pane hy-v s-sc-prv">${prHead}${card}${files}${fold(false, 'Activity', 3, 'CI · 4m')}${linked}${others}<div class="s-sc-gap"></div>${linkFoot}</div>`;

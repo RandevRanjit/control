@@ -306,7 +306,7 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 - **Summary, 26.** `4 files +38 −12`. Plus is in the green mark, minus in the red mark (Plex 11.5 / 520). Everywhere
   counts show, a side with nothing is left out, and a binary file shows none.
 - **Changed files.** 24 high, radius 8. A status letter (M, A, D, R) after the chevron, in place of T3's icons,
-  the path in Plex 11.5, and `+n −n` at the right, added before removed everywhere. Copy path shows on the row's
+  then the file's icon (§20.3; owner, 29 Oct), the path in Plex 11.5, and `+n −n` at the right, added before removed everywhere. Copy path shows on the row's
   hover only.
 - **Diff.** Plex 11 / 16 on `--deep`, radius 6. Line numbers sit on `--sunken`.
   - Added lines take Bloom's green wash, with words on `--green-word`.
@@ -322,7 +322,7 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
   the documents, pictures, media and builds a turn wrote into the folder (Markdown, PDF, images, CSV, DMG…). Code a
   turn changed is Git's.
 - **List.** Grouped under turn headings (`T14 · now`, `T12 · 23:20`) with a chevron. Only the newest turn starts
-  open; a closed turn shows its count. Each row is 28 high: a 14 px kind icon (shot, file, out; §20.2), the name in
+  open; a closed turn shows its count. Each row is 28 high: the file's 14 px icon (§20.3; owner, 29 Oct), the name in
   Plex 11.5 and the meta at the right (`PNG · 212 × 40`, `DMG · 11.7 MB`, `+4 −10`). The picked row takes the card
   tone.
 - **Preview.** The picked output renders underneath, on `--deep`, radius 10. A Markdown report is shown rendered:
@@ -1168,7 +1168,7 @@ These are CONTROL's marks, not icons, and stay its own:
   panel, the palette and the phone;
 - the spark (`g-spark`), the Claude mark, in the ink of the place it sits; not T3's `ClaudeAI`;
 - lamps, bead bars, pearls, the effort meter and the project monogram;
-- file-type icons (the file tree, a file's tab), which are T3's Pierre icons. The page draws Lucide's `File` there.
+- file-type icons (the file tree, a file's tab, Outputs' and Diff's rows), which are T3's Pierre icons. The page draws Lucide's `File` there.
 
 ### 20.4 The page and the app
 

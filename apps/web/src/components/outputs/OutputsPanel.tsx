@@ -1,21 +1,19 @@
 import type { EnvironmentId, OrchestrationV2Run, RunId } from "@control/contracts";
-import { Camera, ChevronDown, ChevronRight, File, FileOutput, type LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 
 import type { ChatMessage, TurnDiffSummary } from "~/types";
 import { cn } from "~/lib/utils";
 
+import { useTheme } from "~/hooks/useTheme";
+
+import { PierreEntryIcon } from "../chat/PierreEntryIcon";
 import { AttachmentFilePreview } from "../files/AttachmentFilePreview";
 import { deriveThreadOutputs, type ThreadOutput } from "./threadOutputs";
 
-/** §20.2: screenshot, file, build output; a published page and a written document are files. */
-const KIND_ICONS: Record<ThreadOutput["kind"], LucideIcon> = {
-  shot: Camera,
-  file: File,
-  page: File,
-  change: File,
-  out: FileOutput,
-};
+/** The name a row's icon is read from: each output takes its file's icon, as the tree does (§20.3). */
+const iconPath = (item: ThreadOutput) =>
+  item.kind === "change" ? item.path : item.kind === "page" ? `${item.name}.html` : item.name;
 
 /**
  * The panel's Outputs view (design §5.3): what the agent made in this thread, grouped by turn,
@@ -33,6 +31,7 @@ export function OutputsPanel(props: {
   /** Shows a workspace file the agent wrote, as Folder does. */
   renderWorkspaceFile: (path: string) => ReactNode;
 }) {
+  const { resolvedTheme } = useTheme();
   const turns = useMemo(
     () =>
       deriveThreadOutputs({
@@ -93,7 +92,6 @@ export function OutputsPanel(props: {
                 </button>
                 {open
                   ? turn.items.map((item) => {
-                      const Icon = KIND_ICONS[item.kind];
                       return (
                         <button
                           key={item.id}
@@ -103,7 +101,12 @@ export function OutputsPanel(props: {
                           data-on={item.id === picked?.id ? "" : undefined}
                           onClick={() => setPickedId(item.id)}
                         >
-                          <Icon className="gi" />
+                          <PierreEntryIcon
+                            pathValue={iconPath(item)}
+                            kind="file"
+                            theme={resolvedTheme}
+                            className="gi"
+                          />
                           <span className="dp-nm">{item.name}</span>
                           <span className="dp-mt">{item.meta}</span>
                         </button>

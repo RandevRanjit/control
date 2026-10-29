@@ -85,6 +85,7 @@ import { createGitDiffFileContentsLoader } from "../lib/diffFileContents";
 import { useReviewFilePatches } from "./diffs/useReviewFilePatches";
 import { DiffFileLoadingBoundary } from "./diffs/DiffFileLoadingBoundary";
 import { DiffChangeMark } from "./diffs/DiffChangeMark";
+import { PierreEntryIcon } from "./chat/PierreEntryIcon";
 import { DiffFileStatus } from "./diffs/DiffFileStatus";
 
 type DiffThemeType = "light" | "dark";
@@ -1184,6 +1185,13 @@ export default function DiffPanel({
                             onToggle={toggleDiffFileCollapsed}
                           />
                           <DiffChangeMark type={fileDiff.type} />
+                          {/* The file's icon, as the tree and Outputs draw it (§20.3). */}
+                          <PierreEntryIcon
+                            pathValue={resolveFileDiffPath(fileDiff)}
+                            kind="file"
+                            theme={resolvedTheme}
+                            className="ml-1 size-3.5"
+                          />
                         </span>
                       );
                     }}

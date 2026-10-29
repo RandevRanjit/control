@@ -66,6 +66,7 @@ import { diffFileTreeEntries } from "../diffs/diffFileTree.logic";
 import { StyledDiffCodeView } from "../diffs/StyledDiffCodeView";
 import { Button } from "../ui/button";
 import { DiffChangeMark } from "../diffs/DiffChangeMark";
+import { PierreEntryIcon } from "../chat/PierreEntryIcon";
 import { MorphIcon } from "~/components/MorphIcon";
 import { Checkbox } from "../ui/checkbox";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "../ui/collapsible";
@@ -821,11 +822,21 @@ function PullRequestCodeTab({
           >
             <MorphIcon className="size-4" icon={collapsed ? ChevronRight : ChevronDown} />
           </Button>
-          {item.type === "diff" ? <DiffChangeMark type={item.fileDiff.type} /> : null}
+          {item.type === "diff" ? (
+            <>
+              <DiffChangeMark type={item.fileDiff.type} />
+              <PierreEntryIcon
+                pathValue={resolveFileDiffPath(item.fileDiff)}
+                kind="file"
+                theme={resolvedTheme}
+                className="ml-1 size-3.5"
+              />
+            </>
+          ) : null}
         </span>
       );
     },
-    [toggleFile],
+    [resolvedTheme, toggleFile],
   );
 
   // Read through refs rather than closed over. The viewer memoizes each visible file's header

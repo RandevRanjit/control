@@ -166,7 +166,7 @@ function tabs(list, o = {}) {
 const FILES = [['M', 'lib/release.ts', '+2', '−1'], ['M', 'app/download/page.tsx', '+1', '−1'], ['A', 'app/admin/page.tsx', '+31', ''], ['M', 'docs/DESIGN.md', '+4', '−10']];
 const diffView = () => `<div class="pane hy-v"><div class="hy-vh"><div class="seg sm"><button aria-pressed="false">Graph</button><button aria-pressed="true">Diff</button><button aria-pressed="false">PR</button></div><span class="sp"></span><span class="hy-soft">this turn · vs HEAD</span></div>
   <div class="hy-dsum"><span>4 files</span><span class="t-num hy-pn">+38</span><span class="t-num hy-mn">−12</span></div>
-  ${FILES.map(([s, f, a, r]) => `<div class="hy-df"><span></span><span>${s}</span><span>${f}</span><span class="t-num"><span class="hy-pn">${a}</span> <span class="hy-mn">${r}</span></span></div>`).join('')}
+  ${FILES.map(([s, f, a, r]) => `<div class="hy-df"><span></span><span>${s}</span>${G('file')}<span>${f}</span><span class="t-num"><span class="hy-pn">${a}</span> <span class="hy-mn">${r}</span></span></div>`).join('')}
   <div class="hy-diff hy-pd">${DIFF.release.map(dline).join('')}${DIFF.download.map(dline).join('')}</div></div>`;
 const browserView = () => `<div class="pane hy-v"><div class="hy-vh">${G('chev-l')}${G('chev-r')}${G('reload')}<span class="input hy-url">localhost:3000/download</span><span class="hy-pk">${G('pick')}</span><span class="hy-pk">${G('shot')}</span></div>
   <div class="hy-site"><div class="hy-snav"><b>ORBIT</b><span>Features</span><span>Download</span><span>Changelog</span></div><h4 class="hy-sh1">Download ORBIT</h4>
@@ -349,7 +349,7 @@ const OUTS = [
   ['T12 · 23:20', 0, [['out', 'dist/ORBIT-0.2.3.dmg', 'DMG · 11.7 MB'], ['file', 'CHANGELOG.md', 'Markdown'], ['file', 'notary-log.json', 'JSON · accepted']]],
 ];
 const dOutputs = () => `<div class="pane hy-v dp-v"><div class="hy-vh"><b>Outputs</b><span>this thread, newest first</span><span class="sp"></span><span class="t-num">5</span></div>
-  <div class="dp-list">${OUTS.map(([t, open, rows]) => `<div class="dp-th">${G(open ? 'chev-d' : 'chev-r')}${t}<span class="sp"></span>${open ? '' : `<span class="t-num">${rows.length}</span>`}</div>${open ? rows.map(([g, n, m, on]) => `<div class="dp-o"${on ? ' data-on' : ''}>${G(g)}<span class="dp-nm">${n}</span><span class="dp-mt">${m}</span></div>`).join('') : ''}`).join('')}</div>
+  <div class="dp-list">${OUTS.map(([t, open, rows]) => `<div class="dp-th">${G(open ? 'chev-d' : 'chev-r')}${t}<span class="sp"></span>${open ? '' : `<span class="t-num">${rows.length}</span>`}</div>${open ? rows.map(([, n, m, on]) => `<div class="dp-o"${on ? ' data-on' : ''}>${G('file')}<span class="dp-nm">${n}</span><span class="dp-mt">${m}</span></div>`).join('') : ''}`).join('')}</div>
   <div class="dp-md"><h5>Release size</h5><p>The DMG's size is read from the file at build time, never typed. <code>lib/release.ts</code> holds it in bytes; both pages format it with <code>formatSize</code>.</p>
   <table><tr><th>Page</th><th>Reads</th></tr><tr><td><code>/download</code></td><td><code>release.size</code></td></tr><tr><td><code>/admin</code></td><td><code>release.size</code></td></tr></table>
   <p>Never hand-type a size again: the build fails if <code>dist/</code> has no DMG.</p></div>

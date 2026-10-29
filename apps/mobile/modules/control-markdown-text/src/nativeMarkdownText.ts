@@ -2,6 +2,7 @@ import type { MarkdownNode } from "react-native-nitro-markdown/headless";
 import { isMarkdownFileLinkLabel } from "@control/client-runtime/markdown-links";
 import { collectComposerInlineTokens } from "@control/shared/composerInlineTokens";
 import { imageMimeType } from "@control/shared/image";
+import { markdownMathRanges } from "@control/shared/markdownMath";
 import { isWindowsAbsolutePath } from "@control/shared/path";
 import { videoMimeType } from "@control/shared/video";
 /**
@@ -615,6 +616,110 @@ export function nativeMarkdownWithAuthoredWindowsPaths(
   return restore(node);
 }
 
+export interface NativeMarkdownFormula {
+  readonly tex: string;
+  readonly display: boolean;
+}
+
+// Private-use characters md4c reads as plain text, so a formula survives parsing as a
+// token in a text node and reaches the renderer in a run.
+const MATH_PLACEHOLDER_PATTERN = /\uE000(\d+)\uE001/g;
+
+/**
+ * Formulas found by the shared parser web uses, so `$5 and $10`, `$HOME` and code stay
+ * text. Each becomes a placeholder before md4c parses the rest of the Markdown.
+ */
+export function nativeMarkdownMathSource(markdown: string): {
+  readonly markdown: string;
+  readonly formulas: ReadonlyArray<NativeMarkdownFormula>;
+} {
+  const ranges = markdownMathRanges(markdown);
+  if (ranges.length === 0) return { markdown, formulas: [] };
+  let source = "";
+  let offset = 0;
+  const formulas = ranges.map((range, index) => {
+    source += `${markdown.slice(offset, range.start)}\uE000${index}\uE001`;
+    offset = range.end;
+    return { tex: range.tex, display: range.display && !range.inTable };
+  });
+  return { markdown: source + markdown.slice(offset), formulas };
+}
+
+/** Run text split into prose and the formulas its placeholders stand for. */
+export function nativeMarkdownMathSegments(
+  text: string,
+  formulas: ReadonlyArray<NativeMarkdownFormula>,
+): Array<string | NativeMarkdownFormula> {
+  const segments: Array<string | NativeMarkdownFormula> = [];
+  let offset = 0;
+  for (const match of text.matchAll(MATH_PLACEHOLDER_PATTERN)) {
+    const formula = formulas[Number(match[1])];
+    if (!formula) continue;
+    if (match.index > offset) segments.push(text.slice(offset, match.index));
+    segments.push(formula);
+    offset = match.index + match[0].length;
+  }
+  if (offset < text.length) segments.push(text.slice(offset));
+  return segments;
+}
+
+function isBreakNode(node: MarkdownNode): boolean {
+  return node.type === "soft_break" || node.type === "line_break";
+}
+
+function displayMathBlocks(
+  paragraph: MarkdownNode,
+  formulas: ReadonlyArray<NativeMarkdownFormula>,
+): MarkdownNode[] {
+  const blocks: MarkdownNode[] = [];
+  let inline: MarkdownNode[] = [];
+  const flush = () => {
+    while (inline[0] && isBreakNode(inline[0])) inline.shift();
+    while (inline.at(-1) && isBreakNode(inline.at(-1)!)) inline.pop();
+    if (inline.length > 0) {
+      // Only the first piece keeps the paragraph's offsets, so sibling keys stay unique.
+      blocks.push(
+        blocks.length === 0
+          ? { ...paragraph, children: inline }
+          : { type: "paragraph", children: inline },
+      );
+    }
+    inline = [];
+  };
+  for (const child of paragraph.children ?? []) {
+    const text = child.type === "text" ? (child.content ?? "") : "";
+    let offset = 0;
+    for (const match of text.matchAll(MATH_PLACEHOLDER_PATTERN)) {
+      const formula = formulas[Number(match[1])];
+      if (!formula?.display) continue;
+      if (match.index > offset) inline.push({ ...child, content: text.slice(offset, match.index) });
+      flush();
+      blocks.push({ type: "math_block", content: formula.tex });
+      offset = match.index + match[0].length;
+    }
+    if (offset === 0) inline.push(child);
+    else if (offset < text.length) inline.push({ ...child, content: text.slice(offset) });
+  }
+  flush();
+  return blocks;
+}
+
+/** Display formulas leave their paragraph as math blocks; inline ones stay in the text. */
+export function nativeMarkdownWithDisplayMath(
+  node: MarkdownNode,
+  formulas: ReadonlyArray<NativeMarkdownFormula>,
+): MarkdownNode {
+  if (!node.children) return node;
+  return {
+    ...node,
+    children: node.children.flatMap((child) =>
+      child.type === "paragraph"
+        ? displayMathBlocks(child, formulas)
+        : [nativeMarkdownWithDisplayMath(child, formulas)],
+    ),
+  };
+}
+
 function appendBlockTerminator(
   runs: NativeMarkdownTextRun[],
   context: RunContext,
@@ -952,7 +1057,9 @@ function containsRichBlock(node: MarkdownNode): boolean {
     node.type === "image" ||
     node.type === "horizontal_rule" ||
     node.type === "html_block" ||
-    node.type === "math_block"
+    node.type === "math_block" ||
+    // Inline formulas draw as views, which only React Native text can hold.
+    (node.type === "text" && node.content?.includes("\uE000"))
   ) {
     return true;
   }

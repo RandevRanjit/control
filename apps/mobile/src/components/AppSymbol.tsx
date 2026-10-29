@@ -75,6 +75,7 @@ import IconLetterSpacing from "@tabler/icons-react-native/IconLetterSpacing";
 import IconMicrophone from "@tabler/icons-react-native/IconMicrophone";
 import IconLink from "@tabler/icons-react-native/IconLink";
 import IconListNumbers from "@tabler/icons-react-native/IconListNumbers";
+import IconMath from "@tabler/icons-react-native/IconMath";
 import IconMenu2 from "@tabler/icons-react-native/IconMenu2";
 import IconMail from "@tabler/icons-react-native/IconMail";
 import IconMessage from "@tabler/icons-react-native/IconMessage";
@@ -232,6 +233,7 @@ const ANDROID_ICON_BY_SF_SYMBOL = {
   trash: IconTrash,
   wifi: IconWifi,
   "wifi.slash": IconWifiOff,
+  "x.squareroot": IconMath,
   xmark: IconX,
   "xmark.circle.fill": IconCircleXFilled,
 } satisfies Partial<Record<SFSymbol, Icon>>;

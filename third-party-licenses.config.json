@@ -193,6 +193,14 @@
       }
     },
     {
+      "name": "mj-context-menu",
+      "version": "0.6.1",
+      "sourceUrl": "https://github.com/zorkow/context-menu",
+      "generatedNotice": {
+        "licenseId": "Apache-2.0"
+      }
+    },
+    {
       "name": "@bufbuild/protobuf",
       "version": "1.10.0",
       "generatedNotices": [

@@ -71,6 +71,8 @@ interface AppearancePreferencesContextValue {
   /** Pass null to clear the override and follow the base font size. */
   readonly setCodeFontSize: (value: number | null) => void;
   readonly setCodeWordBreak: (value: boolean) => void;
+  readonly mathRenderingEnabled: boolean;
+  readonly setMathRenderingEnabled: (value: boolean) => void;
 }
 
 const AppearancePreferencesContext = createContext<AppearancePreferencesContextValue | null>(null);
@@ -272,6 +274,15 @@ export function AppearancePreferencesProvider(props: { readonly children: ReactN
     [updatePreferences],
   );
 
+  // Off by default, as on web.
+  const mathRenderingEnabled = storedPreferences?.mathRenderingEnabled === true;
+  const setMathRenderingEnabled = useCallback(
+    (value: boolean) => {
+      updatePreferences({ mathRenderingEnabled: value });
+    },
+    [updatePreferences],
+  );
+
   const value = useMemo(
     (): AppearancePreferencesContextValue => ({
       appearance,
@@ -292,6 +303,8 @@ export function AppearancePreferencesProvider(props: { readonly children: ReactN
       setTerminalFontSize,
       setCodeFontSize,
       setCodeWordBreak,
+      mathRenderingEnabled,
+      setMathRenderingEnabled,
     }),
     [
       appearance,
@@ -311,6 +324,8 @@ export function AppearancePreferencesProvider(props: { readonly children: ReactN
       setTerminalFontSize,
       setCodeFontSize,
       setCodeWordBreak,
+      mathRenderingEnabled,
+      setMathRenderingEnabled,
     ],
   );
 

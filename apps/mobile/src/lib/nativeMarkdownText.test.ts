@@ -6,7 +6,10 @@ import {
   nativeMarkdownDocumentChunks,
   nativeMarkdownDocumentRuns,
   nativeMarkdownListItemBlocks,
+  nativeMarkdownMathSegments,
+  nativeMarkdownMathSource,
   nativeMarkdownTextRuns,
+  nativeMarkdownWithDisplayMath,
   nativeMarkdownWithAuthoredWindowsPaths,
   nativeMarkdownWithPreservedSoftBreaks,
   nativeMarkdownContextCopyRanges,
@@ -1333,5 +1336,126 @@ describe("pull request chip status", () => {
         sectionId: "pull-request:1",
       }).accent,
     ).toBe("#7079e4");
+  });
+});
+
+describe("nativeMarkdownMathSource", () => {
+  it("swaps formulas for placeholders and leaves prices, shell variables and code as text", () => {
+    const { markdown, formulas } = nativeMarkdownMathSource(
+      [
+        "Area $\\pi r^2$ costs $5 and $10 in $HOME.",
+        "",
+        "$$",
+        "\\sum_{i=1}^n i",
+        "$$",
+        "",
+        "```bash",
+        "echo $x$",
+        "```",
+        "",
+        "Inline `$y$` stays code.",
+      ].join("\n"),
+    );
+    expect(formulas).toEqual([
+      { tex: "\\pi r^2", display: false },
+      { tex: "\\sum_{i=1}^n i", display: true },
+    ]);
+    expect(markdown).toBe(
+      [
+        "Area \uE0000\uE001 costs $5 and $10 in $HOME.",
+        "",
+        "\uE0001\uE001",
+        "",
+        "```bash",
+        "echo $x$",
+        "```",
+        "",
+        "Inline `$y$` stays code.",
+      ].join("\n"),
+    );
+  });
+
+  it("returns the source untouched when it holds no formula", () => {
+    const source = "Costs $5 and $10; see `$PATH`.";
+    expect(nativeMarkdownMathSource(source)).toEqual({ markdown: source, formulas: [] });
+  });
+});
+
+describe("nativeMarkdownWithDisplayMath", () => {
+  const formulas = [
+    { tex: "x", display: false },
+    { tex: "E = mc^2", display: true },
+  ];
+
+  it("lifts a display formula out of its paragraph into a math block", () => {
+    const document: MarkdownNode = {
+      type: "document",
+      children: [
+        {
+          type: "paragraph",
+          beg: 0,
+          end: 30,
+          children: [
+            { type: "text", content: "Since \uE0000\uE001 holds" },
+            { type: "soft_break" },
+            { type: "text", content: "\uE0001\uE001" },
+            { type: "soft_break" },
+            { type: "text", content: "follows." },
+          ],
+        },
+      ],
+    };
+
+    expect(nativeMarkdownWithDisplayMath(document, formulas)).toEqual({
+      type: "document",
+      children: [
+        {
+          type: "paragraph",
+          beg: 0,
+          end: 30,
+          children: [{ type: "text", content: "Since \uE0000\uE001 holds" }],
+        },
+        { type: "math_block", content: "E = mc^2" },
+        { type: "paragraph", children: [{ type: "text", content: "follows." }] },
+      ],
+    });
+  });
+
+  it("routes a block holding an inline formula to the rich renderer", () => {
+    const document: MarkdownNode = {
+      type: "document",
+      children: [
+        { type: "paragraph", children: [{ type: "text", content: "Plain." }] },
+        {
+          type: "list",
+          children: [
+            {
+              type: "list_item",
+              children: [{ type: "text", content: "Term \uE0000\uE001" }],
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(
+      nativeMarkdownDocumentChunks(nativeMarkdownWithDisplayMath(document, formulas)).map(
+        (chunk) => chunk.kind,
+      ),
+    ).toEqual(["selectable", "rich"]);
+  });
+});
+
+describe("nativeMarkdownMathSegments", () => {
+  it("splits run text into prose and formulas", () => {
+    const formulas = [{ tex: "a^2", display: false }];
+    expect(nativeMarkdownMathSegments("Let \uE0000\uE001 be.", formulas)).toEqual([
+      "Let ",
+      formulas[0],
+      " be.",
+    ]);
+    expect(nativeMarkdownMathSegments("Unknown \uE0009\uE001", formulas)).toEqual([
+      "Unknown \uE0009\uE001",
+    ]);
   });
 });

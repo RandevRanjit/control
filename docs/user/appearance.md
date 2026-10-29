@@ -32,12 +32,13 @@ applies to the web and desktop clients.
 ## Math
 
 Turn on **Render math** in **Settings → Appearance** to typeset LaTeX in a thread's messages and in
-Markdown previews on web and desktop. The iPhone app still shows the TeX source. It reads `$…$`,
-`$$…$$`, `\(…\)`, and `\[…\]`, outside of code.
+Markdown previews. On the iPhone the switch is under **Settings → Appearance → Text**. It reads
+`$…$`, `$$…$$`, `\(…\)`, and `\[…\]`, outside of code.
 Fenced `math` blocks also render. Formulas work in tables, including absolute-value bars.
 Dollar amounts such as `$5 and $10` stay text; write `\$` to keep any other dollar sign literal.
-Wide formulas scroll horizontally while the surrounding text wraps. Copying a formula or
-exporting a table preserves the TeX.
+Wide formulas scroll horizontally while the surrounding text wraps. On web and desktop, copying a
+formula or exporting a table preserves the TeX; on the iPhone, a paragraph holding a formula
+copies as plain text without it.
 
 With Render math on, the composer keeps TeX source editable, including when rich text is
 enabled, and a `$skill` or `@file` inside a formula stays text. The Render math preference is

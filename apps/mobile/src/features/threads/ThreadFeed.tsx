@@ -788,11 +788,13 @@ const AssistantMarkdownContent = memo(function AssistantMarkdownContent(props: {
   readonly skills?: ReadonlyArray<SelectableMarkdownSkill> | undefined;
 }) {
   const markdown = useLiveThreadLinkLabels(props.markdown, props.environmentId);
+  const { mathRenderingEnabled } = useAppearancePreferences();
   if (markdown.trim().length === 0) return null;
 
   return hasNativeSelectableMarkdownText() ? (
     <SelectableMarkdownText
       markdown={markdown}
+      renderMath={mathRenderingEnabled}
       skills={props.skills}
       textStyle={props.markdownStyles.nativeTextStyle}
       {...props.linkHandlers}
@@ -1920,6 +1922,7 @@ function UserMessageContent(props: UserMessageContentProps) {
 }
 
 function LegacyUserMessageContent(props: UserMessageContentProps) {
+  const { mathRenderingEnabled } = useAppearancePreferences();
   const text = props.text;
   const segments = parseReviewCommentMessageSegments(text);
   const hasReviewComment = segments.some((segment) => segment.kind === "review-comment");
@@ -1941,6 +1944,7 @@ function LegacyUserMessageContent(props: UserMessageContentProps) {
           skills={props.skills}
           textStyle={props.markdownStyles.nativeTextStyle}
           preserveSoftBreaks
+          renderMath={mathRenderingEnabled}
           {...props.linkHandlers}
           renderImage={props.renderImage}
         />
@@ -1984,6 +1988,7 @@ function LegacyUserMessageContent(props: UserMessageContentProps) {
             skills={props.skills}
             textStyle={props.markdownStyles.nativeTextStyle}
             preserveSoftBreaks
+            renderMath={mathRenderingEnabled}
             {...props.linkHandlers}
             renderImage={props.renderImage}
           />

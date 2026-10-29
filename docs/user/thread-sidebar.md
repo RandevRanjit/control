@@ -256,7 +256,8 @@ subagent, for example after CONTROL restarted, Stop marks it interrupted and its
 result says it had already ended.
 
 A task an agent delegates gets its own worktree unless the agent asks to share
-the thread's checkout, or the project's folder isn't in Git. The
+the thread's checkout, or the project's folder isn't in Git. A project in Git
+needs a first commit before a task can get a worktree. The
 worktree starts from the thread's latest commit, so uncommitted edits aren't in
 it, and the project's setup runs before the task starts. When the task ends, CONTROL leaves the worktree and its branch in place
 for you to review or merge, so nothing the task didn't commit is lost. Stopping

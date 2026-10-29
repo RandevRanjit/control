@@ -6,7 +6,8 @@ The right panel sits beside a thread. Open it with the panel toggle in the threa
 - **Outputs**: what the agent made in this thread, newest turn first: pages it published, files and
   screenshots it sent, and the documents, pictures and builds it wrote into the folder. Code it
   changed is in Git, not here. The newest turn starts open; click an older turn to open it. Pick an
-  output to see it underneath, with Markdown shown rendered.
+  output to see it underneath, with Markdown shown rendered. A turn's number (T22) also sits under
+  the arrow of the prompt that started it, so you can find the prompt behind an output.
 - **Folder**: the thread's folder as a tree at the left. A file you click opens at its right, as a
   tab over the file. Files with uncommitted changes carry Git's letter (M, A, D, R), and their
   folders a dot. The button at the start of the tabs hides the tree and shows it again; in a narrow

@@ -729,6 +729,35 @@ describe("MessagesTimeline", () => {
     },
   );
 
+  it("labels a prompt with its turn, as Outputs and loose ends name it", async () => {
+    const { MessagesTimeline } = await import("./MessagesTimeline");
+    const run = {
+      id: "run-22",
+      ordinal: 22,
+      userMessageId: "message-1",
+      providerInstanceId: "claudeAgent",
+      modelSelection: { instanceId: "claudeAgent", model: "claude-opus-5-5" },
+    };
+    const markup = renderToStaticMarkup(
+      <MessagesTimeline
+        {...buildProps()}
+        runs={[run] as never}
+        timelineEntries={[buildUserTimelineEntry("Fix the sidebar.")]}
+      />,
+    );
+    expect(markup).toContain(">T22</span>");
+
+    // A prompt no run answers yet (or a steer) has no turn of its own.
+    const unanswered = renderToStaticMarkup(
+      <MessagesTimeline
+        {...buildProps()}
+        runs={[{ ...run, userMessageId: "message-other" }] as never}
+        timelineEntries={[buildUserTimelineEntry("Fix the sidebar.")]}
+      />,
+    );
+    expect(unanswered).not.toContain(">T22</span>");
+  });
+
   it("preserves arbitrary XML-like tags and comparisons in rendered user messages", async () => {
     const { MessagesTimeline } = await import("./MessagesTimeline");
     const markup = renderToStaticMarkup(

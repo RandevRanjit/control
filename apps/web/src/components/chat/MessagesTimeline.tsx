@@ -29,6 +29,7 @@ import {
   type AssistantCitation,
   type EnvironmentId,
   type MessageId,
+  type OrchestrationV2Run,
   type OrchestrationV2TurnItem,
   type RunAttemptId,
   type ScopedThreadRef,
@@ -328,8 +329,8 @@ interface TimelineRowSharedState {
   skills: ReadonlyArray<Pick<ServerProviderSkill, "name" | "displayName">>;
   /** Provider snapshots for resolving handoff endpoints to icons + model names. */
   providerStatuses: ReadonlyArray<ServerProvider>;
-  /** Projection runs, for recovering handoff models on legacy items. */
-  runs: ReadonlyArray<HandoffTimelineRun>;
+  /** Projection runs, for recovering handoff models on legacy items and naming each prompt's turn. */
+  runs: ReadonlyArray<TimelineRun>;
   /** Each finished turn's totals line, by run. */
   turnTotals: ReadonlyMap<RunId, TurnTotals>;
   activeThreadEnvironmentId: EnvironmentId;
@@ -433,7 +434,9 @@ const TIMELINE_MAINTAIN_SCROLL_AT_END = {
     layout: true,
   },
 } as const satisfies MaintainScrollAtEndOptions;
-const EMPTY_TIMELINE_RUNS: ReadonlyArray<HandoffTimelineRun> = [];
+/** A run as the timeline reads it: handoff rows recover models, prompts show their turn. */
+type TimelineRun = HandoffTimelineRun & Pick<OrchestrationV2Run, "userMessageId">;
+const EMPTY_TIMELINE_RUNS: ReadonlyArray<TimelineRun> = [];
 const EMPTY_RUN_IDS: ReadonlySet<RunId> = new Set();
 // Streamed text lands a paragraph at a time. A smooth scroll to the end
 // turns each landing into a short glide instead of a jump. Thread switches
@@ -516,7 +519,7 @@ interface MessagesTimelineProps {
   workspaceRoot: string | undefined;
   skills?: ReadonlyArray<Pick<ServerProviderSkill, "name" | "displayName">>;
   providerStatuses: ReadonlyArray<ServerProvider>;
-  runs: ReadonlyArray<HandoffTimelineRun>;
+  runs: ReadonlyArray<TimelineRun>;
   turnTotals?: ReadonlyMap<RunId, TurnTotals>;
   anchorMessageId: MessageId | null;
   onAnchorReady: (messageId: MessageId, anchorIndex: number) => void;
@@ -2269,6 +2272,8 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
     [userImages],
   );
   const revertTurnCount = row.revertTurnCount;
+  // The turn this prompt started, named as Outputs and loose ends name it. Steers join a turn; they start none.
+  const turnOrdinal = ctx.runs.find((run) => run.userMessageId === row.message.id)?.ordinal;
   // A file with a chip in the prose needs no standalone row. Media is the exception: the
   // thumbnail is the only way to actually see it, so it shows whether or not it has a chip.
   const chippedAttachmentIds = new Set(
@@ -2444,6 +2449,7 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
         <svg className="d-pin" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
           <path d="M1.5 9H16M11.5 4.5L16 9L11.5 13.5" />
         </svg>
+        {turnOrdinal === undefined ? null : <span className="d-qn">{`T${turnOrdinal}`}</span>}
         <div className="d-qt">
           <MessageAuthorHeading>You</MessageAuthorHeading>
           {(regularImages.length > 0 || userVideos.length > 0) && (
@@ -4879,22 +4885,20 @@ function UserMessageReviewCommentCard({ comment }: { comment: ReviewCommentConte
 // so LegendList (and React) can skip re-rendering unchanged items.
 // ---------------------------------------------------------------------------
 
-/** Content-stable projection of the runs the handoff rows read. The incoming
+/** Content-stable projection of the runs the timeline rows read. The incoming
  *  array is rebuilt on every projection event (status/timestamp churn), but
  *  the returned reference only changes when a run's identity-relevant fields
- *  (id, ordinal, instance, model) do — keeping TimelineRowCtx stable. */
-function useStableHandoffRuns(
-  runs: ReadonlyArray<HandoffTimelineRun>,
-): ReadonlyArray<HandoffTimelineRun> {
+ *  (id, ordinal, instance, model, prompt) do — keeping TimelineRowCtx stable. */
+function useStableHandoffRuns(runs: ReadonlyArray<TimelineRun>): ReadonlyArray<TimelineRun> {
   const prev = useRef<{
     signature: string;
-    value: ReadonlyArray<HandoffTimelineRun>;
+    value: ReadonlyArray<TimelineRun>;
   }>({ signature: "", value: EMPTY_TIMELINE_RUNS });
   return useMemo(() => {
     const signature = runs
       .map(
         (run) =>
-          `${run.id}\0${run.providerInstanceId}\0${run.ordinal}\0${run.modelSelection.instanceId}\0${run.modelSelection.model}`,
+          `${run.id}\0${run.providerInstanceId}\0${run.ordinal}\0${run.modelSelection.instanceId}\0${run.modelSelection.model}\0${run.userMessageId}`,
       )
       .join("\n");
     if (signature === prev.current.signature) {
@@ -4905,6 +4909,7 @@ function useStableHandoffRuns(
       ordinal: run.ordinal,
       providerInstanceId: run.providerInstanceId,
       modelSelection: run.modelSelection,
+      userMessageId: run.userMessageId,
     }));
     prev.current = { signature, value };
     return value;

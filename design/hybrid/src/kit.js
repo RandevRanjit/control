@@ -307,15 +307,15 @@ function dstack(head, rows, o = {}) {
 }
 const ARW = '<svg class="d-pin" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M1.5 9H16M11.5 4.5L16 9L11.5 13.5"/></svg>';
 const HOOKARW = '<svg class="d-pin" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M1.5 1V10H16M11.5 5.5L16 10L11.5 14.5"/></svg>';
-const dq = t => `<div class="d-q">${ARW}<span class="d-qt">${t}</span></div>`;
+const dq = (t, n) => `<div class="d-q">${ARW}<span class="d-qn">T${n}</span><span class="d-qt">${t}</span></div>`;
 const dsay = t => `<div class="d-say">${HOOKARW}${t}</div>`;
 const dtot = t => `<div class="d-tot">${t}</div>`;
 function dconvo() {
-  return `<div class="d-turn"><i class="d-line" aria-hidden="true"></i>${dq('/download says 11.2 MB but the DMG is 11.7')}
+  return `<div class="d-turn"><i class="d-line" aria-hidden="true"></i>${dq('/download says 11.2 MB but the DMG is 11.7', 13)}
     ${dstack('Worked for 18s', [['read', 'app/download/page.tsx', '64 lines'], ['read', 'app/admin/page.tsx', '118 lines']])}
     ${dsay('The DMG grew in 0.2.3 and the label is a hand-typed string in two places. Neither page reads the file.')}
     ${dtot('18s · ↑ 2.1k · ↓ 640 · no changes')}</div>
-  <div class="d-turn"><i class="d-line" aria-hidden="true"></i>${dq('put the release size in one place so /download and /admin can\'t drift')}
+  <div class="d-turn"><i class="d-line" aria-hidden="true"></i>${dq('put the release size in one place so /download and /admin can\'t drift', 14)}
     ${dstack('Worked for 20s', [['skill', 'release-notes', ''], ['read', 'lib/format.ts', '22 lines'], ['agent', 'explore · every other place the size is typed', '14s'],
       ['write', 'lib/release.ts', '+2 −1'], ['write', 'app/download/page.tsx', '+1 −1'], ['error', 'app/admin/page.tsx', 'string not found'], ['read', 'app/admin/page.tsx', '118 lines'],
       ['write', 'app/admin/page.tsx', '+3 −1'], ['run', 'bun run typecheck', 'no output']])}

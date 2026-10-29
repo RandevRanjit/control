@@ -712,6 +712,10 @@ html[data-motion="full"] .sbar[data-st="intr"]::before { animation: none; }
 
 .d-q > .d-pin { left: -26px; top: 10.5px; stroke: var(--text-strong); }
 
+/* the prompt's turn under its arrow, named as Outputs and loose ends name it */
+.d-q > .d-qn { position: absolute; z-index: 1; left: -34px; top: 28px; width: 34px; text-align: center; user-select: none;
+  font: var(--w-med) 11px/1 var(--f-chrome); color: var(--text-caption); }
+
 .d-q { max-width: none; }
 
 .d-qt { display: block; margin-left: -34px; padding: 8.5px 10px 8.5px 34px; background: var(--sunken);

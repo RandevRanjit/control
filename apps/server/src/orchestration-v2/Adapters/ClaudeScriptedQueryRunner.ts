@@ -215,6 +215,7 @@ export const layerScripted = (scriptPath: string) =>
               offer: (message) => Queue.offer(prompts, message).pipe(Effect.asVoid),
               setModel: () => Effect.void,
               setPermissionMode: () => Effect.void,
+              backgroundTasks: () => Effect.succeed(false),
               interrupt: Effect.sync(() => abort.abort()),
               close: Queue.shutdown(prompts).pipe(Effect.andThen(Effect.sync(() => abort.abort()))),
             } satisfies ClaudeAgentSdkQuerySession;

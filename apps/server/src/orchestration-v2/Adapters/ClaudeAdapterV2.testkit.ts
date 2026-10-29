@@ -242,6 +242,7 @@ interface ClaudeSubagentFoundFrame {
 }
 
 type ClaudeOutboundFrame =
+  | { readonly type: "query.background_tasks"; readonly toolUseId: string }
   | ClaudeQueryOpenFrame
   | ClaudePromptOfferFrame
   | ClaudeQuerySetModelFrame
@@ -825,6 +826,10 @@ function makeReplayQueryRunner(
               mode,
             });
           }),
+        backgroundTasks: (toolUseId) =>
+          replayEffect(() => {
+            assertNextOutboundFrame({ type: "query.background_tasks", toolUseId });
+          }).pipe(Effect.as(true)),
         interrupt: replayEffect(() => {
           assertNextOutboundFrame({ type: "query.interrupt" });
         }),

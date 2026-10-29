@@ -12174,6 +12174,9 @@ function ThreadVisitWatermark(props: { readonly threadRef: ScopedThreadRef }) {
     if (!serverThread?.id) return;
     if (recordedOpenRef.current === threadKey) return;
     recordedOpenRef.current = threadKey;
+    // A reopened thread is visited again, even one marked unread while open and
+    // back inside the open dedupe window.
+    lastDispatchedVisitRef.current = null;
     // Recorded here even when the server cannot take opens, so recents follow it.
     const claimed = claimThreadOpen(serverThread.environmentId, serverThread.id, Date.now());
     if (!claimed || serverThread.lastVisitedAt === undefined) return;

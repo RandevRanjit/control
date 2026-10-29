@@ -824,6 +824,34 @@ it.layer(layerTest)("ThreadSearch while the index backfills", (it) => {
     }),
   );
 
+  it.effect("finds accented words in either case, short or read without the index", () =>
+    Effect.gen(function* () {
+      const projections = yield* ProjectionStore.ProjectionStoreV2;
+      const search = yield* ThreadSearch.ThreadSearch;
+      const sql = yield* SqlClient.SqlClient;
+      const project = ProjectId.make("project:accents");
+      const threadId = ThreadId.make("thread:accents");
+      yield* createProject(project);
+      yield* Effect.forEach(
+        [
+          thread(threadId, project),
+          message(threadId, "accents", "user", "CRÈME BRÛLÉE À LA CARTE"),
+        ],
+        projections.apply,
+        { discard: true },
+      );
+      const threadIds = (query: string) =>
+        search.search({ query }).pipe(Effect.map(({ matches }) => matches.map((m) => m.threadId)));
+      assert.deepEqual(yield* threadIds("crème à"), [threadId]);
+      yield* sql`
+        INSERT INTO orchestration_v2_message_search_backfill (next_rowid, last_rowid)
+        SELECT 0, max(rowid) FROM orchestration_v2_projection_messages
+      `;
+      assert.deepEqual(yield* threadIds("brûlée"), [threadId]);
+      yield* search.backfillIndex;
+    }),
+  );
+
   it.effect("reports an unreadable match as a decode failure", () =>
     Effect.gen(function* () {
       const projections = yield* ProjectionStore.ProjectionStoreV2;

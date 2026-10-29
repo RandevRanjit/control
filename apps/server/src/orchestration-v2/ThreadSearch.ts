@@ -114,7 +114,11 @@ function buildMessageSearch(
   const indexed = hasIndex && long.every((token) => Array.from(token).length >= 3);
   return {
     match: indexed ? long.map((token) => `"${token.replaceAll('"', '""')}"`).join(" ") : null,
-    substrings: indexed ? short : [...long, ...short],
+    // SQLite's lower() folds ASCII only, so "À" would miss "à"; the message
+    // matcher checks other tokens after the query.
+    substrings: (indexed ? short : [...long, ...short]).filter((token) =>
+      /^[\x00-\x7f]*$/.test(token),
+    ),
   };
 }
 

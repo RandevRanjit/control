@@ -178,13 +178,14 @@ One `.d-turn`, padded `6 0 16 34`. The 34 px left gutter holds the arrows and th
 1. **The prompt.** Open text, not a bubble.
    - Regrade 14.5 / 22, weight 520, `--text-strong`.
    - It sits on a **band**: `--sunken` (`#CDD7ED` in Field, `#242323` in Night), padded 8.5 above and below, so the
-     band is 39 high (1.3× the first cut).
+     band is 39 high (1.3× the first cut); 52 when it carries a turn number (below).
    - The band runs **edge to edge across the centre pane**: a full-bleed box-shadow, clipped by the canvas, with square
      corners.
    - The **→ arrow** (18 × 18) sits in the gutter, 8 px from the pane's content edge and 8 px from the text.
    - Under the arrow, centred in the gutter, the **turn it started**: `T14`, in the 11 px medium caption that heads a turn
-     in Outputs (§5.3), so a prompt and what it produced carry one name (owner, 29 Oct). It sits inside a one-line
-     band. A steer joins a turn and starts none, so it has no number.
+     in Outputs (§5.3), so a prompt and what it produced carry one name (owner, 29 Oct). It sits 7 below the arrow, and
+     a prompt with a number has a band at least 52 high, so a one-line prompt keeps 12 under it (*"spacing is not
+     properly held"* at 39). A steer joins a turn and starts none, so it has no number and keeps the 39 band.
 2. **Tool stacks**, one per run of tool calls, inset 22 from the text edge (§4.5).
 3. **The reply.**
    - Regrade 14 / 22, weight 400, **`--text-strong`**, the same ink as the prompt. At most 620 wide in the Comfortable chat

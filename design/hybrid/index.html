@@ -1182,8 +1182,9 @@ html[data-theme="night"] .t3w.t3-native, html[data-theme="night"] .t3-pal { --t3
 .d-q { position: relative; max-width: 620px; font: var(--w-med) 14.5px/22px var(--f-chrome); color: var(--text-strong); }
 .d-q > .d-pin { left: -26px; top: 10.5px; stroke: var(--text-strong); }
 /* the prompt's turn under its arrow, named as Outputs and loose ends name it */
-.d-q > .d-qn { position: absolute; z-index: 1; left: -34px; top: 28px; width: 34px; text-align: center; user-select: none;
+.d-q > .d-qn { position: absolute; z-index: 1; left: -34px; top: 32px; width: 34px; text-align: center; user-select: none;
   font: var(--w-med) 11px/1 var(--f-chrome); color: var(--text-caption); }
+.d-q:has(> .d-qn) > .d-qt { min-height: 52px; }   /* a one-line prompt still holds its turn with room under it */
 .d-q { max-width: none; }
 .d-qt { display: block; margin-left: -34px; padding: 8.5px 10px 8.5px 34px; background: var(--sunken);
   box-shadow: 0 0 0 100vmax var(--sunken); clip-path: inset(0 -100vmax); }   /* edge to edge across the centre pane; the canvas clips it */

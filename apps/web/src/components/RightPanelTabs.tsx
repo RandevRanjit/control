@@ -8,6 +8,7 @@ import {
 import type {
   ContextMenuItem,
   EnvironmentId,
+  KeybindingCommand,
   PreviewSessionSnapshot,
   ProjectId,
   PullRequestState,
@@ -16,8 +17,9 @@ import type {
 import { getTerminalLabel } from "@control/shared/terminalLabels";
 import {
   FileDiff,
-  FileOutput,
-  Files,
+  FileText,
+  Folder,
+  GitBranch,
   Globe,
   type LucideIcon,
   Plus,
@@ -47,7 +49,11 @@ import {
   type RightPanelSurface,
 } from "~/rightPanelStore";
 import { cn } from "~/lib/utils";
-import { resolveShortcutCommand, type ShortcutMatchContext } from "~/keybindings";
+import {
+  resolveShortcutCommand,
+  shortcutLabelForCommand,
+  type ShortcutMatchContext,
+} from "~/keybindings";
 import { readLocalApi } from "~/localApi";
 import { MorphIcon } from "~/components/MorphIcon";
 import { AndroidIcon, AppleIcon } from "~/components/Icons";
@@ -166,13 +172,18 @@ export interface PanelTabsConfig {
   onSelect: (tab: PanelTab) => void;
 }
 
-/** §5.1's tabs, in order, with §20.2's icons. */
-const PANEL_TAB_LOOKS: ReadonlyArray<{ tab: PanelTab; label: string; Icon: LucideIcon }> = [
-  { tab: "outputs", label: "Outputs", Icon: FileOutput },
-  { tab: "folder", label: "Folder", Icon: Files },
-  { tab: "browser", label: "Browser", Icon: Globe },
-  { tab: "git", label: "Git", Icon: FileDiff },
-  { tab: "terminal", label: "Terminal", Icon: SquareTerminal },
+/** §5.1's tabs, in order, with §20.2's icons and the command whose shortcut each tooltip names. */
+const PANEL_TAB_LOOKS: ReadonlyArray<{
+  tab: PanelTab;
+  label: string;
+  Icon: LucideIcon;
+  command: KeybindingCommand;
+}> = [
+  { tab: "outputs", label: "Outputs", Icon: FileText, command: "rightPanel.outputs" },
+  { tab: "folder", label: "Folder", Icon: Folder, command: "rightPanel.folder" },
+  { tab: "browser", label: "Browser", Icon: Globe, command: "preview.toggle" },
+  { tab: "git", label: "Git", Icon: GitBranch, command: "diff.toggle" },
+  { tab: "terminal", label: "Terminal", Icon: SquareTerminal, command: "terminal.toggle" },
 ];
 
 export type PullRequestTabStatusSeed = Pick<PullRequestTabStatus, "state" | "isDraft">;
@@ -369,12 +380,12 @@ function SurfaceIcon({
       return <PreviewFavicon capturedUrl={capturedUrl} url={url} />;
     }
     case "outputs":
-      return <FileOutput className="size-3 shrink-0" />;
+      return <FileText className="size-3 shrink-0" />;
     case "graph":
     case "diff":
       return <FileDiff className="size-3 shrink-0" />;
     case "files":
-      return <Files className="size-3 shrink-0" />;
+      return <Folder className="size-3 shrink-0" />;
     case "file":
       return (
         <PierreEntryIcon
@@ -987,8 +998,9 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
       >
         {props.tabs ? (
           <div className="hy-tabs h-full min-w-0 flex-1" role="tablist" aria-label="Panel">
-            {PANEL_TAB_LOOKS.map(({ tab: look, label, Icon }) => {
+            {PANEL_TAB_LOOKS.map(({ tab: look, label, Icon, command }) => {
               const reason = props.tabs!.unavailable[look];
+              const shortcut = shortcutLabelForCommand(props.keybindings, command);
               return (
                 <Tooltip key={look}>
                   <TooltipTrigger
@@ -1014,6 +1026,9 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
                   />
                   <TooltipPopup side="bottom">
                     {reason === undefined ? label : `${label}: ${reason}`}
+                    {shortcut === null ? null : (
+                      <span className="ml-1.5 font-mono text-muted-foreground">{shortcut}</span>
+                    )}
                   </TooltipPopup>
                 </Tooltip>
               );

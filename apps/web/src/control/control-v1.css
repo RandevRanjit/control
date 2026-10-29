@@ -348,7 +348,8 @@ html[data-motion="full"] .sbar[data-st="outside"]::before { animation: none; }
 
 .hy-tab.hy-ico { width: 30px; padding: 0; justify-content: center; }
 
-.hy-tab[aria-selected="true"] { background: var(--deep); color: var(--text-strong); }
+/* the open tab: the raised fill and an underline in strong ink (owner, 29 Oct) */
+.hy-tab[aria-selected="true"] { background: var(--raised); color: var(--text-strong); box-shadow: inset 0 -2px 0 var(--text-strong); }
 
 .hy-views { flex: 1; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr); }
 

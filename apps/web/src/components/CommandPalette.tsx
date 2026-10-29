@@ -67,12 +67,12 @@ import {
   CirclePlusIcon,
   CornerLeftUpIcon,
   FileDiffIcon,
-  FileOutputIcon,
+  FileTextIcon,
   GitGraphIcon,
   SquareTerminalIcon,
   FileSearchIcon,
-  FilesIcon,
   FolderGit2Icon,
+  GitBranchIcon,
   FolderIcon,
   FolderPlusIcon,
   GlobeIcon,
@@ -2156,14 +2156,14 @@ function OpenCommandPaletteDialog(props: {
         "outputs",
         "outputs",
         "Show outputs",
-        <FileOutputIcon className={ITEM_ICON_CLASS} />,
+        <FileTextIcon className={ITEM_ICON_CLASS} />,
         "rightPanel.outputs",
       ],
       [
         "folder",
         "files",
         "Show folder",
-        <FilesIcon className={ITEM_ICON_CLASS} />,
+        <FolderIcon className={ITEM_ICON_CLASS} />,
         "rightPanel.folder",
       ],
       [
@@ -2173,7 +2173,7 @@ function OpenCommandPaletteDialog(props: {
         <GlobeIcon className={ITEM_ICON_CLASS} />,
         "preview.toggle",
       ],
-      ["git", "diff", "Show Git", <FileDiffIcon className={ITEM_ICON_CLASS} />, "diff.toggle"],
+      ["git", "diff", "Show Git", <GitBranchIcon className={ITEM_ICON_CLASS} />, "diff.toggle"],
     ];
     for (const [tab, kind, title, icon, shortcutCommand] of panelTabs) {
       actionItems.push({

@@ -83,7 +83,7 @@
 </section>
 <script data-part="shell">
 (() => {
-const MAP = [['files', 'Folder', 'Files'], ['git', 'Git', 'Diff + Pull request'], ['web', 'Browser', 'Browser'], ['term', 'Terminal', 'Terminal (B) · drawer (C)'], ['out', 'Outputs', 'new, from Bloom'], ['find', '⌘K only', 'Device']];
+const MAP = [['folder', 'Folder', 'Files'], ['branch', 'Git', 'Diff + Pull request'], ['web', 'Browser', 'Browser'], ['term', 'Terminal', 'Terminal (B) · drawer (C)'], ['doc', 'Outputs', 'new, from Bloom'], ['find', '⌘K only', 'Device']];
 Bloom.section('shell', { init(el) {
   const W = {
     b: () => Hy.win({ side: Hy.bloomSide(), head: Hy.head(), panel: Hy.panel({ tabs: Hy.BLOOM_TABS('Git') }) }),

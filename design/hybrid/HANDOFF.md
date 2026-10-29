@@ -292,8 +292,10 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 
 - **Flat.** No radius anywhere. It sits on `--deep` and meets the centre with one 1 px `--seam` line (`box-shadow:
   -1px 0 0`).
-- **Tab row, 52.** Five icon tabs, 30 × 26 on a pill radius: **Outputs, Folder, Browser, Git, Terminal** (icons in §20.2). The selected
-  tab takes strong ink. Its `--deep` fill is the flat panel's own tone, so the ink alone marks it.
+- **Tab row, 52.** Five icon tabs, 30 × 26 on a pill radius: **Outputs, Folder, Browser, Git, Terminal** (icons in §20.2:
+  a page, a folder, the globe, a branch, a prompt). The open tab takes strong ink, the `--raised` fill and a 2 px underline
+  in strong ink (owner, 29 Oct). A tab's tooltip gives its name and its shortcut from the keybindings (`Git ⌘D`; by
+  default Outputs ⌥⌘O, Folder ⌥⌘F, Browser ⇧⌘J, Git ⌘D, Terminal ⌘J).
 - **The tabs switch the view.** The window opens on Git. Every view sits under the row; one shows at a time.
 
 ### 5.2 Git (Diff mode shown)
@@ -1139,9 +1141,9 @@ CONTROL's marks its own (§20.3): *"there is no reason to change the control loc
 | Add | `Plus` | terminal tabs |
 | Folder, `Local` | `Folder` | folder rows; the strip |
 | Add folder | `FolderPlus` | the pen's picker |
-| Worktree | `FolderGit2` | card line 3; the strip; menu-bar panel; the workspace picker (a worktree checkout, New worktree) |
-| Branch | `GitBranch` | card line 3; menu-bar panel |
-| Loose ends | `Mail` | chat head; card line 2 |
+| Worktree | `FolderGit2` | card line 2; the strip; menu-bar panel; the workspace picker (a worktree checkout, New worktree) |
+| Branch, Git | `GitBranch` | card line 2; menu-bar panel; the Git tab |
+| Loose ends | `Mail` | chat head; card line 1 |
 | Supervised, Auto-accept edits, Auto, Full access | `Lock`, `PenLine`, `KeyRound`, `LockOpen` | composer access picker; these padlocks mean permissions, not CONTROL's lock. Auto's key: owner, 18 Oct |
 | Pin | `Pin` | card line 1 |
 | Snoozed | `AlarmClock` | fold strip; snooze menus |
@@ -1154,7 +1156,7 @@ CONTROL's marks its own (§20.3): *"there is no reason to change the control loc
 | Statistics | `ChartNoAxesColumn` | sidebar foot |
 | Attach | `Paperclip` | composer |
 | Effort | `Brain` | composer effort picker |
-| Outputs, Folder, Browser, Git, Terminal | `FileOutput`, `Files`, `Globe`, `FileDiff`, `SquareTerminal` | panel tabs |
+| Outputs, Folder, Browser, Git, Terminal | `FileText`, `Folder`, `Globe`, `GitBranch`, `SquareTerminal` | panel tabs; the palette's Show entries (owner, 29 Oct: one picture per meaning) |
 | Git's graph | `GitGraph` | palette's Show Git graph (owner, 29 Oct) |
 | Screenshot, file, diff, build output | `Camera`, `File`, `FileDiff`, `FileOutput` | Outputs rows |
 | Reload, pick an element | `RefreshCw`, `MousePointerClick` | browser toolbar (with `Camera`) |

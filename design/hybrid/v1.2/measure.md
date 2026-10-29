@@ -143,7 +143,7 @@ Colours are the computed values, Field then Night; `@n%` is alpha. Padding is to
 |---|---|---|---|---|---|---|---|
 | tab row | `.hy-tabs` | 1072, 0, 440, 52 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 8 0 8 |
 | tab | `.hy-tab` | 1080, 13, 30, 26 | Regrade 12/12 520 | #525a7c / #a9aebf | — | 999px | 0 |
-| tab, selected | `.hy-tab[aria-selected="true"]` | 1173, 13, 30, 26 | Regrade 12/12 520 | #262b5b / #f5ebe4 | #d6deee / #1b1a1a | 999px | 0 |
+| tab, selected | `.hy-tab[aria-selected="true"]` | 1173, 13, 30, 26 | Regrade 12/12 520 | #262b5b / #f5ebe4 | #e3e9f4 / #383737 | 999px | 0 |
 | Git head | `[data-tab="Git"] .hy-vh` | 1072, 52, 440, 34 | Regrade 11.5/11.5 400 | #525a7c / #a9aebf | — | 0 | 0 8 0 10 |
 | Graph | Diff | `[data-tab="Git"] .seg` | 1082, 56, 125.1, 26 | Regrade 11.5/11.5 400 | #525a7c / #a9aebf | #cdd7ed / #242323 | 999px | 3 3 3 3 |
 | diff summary | `.hy-dsum` | 1072, 86, 440, 26 | Regrade 12/12 520 | #414970 / #c1c6d5 | — | 0 | 0 14 0 14 |

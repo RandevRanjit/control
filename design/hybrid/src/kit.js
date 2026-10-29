@@ -176,7 +176,8 @@ function panel(o = {}) {
   const v = o.view || 'git';
   return `<div class="hy-panel">${tabs(o.tabs, o)}<div class="hy-views">${v === 'browser' ? browserView() : diffView()}</div></div>`;
 }
-const BLOOM_TABS = sel => [['out', 'Outputs'], ['files', 'Folder'], ['web', 'Browser'], ['git', 'Git'], ['term', 'Terminal']].map(([g, l]) => [g, l, l === sel]);
+/* one picture per meaning: a page, a folder, the globe, a branch, a prompt (owner, 29 Oct) */
+const BLOOM_TABS = sel => [['doc', 'Outputs'], ['folder', 'Folder'], ['web', 'Browser'], ['branch', 'Git'], ['term', 'Terminal']].map(([g, l]) => [g, l, l === sel]);
 
 /* T3's terminal drawer (⌘J) under the conversation: the app's own shells, not Claude */
 const drawer = () => `<div class="pane hy-drawer"><div class="hy-tmux"><span class="hy-tx" data-on><i>1</i>zsh</span><span class="hy-tx"><i>2</i>bun dev</span><span class="hy-ib">${G('plus')}</span><span class="sp"></span><span class="kbd">⌘J</span></div>

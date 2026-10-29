@@ -115,9 +115,10 @@ function buildMessageSearch(
   return {
     match: indexed ? long.map((token) => `"${token.replaceAll('"', '""')}"`).join(" ") : null,
     // SQLite's lower() folds ASCII only, so "À" would miss "à"; the message
-    // matcher checks other tokens after the query.
+    // matcher checks tokens with cased letters beyond ASCII after the query.
+    // Caseless scripts such as Chinese stay here, ahead of the hit limit.
     substrings: (indexed ? short : [...long, ...short]).filter((token) =>
-      /^[\x00-\x7f]*$/.test(token),
+      Array.from(token).every((char) => char < "\x80" || char.toUpperCase() === char),
     ),
   };
 }

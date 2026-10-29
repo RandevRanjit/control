@@ -32,7 +32,7 @@ import { environmentServerConfigsAtom } from "../state/server";
 import { isScratchProject } from "@control/client-runtime/state/projects";
 import { orchestrationEnvironment } from "../state/orchestration";
 import { threadEnvironment } from "../state/threads";
-import { vcsEnvironment } from "../state/vcs";
+import { readLocalVcsStatus, vcsEnvironment } from "../state/vcs";
 import { useNewThreadHandler } from "./useHandleNewThread";
 import { refreshArchivedThreadsForEnvironment } from "../lib/archivedThreadsState";
 import { releaseComposerDraftUploads } from "../lib/composerDraftUploads";
@@ -321,8 +321,6 @@ export function useThreadActions() {
   const refreshVcsStatus = useAtomCommand(vcsEnvironment.refreshStatus, {
     reportFailure: false,
   });
-  // Local status only: no fetch and no auto-pull for a worktree about to go.
-  const loadVcsStatus = useAtomQueryRunner(vcsEnvironment.status, { reportFailure: false });
   const sidebarThreadSortOrder = useClientSettings((settings) => settings.sidebarThreadSortOrder);
   const confirmThreadDelete = useClientSettings((settings) => settings.confirmThreadDelete);
   const confirmThreadUnpin = useClientSettings((settings) => settings.confirmThreadUnpin);
@@ -532,16 +530,9 @@ export function useThreadActions() {
       // front when its status shows them; a failed read leaves that to the server.
       const worktreeStatus =
         canDeleteWorktree && orphanedWorktreePath !== null
-          ? await loadVcsStatus({
-              environmentId: threadRef.environmentId,
-              input: { cwd: orphanedWorktreePath, includeRemote: false },
-            })
+          ? await readLocalVcsStatus(threadRef.environmentId, orphanedWorktreePath)
           : null;
-      if (
-        localApi &&
-        worktreeStatus?._tag === "Success" &&
-        worktreeStatus.value?.hasWorkingTreeChanges === true
-      ) {
+      if (localApi && worktreeStatus?.hasWorkingTreeChanges === true) {
         const confirmationResult = await settlePromise(() =>
           localApi.dialogs.confirm(
             [
@@ -709,7 +700,6 @@ export function useThreadActions() {
       deleteThreadMutation,
       getCurrentRouteThreadRef,
       loadSessionState,
-      loadVcsStatus,
       refreshVcsStatus,
       removeWorktree,
       router,

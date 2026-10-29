@@ -21,6 +21,7 @@ import { splitPromptIntoComposerSegments } from "~/composer-editor-mentions";
 import { nextOrderedMarkerText } from "~/composer-list-continuation";
 import { parseInlineMarkdown, RICH_TEXT_DELIMITERS, type RichTextMark } from "~/composer-rich-text";
 import { collectInlineContextIds } from "~/lib/composerContextReferences";
+import { markdownMathRanges } from "@control/shared/markdownMath";
 
 /**
  * Pure document model for the rich text (Tiptap) composer.
@@ -553,12 +554,31 @@ export function buildTiptapContent(
   // Code fences hold no chips, so their lines put the original source back in
   // place of the sentinel rather than building an atom for it.
   const atomSources: string[] = [];
-  const text = splitPromptIntoComposerSegments(value)
-    .map((segment) => {
-      if (segment.type === "text") return segment.text;
-      atoms.push(atomJsonForSegment(segment, skillLabelFor));
-      atomSources.push(segment.source);
-      return sentinel;
+  const formulas = markdownMathRanges(value);
+  let offset = 0;
+  const chunks: Array<{ text: string } | { source: string }> = [];
+  for (const formula of formulas) {
+    chunks.push({ text: value.slice(offset, formula.start) }, { source: formula.source });
+    offset = formula.end;
+  }
+  chunks.push({ text: value.slice(offset) });
+  // Math stays editable source. Shield its commands and Markdown-like markers
+  // from styling and context-chip parsing, then restore ordinary text nodes.
+  const text = chunks
+    .map((chunk) => {
+      if ("source" in chunk) {
+        atoms.push(textJsonForSpan(chunk.source, []));
+        atomSources.push(chunk.source);
+        return sentinel;
+      }
+      return splitPromptIntoComposerSegments(chunk.text)
+        .map((segment) => {
+          if (segment.type === "text") return segment.text;
+          atoms.push(atomJsonForSegment(segment, skillLabelFor));
+          atomSources.push(segment.source);
+          return sentinel;
+        })
+        .join("");
     })
     .join("");
   let atomIndex = 0;

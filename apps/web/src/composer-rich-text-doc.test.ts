@@ -85,6 +85,41 @@ function roundTrip(value: string) {
   return serializeEditorDoc(doc);
 }
 
+describe("editable math source", () => {
+  it.each([
+    "Area $x_i^2$ after",
+    "before \\(\\frac{1}{2}\\) after",
+    "before $$x^2$$ after",
+    "\\[\nx = 1\ny = 2\n\\]",
+    "\\[\\text{use $browser then @README.md and **literal**}\\]",
+    "```math\nx_i + y_i\n```",
+    "- **use** $x_i$ then @README.md",
+    "**$x_i$** and **A $x_i$ B**",
+    "| Name | Formula |\n| --- | --- |\n| Norm | $|x|$ |",
+    "| Name | Formula |\n| --- | --- |\n| Norm | \\(\\|x\\|\\) |",
+  ])("keeps TeX editable and round trips its source: %s", (source) => {
+    const map = roundTrip(source);
+    expect(map.value).toBe(source);
+    const doc = schema.nodeFromJSON(
+      buildDocJson(source, (name) => ({ label: name, description: null })),
+    );
+    expect(serializeSelection(doc, 1, doc.content.size - 1)).toBe(source);
+  });
+
+  it("edits a command character directly without replacing a formula node", () => {
+    const source = "before \\(\\frac{a}{b}\\) after";
+    const doc = schema.nodeFromJSON(
+      buildDocJson(source, (name) => ({ label: name, description: null })),
+    );
+    const map = serializeEditorDoc(doc);
+    const offset = source.indexOf("{a}") + 1;
+    const position = flatToPm(map, offset);
+    const state = EditorState.create({ doc });
+    const next = state.apply(state.tr.insertText("c", position, position + 1));
+    expect(serializeEditorDoc(next.doc).value).toBe(source.replace("{a}", "{c}"));
+  });
+});
+
 // Plain mode: the same engine with the mark extensions off. Markers stay
 // literal characters and task lines stay paragraphs.
 const plainSchema = getSchemaByResolvedExtensions(
@@ -134,6 +169,15 @@ function roundTripPlain(value: string) {
   const doc = ProseMirrorNode.fromJSON(plainSchema, json);
   return serializeEditorDoc(doc);
 }
+
+describe("editable math source without styling", () => {
+  it("keeps skill and file tokens inside a formula as text", () => {
+    const source = "\\[\n\\text{use $browser, @README.md and $deploy}\n\\]";
+    const map = roundTripPlain(source);
+    expect(map.value).toBe(source);
+    expect(map.runs.some((run) => run.kind === "token")).toBe(false);
+  });
+});
 
 describe("composer rich text document model", () => {
   it.each(["€", "£", "¥", "₹", "₩", "₿", "𑿝"])(

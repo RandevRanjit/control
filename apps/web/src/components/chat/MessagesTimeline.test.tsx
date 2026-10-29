@@ -2910,3 +2910,24 @@ describe("MessagesTimeline", () => {
     }
   });
 });
+
+describe("compact reasoning math", () => {
+  it("keeps formulas while flattening compact reasoning previews", async () => {
+    const { remarkThoughtPreview } = await import("./MessagesTimeline");
+    const { parseMarkdownWithMath } = await import("@control/shared/markdownMath");
+    const tree = parseMarkdownWithMath("## Reasoning\n\nUse **norm** $|x|$ and \\[x^2\\]");
+    remarkThoughtPreview("Reasoning")(tree);
+    expect(tree.children.map((node) => node.type)).toEqual([
+      "text",
+      "inlineMath",
+      "text",
+      "inlineMath",
+    ]);
+    expect(tree.children.map((node) => ("value" in node ? node.value : null))).toEqual([
+      "Reasoning Use norm ",
+      "|x|",
+      " and ",
+      "x^2",
+    ]);
+  });
+});

@@ -2,10 +2,13 @@
 
 import { EnvironmentId, type AuthEnvironmentScope } from "@control/contracts";
 import { act, type ComponentProps, type ReactNode } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { create, type ReactTestRenderer } from "react-test-renderer";
-import { describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
+import { captureAssistantTextSelection } from "../lib/assistantTextSelection";
+import { chatMarkdownClipboardPayload, serializeTableElementToCsv } from "../markdown-clipboard";
 import { getSyntaxHighlighterPromise } from "../lib/syntaxHighlighting";
 import { GitHubIcon } from "./Icons";
 import { Button } from "./ui/button";
@@ -13,13 +16,16 @@ import { setMarkdownTaskChecked } from "./files/filePreviewMode";
 
 vi.mock("@effect/atom-react", () => ({ useAtomValue: () => null }));
 vi.mock("../hooks/useTheme", () => ({ useTheme: () => ({ resolvedTheme: "dark" }) }));
+const settingsOverrides = vi.hoisted(() => ({ mathRenderingEnabled: false }));
 vi.mock("../hooks/useSettings", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../hooks/useSettings")>();
   const settings = actual.getClientSettings();
   return {
     ...actual,
-    useClientSettings: (select?: (value: typeof settings) => unknown) =>
-      select ? select(settings) : settings,
+    useClientSettings: (select?: (value: typeof settings) => unknown) => {
+      const current = { ...settings, ...settingsOverrides };
+      return select ? select(current) : current;
+    },
   };
 });
 vi.mock("./ui/tooltip", async () => {
@@ -850,5 +856,127 @@ describe("ChatMarkdown Windows file links", () => {
     expect(html).not.toContain("javascript:");
     expect(html).not.toContain("d:alert");
     expect(html).not.toContain("chat-markdown-file-link");
+  });
+});
+
+describe("ChatMarkdown math", () => {
+  const unmounts: Array<() => void> = [];
+  async function render(text: string, options: Partial<ComponentProps<typeof ChatMarkdown>> = {}) {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    const host = document.createElement("div");
+    document.body.append(host);
+    const root = createRoot(host);
+    await act(async () => {
+      root.render(<ChatMarkdown cwd="/tmp/project" text={text} {...options} />);
+    });
+    // MathTypeset is a lazy chunk; let it resolve and the formulas commit.
+    await act(async () => {
+      await import("./chat/MathTypeset");
+    });
+    unmounts.push(() => {
+      act(() => root.unmount());
+      host.remove();
+    });
+    return host;
+  }
+  const copies = (host: Element) =>
+    [...host.querySelectorAll("[data-markdown-math]")].map((node) =>
+      node.getAttribute("data-markdown-copy"),
+    );
+  afterEach(() => {
+    for (const unmount of unmounts.splice(0)) unmount();
+    settingsOverrides.mathRenderingEnabled = false;
+    vi.unstubAllGlobals();
+  });
+
+  it("typesets inline and display formulas only when enabled, keeping prices as text", async () => {
+    const text = "Area $\\pi r^2$ costs $5 and $10.\n\n\\[\nE = mc^2\n\\]\n\n$$a+b$$";
+    const off = await render(text);
+    expect(off.querySelector("[data-markdown-math]")).toBeNull();
+    expect(off.querySelector(".katex")).toBeNull();
+
+    settingsOverrides.mathRenderingEnabled = true;
+    const on = await render(text);
+    expect(copies(on)).toEqual(["\\(\\pi r^2\\)", "\\[\nE = mc^2\n\\]\n\n", "\\[\na+b\n\\]\n\n"]);
+    expect(on.querySelectorAll(".katex")).toHaveLength(3);
+    expect(on.querySelectorAll('[data-markdown-math="display"]')).toHaveLength(2);
+    expect(on.textContent).toContain("costs $5 and $10.");
+  });
+
+  it.each([
+    "It costs $5 and $10, or $5-$10 a seat.",
+    "Set $HOME and $PATH before running $browser.",
+    "Use `$x$` and `echo $HOME` in code.",
+    "```bash\necho $x$ \\(y\\) $$z$$\n```",
+    "Escaped \\$x\\$ stays.",
+  ])("leaves %j as prose or code", async (text) => {
+    settingsOverrides.mathRenderingEnabled = true;
+    const host = await render(text);
+    expect(host.querySelector("[data-markdown-math]")).toBeNull();
+    expect(host.querySelector(".katex")).toBeNull();
+    if (text.startsWith("```")) {
+      expect(host.querySelector("pre")?.textContent).toContain("echo $x$ \\(y\\) $$z$$");
+    }
+  });
+
+  it("renders math-free Markdown the same with math on", async () => {
+    const text =
+      "# Title\n\n**bold**, `code` and a [link](https://example.com).\n\n- [ ] task\n- item\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\n> quote";
+    // React's useId values differ between roots; everything else must match.
+    const html = async () => (await render(text)).innerHTML.replace(/_r_[0-9a-z]+_/g, "id");
+    const off = await html();
+    settingsOverrides.mathRenderingEnabled = true;
+    expect(await html()).toBe(off);
+  });
+
+  it("keeps table cells intact and exports formulas as TeX", async () => {
+    settingsOverrides.mathRenderingEnabled = true;
+    const host = await render(
+      "| Name | Formula |\n| --- | --- |\n| Norm | $|x|$ |\n| Price | $5 and $10 |",
+    );
+    const table = host.querySelector("table")!;
+    expect([...table.rows].map((row) => row.cells.length)).toEqual([2, 2, 2]);
+    expect(table.querySelectorAll(".katex")).toHaveLength(1);
+    expect(serializeTableElementToCsv(table)).toBe(
+      "Name,Formula\nNorm,\\(|x|\\)\nPrice,$5 and $10",
+    );
+  });
+
+  it("copies a formula's TeX when the selection starts inside its glyphs", async () => {
+    settingsOverrides.mathRenderingEnabled = true;
+    const host = await render("Area $\\pi r^2$ grows.");
+    const glyph = host.querySelector(".katex-mathml mi")!.firstChild!;
+    const range = document.createRange();
+    range.setStart(glyph, 0);
+    range.setEnd(glyph, 1);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    const payload = chatMarkdownClipboardPayload(selection)!;
+    expect(payload.text).toBe("\\(\\pi r^2\\)");
+    expect(payload.html).not.toContain("katex");
+    host.setAttribute("data-assistant-citation-source", "assistant");
+    expect(captureAssistantTextSelection(host, selection)?.selector.text).toBe("\\(\\pi r^2\\)");
+  });
+
+  it("renders math fences and closed display math while streaming, not unfinished ones", async () => {
+    settingsOverrides.mathRenderingEnabled = true;
+    const fence = await render("```math\nx_i^2\n```");
+    expect(fence.querySelectorAll('[data-markdown-math="display"] .katex')).toHaveLength(1);
+
+    for (const text of ["```math\nx_i^2", "$$\nx^2\n", "\\[\nx^2\n\nFollowing prose."]) {
+      const host = await render(text, { isStreaming: true });
+      expect(host.querySelector(".katex")).toBeNull();
+      expect(host.textContent).toContain("x");
+    }
+    const closed = await render("$$\nx^2\n$$", { isStreaming: true });
+    expect(closed.querySelectorAll(".katex")).toHaveLength(1);
+  });
+
+  it("shows unsupported TeX as source and keeps active commands inert", async () => {
+    settingsOverrides.mathRenderingEnabled = true;
+    const host = await render("\\(\\notACommand{x}\\) and \\(\\href{https://example.com}{x}\\)");
+    expect(host.textContent).toContain("\\(\\notACommand{x}\\)");
+    expect(host.querySelector('a[href="https://example.com"]')).toBeNull();
   });
 });

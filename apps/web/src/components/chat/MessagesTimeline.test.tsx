@@ -1210,6 +1210,32 @@ describe("MessagesTimeline", () => {
     expect(markup).not.toContain('alt="report.pdf"');
   });
 
+  it("plays audio attachments inline instead of listing them as files", () => {
+    const entry = {
+      ...buildUserTimelineEntry("Listen to this."),
+      message: {
+        ...buildUserTimelineEntry("Listen to this.").message,
+        attachments: [
+          {
+            type: "file" as const,
+            id: "attachment-tone-wav",
+            name: "tone.wav",
+            mimeType: "audio/wav",
+            sizeBytes: 45,
+          },
+        ],
+      },
+    };
+
+    const markup = renderToStaticMarkup(
+      <MessagesTimeline {...buildProps()} timelineEntries={[entry]} />,
+    );
+
+    expect(markup).toContain('aria-label="Loading tone.wav"');
+    expect(markup).toContain('aria-label="Preview tone.wav"');
+    expect(markup).not.toContain('aria-label="Download tone.wav"');
+  });
+
   it("renders a file download button without creating its URL in advance", () => {
     const entry = {
       ...buildUserTimelineEntry("Read the report."),

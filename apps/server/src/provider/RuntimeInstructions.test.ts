@@ -33,6 +33,12 @@ describe("buildRuntimeInstructions", () => {
     ).toBeLessThan(1_050);
   });
 
+  it("tells the agent audio embeds like images and video", () => {
+    expect(buildRuntimeInstructions({ harness: "Claude Code" })).toContain(
+      "Embed images, video and audio as ![](absolute path).",
+    );
+  });
+
   it("asks for file paths the chat can open", () => {
     expect(buildRuntimeInstructions({ harness: "Claude Code" })).toContain(
       "write each file's absolute path, or its full path from your working folder",

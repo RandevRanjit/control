@@ -1409,6 +1409,23 @@ export default function FilePreviewPanel({
               title={relativePath}
               workspaceMutationId={workspaceMutationId}
             />
+          ) : relativePath && absolutePath && file.readError?.failure === "binary_file" ? (
+            <AttachmentFilePreview
+              key={`${environmentId}:${absolutePath}`}
+              name={relativePath.split(/[\\/]/).at(-1) || relativePath}
+              mimeType="application/octet-stream"
+              sizeBytes={0}
+              asset={{
+                environmentId,
+                resource: {
+                  _tag: "media-file",
+                  threadId: threadRef.threadId,
+                  path: absolutePath,
+                  disposition: "attachment",
+                },
+              }}
+              origin="File"
+            />
           ) : relativePath && file.error && file.data === null ? (
             <div role="alert" className="flex min-h-0 flex-1 flex-col overflow-auto">
               <div className="my-auto flex shrink-0 flex-col gap-3 px-6 py-6 text-center text-xs leading-relaxed">

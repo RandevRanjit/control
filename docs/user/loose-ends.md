@@ -15,11 +15,11 @@ this thread. Click it, or press `mod+e`, to open the list under it; `mod+e` agai
 anywhere else closes it. Customize `looseEnds.toggle` in **Settings → Keybindings**.
 
 Each item has the agent's line, its reason, and the turn it was filed in; click the turn to
-scroll the thread there. An item can carry one action: **Open** a link, **Reveal** a file, or
-**Copy** a command. Tick the box when it's done, or press **×** to dismiss one you won't do. The
-agent can also close one once it can see it's done. Closed items fold under **Done**, newest
-first, with who closed them and when; **Undo** puts one back. Each device remembers whether the
-fold is open.
+scroll the thread there. An item can carry one action: **Open** a link, **Open** a file in the
+panel (as a file link in the thread does), or **Copy** a command. Tick the box when it's done, or
+press **×** to dismiss one you won't do. The agent can also close one once it can see it's done.
+Closed items fold under **Done**, newest first, with who closed them and when; **Undo** puts one
+back. Each device remembers whether the fold is open.
 
 A thread with anything open shows the mail mark and the count on its card. Click the mark to open
 that thread with its list up.

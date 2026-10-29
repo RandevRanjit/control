@@ -747,7 +747,8 @@ toast and never breaks through a lock. The count is the only signal.
 ### 17.1 An item
 
 - **Fields:** a line in the agent's words; a reason (a sentence or two); the turn it was filed in; and at most one
-  action: a link (**Open**), a file (**Reveal**) or a command (**Copy**).
+  action: a link (**Open**), a file (**Open**, in the panel's file tab, as a file link in the chat opens; owner, 29 Oct)
+  or a command (**Copy**).
 - **Open** until it closes in one of three ways: the owner ticks it **done**, the owner **dismisses** it (×), or the
   agent closes it once it can see the thing is done. A closed item records who closed it and when. **Undo** reopens it.
 

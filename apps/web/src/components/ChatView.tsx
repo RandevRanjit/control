@@ -11344,7 +11344,11 @@ export default function ChatView(props: ChatViewProps) {
   const panelToggleControlProps = {
     looseEnds:
       activeThreadRef && isServerThread ? (
-        <LooseEndsHeadIcon threadRef={activeThreadRef} projection={serverProjection} />
+        <LooseEndsHeadIcon
+          threadRef={activeThreadRef}
+          projection={serverProjection}
+          workspaceRoot={activeWorkspaceRoot}
+        />
       ) : null,
     threadPanelOpen,
     threadPanelPresentation,

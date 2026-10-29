@@ -1281,7 +1281,7 @@ export const OrchestrationV2PlanArtifact = Schema.Union([
 ]);
 export type OrchestrationV2PlanArtifact = typeof OrchestrationV2PlanArtifact.Type;
 
-/** What a loose end's one action does: open a link, reveal a file, or copy a command. */
+/** What a loose end's one action does: open a link, open a file in the panel, or copy a command. */
 export const OrchestrationV2LooseEndAction = Schema.Struct({
   kind: Schema.Literals(["link", "file", "command"]),
   value: TrimmedNonEmptyString,

@@ -383,7 +383,7 @@ export const OrchestratorMcpLooseEndAddInput = Schema.Struct({
   ),
   action: Schema.optional(
     OrchestrationV2LooseEndAction.annotate({
-      description: "One link to open, file to reveal or command to copy.",
+      description: "One link to open, file to open in the panel or command to copy.",
     }),
   ),
   clientRequestId: Schema.optional(OrchestratorMcpClientRequestId),

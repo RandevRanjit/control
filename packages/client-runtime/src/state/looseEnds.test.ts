@@ -85,7 +85,7 @@ describe("loose ends", () => {
 
   it("offers Reveal for a file only where the file is", () => {
     expect(actionLabel({ kind: "link", value: "https://example.com" }, true)).toBe("Open");
-    expect(actionLabel({ kind: "file", value: "/tmp/a" }, true)).toBe("Reveal");
+    expect(actionLabel({ kind: "file", value: "/tmp/a" }, true)).toBe("Open");
     expect(actionLabel({ kind: "file", value: "/tmp/a" }, false)).toBe("Copy");
     expect(actionLabel({ kind: "command", value: "make" }, true)).toBe("Copy");
   });

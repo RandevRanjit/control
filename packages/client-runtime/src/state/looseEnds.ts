@@ -55,8 +55,8 @@ export function closedLabel(
   return `${item.status === "dismissed" ? "Dismissed" : "Done"} by you · ${whenLabel(at, nowMs)}`;
 }
 
-/** A file can be revealed only on the machine it's on; elsewhere its path is copied (§17.5). */
-export function actionLabel(action: OrchestrationV2LooseEndAction, canReveal: boolean) {
+/** A file opens in the panel's file tab; the phone, which has no panel, copies its path (§17.5). */
+export function actionLabel(action: OrchestrationV2LooseEndAction, canOpenFile: boolean) {
   if (action.kind === "link") return "Open";
-  return action.kind === "file" && canReveal ? "Reveal" : "Copy";
+  return action.kind === "file" && canOpenFile ? "Open" : "Copy";
 }

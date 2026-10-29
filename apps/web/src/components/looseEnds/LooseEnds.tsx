@@ -5,6 +5,7 @@ import type {
   OrchestrationV2ThreadProjection,
   ScopedThreadRef,
 } from "@control/contracts";
+import { workspaceRelativeFilePath } from "@control/shared/path";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon, ChevronRightIcon, MailIcon, XIcon } from "lucide-react";
 import { create } from "zustand";
@@ -13,11 +14,10 @@ import { useOpenLink } from "../../browser/useOpenLink";
 import { writeTextToClipboard } from "../../hooks/useCopyToClipboard";
 import { useNowMinute } from "../../hooks/useNowMinute";
 import { shortcutLabelForCommand } from "../../keybindings";
-import { serverEnvironment, primaryServerKeybindingsAtom } from "../../state/server";
-import { shellEnvironment } from "../../state/shell";
+import { primaryServerKeybindingsAtom } from "../../state/server";
 import { threadEnvironment } from "../../state/threads";
-import { useAtomCommand } from "../../state/use-atom-command";
 import { useOrchestrationCommand } from "../../state/use-orchestration-command";
+import { useRightPanelStore } from "../../rightPanelStore";
 import { jumpToMessage } from "../chat/timelineJump";
 import { cn } from "~/lib/utils";
 import { toastManager } from "../ui/toast";
@@ -73,6 +73,8 @@ const TICK = (
 type PopoverProps = {
   readonly threadRef: ScopedThreadRef;
   readonly projection: Pick<OrchestrationV2ThreadProjection, "looseEnds" | "runs"> | null;
+  /** The thread's folder: a file inside it opens editable, by its workspace path. */
+  readonly workspaceRoot: string | undefined;
 };
 
 /**
@@ -124,7 +126,6 @@ function Popover(props: PopoverProps) {
   const { threadRef, projection } = props;
   const nowMs = Date.parse(useNowMinute());
   const keybindings = useAtomValue(primaryServerKeybindingsAtom);
-  const serverConfig = useAtomValue(serverEnvironment.configValueAtom(threadRef.environmentId));
   const close = useOrchestrationCommand(
     threadEnvironment.closeLooseEnd,
     "Failed to close the loose end",
@@ -137,7 +138,6 @@ function Popover(props: PopoverProps) {
     threadEnvironment.clearLooseEnds,
     "Failed to clear the done loose ends",
   );
-  const openInEditor = useAtomCommand(shellEnvironment.openInEditor, "Failed to reveal the file");
   const openLink = useOpenLink(threadRef);
   const [doneOpen, setDoneOpen] = useState(readDoneOpen);
 
@@ -155,9 +155,6 @@ function Popover(props: PopoverProps) {
   const runs = projection?.runs ?? [];
   const { open: openItems, closed } = splitLooseEnds(projection?.looseEnds ?? []);
   const shortcut = shortcutLabelForCommand(keybindings, "looseEnds.toggle");
-  const canReveal =
-    serverConfig?.shellRevealInFileManager === true &&
-    serverConfig.availableEditors.includes("file-manager");
 
   const target = { environmentId: threadRef.environmentId };
   const settle = (item: OrchestrationV2LooseEnd, outcome: "done" | "dismissed") =>
@@ -171,13 +168,16 @@ function Popover(props: PopoverProps) {
     const action = item.action;
     if (action === null) return;
     if (action.kind === "link") void openLink(action.value);
-    else if (action.kind === "file" && canReveal)
-      void openInEditor({
-        ...target,
-        input: { cwd: action.value, editor: "file-manager", reveal: true },
-      });
+    // In the panel's file tab, as a chat's file link opens; a folder shows in the tree.
+    else if (action.kind === "file")
+      useRightPanelStore
+        .getState()
+        .openFile(
+          threadRef,
+          workspaceRelativeFilePath(action.value, props.workspaceRoot) ?? action.value,
+        );
     else
-      void writeTextToClipboard(action.value, action.kind === "file" ? "path" : "command").then(
+      void writeTextToClipboard(action.value, "command").then(
         (didCopy) => {
           if (didCopy)
             toastManager.add({ type: "success", title: "Copied", description: action.value });
@@ -246,7 +246,7 @@ function Popover(props: PopoverProps) {
                   <div className="s-le-acts">
                     {item.action === null ? null : (
                       <button type="button" className="pill ghost sm" onClick={() => act(item)}>
-                        {actionLabel(item.action, canReveal)}
+                        {actionLabel(item.action, true)}
                       </button>
                     )}
                     <Tooltip>

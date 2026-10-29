@@ -55,6 +55,7 @@ interface FakeGhScenario {
     isCrossRepository?: boolean;
     headRepositoryNameWithOwner?: string | null;
     headRepositoryOwnerLogin?: string | null;
+    headSha?: string;
   };
   repositoryCloneUrls?: Record<string, { url: string; sshUrl: string }>;
   /** The detail the provider fails with, the way a GitHub failure reaches GitManager. */
@@ -63,6 +64,8 @@ interface FakeGhScenario {
   failCause?: unknown;
   /** Let this many gh calls succeed before failWith kicks in (default 0 = fail immediately). */
   failAfterCalls?: number;
+  /** Check out the pull request head the way gh does: fast-forward only unless forced. */
+  syncCheckoutWithPullHead?: boolean;
 }
 
 export function fakeGhOutput(stdout: string): VcsProcess.VcsProcessOutput {
@@ -449,7 +452,29 @@ function createGitHubProviderWithFakeGh(scenario: FakeGhScenario = {}): {
       return Effect.try({
         try: () => {
           const headBranch = scenario.pullRequest?.headRefName;
-          if (headBranch) {
+          if (headBranch && scenario.syncCheckoutWithPullHead) {
+            runGitSyncForFakeGh(input.cwd, [
+              "fetch",
+              "origin",
+              `refs/pull/${scenario.pullRequest?.number}/head`,
+            ]);
+            const existingBranch = NodeChildProcess.spawnSync(
+              "git",
+              ["show-ref", "--verify", "--quiet", `refs/heads/${headBranch}`],
+              { cwd: input.cwd },
+            );
+            if (existingBranch.status === 0) {
+              runGitSyncForFakeGh(input.cwd, ["checkout", headBranch]);
+              runGitSyncForFakeGh(
+                input.cwd,
+                args.includes("--force")
+                  ? ["reset", "--hard", "FETCH_HEAD"]
+                  : ["merge", "--ff-only", "FETCH_HEAD"],
+              );
+            } else {
+              runGitSyncForFakeGh(input.cwd, ["checkout", "-b", headBranch, "FETCH_HEAD"]);
+            }
+          } else if (headBranch) {
             const existingBranch = NodeChildProcess.spawnSync(
               "git",
               ["show-ref", "--verify", "--quiet", `refs/heads/${headBranch}`],

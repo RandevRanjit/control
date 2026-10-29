@@ -13,6 +13,7 @@ export interface NormalizedAzureDevOpsPullRequestRecord {
   readonly url: string;
   readonly baseRefName: string;
   readonly headRefName: string;
+  readonly headSha?: string;
   readonly state: "open" | "closed" | "merged";
   readonly isDraft?: boolean;
   readonly closedAt?: string | null;
@@ -37,6 +38,10 @@ const AzureDevOpsPullRequestSchema = Schema.Struct({
   ),
   sourceRefName: TrimmedNonEmptyString,
   targetRefName: TrimmedNonEmptyString,
+  /** The source branch's tip as of Azure's last merge evaluation: the pull request's head. */
+  lastMergeSourceCommit: Schema.optional(
+    Schema.NullOr(Schema.Struct({ commitId: Schema.optional(Schema.NullOr(Schema.String)) })),
+  ),
   status: Schema.String,
   isDraft: Schema.optional(Schema.Boolean),
   creationDate: Schema.optional(Schema.OptionFromNullOr(Schema.DateTimeUtcFromString)),
@@ -166,6 +171,7 @@ function normalizeAzureDevOpsPullRequestRecord(
   raw: Schema.Schema.Type<typeof AzureDevOpsPullRequestSchema>,
 ): NormalizedAzureDevOpsPullRequestRecord {
   const state = normalizeAzureDevOpsPullRequestState(raw.status);
+  const headSha = trimOptionalString(raw.lastMergeSourceCommit?.commitId);
   const terminalAt = Option.match(raw.closedDate ?? Option.none(), {
     onNone: () => null,
     onSome: DateTime.formatIso,
@@ -176,6 +182,7 @@ function normalizeAzureDevOpsPullRequestRecord(
     url: normalizeAzureDevOpsPullRequestUrl(raw),
     baseRefName: normalizeRefName(raw.targetRefName),
     headRefName: normalizeRefName(raw.sourceRefName),
+    ...(headSha ? { headSha } : {}),
     state,
     ...(raw.isDraft === true ? { isDraft: true } : {}),
     closedAt: state === "closed" ? terminalAt : null,

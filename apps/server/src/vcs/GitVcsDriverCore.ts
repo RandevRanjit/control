@@ -29,6 +29,7 @@ import {
   type VcsRef,
 } from "@control/contracts";
 import { dedupeRemoteBranchesWithLocalMatches, normalizeGitRemoteUrl } from "@control/shared/git";
+import { COMMIT_LOG_FORMAT, parseCommitFiles, parseCommitLog } from "./gitHistory.ts";
 import { HostProcessPlatform } from "@control/shared/hostProcess";
 import { compactTraceAttributes } from "@control/shared/observability";
 import { decodeJsonResult } from "@control/shared/schemaJson";
@@ -3122,6 +3123,79 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
       Effect.map((trimmed) => (trimmed.length > 0 ? trimmed : null)),
     );
 
+  const listCommits: GitVcsDriver.GitVcsDriver["Service"]["listCommits"] = Effect.fn("listCommits")(
+    function* (input) {
+      const limit = input.limit ?? 60;
+      // The branch's upstream and the remote's default branch draw beside HEAD, so the graph shows
+      // where the branch left them and what it hasn't pulled.
+      const [upstream, defaultHead] = yield* Effect.all(
+        [
+          runGitStdout(
+            "GitVcsDriver.listCommits.upstream",
+            input.cwd,
+            ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"],
+            true,
+          ),
+          runGitStdout(
+            "GitVcsDriver.listCommits.defaultHead",
+            input.cwd,
+            ["symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"],
+            true,
+          ),
+        ],
+        { concurrency: "unbounded" },
+      );
+      const sides = [...new Set([upstream.trim(), defaultHead.trim()])].filter(
+        (ref) => ref.length > 0 && !ref.startsWith("-") && !ref.includes("@{"),
+      );
+      const result = yield* executeGit(
+        "GitVcsDriver.listCommits",
+        input.cwd,
+        [
+          "log",
+          "--topo-order",
+          `--max-count=${limit + 1}`,
+          `--format=${COMMIT_LOG_FORMAT}`,
+          "HEAD",
+          ...sides,
+          "--",
+        ],
+        { allowNonZeroExit: true, maxOutputBytes: 2_000_000 },
+      );
+      // An unborn HEAD has no history yet.
+      const commits = result.exitCode === 0 ? parseCommitLog(result.stdout) : [];
+      return { isRepo: true, commits: commits.slice(0, limit), hasMore: commits.length > limit };
+    },
+  );
+
+  const readCommitFiles: GitVcsDriver.GitVcsDriver["Service"]["readCommitFiles"] = Effect.fn(
+    "readCommitFiles",
+  )(function* (input) {
+    const header = yield* runGitStdout("GitVcsDriver.readCommitFiles.header", input.cwd, [
+      "log",
+      "-1",
+      "--format=%P%x1f%b",
+      input.sha,
+      "--",
+    ]);
+    const [parents = "", body = ""] = header.split("\x1f");
+    const firstParent = parents.trim().split(" ")[0];
+    // Against the first parent, so a merge lists what it brought in; the root against nothing.
+    const range = firstParent ? [`${input.sha}^1`, input.sha] : ["--root", input.sha];
+    const diffTree = (format: string) =>
+      runGitStdoutWithOptions(
+        `GitVcsDriver.readCommitFiles.${format}`,
+        input.cwd,
+        ["diff-tree", "-r", "-z", "--no-renames", "--no-commit-id", `--${format}`, ...range],
+        { maxOutputBytes: 2_000_000 },
+      );
+    const [nameStatus, numstat] = yield* Effect.all(
+      [diffTree("name-status"), diffTree("numstat")],
+      { concurrency: "unbounded" },
+    );
+    return { body: body.trim(), ...parseCommitFiles(nameStatus, numstat, 500) };
+  });
+
   const readGitRefsSnapshot = Effect.fn("readGitRefsSnapshot")(function* (gitCommonDir: string) {
     const fetchCwd =
       path.basename(gitCommonDir) === ".git" ? path.dirname(gitCommonDir) : gitCommonDir;
@@ -4097,6 +4171,8 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
     getReviewDiffFileContents,
     readConfigValue,
     listRefs,
+    listCommits,
+    readCommitFiles,
     createWorktree: (input, options) =>
       withListRefsInvalidation(input.cwd, createWorktree(input, options)),
     fetchPullRequestBranch: (input) =>

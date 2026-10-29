@@ -65,6 +65,7 @@ import { useCodeViewFileReveal } from "../diffs/useCodeViewFileReveal";
 import { diffFileTreeEntries } from "../diffs/diffFileTree.logic";
 import { StyledDiffCodeView } from "../diffs/StyledDiffCodeView";
 import { Button } from "../ui/button";
+import { DiffChangeMark } from "../diffs/DiffChangeMark";
 import { MorphIcon } from "~/components/MorphIcon";
 import { Checkbox } from "../ui/checkbox";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "../ui/collapsible";
@@ -806,19 +807,22 @@ function PullRequestCodeTab({
       // chevron follows it rather than recomputing the default here.
       const collapsed = item.collapsed === true;
       return (
-        <Button
-          size="icon-micro"
-          variant="ghost-muted"
-          aria-expanded={!collapsed}
-          aria-label={collapsed ? "Expand diff" : "Collapse diff"}
-          className="mr-1"
-          onClick={(event) => {
-            event.stopPropagation();
-            toggleFile(item.id);
-          }}
-        >
-          <MorphIcon className="size-4" icon={collapsed ? ChevronRight : ChevronDown} />
-        </Button>
+        <span className="flex items-center gap-0.5">
+          <Button
+            size="icon-micro"
+            variant="ghost-muted"
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? "Expand diff" : "Collapse diff"}
+            className="mr-1"
+            onClick={(event) => {
+              event.stopPropagation();
+              toggleFile(item.id);
+            }}
+          >
+            <MorphIcon className="size-4" icon={collapsed ? ChevronRight : ChevronDown} />
+          </Button>
+          {item.type === "diff" ? <DiffChangeMark type={item.fileDiff.type} /> : null}
+        </span>
       );
     },
     [toggleFile],

@@ -19,6 +19,7 @@ import type { ChatFileAttachment } from "./types";
 
 const RIGHT_PANEL_KINDS = [
   "outputs",
+  "graph",
   "diff",
   "files",
   "file",
@@ -43,6 +44,7 @@ export function panelTabOf(kind: RightPanelKind): PanelTab {
     case "preview":
     case "device":
       return "browser";
+    case "graph":
     case "diff":
     case "pull-request":
     case "pull-requests":
@@ -72,6 +74,7 @@ export type RightPanelSurface =
       splitDirection?: "horizontal" | "vertical";
     }
   | { id: "outputs"; kind: "outputs" }
+  | { id: "graph"; kind: "graph" }
   | { id: "diff"; kind: "diff" }
   | { id: "files"; kind: "files" }
   | {
@@ -227,6 +230,8 @@ const singletonSurface = (
   switch (kind) {
     case "outputs":
       return { id: "outputs", kind };
+    case "graph":
+      return { id: "graph", kind };
     case "diff":
       return { id: "diff", kind };
     case "files":
@@ -254,6 +259,15 @@ const fileSurface = (
   revealLine,
   revealRequestId,
 });
+
+/** Folder's tree stays its first tab while files are open, so there is always a way back to it. */
+function withFolderTree(surfaces: readonly RightPanelSurface[]): RightPanelSurface[] {
+  const tree = surfaces.find((surface) => surface.kind === "files") ?? singletonSurface("files");
+  const rest = surfaces.filter((surface) => surface.kind !== "files");
+  const firstFile = rest.findIndex((surface) => surface.kind === "file");
+  const at = firstFile < 0 ? rest.length : firstFile;
+  return [...rest.slice(0, at), tree, ...rest.slice(at)];
+}
 
 const attachmentSurface = (attachment: ChatFileAttachment): RightPanelSurface => ({
   id: `attachment:${attachment.id}`,
@@ -771,11 +785,9 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
             const relativePath = /^[A-Za-z]:\/+$/.test(requestedPath)
               ? requestedPath
               : requestedPath.replace(/\/+$/, "") || requestedPath;
-            const withoutStandaloneExplorer = current.surfaces.filter(
-              (surface) => surface.kind !== "files",
-            );
+            const withTree = withFolderTree(current.surfaces);
             const surfaceId = `file:${relativePath}` as const;
-            const existing = withoutStandaloneExplorer.find(
+            const existing = withTree.find(
               (surface): surface is Extract<RightPanelSurface, { kind: "file" }> =>
                 surface.id === surfaceId && surface.kind === "file",
             );
@@ -789,24 +801,19 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
               isOpen: true,
               activeSurfaceId: surface.id,
               surfaces: existing
-                ? withoutStandaloneExplorer.map((entry) =>
-                    entry.id === surface.id ? surface : entry,
-                  )
-                : [...withoutStandaloneExplorer, surface],
+                ? withTree.map((entry) => (entry.id === surface.id ? surface : entry))
+                : [...withTree, surface],
             };
           }),
         ),
       openAttachment: (ref, attachment) =>
         set((state) =>
-          userAction(state, scopedThreadKey(ref), (current) => {
-            const withoutStandaloneExplorer = current.surfaces.filter(
-              (surface) => surface.kind !== "files",
-            );
-            return upsertSurface(
-              { ...current, surfaces: withoutStandaloneExplorer },
+          userAction(state, scopedThreadKey(ref), (current) =>
+            upsertSurface(
+              { ...current, surfaces: withFolderTree(current.surfaces) },
               attachmentSurface(attachment),
-            );
-          }),
+            ),
+          ),
         ),
       openTerminal: (ref, terminalId) =>
         set((state) =>

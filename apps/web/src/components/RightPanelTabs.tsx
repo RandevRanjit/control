@@ -123,6 +123,8 @@ interface RightPanelTabsProps {
   onAddTerminal: () => void;
   /** Git's Diff, when it is not open yet. */
   onAddDiff: () => void;
+  /** Git's Graph, when it is not open yet. */
+  onAddGraph: () => void;
   /** Git's PR view: the thread's pull requests and every project's (design §22). */
   onAddPullRequests: () => void;
   onAddDevice: () => void;
@@ -172,7 +174,7 @@ export function shouldOpenDefaultBrowserProfileFromMenuClick(
   return pointerType !== "touch";
 }
 
-const GIT_VIEWS = ["Diff", "PR"] as const;
+type GitView = "Graph" | "Diff" | "PR";
 
 const SURFACE_DISABLED_REASONS = {
   browser: "Browser previews are only available in the Control desktop app.",
@@ -280,6 +282,8 @@ function surfaceTitle(
   switch (surface.kind) {
     case "outputs":
       return "Outputs";
+    case "graph":
+      return "Graph";
     case "diff":
       return "Diff";
     case "files":
@@ -357,6 +361,7 @@ function SurfaceIcon({
     }
     case "outputs":
       return <FileOutput className="size-3 shrink-0" />;
+    case "graph":
     case "diff":
       return <FileDiff className="size-3 shrink-0" />;
     case "files":
@@ -525,12 +530,16 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
         ]
       : [];
   const canAdd = addActions.some((action) => action.available);
-  // Git switches its two views with Diff | PR (design §22) where pull requests can be read.
+  // Git switches its views with Graph | Diff | PR (design §5.2, §22); PR where pull requests can
+  // be read.
   const gitPullRequest = tabSurfaces.find(
     (surface) => surface.kind === "pull-request" || surface.kind === "pull-requests",
   );
-  const showGitSwitch =
-    tab === "git" && (props.pullRequestsAvailable || gitPullRequest !== undefined);
+  const showGitSwitch = tab === "git";
+  const gitViews: readonly GitView[] =
+    props.pullRequestsAvailable || gitPullRequest !== undefined
+      ? ["Graph", "Diff", "PR"]
+      : ["Graph", "Diff"];
   const activeTabSurface = tabSurfaces.find((surface) => surface.id === props.activeSurfaceId);
   // A tab shows its own row of chips once it holds more than one surface, or has something to add.
   const showChips = tab !== "git" && (tab === null || tabSurfaces.length > 1 || canAdd);
@@ -741,29 +750,36 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
                 !active && "hover:text-foreground",
               )}
             >
-              <PanelTabCloseButton
-                label={`Close ${title}`}
-                onClick={() => props.onCloseSurface(surface)}
-              >
-                {surface.kind === "terminal" ? (
-                  <i>{terminalNumber(surface)}</i>
-                ) : (
-                  <SurfaceIcon
-                    surface={surface}
-                    sessions={props.previewSessions}
-                    desktopByTabId={props.desktopByTabId}
-                    theme={resolvedTheme}
-                    environmentId={props.environmentId}
-                    pullRequestStatusSeeds={props.pullRequestStatusSeeds}
-                  />
-                )}
-                {pending ? (
-                  <span
-                    className="absolute -right-0.5 -bottom-0.5 size-1.5 rounded-full bg-current"
-                    aria-hidden
-                  />
-                ) : null}
-              </PanelTabCloseButton>
+              {surface.kind === "files" ? (
+                // Folder's tree is pinned first (rightPanelStore.withFolderTree): it has no close.
+                <span className="flex size-4 shrink-0 items-center justify-center">
+                  <Files className="size-3 shrink-0" />
+                </span>
+              ) : (
+                <PanelTabCloseButton
+                  label={`Close ${title}`}
+                  onClick={() => props.onCloseSurface(surface)}
+                >
+                  {surface.kind === "terminal" ? (
+                    <i>{terminalNumber(surface)}</i>
+                  ) : (
+                    <SurfaceIcon
+                      surface={surface}
+                      sessions={props.previewSessions}
+                      desktopByTabId={props.desktopByTabId}
+                      theme={resolvedTheme}
+                      environmentId={props.environmentId}
+                      pullRequestStatusSeeds={props.pullRequestStatusSeeds}
+                    />
+                  )}
+                  {pending ? (
+                    <span
+                      className="absolute -right-0.5 -bottom-0.5 size-1.5 rounded-full bg-current"
+                      aria-hidden
+                    />
+                  ) : null}
+                </PanelTabCloseButton>
+              )}
               {audio === "none" || !audioRuntimeTabId ? null : (
                 <Tooltip>
                   <TooltipTrigger
@@ -1003,13 +1019,24 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
         <div className="hy-vh flex shrink-0 px-2">
           <Seg
             label="Git view"
-            options={GIT_VIEWS}
-            value={activeTabSurface?.kind === "diff" ? "Diff" : "PR"}
+            options={gitViews}
+            value={
+              activeTabSurface?.kind === "graph"
+                ? "Graph"
+                : activeTabSurface?.kind === "diff"
+                  ? "Diff"
+                  : "PR"
+            }
             onChange={(view) => {
               const shown = tabSurfaces.find((surface) =>
-                view === "Diff" ? surface.kind === "diff" : surface === gitPullRequest,
+                view === "Graph"
+                  ? surface.kind === "graph"
+                  : view === "Diff"
+                    ? surface.kind === "diff"
+                    : surface === gitPullRequest,
               );
               if (shown) props.onActivate(shown);
+              else if (view === "Graph") props.onAddGraph();
               else if (view === "Diff") props.onAddDiff();
               else props.onAddPullRequests();
             }}

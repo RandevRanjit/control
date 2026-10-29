@@ -12,7 +12,11 @@ import type { Ref } from "react";
 import { DIFF_SURFACE_THEME_UNSAFE_CSS } from "~/lib/diffRendering";
 import { DiffWorkerPoolProvider } from "../DiffWorkerPoolProvider";
 
+// Git's letter (DiffChangeMark, in each header's prefix) says how a file changed, not an icon.
 const DIFF_VIEW_UNSAFE_CSS = `${DIFF_SURFACE_THEME_UNSAFE_CSS}
+[data-change-icon] { display: none !important; }
+/* Added before removed, as every other count in the app reads. */
+[data-metadata] [data-additions-count] { order: -1; }
 :is(
   [data-line],
   [data-line-annotation],

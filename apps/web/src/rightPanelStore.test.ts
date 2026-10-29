@@ -50,7 +50,7 @@ describe("rightPanelStore", () => {
       useClosedViewStore
         .getState()
         .entries.map((entry) => (entry.kind === "panel-tab" ? entry.surface.id : null)),
-    ).toEqual(["device", "diff", pr.id]);
+    ).toEqual(["device", "files", "diff", pr.id]);
   });
 
   it("reopens the active tab first after a bulk close", () => {
@@ -107,7 +107,10 @@ describe("rightPanelStore", () => {
 
     expect(
       selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA).surfaces,
-    ).toEqual([expect.objectContaining({ id: "file:src/app.ts" })]);
+    ).toEqual([
+      expect.objectContaining({ id: "files" }),
+      expect.objectContaining({ id: "file:src/app.ts" }),
+    ]);
   });
 
   it("records only closed tabs when a panel is hidden or a terminal tab closes", () => {
@@ -686,7 +689,7 @@ describe("rightPanelStore", () => {
     store.openFile(refA, ".");
     const state = selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA);
     expect(state.activeSurfaceId).toBe("files");
-    expect(state.surfaces.map((surface) => surface.id)).toEqual(["file:README.md", "files"]);
+    expect(state.surfaces.map((surface) => surface.id)).toEqual(["files", "file:README.md"]);
     store.closeSurface(refA, "files");
     expect(
       selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA).activeSurfaceId,
@@ -697,7 +700,7 @@ describe("rightPanelStore", () => {
     ).toBe("files");
   });
 
-  it("replaces the standalone explorer with peer file surfaces", () => {
+  it("keeps the tree as Folder's first tab, with each open file a tab after it", () => {
     useRightPanelStore.getState().open(refA, "files");
     useRightPanelStore.getState().openFile(refA, "src/index.ts");
     useRightPanelStore.getState().openFile(refA, "src/index.ts");
@@ -707,6 +710,7 @@ describe("rightPanelStore", () => {
       isOpen: true,
       activeSurfaceId: "file:README.md",
       surfaces: [
+        { id: "files", kind: "files" },
         {
           id: "file:src/index.ts",
           kind: "file",
@@ -736,6 +740,7 @@ describe("rightPanelStore", () => {
     expect(
       selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA).surfaces,
     ).toMatchObject([
+      { id: "files" },
       { id: `file:${firstPath}`, relativePath: firstPath },
       { id: `file:${secondPath}`, relativePath: secondPath },
     ]);
@@ -752,10 +757,24 @@ describe("rightPanelStore", () => {
 
     expect(
       selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA).surfaces,
-    ).toMatchObject([{ id: `file:${treePath}`, relativePath: treePath, revealRequestId: 2 }]);
+    ).toMatchObject([
+      { id: "files" },
+      { id: `file:${treePath}`, relativePath: treePath, revealRequestId: 2 },
+    ]);
   });
 
-  it("opens an attachment as a file surface without the standalone explorer", () => {
+  it("puts the tree first when a file opens without it, so there is a way back", () => {
+    useRightPanelStore.getState().open(refA, "diff");
+    useRightPanelStore.getState().openFile(refA, "README.md");
+
+    expect(
+      selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA).surfaces.map(
+        (surface) => surface.id,
+      ),
+    ).toEqual(["diff", "files", "file:README.md"]);
+  });
+
+  it("opens an attachment as a file tab after the tree", () => {
     const attachment = {
       type: "file" as const,
       id: "thread-A-attachment-pdf",
@@ -770,6 +789,7 @@ describe("rightPanelStore", () => {
       isOpen: true,
       activeSurfaceId: "attachment:thread-A-attachment-pdf",
       surfaces: [
+        { id: "files", kind: "files" },
         {
           id: "attachment:thread-A-attachment-pdf",
           kind: "file",
@@ -796,7 +816,7 @@ describe("rightPanelStore", () => {
       selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA).surfaces.map(
         (surface) => surface.id,
       ),
-    ).toEqual(["file:attachment:shared-id", "attachment:shared-id"]);
+    ).toEqual(["files", "file:attachment:shared-id", "attachment:shared-id"]);
   });
 
   it("updates line reveal requests when reopening a file surface", () => {
@@ -807,6 +827,7 @@ describe("rightPanelStore", () => {
       isOpen: true,
       activeSurfaceId: "file:src/index.ts",
       surfaces: [
+        { id: "files", kind: "files" },
         {
           id: "file:src/index.ts",
           kind: "file",
@@ -823,6 +844,7 @@ describe("rightPanelStore", () => {
       isOpen: true,
       activeSurfaceId: "file:src/index.ts",
       surfaces: [
+        { id: "files", kind: "files" },
         {
           id: "file:src/index.ts",
           kind: "file",

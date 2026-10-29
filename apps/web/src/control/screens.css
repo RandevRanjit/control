@@ -86,3 +86,24 @@
 .s-sc-root .s-sc-lf input::placeholder { color: var(--text-caption); }
 .s-sc-root .s-sc-lm { flex-basis: 100%; margin: 0; padding: 0 2px; font: 400 10.5px/1.3 var(--f-mono); color: var(--text-caption); }
 .s-sc-root .s-sc-lm[data-error] { color: var(--tv-error); }
+
+/* Git's letters past §5.4's M and A: a deleted file in the error ink, a rename as a change. */
+.dp-gs[data-g="D"] { color: var(--tv-error); }
+.dp-gs[data-g="R"] { color: var(--tv-write); }
+
+/* Git › Graph: commits newest first beside their lanes; a commit opens to its message and files. */
+.s-gg-list { flex: 1; min-height: 0; overflow-y: auto; padding: 2px 6px 8px; }
+.s-gg-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto 12px; align-items: center; column-gap: 8px; width: 100%; height: 28px; padding: 0 8px 0 2px; border-radius: var(--r-s); text-align: left; cursor: pointer; color: var(--text-secondary); }
+.s-gg-row:hover,
+.s-gg-row[data-on] { background: var(--hy-card); box-shadow: inset 0 1px 0 var(--lip); }
+.s-gg-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--w-reg) 12.5px/1 var(--f-chrome); color: var(--text-strong); }
+.s-gg-refs { display: inline-flex; gap: 4px; min-width: 0; overflow: hidden; }
+.s-gg-ref { flex: none; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 6px; border-radius: var(--r-pill); background: var(--hy-card); font: 400 10px/1 var(--f-mono); color: var(--text-strong); }
+.s-gg-ref[data-remote] { background: none; box-shadow: inset 0 0 0 1px var(--seam); color: var(--text-caption); }
+.s-gg-open { margin: 0 0 0 7.25px; padding: 2px 0 8px 14px; }
+.s-gg-open[data-continues] { box-shadow: inset 1.5px 0 0 var(--tv-read); }
+.s-gg-more { display: block; margin: 6px auto 0; padding: 6px 10px; border-radius: var(--r-pill); font: var(--w-reg) 12px/1 var(--f-chrome); color: var(--text-secondary); }
+.s-gg-more:hover { background: var(--hy-card); color: var(--text-strong); }
+.s-gg-by { margin: 6px 8px 0; font: 400 10.5px/1.4 var(--f-mono); color: var(--text-caption); }
+.s-gg-body { margin: 4px 8px 6px; white-space: pre-wrap; font: var(--w-reg) 12px/1.5 var(--f-chrome); color: var(--text-secondary); }
+.s-gg-note { margin: 0; padding: 10px 14px; font: var(--w-reg) 12px/1.4 var(--f-chrome); color: var(--text-caption); }

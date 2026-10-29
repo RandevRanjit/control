@@ -13,6 +13,10 @@ import {
   type VcsCreateWorktreeResult,
   type VcsListRefsInput,
   type VcsListRefsResult,
+  type VcsListCommitsInput,
+  type VcsListCommitsResult,
+  type VcsReadCommitFilesInput,
+  type VcsReadCommitFilesResult,
   type GitManagerServiceError,
   type GitPreparePullRequestThreadInput,
   type GitPreparePullRequestThreadResult,
@@ -76,6 +80,12 @@ export class GitWorkflowService extends Context.Service<
     readonly listRefs: (
       input: VcsListRefsInput,
     ) => Effect.Effect<VcsListRefsResult, GitCommandError>;
+    readonly listCommits: (
+      input: VcsListCommitsInput,
+    ) => Effect.Effect<VcsListCommitsResult, GitCommandError>;
+    readonly readCommitFiles: (
+      input: VcsReadCommitFilesInput,
+    ) => Effect.Effect<VcsReadCommitFilesResult, GitCommandError>;
     readonly createWorktree: (
       input: VcsCreateWorktreeInput,
       options?: GitVcsDriver.CreateWorktreeOptions,
@@ -372,6 +382,18 @@ export const make = Effect.gen(function* () {
         Effect.flatMap((isGitRepository) =>
           isGitRepository ? git.listRefs(input) : Effect.succeed(nonRepositoryListRefs()),
         ),
+      ),
+    listCommits: (input) =>
+      detectGitRepositoryForCommand("GitWorkflowService.listCommits", input.cwd).pipe(
+        Effect.flatMap((isGitRepository) =>
+          isGitRepository
+            ? git.listCommits(input)
+            : Effect.succeed({ isRepo: false, commits: [], hasMore: false }),
+        ),
+      ),
+    readCommitFiles: (input) =>
+      ensureGitCommand("GitWorkflowService.readCommitFiles", input.cwd).pipe(
+        Effect.andThen(git.readCommitFiles(input)),
       ),
     createWorktree: (input, options) =>
       ensureGitCommand("GitWorkflowService.createWorktree", input.cwd).pipe(

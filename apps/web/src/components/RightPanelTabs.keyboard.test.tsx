@@ -101,6 +101,7 @@ async function renderPanel(
         onAddBrowserInProfile={noop}
         onAddTerminal={addTerminal}
         onAddDiff={noop}
+        onAddGraph={noop}
         onAddPullRequests={noop}
         onAddDevice={noop}
         browserAvailable
@@ -281,8 +282,66 @@ describe("right panel tabs", () => {
     expect(onAddDiff).toHaveBeenCalledOnce();
   });
 
-  it("leaves Git as Diff alone where pull requests cannot be read", async () => {
-    await renderPanel({ surfaces: [{ id: "diff", kind: "diff" }], activeSurfaceId: "diff" });
-    expect(container.querySelector('[aria-label="Git view"]')).toBeNull();
+  it("opens Git's Graph from the switch, and offers Graph and Diff where pull requests cannot be read", async () => {
+    const onAddGraph = vi.fn();
+    const onActivate = vi.fn();
+    const views = () =>
+      [...container.querySelectorAll<HTMLButtonElement>('[aria-label="Git view"] button')].map(
+        (button) => button.textContent,
+      );
+    await renderPanel({
+      surfaces: [{ id: "diff", kind: "diff" }],
+      activeSurfaceId: "diff",
+      onAddGraph,
+    });
+    expect(views()).toEqual(["Graph", "Diff"]);
+    await act(() =>
+      container.querySelector<HTMLButtonElement>('[aria-label="Git view"] button')!.click(),
+    );
+    expect(onAddGraph).toHaveBeenCalledOnce();
+
+    const graph = { id: "graph" as const, kind: "graph" as const };
+    await renderPanel({
+      surfaces: [{ id: "diff", kind: "diff" }, graph],
+      activeSurfaceId: "graph",
+      pullRequestsAvailable: true,
+      onAddGraph,
+      onActivate,
+    });
+    expect(views()).toEqual(["Graph", "Diff", "PR"]);
+    expect(
+      container
+        .querySelector<HTMLButtonElement>('[aria-label="Git view"] button')!
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+  });
+});
+
+describe("Folder's tabs", () => {
+  const tree = { id: "files" as const, kind: "files" as const };
+  const file = {
+    id: "file:src/app.ts" as const,
+    kind: "file" as const,
+    relativePath: "src/app.ts",
+    revealLine: null,
+    revealRequestId: 1,
+  };
+
+  it("keep the tree as a first tab without a close, and go back to it on a click", async () => {
+    const onActivate = vi.fn();
+    const onCloseSurface = vi.fn();
+    await renderPanel(
+      { surfaces: [tree, file], activeSurfaceId: file.id, onActivate, onCloseSurface },
+      "folder",
+    );
+    expect(chipTitles()).toEqual(["Files", "app.ts"]);
+    expect(container.querySelector('[aria-label="Close Files"]')).toBeNull();
+    expect(container.querySelector('[aria-label="Close app.ts"]')).not.toBeNull();
+
+    const treeChip = [
+      ...container.querySelectorAll<HTMLElement>("[data-right-panel-subtabs] button"),
+    ].find((button) => button.textContent === "Files")!;
+    await act(() => treeChip.click());
+    expect(onActivate).toHaveBeenCalledWith(tree);
   });
 });

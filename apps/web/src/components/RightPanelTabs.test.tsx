@@ -112,6 +112,7 @@ function renderTabs(
       onAddBrowserInProfile={() => undefined}
       onAddTerminal={() => undefined}
       onAddDiff={() => undefined}
+      onAddGraph={() => undefined}
       onAddPullRequests={() => undefined}
       onAddDevice={() => undefined}
       browserAvailable

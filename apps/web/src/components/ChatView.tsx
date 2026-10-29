@@ -277,6 +277,7 @@ import { PullRequestDetailPanel } from "./pullRequest/PullRequestDetailPanel";
 import { PullRequestDetailGhost } from "./pullRequest/PullRequestGhosts";
 import { PullRequestsUnavailableState } from "./pullRequest/PullRequestsUnavailableState";
 import { type PanelTabsConfig, RightPanelTabs } from "./RightPanelTabs";
+import { GitGraphPanel } from "./git/GitGraphPanel";
 import { OutputsPanel } from "./outputs/OutputsPanel";
 import { LooseEndsHeadIcon, toggleLooseEnds } from "./looseEnds/LooseEnds";
 import { ThreadPullRequestsPanel } from "./pullRequest/ThreadPullRequestsPanel";
@@ -5386,6 +5387,10 @@ export default function ChatView(props: ChatViewProps) {
   const openChangesFromThreadPanel = useCallback(() => {
     addDiffSurface();
   }, [addDiffSurface]);
+  const addGraphSurface = useCallback(() => {
+    if (!activeThreadRef || !isServerThread || !isGitRepo) return;
+    useRightPanelStore.getState().open(activeThreadRef, "graph");
+  }, [activeThreadRef, isGitRepo, isServerThread]);
   const addFilesSurface = useCallback(() => {
     if (!activeThreadRef || !activeProject) return;
     useRightPanelStore.getState().open(activeThreadRef, "files");
@@ -6188,7 +6193,10 @@ export default function ChatView(props: ChatViewProps) {
   const closeOtherRightPanelSurfaces = useCallback(
     (surface: RightPanelSurface) => {
       if (!activeThreadRef) return;
-      const surfaces = sameTabSurfaces(surface).filter((entry) => entry.id !== surface.id);
+      // Folder's tree is pinned: closing the other files leaves it.
+      const surfaces = sameTabSurfaces(surface).filter(
+        (entry) => entry.id !== surface.id && entry.kind !== "files",
+      );
       const finishClose = () => finishRightPanelSurfaceClose(surfaces);
       closeAfterAgentBrowserConfirmation(surfaces, finishClose);
     },
@@ -6205,7 +6213,9 @@ export default function ChatView(props: ChatViewProps) {
       const tabSurfaces = sameTabSurfaces(surface);
       const surfaceIndex = tabSurfaces.findIndex((entry) => entry.id === surface.id);
       if (surfaceIndex < 0) return;
-      const surfaces = tabSurfaces.slice(surfaceIndex + 1);
+      const surfaces = tabSurfaces
+        .slice(surfaceIndex + 1)
+        .filter((entry) => entry.kind !== "files");
       const finishClose = () => finishRightPanelSurfaceClose(surfaces);
       closeAfterAgentBrowserConfirmation(surfaces, finishClose);
     },
@@ -10929,7 +10939,30 @@ export default function ChatView(props: ChatViewProps) {
         htmlRenders={timelineHtmlRenders}
         runs={serverProjection?.runs ?? []}
         checkpoints={turnDiffSummaries}
-        onOpenDiff={onOpenTurnDiff}
+        renderWorkspaceFile={(path) =>
+          activeWorkspaceRoot ? (
+            <Suspense fallback={null}>
+              <FilePreviewPanel
+                key={`${activeThread.environmentId}:${activeWorkspaceRoot}:${path}`}
+                asOutput
+                environmentId={activeThread.environmentId}
+                cwd={activeWorkspaceRoot}
+                projectName={activeProject?.title ?? ""}
+                threadRef={activeThreadRef}
+                composerDraftTarget={composerDraftTarget}
+                keybindings={keybindings}
+                availableEditors={availableEditors}
+                relativePath={path}
+                revealLine={null}
+                revealRequestId={0}
+                onOpenFile={openFileSurface}
+                onPendingChange={handleFilePendingChange}
+                selectedFilePending={false}
+                workspaceMutationId={workspaceMutationId}
+              />
+            </Suspense>
+          ) : null
+        }
       />
     ) : shownRightPanelSurface.kind === "preview" ? (
       <Suspense fallback={null}>
@@ -10963,6 +10996,15 @@ export default function ChatView(props: ChatViewProps) {
         newShortcutLabel={newTerminalShortcutLabel ?? undefined}
         closeShortcutLabel={closeTerminalShortcutLabel ?? undefined}
       />
+    ) : shownRightPanelSurface.kind === "graph" ? (
+      gitCwd ? (
+        <GitGraphPanel
+          environmentId={activeThread.environmentId}
+          cwd={gitCwd}
+          workspaceMutationId={workspaceMutationId}
+          onOpenFile={openFileSurface}
+        />
+      ) : null
     ) : shownRightPanelSurface.kind === "diff" ? (
       <Suspense fallback={null}>
         <DiffPanel
@@ -11885,6 +11927,7 @@ export default function ChatView(props: ChatViewProps) {
           onAddBrowserInProfile={createBrowserSurface}
           onAddTerminal={addTerminalSurface}
           onAddDiff={addDiffSurface}
+          onAddGraph={addGraphSurface}
           onAddPullRequests={addPullRequestsSurface}
           onAddDevice={addDeviceSurface}
           browserAvailable={browserTabOpens}
@@ -11939,6 +11982,7 @@ export default function ChatView(props: ChatViewProps) {
             onAddBrowserInProfile={createBrowserSurface}
             onAddTerminal={addTerminalSurface}
             onAddDiff={addDiffSurface}
+            onAddGraph={addGraphSurface}
             onAddPullRequests={addPullRequestsSurface}
             onAddDevice={addDeviceSurface}
             browserAvailable={browserTabOpens}

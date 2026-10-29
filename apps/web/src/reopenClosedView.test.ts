@@ -59,7 +59,11 @@ describe("reopenClosedView", () => {
     expect(reopened).toBe(true);
     const state = selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, threadRef);
     expect(state.isOpen).toBe(true);
-    expect(state.surfaces).toMatchObject([{ id: "file:src/app.ts", revealLine: 18 }]);
+    // Folder's tree comes back with it, pinned first, so there is a way back from the file.
+    expect(state.surfaces).toMatchObject([
+      { id: "files" },
+      { id: "file:src/app.ts", revealLine: 18 },
+    ]);
     expect(openPreview).not.toHaveBeenCalled();
   });
 

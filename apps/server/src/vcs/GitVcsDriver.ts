@@ -26,6 +26,10 @@ import {
   type VcsInitInput,
   type VcsListRefsInput,
   type VcsListRefsResult,
+  type VcsListCommitsInput,
+  type VcsListCommitsResult,
+  type VcsReadCommitFilesInput,
+  type VcsReadCommitFilesResult,
   type VcsPullResult,
   type VcsRemoveWorktreeInput,
   type VcsStatusInput,
@@ -349,6 +353,14 @@ export class GitVcsDriver extends Context.Service<
     readonly listRefs: (
       input: VcsListRefsInput,
     ) => Effect.Effect<VcsListRefsResult, GitCommandError>;
+    /** HEAD's history, newest first, with its upstream and the remote's default branch beside it. */
+    readonly listCommits: (
+      input: VcsListCommitsInput,
+    ) => Effect.Effect<VcsListCommitsResult, GitCommandError>;
+    /** A commit's message body and the files it changed against its first parent. */
+    readonly readCommitFiles: (
+      input: VcsReadCommitFilesInput,
+    ) => Effect.Effect<VcsReadCommitFilesResult, GitCommandError>;
     readonly pullCurrentBranch: (cwd: string) => Effect.Effect<VcsPullResult, GitCommandError>;
     readonly createWorktree: (
       input: VcsCreateWorktreeInput,

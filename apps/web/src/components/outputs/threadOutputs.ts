@@ -13,7 +13,10 @@ import {
   type TurnDiffSummary,
 } from "../../types";
 
-/** One thing a turn made (design §5.3): a screenshot, a file, a changed file or a build output. */
+/**
+ * One thing a turn made (design §5.3): a screenshot, a file, a page, a build output, or a document
+ * or picture it wrote into the workspace. Code it changed is Git's, not an output (owner, 29 Oct).
+ */
 export type ThreadOutput =
   | {
       id: string;
@@ -23,7 +26,7 @@ export type ThreadOutput =
       attachment: ChatImageAttachment | ChatFileAttachment;
     }
   | { id: string; kind: "page"; name: string; meta: string; attachmentId: string }
-  | { id: string; kind: "diff"; name: string; meta: string; runId: RunId; path: string };
+  | { id: string; kind: "change"; name: string; meta: string; runId: RunId; path: string };
 
 export interface ThreadOutputTurn {
   runId: RunId;
@@ -51,6 +54,10 @@ function attachmentOutput(attachment: ChatImageAttachment | ChatFileAttachment):
     attachment,
   };
 }
+
+/** Workspace files a person reads rather than runs: documents, pictures, media and builds. */
+const ARTEFACT_EXTENSION =
+  /\.(md|markdown|mdx|txt|pdf|rtf|docx?|odt|pptx?|key|xlsx?|numbers|pages|csv|tsv|png|jpe?g|gif|webp|avif|heic|svg|ico|mp4|mov|webm|m4v|mp3|wav|m4a|aiff?|flac|dmg|zip|pkg|ipa|apk|aab|tar|gz|tgz|whl|msi|exe)$/i;
 
 function changeMeta(file: TurnDiffSummary["files"][number]): string {
   if (file.kind === "added") return "new";
@@ -95,9 +102,10 @@ export function deriveThreadOutputs(input: {
       const changes = input.checkpoints
         .filter((checkpoint) => checkpoint.runId === run.id)
         .flatMap((checkpoint) => checkpoint.files)
+        .filter((file) => file.kind !== "deleted" && ARTEFACT_EXTENSION.test(file.path))
         .map((file): ThreadOutput => ({
-          id: `diff:${run.id}:${file.path}`,
-          kind: "diff",
+          id: `change:${run.id}:${file.path}`,
+          kind: "change",
           name: file.path,
           meta: changeMeta(file),
           runId: run.id,

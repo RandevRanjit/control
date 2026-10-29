@@ -76,6 +76,7 @@ import { AttachmentFilePreview } from "./AttachmentFilePreview";
 import { AudioPreview } from "./AudioPreview";
 import { BrowserDocumentFrame, isPdfPreviewFile } from "./BrowserDocumentFrame";
 import { DelimitedTablePreview } from "./DelimitedTablePreview";
+import { useElementWidth } from "~/hooks/useElementWidth";
 import FileBrowserPanel from "./FileBrowserPanel";
 import { FileBreadcrumbs } from "./FileBreadcrumbs";
 import { parentFolder, treePathOfChatPath } from "./filePath";
@@ -133,9 +134,13 @@ interface FilePreviewPanelProps {
   onPendingChange: (relativePath: string, pending: boolean) => void;
   selectedFilePending: boolean;
   workspaceMutationId: string | null;
+  /** Shown in Outputs: no tree beside it, and a document reads rendered until switched. */
+  asOutput?: boolean;
 }
 
 const FILE_EXPLORER_STORAGE_KEY = "control.fileExplorerOpen";
+/** Narrower, a file gets the panel to itself and Folder's Files tab is the way to the tree. */
+const EXPLORER_BESIDE_MIN_WIDTH = 720;
 const FILE_EXPLORER_WIDTH_STORAGE_KEY = "control.fileExplorerWidth";
 const RENDER_MARKDOWN_STORAGE_KEY = "control.renderMarkdown";
 const RENDER_BROWSER_FILE_STORAGE_KEY = "control.renderBrowserFile";
@@ -1021,6 +1026,7 @@ export default function FilePreviewPanel({
   onPendingChange,
   selectedFilePending,
   workspaceMutationId,
+  asOutput = false,
 }: FilePreviewPanelProps) {
   const relativePath =
     attachment === undefined ? resolveFilePreviewPath(requestedPath, cwd) : requestedPath;
@@ -1070,25 +1076,32 @@ export default function FilePreviewPanel({
   // Everything preview-related keys off previewPath; a folder has no preview.
   const previewPath = isDirectory ? null : relativePath;
   const [explorerOpen, setExplorerOpen] = useState(initialExplorerOpen);
+  const [setRootElement, rootWidth] = useElementWidth<HTMLDivElement>();
+  const roomForExplorer = rootWidth === null || rootWidth >= EXPLORER_BESIDE_MIN_WIDTH;
   // The folder the explorer shows once the owner goes above the chat's; null shows the chat's.
   // Having gone up once, the tree stays beside host files, so Back doesn't take it away.
   const [browseRoot, setBrowseRoot] = useState<string | null>(null);
   const [browsedAbove, setBrowsedAbove] = useState(false);
   const treeRoot = browseRoot ?? cwd;
   const upFolder = parentFolder(treeRoot);
-  const showExplorer = shouldShowFileExplorer({
-    relativePath: previewPath,
-    explorerOpen,
-    attachmentOpen: attachment !== undefined,
-    browsedAbove,
-  });
+  const showExplorer =
+    !asOutput &&
+    shouldShowFileExplorer({
+      relativePath: previewPath,
+      explorerOpen: explorerOpen && roomForExplorer,
+      attachmentOpen: attachment !== undefined,
+      browsedAbove,
+    });
   // Reading markdown rendered is a preference, not a property of one file. Keeping
   // it on the panel meant a thread switch dropped it and forced source back.
-  const [renderMarkdownPreferred, setRenderMarkdownPreferred] = useLocalStorage(
+  const [renderMarkdownStored, setRenderMarkdownStored] = useLocalStorage(
     RENDER_MARKDOWN_STORAGE_KEY,
     false,
     Schema.Boolean,
   );
+  const [renderMarkdownAsOutput, setRenderMarkdownAsOutput] = useState(true);
+  const renderMarkdownPreferred = asOutput ? renderMarkdownAsOutput : renderMarkdownStored;
+  const setRenderMarkdownPreferred = asOutput ? setRenderMarkdownAsOutput : setRenderMarkdownStored;
   const [renderBrowserFilePreferred, setRenderBrowserFilePreferred] = useLocalStorage(
     RENDER_BROWSER_FILE_STORAGE_KEY,
     true,
@@ -1242,7 +1255,10 @@ export default function FilePreviewPanel({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
+    <div
+      ref={setRootElement}
+      className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background"
+    >
       {relativePath && attachment === undefined ? (
         <div className={FILE_SURFACE_SUBHEADER_CLASS} data-surface-subheader>
           <ScrollArea
@@ -1308,7 +1324,7 @@ export default function FilePreviewPanel({
               <Globe className="size-3.5" />
             </FileSurfaceAction>
           ) : null}
-          {(!isHostFile || browsedAbove) && previewPath !== null ? (
+          {!asOutput && roomForExplorer && (!isHostFile || browsedAbove) && previewPath !== null ? (
             <FileSurfaceAction
               label={explorerOpen ? "Hide file explorer" : "Show file explorer"}
               pressed={explorerOpen}

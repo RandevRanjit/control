@@ -66,7 +66,9 @@ describe("deriveThreadOutputs", () => {
       checkpoints: [
         checkpoint("r14", [
           { path: "lib/release.ts", kind: "modified", additions: 2, deletions: 1 },
-          { path: "app/admin/page.tsx", kind: "modified", additions: 31, deletions: 0 },
+          { path: "docs/RELEASE.md", kind: "modified", additions: 4, deletions: 10 },
+          { path: "app/admin/page.tsx", kind: "added", additions: 31, deletions: 0 },
+          { path: "public/hero.png", kind: "added", additions: 0, deletions: 0 },
         ]),
       ],
       nowMs: Date.parse("2026-10-27T20:00:30.000Z"),
@@ -78,13 +80,32 @@ describe("deriveThreadOutputs", () => {
       ["shot", "button.cta.png", "PNG · 41 KB"],
       ["file", "DESIGN.md", "Markdown"],
       ["page", "Release size", "Page"],
-      ["diff", "lib/release.ts", "+2 −1"],
-      ["diff", "app/admin/page.tsx", "+31"],
+      // Code the turn changed is Git's; the documents and pictures it wrote are outputs.
+      ["change", "docs/RELEASE.md", "+4 −10"],
+      ["change", "public/hero.png", "new"],
     ]);
     // The user's own picture is not an output; the build is.
     expect(turns[1]!.items.map(({ kind, name, meta }) => [kind, name, meta])).toEqual([
       ["out", "ORBIT-0.2.3.dmg", "DMG · 11.7 MB"],
     ]);
+  });
+
+  it("leaves out turns that only changed code", () => {
+    expect(
+      deriveThreadOutputs({
+        runs: [run("r1", 1, "2026-10-27T18:20:00.000Z")],
+        messages: [message("a1", "assistant", "r1", [])],
+        htmlRenders: [],
+        checkpoints: [
+          checkpoint("r1", [
+            { path: "src/app.tsx", kind: "modified", additions: 3, deletions: 1 },
+            { path: "package.json", kind: "modified", additions: 1, deletions: 1 },
+            { path: "site/index.html", kind: "modified", additions: 1, deletions: 1 },
+          ]),
+        ],
+        nowMs: Date.parse("2026-10-27T20:00:00.000Z"),
+      }),
+    ).toEqual([]);
   });
 
   it("leaves out turns that made nothing", () => {

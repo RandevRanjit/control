@@ -150,6 +150,56 @@ export const VcsListRefsInput = Schema.Struct({
 });
 export type VcsListRefsInput = typeof VcsListRefsInput.Type;
 
+/** Git's history for the panel's Graph: HEAD with its upstream and the default branch beside it. */
+export const VcsListCommitsInput = Schema.Struct({
+  cwd: TrimmedNonEmptyStringSchema,
+  limit: Schema.optional(PositiveInt.check(Schema.isLessThanOrEqualTo(200))),
+});
+export type VcsListCommitsInput = typeof VcsListCommitsInput.Type;
+
+export const VcsCommit = Schema.Struct({
+  sha: TrimmedNonEmptyStringSchema,
+  parents: Schema.Array(Schema.String),
+  subject: Schema.String,
+  authorName: Schema.String,
+  /** ISO 8601. */
+  authoredAt: Schema.String,
+  /** Branch and tag names pointing at the commit, `HEAD` first when it does. */
+  refs: Schema.Array(Schema.String),
+});
+export type VcsCommit = typeof VcsCommit.Type;
+
+export const VcsListCommitsResult = Schema.Struct({
+  isRepo: Schema.Boolean,
+  commits: Schema.Array(VcsCommit),
+  hasMore: Schema.Boolean,
+});
+export type VcsListCommitsResult = typeof VcsListCommitsResult.Type;
+
+export const VcsReadCommitFilesInput = Schema.Struct({
+  cwd: TrimmedNonEmptyStringSchema,
+  sha: TrimmedNonEmptyStringSchema.check(Schema.isPattern(/^[0-9a-f]{4,64}$/)),
+});
+export type VcsReadCommitFilesInput = typeof VcsReadCommitFilesInput.Type;
+
+export const VcsCommitFile = Schema.Struct({
+  path: Schema.String,
+  /** Git's letter: Added, Modified, Deleted, or T for a type change. */
+  status: Schema.Literals(["A", "M", "D", "T"]),
+  /** Null for a binary file. */
+  additions: Schema.NullOr(NonNegativeInt),
+  deletions: Schema.NullOr(NonNegativeInt),
+});
+export type VcsCommitFile = typeof VcsCommitFile.Type;
+
+export const VcsReadCommitFilesResult = Schema.Struct({
+  /** The message after its subject line. */
+  body: Schema.String,
+  files: Schema.Array(VcsCommitFile),
+  truncated: Schema.Boolean,
+});
+export type VcsReadCommitFilesResult = typeof VcsReadCommitFilesResult.Type;
+
 export const VcsCreateWorktreeInput = Schema.Struct({
   cwd: TrimmedNonEmptyStringSchema,
   refName: TrimmedNonEmptyStringSchema,

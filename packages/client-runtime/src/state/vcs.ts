@@ -16,6 +16,7 @@ import * as SubscriptionRef from "effect/SubscriptionRef";
 import { Atom, AtomRegistry } from "effect/reactivity";
 
 import {
+  createEnvironmentRpcQueryAtomFamily,
   createEnvironmentRpcCommand,
   createEnvironmentRpcSubscriptionAtomFamily,
   createEnvironmentSubscriptionAtomFamily,
@@ -280,6 +281,16 @@ export function createVcsEnvironmentAtoms<R, E>(
 
   return {
     listRefs,
+    /** HEAD's history for the panel's Graph. */
+    listCommits: createEnvironmentRpcQueryAtomFamily(runtime, {
+      label: "environment-data:vcs:list-commits",
+      tag: WS_METHODS.vcsListCommits,
+    }),
+    /** A commit's body and files, read when the Graph opens it. */
+    readCommitFiles: createEnvironmentRpcQueryAtomFamily(runtime, {
+      label: "environment-data:vcs:read-commit-files",
+      tag: WS_METHODS.vcsReadCommitFiles,
+    }),
     status: createEnvironmentSubscriptionAtomFamily(runtime, {
       label: "environment-data:vcs:status",
       idleTtlMs: VCS_STATUS_IDLE_TTL_MS,

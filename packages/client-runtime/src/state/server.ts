@@ -764,6 +764,7 @@ export function createServerEnvironmentAtoms<R, E>(
     let lastMerge:
       | {
           readonly providers: ServerConfig["providers"];
+          readonly settings: ServerConfig["settings"];
           readonly fetched: ReadonlyArray<FetchedWorkspaceSnapshot>;
           readonly merged: ServerConfig["providers"];
         }
@@ -780,9 +781,19 @@ export function createServerEnvironmentAtoms<R, E>(
       const fetched = get(fetchedWorkspaceSnapshotsAtom(environmentId));
       const merged = withFetchedWorkspaceSnapshots(config, fetched);
       if (merged === config) return config;
-      // Settings and keybinding events leave providers alone, so their merge is reused.
-      if (lastMerge?.providers !== config.providers || lastMerge.fetched !== fetched) {
-        lastMerge = { providers: config.providers, fetched, merged: merged.providers };
+      // Keybinding events leave the merge's inputs alone, so its providers are reused. Settings
+      // are an input: a snapshot's basis includes its instance's settings.
+      if (
+        lastMerge?.providers !== config.providers ||
+        lastMerge.settings !== config.settings ||
+        lastMerge.fetched !== fetched
+      ) {
+        lastMerge = {
+          providers: config.providers,
+          settings: config.settings,
+          fetched,
+          merged: merged.providers,
+        };
       }
       return { ...merged, providers: lastMerge.merged };
     }).pipe(Atom.withLabel(`environment-data:server:config:${environmentId}`));
@@ -1238,25 +1249,36 @@ export function createServerEnvironmentAtoms<R, E>(
     refreshProviders: createEnvironmentRpcCommand(runtime, {
       label: "environment-data:server:refresh-providers",
       tag: WS_METHODS.serverRefreshProviders,
-      execute: (input) =>
-        requestGuarded(WS_METHODS.serverRefreshProviders, {
+      execute: (input, registry, environmentId) => {
+        const { instanceId, cwd } = input;
+        const configAtom = configValueAtom(environmentId);
+        const requestedBasis =
+          instanceId === undefined
+            ? undefined
+            : snapshotBasis(registry.get(configAtom), instanceId);
+        return requestGuarded(WS_METHODS.serverRefreshProviders, {
           ...input,
           workspaceSnapshotsOnDemand: true,
           ...(options.usageLimitsCommand === true ? { usageLimitsCommand: true } : {}),
-        }),
-      onSuccess: ({ environmentId, input }, registry, result) =>
-        Effect.sync(() => {
-          const { instanceId, cwd } = input;
-          if (instanceId === undefined || cwd === undefined) return;
-          registry.update(fetchedWorkspaceSnapshotsAtom(environmentId), (current) =>
-            recordFetchedWorkspaceSnapshot(
-              current,
-              { instanceId, cwd, fresh: input.fresh === true },
-              result.providers,
-              registry.get(configValueAtom(environmentId)),
-            ),
-          );
-        }),
+        }).pipe(
+          Effect.tap((result) =>
+            Effect.sync(() => {
+              if (instanceId === undefined || cwd === undefined) return;
+              const config = registry.get(configAtom);
+              // A reconfigure or provider change during the scan may have outdated its answer.
+              if (!Equal.equals(requestedBasis, snapshotBasis(config, instanceId))) return;
+              registry.update(fetchedWorkspaceSnapshotsAtom(environmentId), (current) =>
+                recordFetchedWorkspaceSnapshot(
+                  current,
+                  { instanceId, cwd, fresh: input.fresh === true },
+                  result.providers,
+                  config,
+                ),
+              );
+            }),
+          ),
+        );
+      },
       concurrency: {
         mode: "singleFlight",
         key: ({ environmentId, input }) =>

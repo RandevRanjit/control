@@ -1948,8 +1948,9 @@ const make = Effect.gen(function* () {
         });
         let workspaceStrategy: OrchestrationV2ThreadLaunchWorkspaceStrategy | undefined;
         // A child gets its own worktree unless it asks to share. Without an
-        // explicit ask, a parent folder outside Git shares instead; any other
-        // Git failure is reported rather than quietly sharing.
+        // explicit ask, a project whose root is outside Git (where the worktree
+        // would be made, as in Scratch) shares instead; any other Git failure is
+        // reported rather than quietly sharing.
         if (input.isolation !== "shared") {
           const project = yield* requireProject(parent.thread.projectId);
           const cwd = parent.thread.worktreePath ?? project.workspaceRoot;
@@ -1958,7 +1959,7 @@ const make = Effect.gen(function* () {
             !(yield* gitDriver
               .execute({
                 operation: "OrchestratorMcpService.delegateTask.isInsideWorkTree",
-                cwd,
+                cwd: project.workspaceRoot,
                 args: ["rev-parse", "--is-inside-work-tree"],
                 allowNonZeroExit: true,
               })

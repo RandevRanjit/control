@@ -30,6 +30,8 @@ import {
   type PermissionUpdate,
   type Query as ClaudeQuery,
   type Settings as ClaudeSdkSettings,
+  type SpawnOptions as ClaudeSpawnOptions,
+  type SpawnedProcess as ClaudeSpawnedProcess,
   type SDKAssistantMessage,
   type SDKAPIRetryMessage,
   type SDKControlGetContextUsageResponse,
@@ -42,8 +44,10 @@ import type {
   AskUserQuestionInput,
   WebSearchOutput,
 } from "@anthropic-ai/claude-agent-sdk/sdk-tools";
+// @effect-diagnostics-next-line nodeBuiltinImport:off -- the SDK takes a Node ChildProcess for the CLI.
+import * as NodeChildProcess from "node:child_process";
 import { parseCliArgs } from "@control/shared/cliArgs";
-import { HostProcessEnvironment } from "@control/shared/hostProcess";
+import { HostProcessEnvironment, HostProcessPlatform } from "@control/shared/hostProcess";
 import { fromLenientJson } from "@control/shared/schemaJson";
 import { applyClaudePromptEffortPrefix } from "@control/shared/model";
 import {
@@ -113,6 +117,7 @@ import { compileClaudeModelSelection } from "../../claudeModelOptions.ts";
 import * as ServerConfig from "../../config.ts";
 import { CONTROL_CHAT_ENV } from "../../lock/ClaudeLockHook.ts";
 import { expandHomePath } from "../../pathExpansion.ts";
+import { signalProcessGroup } from "../../process/processGroup.ts";
 import {
   claudeSignedOutMessage,
   makeClaudeEnvironment,
@@ -230,6 +235,37 @@ export function claudeContextUsage(
 }
 export const CLAUDE_DEFAULT_INSTANCE_ID = defaultInstanceIdForDriver(CLAUDE_PROVIDER);
 const DEFAULT_CLAUDE_SETTINGS = Schema.decodeSync(ClaudeSettings)({});
+
+/**
+ * Starts the Claude CLI as the leader of its own process group. When the CLI
+ * exits it stops the MCP servers it started, but not their children: a
+ * plugin's `bun run start` wrapper dies and its `bun server.ts` keeps running,
+ * writing to a pipe nobody reads (#3089). Those stay in the CLI's group, so
+ * the rest of the group gets SIGKILL once the CLI exits for any reason.
+ * Commands the agent runs through its Bash tool start their own groups, so
+ * background jobs it launched are not part of this.
+ *
+ * The SDK reads stderr only from its own spawn, where it redacts credentials
+ * before adding the tail to exit errors. Here stderr is dropped instead, so
+ * exit errors carry only the code or signal.
+ */
+function spawnClaudeProcessGroup(options: ClaudeSpawnOptions): ClaudeSpawnedProcess {
+  const child = NodeChildProcess.spawn(options.command, options.args, {
+    cwd: options.cwd,
+    env: options.env,
+    signal: options.signal,
+    stdio: ["pipe", "pipe", "ignore"],
+    detached: true,
+  });
+  child.once("exit", () => {
+    try {
+      signalProcessGroup(child.pid ?? 0, "SIGKILL");
+    } catch {
+      // The group is already empty.
+    }
+  });
+  return child;
+}
 
 export const ClaudeProviderCapabilitiesV2 = {
   sessions: {
@@ -674,6 +710,7 @@ export const layerQueryRunner: Layer.Layer<
   Effect.gen(function* () {
     const crypto = yield* Crypto.Crypto;
     const { native: nativeEventLogger } = yield* ProviderEventLoggers.ProviderEventLoggers;
+    const platform = yield* HostProcessPlatform;
 
     return ClaudeAgentSdkQueryRunner.of({
       allocateSessionId: crypto.randomUUIDv4.pipe(
@@ -696,11 +733,19 @@ export const layerQueryRunner: Layer.Layer<
           ),
           Stream.toAsyncIterable,
         );
+        // A spawner the caller passed keeps its process. Windows has no process
+        // groups, so there the SDK spawns the CLI itself.
+        const spawnClaudeCodeProcess =
+          input.options.spawnClaudeCodeProcess ??
+          (platform === "win32" ? undefined : spawnClaudeProcessGroup);
         const queryRuntime = yield* Effect.try({
           try: () =>
             query({
               prompt,
-              options: input.options,
+              options:
+                spawnClaudeCodeProcess === undefined
+                  ? input.options
+                  : { ...input.options, spawnClaudeCodeProcess },
             }),
           catch: (cause) => queryRunnerError(cause, "query"),
         });

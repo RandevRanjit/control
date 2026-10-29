@@ -7,7 +7,12 @@ import {
 import { threadPullRequestsOf } from "@control/shared/threadPullRequests";
 import * as NodeSqliteClient from "@control/shared/nodeSqliteClient";
 import * as Stream from "effect/Stream";
-import { makeThreadFind, findProjectedPositions, findProjectedThreadItems } from "./ThreadFind.ts";
+import {
+  makeThreadFind,
+  findProjectedRows,
+  findProjectedThreadItems,
+  findRowKey,
+} from "./ThreadFind.ts";
 import type {
   OrchestrationV2SearchThreadInput,
   OrchestrationV2SearchThreadResult,
@@ -5065,7 +5070,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
         ),
       );
 
-    const { findPositions, searchThread, searchThreadStream } = yield* makeThreadFind((threadId) =>
+    const { findRows, searchThread, searchThreadStream } = yield* makeThreadFind((threadId) =>
       readTimelineIndex(threadId, new Set()).pipe(Effect.map((index) => index.visible)),
     );
 
@@ -5073,13 +5078,13 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
       // Find parses outside the page's transaction, so a query holds no read open while it scans.
       options.query === undefined
         ? readTimelinePage(threadId, options, undefined)
-        : findPositions(threadId, options.query).pipe(
+        : findRows(threadId, options.query).pipe(
             Effect.flatMap((found) => readTimelinePage(threadId, options, found)),
           );
     const readTimelinePage = (
       threadId: ThreadId,
       options: ProjectionTimelinePageOptions,
-      found: ReadonlySet<number> | undefined,
+      found: ReadonlySet<string> | undefined,
     ) =>
       sql
         .withTransaction(
@@ -5089,7 +5094,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
               .map((row, position) => ({ ...row, position }))
               .filter(
                 (row) =>
-                  (found === undefined || found.has(row.position)) &&
+                  (found === undefined || found.has(findRowKey(row))) &&
                   (options.itemId === undefined
                     ? row.position > (options.afterPosition ?? -1) &&
                       (options.view === "activity" ||
@@ -6805,14 +6810,14 @@ export const layerMemory: Layer.Layer<ProjectionStoreV2> = Layer.effect(
             const found =
               options.query === undefined
                 ? undefined
-                : findProjectedPositions(
+                : findProjectedRows(
                     projection.visibleTurnItems,
                     options.query,
                     projection.thread.worktreePath ?? undefined,
                   );
             const matching = projection.visibleTurnItems.filter(
               (row) =>
-                (found === undefined || found.has(row.position)) &&
+                (found === undefined || found.has(findRowKey(row))) &&
                 (options.itemId === undefined
                   ? row.position > (options.afterPosition ?? -1) &&
                     (options.view === "activity" ||

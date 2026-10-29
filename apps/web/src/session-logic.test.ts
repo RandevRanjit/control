@@ -232,7 +232,6 @@ describe("V2 session presentation", () => {
             runId,
           },
         ],
-        updatedAt: now,
       },
       runId,
     );

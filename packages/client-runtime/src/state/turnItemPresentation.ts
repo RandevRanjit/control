@@ -4,6 +4,8 @@ import {
   type OrchestrationV2TurnItem,
 } from "@control/contracts";
 
+import type { ThreadStructureTurnItem } from "./models.ts";
+
 const WORKSPACE_PREPARATION_INPUT = "Preparing workspace";
 
 /**
@@ -26,7 +28,7 @@ export function turnItemIsWorkspacePreparation(item: OrchestrationV2TurnItem): b
  */
 export function workspacePreparationRetryRunIds(
   runs: ReadonlyArray<Pick<OrchestrationV2Run, "id" | "status" | "workspacePreparation">>,
-  items: ReadonlyArray<OrchestrationV2TurnItem>,
+  items: ReadonlyArray<ThreadStructureTurnItem>,
 ): ReadonlySet<OrchestrationV2Run["id"]> {
   const failedRuns = new Set(
     runs.flatMap((run) =>

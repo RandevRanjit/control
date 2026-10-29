@@ -202,8 +202,9 @@ does not show its diff, so marks are made and read on web and desktop.
 A thread can hold several pull requests, including reviews from another repository on the same host.
 Type a pull request's link or number into the field at the foot of **Git → PR** and press Enter, use
 **Link pull request** in the command palette (it puts the cursor in that field), or right-click a
-pull request link in the conversation. Creating a pull request from Git actions links it automatically.
-Agents can link their pull requests with the `link_pull_request` tool.
+pull request link in the conversation. Creating a pull request from Git actions links it automatically,
+and so does an agent creating one with `gh pr create` or `glab mr create`. Agents can link other
+pull requests with the `link_pull_request` tool.
 
 Use **Link this PR** in a branch-detected badge's tooltip to keep it with the thread. A pull request
 opened from the list offers **Link to this thread**, and **Link to another thread…** to search for

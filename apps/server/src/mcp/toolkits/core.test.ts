@@ -35,6 +35,8 @@ import * as ProviderRegistry from "../../provider/ProviderRegistry.ts";
 import * as SecretRequests from "../../secrets/SecretRequests.ts";
 import * as ScheduledTaskService from "../../scheduledTasks/ScheduledTaskService.ts";
 import * as McpHttpServer from "../McpHttpServer.ts";
+import * as ThreadLaunchService from "../../orchestration-v2/ThreadLaunchService.ts";
+import * as GitVcsDriver from "../../vcs/GitVcsDriver.ts";
 import * as McpInvocationContext from "../McpInvocationContext.ts";
 import * as McpToolAccessTestkit from "../McpToolAccess.testkit.ts";
 import { dispatchFailure } from "../threadAccess.ts";
@@ -64,6 +66,11 @@ import {
   resolveControlMcpToolSummaryAction,
 } from "@control/shared/controlMcpToolPresentation";
 import { htmlRenderFromToolItem } from "@control/shared/toolOutput";
+
+const layerOrchestratorToolkit = McpHttpServer.layerOrchestratorToolkit.pipe(
+  Layer.provide(Layer.mock(ThreadLaunchService.ThreadLaunchService)({})),
+  Layer.provide(Layer.mock(GitVcsDriver.GitVcsDriver)({})),
+);
 
 const decodeMcpAttachmentInput = Schema.decodeUnknownEffect(McpAttachmentInput);
 
@@ -566,7 +573,7 @@ it.effect("refuses act-as-caller tools to a client caller", () =>
     expect(declaredFailure(result)).toMatchObject({ code: "thread_credential_required" });
   }).pipe(
     Effect.provide(
-      McpHttpServer.layerOrchestratorToolkit.pipe(
+      layerOrchestratorToolkit.pipe(
         Layer.provideMerge(McpServer.McpServer.layer),
         Layer.provide(NodeCrypto.layer),
         Layer.provide(Layer.mock(ThreadManagement.ThreadManagementService)({})),
@@ -606,7 +613,7 @@ it.effect("a caller cannot rewrite a scheduled task that runs above its own mode
     expect(declaredFailure(incomplete)).toMatchObject({ code: "invalid_request" });
   }).pipe(
     Effect.provide(
-      McpHttpServer.layerOrchestratorToolkit.pipe(
+      layerOrchestratorToolkit.pipe(
         Layer.provideMerge(McpServer.McpServer.layer),
         Layer.provide(NodeCrypto.layer),
         Layer.provide(Layer.mock(ThreadManagement.ThreadManagementService)({})),
@@ -672,7 +679,7 @@ it.effect("a caller cannot interrupt a thread that runs above its own modes", ()
     expect(declaredFailure(result)).toMatchObject({ code: "runtime_mode_escalation_denied" });
   }).pipe(
     Effect.provide(
-      McpHttpServer.layerOrchestratorToolkit.pipe(
+      layerOrchestratorToolkit.pipe(
         Layer.provideMerge(McpServer.McpServer.layer),
         Layer.provide(NodeCrypto.layer),
         Layer.provide(

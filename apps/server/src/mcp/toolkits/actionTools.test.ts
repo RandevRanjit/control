@@ -13,6 +13,8 @@ import { McpSchema, McpServer } from "effect/ai";
 
 import * as ControlLock from "../../lock/ControlLock.ts";
 import * as ThreadManagement from "../../orchestration-v2/ThreadManagementService.ts";
+import * as ThreadLaunchService from "../../orchestration-v2/ThreadLaunchService.ts";
+import * as GitVcsDriver from "../../vcs/GitVcsDriver.ts";
 import * as ProviderAdapterRegistry from "../../orchestration-v2/ProviderAdapterRegistry.ts";
 import * as ProjectService from "../../project/ProjectService.ts";
 import * as ProviderRegistry from "../../provider/ProviderRegistry.ts";
@@ -126,6 +128,8 @@ const layerTest = Layer.mergeAll(
     Layer.provide(layerScheduler),
     Layer.provide(Layer.mock(ProjectService.ProjectService)({})),
     Layer.provide(Layer.mock(SecretRequests.SecretRequests)({})),
+    Layer.provide(Layer.mock(ThreadLaunchService.ThreadLaunchService)({})),
+    Layer.provide(Layer.mock(GitVcsDriver.GitVcsDriver)({})),
   ),
 ).pipe(
   Layer.provideMerge(McpServer.McpServer.layer),

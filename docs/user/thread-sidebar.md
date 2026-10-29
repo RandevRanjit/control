@@ -230,6 +230,14 @@ Stop on a thread also stops the subagents it delegated to. Stop on one of
 Claude's own subagents in **Agents** stops only that subagent; the thread's turn
 and its other subagents keep running.
 
+An agent can give a delegated task its own worktree instead of sharing the
+thread's checkout. The worktree starts from the thread's latest commit, so
+uncommitted edits aren't in it, and the project's setup runs before the task
+starts. When the task ends, CONTROL leaves the worktree and its branch in place
+for you to review or merge, so nothing the task didn't commit is lost. Stopping
+the task before setup finishes removes the new worktree, since nothing has
+worked in it yet.
+
 Subagent threads started by the agent can't take messages; message the parent
 thread instead. When such a subagent needs an approval or an answer, the parent
 thread asks for it.

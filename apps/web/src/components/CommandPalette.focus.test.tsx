@@ -8,6 +8,11 @@ import { CommandPalette } from "./CommandPalette";
 import { useComposerHandleContext } from "../composerHandleContext";
 import { openCommandPalette } from "../commandPaletteBus";
 import { primaryServerKeybindingsAtom } from "../state/server";
+import { subscribeThreadFindOpen } from "./chat/threadFindActionBus";
+
+const mocked = vi.hoisted(() => ({
+  activeThread: null as null | { id: string; environmentId: string; projectId: string },
+}));
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
@@ -36,7 +41,7 @@ vi.mock("../hooks/useScratchProject", () => ({
 }));
 vi.mock("../hooks/useNewProject", () => ({ useNewProject: () => vi.fn() }));
 vi.mock("../hooks/useHandleNewThread", () => ({
-  useHandleNewThread: () => ({ activeThread: null, activeDraftThread: null }),
+  useHandleNewThread: () => ({ activeThread: mocked.activeThread, activeDraftThread: null }),
 }));
 vi.mock("../hooks/useOpenPanelPullRequestUrl", () => ({ useOpenPanelPullRequestUrl: () => null }));
 vi.mock("../connection/useDesktopLocalBootstraps", () => ({ useDesktopLocalBootstraps: () => [] }));
@@ -93,6 +98,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
+  mocked.activeThread = null;
   await act(async () => {
     root.unmount();
     await vi.runOnlyPendingTimersAsync();
@@ -206,5 +212,29 @@ describe("command palette focus restoration", () => {
     const composer = container.querySelector("textarea")!;
     expect(document.activeElement).toBe(composer);
     expect(composer.selectionStart).toBe(composer.value.length);
+  });
+});
+
+describe("command palette find shortcut", () => {
+  it("leaves mod+f alone when the active thread's server has no thread find", async () => {
+    mocked.activeThread = { id: "thread-1", environmentId: "env-1", projectId: "project-1" };
+    const requests: number[] = [];
+    const unsubscribe = subscribeThreadFindOpen(() => requests.push(1));
+    await act(() => root.render(<CommandPalette>{null}</CommandPalette>));
+    await act(() => openCommandPalette());
+    await flushFocus();
+    const input = document.activeElement!;
+    const event = new KeyboardEvent("keydown", {
+      key: "f",
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    await act(() => input.dispatchEvent(event));
+    await flushFocus();
+    unsubscribe();
+    expect(requests).toHaveLength(0);
+    expect(event.defaultPrevented).toBe(false);
+    expect(document.querySelector("[data-command-palette]")).not.toBeNull();
   });
 });

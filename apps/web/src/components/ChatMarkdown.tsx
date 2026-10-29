@@ -22,9 +22,7 @@ import { Check, Copy, Maximize2, Minimize2 } from "lucide";
 import {
   AuthPreviewOperateScope,
   type AssetResource,
-  type EditorId,
   type EnvironmentId,
-  type ServerConfig,
   type ScopedThreadRef,
   type ServerProviderSkill,
   type ThreadPullRequestKey,
@@ -105,10 +103,7 @@ import { MediaActions, type MediaActionSource } from "./media/MediaActions";
 import { resolveProtocolRelativeMediaUrl } from "./media/mediaContent";
 import { FileTagChipContent } from "./chat/FileTagChip";
 import { PierreEntryIcon } from "./chat/PierreEntryIcon";
-import {
-  revealInFileExplorerLabelForKind,
-  revealInFileExplorerLabelForOs,
-} from "./preview/fileExplorerLabel";
+import { markdownServerConfigFieldsAtom } from "./chatMarkdownServerConfig";
 import {
   resolveExternalWebLinkHost,
   showExternalLinkContextMenu,
@@ -2508,22 +2503,6 @@ function missingChipFileError(path: string): Error {
   );
 }
 
-const NO_MARKDOWN_EDITORS: ReadonlyArray<EditorId> = [];
-
-/** The server config fields markdown reads. */
-function markdownServerConfigFields(config: ServerConfig | null) {
-  return {
-    pullRequestsEnabled: config?.environment.capabilities.pullRequests === true,
-    availableEditors: config?.availableEditors ?? NO_MARKDOWN_EDITORS,
-    revealInFileManagerLabel:
-      config?.shellRevealInFileManager === true && config.availableEditors.includes("file-manager")
-        ? config.shellRevealInFileManagerKind === undefined
-          ? revealInFileExplorerLabelForOs(config.environment.platform.os)
-          : revealInFileExplorerLabelForKind(config.shellRevealInFileManagerKind)
-        : undefined,
-  };
-}
-
 function useChatMarkdownState({
   text,
   inline = false,
@@ -2612,20 +2591,9 @@ function useChatMarkdownState({
     },
     [createAssetUrl, cwd, expandMedia, preparedConnection, threadRef],
   );
-  // Only the parts of the server config markdown reads. The config object itself
-  // changes with every provider status push, which would re-render every
-  // visible reply.
-  const serverConfig = useAtomValue(serverEnvironment.configValueAtom(environmentId));
-  const nextConfigFields = markdownServerConfigFields(serverConfig);
-  const [configFields, setConfigFields] = useState(nextConfigFields);
-  if (
-    configFields.pullRequestsEnabled !== nextConfigFields.pullRequestsEnabled ||
-    configFields.availableEditors !== nextConfigFields.availableEditors ||
-    configFields.revealInFileManagerLabel !== nextConfigFields.revealInFileManagerLabel
-  ) {
-    setConfigFields(nextConfigFields);
-  }
-  const { pullRequestsEnabled, availableEditors, revealInFileManagerLabel } = configFields;
+  const { pullRequestsEnabled, availableEditors, revealInFileManagerLabel } = useAtomValue(
+    markdownServerConfigFieldsAtom(serverEnvironment.configValueAtom(environmentId)),
+  );
   const projects = useProjects();
   const [preferredEditor] = usePreferredEditor(availableEditors);
   const preferredEditorMenuLabel = openInEditorMenuLabel(preferredEditor);

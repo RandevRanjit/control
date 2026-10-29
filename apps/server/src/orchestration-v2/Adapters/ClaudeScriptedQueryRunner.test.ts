@@ -1,5 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off - The test writes the script file the runner reads.
 import * as NodeFS from "node:fs";
+import * as NodeHttp from "node:http";
+import type * as NodeNet from "node:net";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 
@@ -59,6 +61,54 @@ describe("ClaudeScriptedQueryRunner", () => {
               { type: "result" },
             ],
             second: [{ type: "assistant", message: { content: [] } }],
+          }),
+        ).pipe(Layer.provide(NodeServices.layer)),
+      ),
+    ),
+  );
+
+  it.effect("expands the MCP headers' ${VAR} references from the environment, as Claude does", () =>
+    Effect.gen(function* () {
+      const seen: Array<string | undefined> = [];
+      const server = NodeHttp.createServer((request, response) => {
+        seen.push(request.headers.authorization);
+        request.resume();
+        request.on("end", () => {
+          response.setHeader("content-type", "application/json");
+          response.end(JSON.stringify({ jsonrpc: "2.0", id: 1, result: {} }));
+        });
+      });
+      yield* Effect.acquireRelease(
+        Effect.promise(
+          () => new Promise<void>((done) => server.listen(0, "127.0.0.1", () => done())),
+        ),
+        () => Effect.promise(() => new Promise<void>((done) => server.close(() => done()))),
+      );
+      const { port } = server.address() as NodeNet.AddressInfo;
+      const runner = yield* ClaudeAgentSdkQueryRunner;
+      const session = yield* runner.open({
+        ...openInput,
+        options: {
+          ...openInput.options,
+          env: { CONTROL_MCP_AUTHORIZATION: "Bearer scripted-token" },
+          mcpServers: {
+            control: {
+              type: "http",
+              url: `http://127.0.0.1:${port}/mcp`,
+              headers: { Authorization: "${CONTROL_MCP_AUTHORIZATION}" },
+            },
+          },
+        },
+      });
+      yield* session.offer(prompt("first"));
+      yield* session.messages.pipe(Stream.take(1), Stream.runDrain);
+      assert.deepStrictEqual(seen, ["Bearer scripted-token", "Bearer scripted-token"]);
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(
+        layerScripted(
+          scriptFile({
+            first: [{ type: "mcp.call", tool: "thread_list", arguments: {} }, { type: "result" }],
           }),
         ).pipe(Layer.provide(NodeServices.layer)),
       ),

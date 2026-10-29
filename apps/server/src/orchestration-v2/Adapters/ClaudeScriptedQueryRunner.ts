@@ -68,13 +68,24 @@ type ScriptFrame =
 /** CONTROL's MCP as the adapter hands it to Claude (`mcpServers["control"]`). */
 type McpServer = { readonly url: string; readonly headers?: Record<string, string> };
 
-async function callMcpTool(server: McpServer | undefined, frame: McpCallFrame): Promise<void> {
+async function callMcpTool(
+  server: McpServer | undefined,
+  environment: Readonly<Record<string, string | undefined>> | undefined,
+  frame: McpCallFrame,
+): Promise<void> {
   if (server === undefined) throw new Error(`A scripted ${frame.tool} call needs CONTROL's MCP.`);
+  // Claude expands `${VAR}` in MCP headers from its environment; the token travels that way.
+  const headers = Object.fromEntries(
+    Object.entries(server.headers ?? {}).map(([name, value]) => [
+      name,
+      value.replace(/\$\{(\w+)\}/g, (_, variable: string) => environment?.[variable] ?? ""),
+    ]),
+  );
   const post = (body: object, sessionId?: string) =>
     fetch(server.url, {
       method: "POST",
       headers: {
-        ...server.headers,
+        ...headers,
         accept: "application/json, text/event-stream",
         "content-type": "application/json",
         ...(sessionId === undefined
@@ -125,6 +136,7 @@ async function* playTurns(
   sessionId: string,
   canUseTool: CanUseTool | undefined,
   mcpServer: McpServer | undefined,
+  environment: Readonly<Record<string, string | undefined>> | undefined,
   signal: AbortSignal,
   reportContextUsage: (report: SDKControlGetContextUsageResponse) => void,
 ): AsyncGenerator<SDKMessage> {
@@ -142,7 +154,7 @@ async function* playTurns(
         continue;
       }
       if (frame.type === "mcp.call") {
-        await callMcpTool(mcpServer, frame);
+        await callMcpTool(mcpServer, environment, frame);
         continue;
       }
       if (frame.type === "permission.request") {
@@ -187,6 +199,7 @@ export const layerScripted = (scriptPath: string) =>
                   sessionId,
                   input.options.canUseTool,
                   input.options.mcpServers?.["control"] as McpServer | undefined,
+                  input.options.env,
                   abort.signal,
                   (report) => {
                     contextUsage = report;

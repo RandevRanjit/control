@@ -8125,6 +8125,18 @@ describe("ClaudeAdapterV2 background wake turns", () => {
         yield* awaitUntil(() => harness.terminalEvents().length === 1, "spurious terminal");
         assert.equal(harness.terminalEvents()[0]?.status, "completed");
         assert.lengthOf(harness.offeredMessages, 0);
+        // Nothing reopens the provider thread once the turn has ended.
+        let quietYields = 0;
+        yield* awaitUntil(() => quietYields++ >= 50, "events after the terminal");
+        const afterTerminal = harness.events.slice(
+          harness.events.findIndex((event) => event.type === "turn.terminal") + 1,
+        );
+        assert.deepEqual(
+          afterTerminal.flatMap((event) =>
+            event.type === "provider_thread.updated" ? [event.providerThread.status] : [],
+          ),
+          [],
+        );
       }).pipe(Effect.provide(Layer.merge(IdAllocator.layer, NodeServices.layer))),
     ),
   );

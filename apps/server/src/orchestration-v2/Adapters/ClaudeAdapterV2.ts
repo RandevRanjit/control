@@ -1668,12 +1668,16 @@ const reserveClaudePdfBudget = (
         budget.committed.bytes += this.bytes;
       },
     })),
+    // Only a delivered message changes what is stored. An undelivered one
+    // (a continuation offers none) must not write the thread again: that
+    // write can land after the turn ended and mark the thread active.
     (reservation) =>
-      Effect.sync(() => {
-        if (reservation.delivered) return;
-        budget.pending.pages -= reservation.pages;
-        budget.pending.bytes -= reservation.bytes;
-      }).pipe(Effect.andThen(persist)),
+      reservation.delivered
+        ? persist
+        : Effect.sync(() => {
+            budget.pending.pages -= reservation.pages;
+            budget.pending.bytes -= reservation.bytes;
+          }),
   );
 
 const makeClaudeUserMessageWithAttachments = Effect.fnUntraced(function* (input: {

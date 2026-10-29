@@ -38,8 +38,10 @@ import {
   ThreadId,
 } from "@control/contracts";
 import { assert, describe, it } from "@effect/vitest";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
 import * as Deferred from "effect/Deferred";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -12008,12 +12010,34 @@ describe("ClaudeAdapterV2 background wake turns", () => {
                 ),
               );
           }
-          const steering = yield* Effect.forkScoped(steer);
+          // Moving the clock before the steer starts its 5 second wait would
+          // leave that wait unfired, so the steer's clock reports when it does.
+          const steerWaitStarted = yield* Deferred.make<void>();
+          const steering = yield* Effect.forkScoped(
+            TestClock.testClockWith((testClock) =>
+              steer.pipe(
+                Effect.provideService(Clock.Clock, {
+                  ...testClock,
+                  sleep: (duration) =>
+                    Duration.toMillis(duration) === 5_000
+                      ? // The wait is on the clock before it is reported.
+                        Effect.forkChild(testClock.sleep(duration), {
+                          startImmediately: true,
+                        }).pipe(
+                          Effect.tap(Deferred.succeed(steerWaitStarted, undefined)),
+                          Effect.flatMap(Fiber.join),
+                        )
+                      : testClock.sleep(duration),
+                }),
+              ),
+            ),
+          );
           if (
             backgrounding === "never answers" ||
             backgrounding === "answers after the steer went out"
           ) {
             yield* awaitUntil(() => calls.length === 1, "background request");
+            yield* Deferred.await(steerWaitStarted);
             assert.equal(harness.offeredMessages.length, offered);
             yield* TestClock.adjust("5 seconds");
           }

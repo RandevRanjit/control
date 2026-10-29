@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
-import { act, type ComponentProps } from "react";
+import { act, useContext, type ComponentProps } from "react";
+import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import {
@@ -11,6 +12,7 @@ import {
 import type { PanelTab } from "~/rightPanelStore";
 
 import { RightPanelTabs } from "./RightPanelTabs";
+import { RightPanelToolsSlot } from "./rightPanelToolsSlot";
 
 vi.mock("~/hooks/useTheme", () => ({ useTheme: () => ({ resolvedTheme: "light" }) }));
 vi.mock("~/browser/browserDefaults", () => ({ useBrowserDefaults: () => ({ profiles: [] }) }));
@@ -118,7 +120,7 @@ async function renderPanel(
         }}
         {...overrides}
       >
-        content
+        {overrides.children ?? "content"}
       </RightPanelTabs>,
     ),
   );
@@ -392,5 +394,19 @@ describe("Terminal's tabs", () => {
       "terminal",
     );
     expect(chipTitles()).toEqual(["1bun dev"]);
+  });
+
+  it("hold the shell's tools at the right of their own row, not on a row of their own", async () => {
+    function ShellTools() {
+      const slot = useContext(RightPanelToolsSlot);
+      const tools = <button type="button" aria-label="Split terminal" />;
+      return slot ? createPortal(tools, slot) : tools;
+    }
+    await renderPanel(
+      { surfaces: [terminal], activeSurfaceId: terminal.id, children: <ShellTools /> },
+      "terminal",
+    );
+    const split = container.querySelector("[aria-label='Split terminal']");
+    expect(split?.closest("[data-right-panel-subtabs]")).not.toBeNull();
   });
 });

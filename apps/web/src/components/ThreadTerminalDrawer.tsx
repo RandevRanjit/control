@@ -34,6 +34,7 @@ import {
   type ReactNode,
   type SetStateAction,
   useCallback,
+  useContext,
   useEffect,
   useEffectEvent,
   useLayoutEffect,
@@ -41,6 +42,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { Popover, PopoverPopup, PopoverTrigger } from "~/components/ui/popover";
 import { Button } from "~/components/ui/button";
 import { PanelTabCloseButton } from "~/components/ui/panel-tab-close-button";
@@ -48,6 +50,7 @@ import { stackedThreadToast, toastManager } from "~/components/ui/toast";
 import { readTextFromClipboard, writeTextToClipboard } from "~/hooks/useCopyToClipboard";
 import { cn } from "~/lib/utils";
 import { type TerminalContextSelection } from "~/lib/terminalContext";
+import { RightPanelToolsSlot } from "./rightPanelToolsSlot";
 import {
   observeSelectionActions,
   resolveSelectionActionPosition,
@@ -1142,6 +1145,9 @@ export default function ThreadTerminalDrawer({
 }: ThreadTerminalDrawerProps) {
   const canOperateTerminal = useEnvironmentScope(threadRef.environmentId, AuthTerminalOperateScope);
   const isPanel = mode === "panel";
+  // In the panel the tools sit at the right of the shell chips (design §5.6).
+  const toolsSlot = useContext(RightPanelToolsSlot);
+  const toolsInSlot = isPanel && toolsSlot !== null;
   const controlledDrawerHeight = clampDrawerHeight(height);
   const [drawerHeightState, setDrawerHeightState] = useState(() => ({
     threadId,
@@ -1493,10 +1499,10 @@ export default function ThreadTerminalDrawer({
 
   const activeTerminalLaunchLocation = resolveTerminalLaunchLocation(resolvedActiveTerminalId);
 
-  // The terminal actions sit in their own strip, above the canvas or atop the sidebar, so
-  // they never cover terminal output.
-  const terminalActionStrip = (
-    <div className={cn("hy-vh justify-end", !isPanel && "h-[26px]")}>
+  // Elsewhere the terminal actions sit in their own strip, above the canvas or atop the sidebar,
+  // so they never cover terminal output.
+  const terminalActions = (
+    <>
       <TerminalActionButton
         disabled={!canOperateTerminal}
         className={cn(
@@ -1535,7 +1541,10 @@ export default function ThreadTerminalDrawer({
       >
         <Trash2 className="size-3.5" />
       </TerminalActionButton>
-    </div>
+    </>
+  );
+  const terminalActionStrip = toolsInSlot ? null : (
+    <div className={cn("hy-vh justify-end", !isPanel && "h-[26px]")}>{terminalActions}</div>
   );
 
   return (
@@ -1559,6 +1568,7 @@ export default function ThreadTerminalDrawer({
         />
       ) : null}
 
+      {toolsInSlot ? createPortal(terminalActions, toolsSlot) : null}
       {hasTerminalSidebar ? null : terminalActionStrip}
 
       <div className="min-h-0 w-full flex-1">

@@ -81,6 +81,7 @@ import { previewBridge } from "./preview/previewBridge";
 import { PierreEntryIcon } from "./chat/PierreEntryIcon";
 import { Seg } from "./Seg";
 import { resolvePullRequestState } from "./pullRequest/pullRequestPresentation";
+import { RightPanelToolsSlot } from "./rightPanelToolsSlot";
 import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
 
 interface RightPanelTabsProps {
@@ -509,6 +510,7 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
   const { resolvedTheme } = useTheme();
   const chipListRef = useRef<HTMLDivElement>(null);
   const [renamingDevice, setRenamingDevice] = useState<string | null>(null);
+  const [toolsSlot, setToolsSlot] = useState<HTMLElement | null>(null);
 
   const tab = props.tabs?.selected ?? null;
   const tabSurfaces =
@@ -1030,6 +1032,7 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
       {props.tabs && showChips ? (
         <div className="hy-vh flex shrink-0 px-2" data-right-panel-subtabs>
           {chips}
+          <div ref={setToolsSlot} className="flex shrink-0 items-center empty:hidden" />
         </div>
       ) : null}
       {showGitSwitch ? (
@@ -1063,7 +1066,7 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
       {/* isolate: a surface's own layers (the browser's control bar is z-20) stay under the
           tab row's popover. */}
       <div className="isolate flex min-h-0 flex-1 flex-col" data-right-panel-surface-content>
-        {props.children}
+        <RightPanelToolsSlot value={toolsSlot}>{props.children}</RightPanelToolsSlot>
       </div>
     </PreviewPanelShell>
   );

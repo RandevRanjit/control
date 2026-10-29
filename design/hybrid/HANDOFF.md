@@ -363,7 +363,8 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 ### 5.6 Terminal
 
 - **Head.** The session's shells as tabs: `1 claude`, `2 bun dev` (on), `3 zsh`, then `+`, with the worktree at the
-  right. One shell still shows its tab (29 Oct).
+  right. One shell still shows its tab (29 Oct). The app puts split, split below, new and close at the right of the
+  same row, so the shell starts straight under it (29 Oct).
 - **Body.** The shell, in Plex 11 / 16, bottom-aligned, with success marks in the write green and a block cursor.
 - These are the app's own shells. Claude never types into them, and they die when the owner quits from the menu bar.
   There is no drawer under the conversation: the terminal is this tab.

@@ -2882,13 +2882,17 @@ export default function Sidebar() {
     expanded: settledShelfExpanded,
     visibleCount: settledVisibleCount,
   });
-  const listedSettledThreads = settledThreads.filter(olderSettledShelf.isListed);
+  const isListedSettled = olderSettledShelf.isListed;
+  const listedSettledThreads = useMemo(
+    () => settledThreads.filter(isListedSettled),
+    [isListedSettled, settledThreads],
+  );
   useOlderSettledShelfGrowth(olderSettledShelf, listedSettledThreads);
   // A full lock lists only the threads that need you, so it counts no settled ones.
   const settledCount = lockThrough
     ? settledThreads.length
     : settledThreads.length + olderSettledShelf.unloadedCount(threads);
-  const visibleSettledThreads = (() => {
+  const visibleSettledThreads = useMemo(() => {
     const visible = listedSettledThreads.slice(0, settledVisibleCount);
     // The open thread must never hide under "Show more": navigating into a
     // deep settled thread (search, deep link) pulls its row into the visible
@@ -2907,7 +2911,7 @@ export default function Sidebar() {
       if (routeThread !== undefined) visible.push(routeThread);
     }
     return visible.length === settledThreads.length ? settledThreads : visible;
-  })();
+  }, [listedSettledThreads, routeThreadKey, settledThreads, settledVisibleCount]);
   const hiddenSettledCount = Math.max(0, settledCount - visibleSettledThreads.length);
   const showMoreSettled = useCallback(
     () => setSettledVisibleCount((count) => count + SETTLED_TAIL_PAGE_COUNT),

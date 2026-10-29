@@ -61,3 +61,7 @@ Then sign, notarise and staple the DMG as the workflow's step 3 does, re-stamp `
 with `node scripts/restamp-update-manifest.ts`, and publish `vX.Y.Z` with the same four kinds of
 file. Afterwards set `apps/desktop/package.json` to `X.Y.Z`, so nightlies move on to the next patch:
 a nightly of `X.Y.Z` would sort below the stable release.
+
+Once that push's nightly is out, delete every `X.Y.Z-nightly.*` release with
+`gh release delete <tag> --yes`, keeping the tags. Wait for it: a nightly install reads
+`nightly-mac.yml` from the newest nightly in the release feed, so one must be in place first.

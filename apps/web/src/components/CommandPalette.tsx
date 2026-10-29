@@ -3367,7 +3367,12 @@ function OpenCommandPaletteDialog(props: {
     }
     // ChatView ignores shortcuts while the palette is open, so handle find here
     // instead of letting the browser's own Find open.
-    if (command === "chat.find" && activeThreadId && !event.nativeEvent.isComposing) {
+    if (
+      command === "chat.find" &&
+      activeThreadId &&
+      supportsThreadFind &&
+      !event.nativeEvent.isComposing
+    ) {
       event.preventDefault();
       event.stopPropagation();
       setOpen(false);

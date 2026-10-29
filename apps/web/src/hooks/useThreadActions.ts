@@ -321,6 +321,8 @@ export function useThreadActions() {
   const refreshVcsStatus = useAtomCommand(vcsEnvironment.refreshStatus, {
     reportFailure: false,
   });
+  // Local status only: no fetch and no auto-pull for a worktree about to go.
+  const loadVcsStatus = useAtomQueryRunner(vcsEnvironment.status, { reportFailure: false });
   const sidebarThreadSortOrder = useClientSettings((settings) => settings.sidebarThreadSortOrder);
   const confirmThreadDelete = useClientSettings((settings) => settings.confirmThreadDelete);
   const confirmThreadUnpin = useClientSettings((settings) => settings.confirmThreadUnpin);
@@ -526,7 +528,38 @@ export function useThreadActions() {
       const automaticWorktreeCleanup = environmentSettings
         ? resolveWorktreeCleanup(environmentSettings, thread.projectId).worktreeOnDelete
         : false;
-      if (canDeleteWorktree && localApi && !automaticWorktreeCleanup) {
+      // The server refuses to remove a worktree with uncommitted changes. Say so up
+      // front when its status shows them; a failed read leaves that to the server.
+      const worktreeStatus =
+        canDeleteWorktree && orphanedWorktreePath !== null
+          ? await loadVcsStatus({
+              environmentId: threadRef.environmentId,
+              input: { cwd: orphanedWorktreePath, includeRemote: false },
+            })
+          : null;
+      if (
+        localApi &&
+        worktreeStatus?._tag === "Success" &&
+        worktreeStatus.value?.hasWorkingTreeChanges === true
+      ) {
+        const confirmationResult = await settlePromise(() =>
+          localApi.dialogs.confirm(
+            [
+              "Its worktree has uncommitted changes, so it stays on disk:",
+              orphanedWorktreePath,
+              "",
+              "Delete the thread?",
+            ].join("\n"),
+            { variant: "destructive" },
+          ),
+        );
+        if (confirmationResult._tag === "Failure") {
+          return confirmationResult;
+        }
+        if (!confirmationResult.value) {
+          return AsyncResult.success(undefined);
+        }
+      } else if (canDeleteWorktree && localApi && !automaticWorktreeCleanup) {
         const confirmationResult = await settlePromise(() =>
           localApi.dialogs.confirm(
             [
@@ -619,6 +652,17 @@ export function useThreadActions() {
               }),
             ),
           );
+      // Changes made after the dialog: the server kept the worktree.
+      if (removeResult._tag === "Success" && removeResult.value?.kept === true) {
+        toastManager.add(
+          stackedThreadToast({
+            type: "info",
+            title: "Kept worktree",
+            description: `It has uncommitted changes, so it stays at ${orphanedWorktreePath}`,
+          }),
+        );
+        return deleteResult;
+      }
       const refreshResult =
         removeResult._tag === "Success"
           ? await refreshVcsStatus({
@@ -665,6 +709,7 @@ export function useThreadActions() {
       deleteThreadMutation,
       getCurrentRouteThreadRef,
       loadSessionState,
+      loadVcsStatus,
       refreshVcsStatus,
       removeWorktree,
       router,

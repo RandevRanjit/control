@@ -22,6 +22,7 @@ import * as VcsProcess from "../vcs/VcsProcess.ts";
 import * as GitManager from "./GitManager.ts";
 import * as GitWorkflowService from "./GitWorkflowService.ts";
 import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
+import * as GitVcsDriverTestkit from "../vcs/GitVcsDriverCore.testkit.ts";
 import * as VcsDriverRegistry from "../vcs/VcsDriverRegistry.ts";
 
 function layer(input: {
@@ -347,5 +348,66 @@ it.layer(NodeServices.layer)("GitWorkflowService", (it) => {
 
         expect(events).toEqual(["checkout", operation]);
       }).pipe(Effect.scoped),
+  );
+});
+
+it.layer(GitVcsDriverTestkit.layerTest)("GitWorkflowService.removeWorktreeIfClean", (it) => {
+  const fixture = Effect.gen(function* () {
+    const cwd = yield* GitVcsDriverTestkit.makeTmpDir();
+    const { initialBranch } = yield* GitVcsDriverTestkit.initRepoWithCommit(cwd);
+    yield* GitVcsDriverTestkit.writeTextFile(cwd, ".gitignore", ".env\n");
+    yield* GitVcsDriverTestkit.git(cwd, ["add", ".gitignore"]);
+    yield* GitVcsDriverTestkit.git(cwd, ["commit", "-m", "ignore .env"]);
+    const path = `${yield* GitVcsDriverTestkit.makeTmpDir("git-worktrees-")}/thread`;
+    yield* GitVcsDriverTestkit.git(cwd, ["worktree", "add", "-b", "feature", path, initialBranch]);
+    const workflow = yield* GitWorkflowService.make.pipe(
+      Effect.provideService(
+        VcsDriverRegistry.VcsDriverRegistry,
+        VcsDriverRegistry.VcsDriverRegistry.of({
+          get: () => Effect.die("unused"),
+          detect: () => Effect.die("unused"),
+          resolve: () => Effect.succeed({ kind: "git" } as VcsDriverRegistry.VcsDriverHandle),
+        }),
+      ),
+      Effect.provideService(GitManager.GitManager, {} as GitManager.GitManager["Service"]),
+    );
+    const fs = yield* FileSystem.FileSystem;
+    // Older clients still ask for a forced removal; the server decides.
+    const remove = workflow.removeWorktreeIfClean({ cwd, path, force: true });
+    return { fs, path, remove };
+  });
+
+  it.effect.each([
+    { change: "a modified file", file: "README.md" },
+    { change: "an untracked file", file: "notes.txt" },
+  ])("keeps a worktree with $change", ({ file }) =>
+    Effect.gen(function* () {
+      const { fs, path, remove } = yield* fixture;
+      yield* GitVcsDriverTestkit.writeTextFile(path, file, "work in progress\n");
+
+      expect(yield* remove).toEqual({ kept: true });
+      expect(yield* fs.readFileString(`${path}/${file}`)).toBe("work in progress\n");
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect("keeps a worktree with staged changes", () =>
+    Effect.gen(function* () {
+      const { fs, path, remove } = yield* fixture;
+      yield* GitVcsDriverTestkit.writeTextFile(path, "staged.txt", "staged\n");
+      yield* GitVcsDriverTestkit.git(path, ["add", "staged.txt"]);
+
+      expect(yield* remove).toEqual({ kept: true });
+      expect(yield* fs.exists(`${path}/staged.txt`)).toBe(true);
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect("removes a clean worktree, ignored files included", () =>
+    Effect.gen(function* () {
+      const { fs, path, remove } = yield* fixture;
+      yield* GitVcsDriverTestkit.writeTextFile(path, ".env", "TOKEN=1\n");
+
+      expect(yield* remove).toEqual({});
+      expect(yield* fs.exists(path)).toBe(false);
+    }).pipe(Effect.scoped),
   );
 });

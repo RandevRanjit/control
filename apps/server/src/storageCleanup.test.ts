@@ -12,6 +12,7 @@ import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import {
   DEFAULT_SERVER_SETTINGS,
+  OrchestrationV2AppThreadJson,
   StorageCleanupReport,
   type WorktreeKeepWhen,
 } from "@control/contracts";
@@ -44,6 +45,7 @@ import {
 const NOW_MS = Date.parse("2026-06-10T12:00:00.000Z");
 const DAY_MS = 24 * 60 * 60 * 1_000;
 const decodeCleanupReport = Schema.decodeSync(StorageCleanupReport);
+const encodeAppThread = Schema.encodeSync(Schema.fromJsonString(OrchestrationV2AppThreadJson));
 
 function at(offsetMs: number): DateTime.Utc {
   return DateTime.makeUnsafe(NOW_MS + offsetMs);
@@ -247,6 +249,7 @@ const cleanupFixture = Effect.gen(function* () {
     storageCleanup: { ...DEFAULT_SERVER_SETTINGS.storageCleanup, worktreeAfterDays: 8 },
   };
   let threads = [shell({ branch: "feature", worktreePath: worktree })];
+  let deletedRows: Array<{ payload_json: string; workspaceRoot: string }> = [];
   let editBeforeRemoval = false;
   const context = yield* Layer.build(StorageCleanup.layer).pipe(
     Effect.provideService(GitVcsDriver.GitVcsDriver, {
@@ -272,8 +275,10 @@ const cleanupFixture = Effect.gen(function* () {
     Effect.provideService(Orchestrator.OrchestratorV2, {
       streamDomainEvents: Stream.empty,
     } as unknown as Orchestrator.OrchestratorV2["Service"]),
-    Effect.provideService(SqlClient.SqlClient, (() =>
-      Effect.succeed([])) as unknown as SqlClient.SqlClient),
+    Effect.provideService(SqlClient.SqlClient, ((query: TemplateStringsArray) =>
+      Effect.succeed(
+        query.join("?").includes("deleted_at IS NOT NULL") ? deletedRows : [],
+      )) as unknown as SqlClient.SqlClient),
     Effect.provideService(GitManager.GitManager, {
       invalidateStatus: () => Effect.void,
     } as unknown as GitManager.GitManager["Service"]),
@@ -312,6 +317,22 @@ const cleanupFixture = Effect.gen(function* () {
     },
     setThreads: (next: typeof threads) => {
       threads = next;
+    },
+    /** The thread is deleted with "Delete worktrees with deleted threads" on. */
+    deleteThread: () => {
+      deletedRows = threads.map((thread) => ({
+        payload_json: encodeAppThread({ ...thread, lastVisitedAt: null, deletedAt: at(0) }),
+        workspaceRoot: repo,
+      }));
+      threads = [];
+      settings = {
+        ...settings,
+        storageCleanup: {
+          ...settings.storageCleanup,
+          worktreeAfterDays: null,
+          worktreeOnDelete: true,
+        },
+      };
     },
   };
 });
@@ -475,6 +496,33 @@ describe("storage cleanup reports and local file policies", () => {
           expect(report.entries[0]?.reason).toContain(
             file === ".env" ? "ignored files (.env)" : "uncommitted changes (1 file)",
           );
+      }),
+    ),
+  );
+  // Deleting a thread never takes uncommitted work with it, whatever the keep policy.
+  it.live.each([
+    ["uncommitted-changes", null, "removed"],
+    ["uncommitted-changes", "tracked.txt", "kept"],
+    ["uncommitted-changes", "notes.txt", "kept"],
+    ["tracked-changes", null, "removed"],
+    ["tracked-changes", "tracked.txt", "kept"],
+    ["tracked-changes", "notes.txt", "kept"],
+  ] as const)("on thread delete with %s, %s is %s", ([policy, file, outcome]) =>
+    runCleanupTest(
+      Effect.gen(function* () {
+        const { service, fs, worktree, setPolicy, deleteThread } = yield* cleanupFixture;
+        setPolicy(policy);
+        deleteThread();
+        if (file !== null) yield* fs.writeFileString(`${worktree}/${file}`, "local data\n");
+        const report = yield* service.runNow;
+        expect(report.entries.filter((entry) => entry.kind === "worktree")).toMatchObject([
+          { outcome, path: worktree, threadId: "thread-1" },
+        ]);
+        expect(yield* fs.exists(worktree)).toBe(outcome === "kept");
+        if (outcome === "kept") {
+          expect(report.entries[0]?.reason).toBe("Has uncommitted changes (1 file)");
+          expect(yield* fs.readFileString(`${worktree}/${file}`)).toBe("local data\n");
+        }
       }),
     ),
   );

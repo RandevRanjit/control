@@ -24,6 +24,7 @@ import {
   type GitPullRequestRefInput,
   type VcsPullResult,
   type VcsRemoveWorktreeInput,
+  type VcsRemoveWorktreeResult,
   type GitResolvePullRequestResult,
   type GitRunStackedActionInput,
   type GitRunStackedActionResult,
@@ -118,6 +119,10 @@ export class GitWorkflowService extends Context.Service<
     readonly removeWorktree: (
       input: VcsRemoveWorktreeInput,
     ) => Effect.Effect<void, GitCommandError>;
+    /** Removes the worktree only when nothing uncommitted would be lost; otherwise reports `kept`. */
+    readonly removeWorktreeIfClean: (
+      input: VcsRemoveWorktreeInput,
+    ) => Effect.Effect<VcsRemoveWorktreeResult, GitCommandError>;
     readonly pruneWorktrees: (input: {
       readonly cwd: string;
     }) => Effect.Effect<void, GitCommandError>;
@@ -449,6 +454,18 @@ export const make = Effect.gen(function* () {
       ensureGitCommand("GitWorkflowService.removeWorktree", input.cwd).pipe(
         Effect.andThen(git.removeWorktree(input)),
       ),
+    // A thread's delete reaches this through vcs.removeWorktree. A worktree that
+    // is already gone has nothing to lose, so removal only prunes it.
+    removeWorktreeIfClean: (input) =>
+      Effect.gen(function* () {
+        yield* ensureGitCommand("GitWorkflowService.removeWorktreeIfClean", input.cwd);
+        if (yield* fileSystem.exists(input.path).pipe(Effect.orElseSucceed(() => true))) {
+          const changes = yield* git.uncommittedChanges(input.path);
+          if (changes.files > 0) return { kept: true };
+        }
+        yield* git.removeWorktree(input);
+        return {};
+      }),
     pruneWorktrees: (input) =>
       ensureGitCommand("GitWorkflowService.pruneWorktrees", input.cwd).pipe(
         Effect.andThen(git.pruneWorktrees(input)),

@@ -3934,6 +3934,31 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
       input.branch,
     ]);
 
+  const uncommittedChanges: GitVcsDriver.GitVcsDriver["Service"]["uncommittedChanges"] = Effect.fn(
+    "uncommittedChanges",
+  )(function* (cwd, options) {
+    const status = yield* execute({
+      operation: "GitVcsDriver.uncommittedChanges",
+      cwd,
+      args: [
+        "status",
+        "--porcelain=v1",
+        "-z",
+        "--ignore-submodules=none",
+        options?.trackedOnly ? "--untracked-files=no" : "--untracked-files=all",
+      ],
+      maxOutputBytes: 64 * 1024,
+    });
+    const records = status.stdout.split("\0").filter(Boolean);
+    let files = 0;
+    for (let i = 0; i < records.length; i++) {
+      files++;
+      // A rename or copy carries its source path as the next record.
+      if (/^[RC]|^.[RC]/.test(records[i]!)) i++;
+    }
+    return { files, truncated: status.stdoutTruncated };
+  });
+
   const removeWorktree: GitVcsDriver.GitVcsDriver["Service"]["removeWorktree"] = Effect.fn(
     "removeWorktree",
   )(function* (input) {
@@ -4235,6 +4260,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
       withListRefsInvalidation(input.cwd, fetchRemoteTrackingBranch(input)),
     setBranchUpstream: (input) => withListRefsInvalidation(input.cwd, setBranchUpstream(input)),
     removeWorktree: (input) => withListRefsInvalidation(input.cwd, removeWorktree(input)),
+    uncommittedChanges,
     pruneWorktrees: (input) => withListRefsInvalidation(input.cwd, pruneWorktrees(input)),
     deleteLocalBranch: (input) => withListRefsInvalidation(input.cwd, deleteLocalBranch(input)),
     renameBranch: (input) => withListRefsInvalidation(input.cwd, renameBranch(input)),

@@ -36,6 +36,8 @@ const state = vi.hoisted(() => ({
   toasts: [] as string[],
   afterRequest: undefined as ((action: string) => void) | undefined,
   sessionLookupFails: false,
+  worktreeHasChanges: false,
+  removeResult: undefined as { kept?: boolean } | undefined,
 }));
 
 vi.mock("react", () => ({
@@ -62,18 +64,21 @@ vi.mock("../state/use-atom-command", () => ({
         return AsyncResult.failure(Cause.fail(new Error("Server denied the request")));
       }
       state.afterRequest?.(action);
-      return AsyncResult.success(undefined);
+      return AsyncResult.success(action === "removeWorktree" ? state.removeResult : undefined);
     },
 }));
 vi.mock("../state/use-atom-query-runner", () => ({
-  useAtomQueryRunner: () => async (environmentId: string) =>
-    state.sessionLookupFails
-      ? AsyncResult.failure(Cause.fail(new Error("Session lookup failed")))
-      : AsyncResult.success({
-          authenticated: true,
-          scopes: [...(state.scopes.get(environmentId) ?? [])],
-          auth: { serverUpdateScope: "environment:maintain" },
-        }),
+  useAtomQueryRunner: (family: string) =>
+    family === "status"
+      ? async () => AsyncResult.success({ hasWorkingTreeChanges: state.worktreeHasChanges })
+      : async (environmentId: string) =>
+          state.sessionLookupFails
+            ? AsyncResult.failure(Cause.fail(new Error("Session lookup failed")))
+            : AsyncResult.success({
+                authenticated: true,
+                scopes: [...(state.scopes.get(environmentId) ?? [])],
+                auth: { serverUpdateScope: "environment:maintain" },
+              }),
 }));
 vi.mock("../state/threads", () => ({
   threadEnvironment: Object.fromEntries(
@@ -93,7 +98,11 @@ vi.mock("../state/threads", () => ({
   ),
 }));
 vi.mock("../state/vcs", () => ({
-  vcsEnvironment: { removeWorktree: "removeWorktree", refreshStatus: "refreshStatus" },
+  vcsEnvironment: {
+    removeWorktree: "removeWorktree",
+    refreshStatus: "refreshStatus",
+    status: "status",
+  },
 }));
 vi.mock("../state/entities", () => ({
   readEnvironmentSupportsPinning: () => true,
@@ -230,6 +239,8 @@ beforeEach(() => {
   state.toasts = [];
   state.afterRequest = undefined;
   state.sessionLookupFails = false;
+  state.worktreeHasChanges = false;
+  state.removeResult = undefined;
 });
 
 describe("thread action permissions", () => {
@@ -351,5 +362,49 @@ describe("thread action permissions", () => {
     } finally {
       consoleError.mockRestore();
     }
+  });
+});
+
+describe("deleting a thread whose worktree has uncommitted changes", () => {
+  beforeEach(() => {
+    state.scopes
+      .get(secondary)!
+      .add(AuthOrchestrationOperateScope)
+      .add(AuthSourceControlWriteScope);
+    state.threads[0]!.worktreePath = "/worktrees/thread";
+  });
+
+  it("says up front that the worktree stays, and never asks to remove it", async () => {
+    state.worktreeHasChanges = true;
+    expect((await useThreadActions().deleteThread(target))._tag).toBe("Success");
+    expect(state.confirm).toHaveBeenCalledOnce();
+    expect(state.confirm.mock.calls[0]![0]).toBe(
+      [
+        "Its worktree has uncommitted changes, so it stays on disk:",
+        "/worktrees/thread",
+        "",
+        "Delete the thread?",
+      ].join("\n"),
+    );
+    expect(state.requests.map((request) => request.action)).toEqual(["stopSession", "delete"]);
+  });
+
+  it("deletes nothing when that dialog is cancelled", async () => {
+    state.worktreeHasChanges = true;
+    state.confirm.mockResolvedValue(false);
+    expect((await useThreadActions().deleteThread(target))._tag).toBe("Success");
+    expect(state.requests).toEqual([]);
+    expect(state.localEffects).toEqual([]);
+  });
+
+  it("reports a worktree the server kept after the dialog", async () => {
+    state.removeResult = { kept: true };
+    expect((await useThreadActions().deleteThread(target))._tag).toBe("Success");
+    expect(state.requests.map((request) => request.action)).toEqual([
+      "stopSession",
+      "delete",
+      "removeWorktree",
+    ]);
+    expect(state.toasts).toEqual(["Kept worktree"]);
   });
 });

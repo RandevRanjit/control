@@ -406,6 +406,16 @@ export class GitVcsDriver extends Context.Service<
     readonly removeWorktree: (
       input: VcsRemoveWorktreeInput,
     ) => Effect.Effect<void, GitCommandError>;
+    /**
+     * Files that removing the worktree at `cwd` would lose: modified, staged
+     * and, unless `trackedOnly`, untracked files that aren't ignored. Thread
+     * delete and storage cleanup both decide on it. `truncated` means there are
+     * more than the output limit could list.
+     */
+    readonly uncommittedChanges: (
+      cwd: string,
+      options?: { readonly trackedOnly?: boolean },
+    ) => Effect.Effect<{ readonly files: number; readonly truncated: boolean }, GitCommandError>;
     /** Drops worktree admin entries whose directory is already gone (`git worktree prune`). */
     readonly pruneWorktrees: (input: {
       readonly cwd: string;

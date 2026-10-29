@@ -230,6 +230,16 @@ export const VcsRemoveWorktreeInput = Schema.Struct({
 });
 export type VcsRemoveWorktreeInput = typeof VcsRemoveWorktreeInput.Type;
 
+/**
+ * `kept` is true when the worktree had uncommitted changes (modified, staged or
+ * untracked files that aren't ignored), so the server left it on disk. Older
+ * servers return nothing.
+ */
+export const VcsRemoveWorktreeResult = Schema.UndefinedOr(
+  Schema.Struct({ kept: Schema.optional(Schema.Boolean) }),
+);
+export type VcsRemoveWorktreeResult = typeof VcsRemoveWorktreeResult.Type;
+
 export const VcsCreateRefInput = Schema.Struct({
   cwd: TrimmedNonEmptyStringSchema,
   refName: TrimmedNonEmptyStringSchema,

@@ -7,7 +7,7 @@ import {
 import { threadPullRequestsOf } from "@control/shared/threadPullRequests";
 import * as NodeSqliteClient from "@control/shared/nodeSqliteClient";
 import * as Stream from "effect/Stream";
-import { makeThreadFind, findProjectedThreadItems } from "./ThreadFind.ts";
+import { makeThreadFind, findProjectedPositions, findProjectedThreadItems } from "./ThreadFind.ts";
 import type {
   OrchestrationV2SearchThreadInput,
   OrchestrationV2SearchThreadResult,
@@ -321,6 +321,8 @@ export interface ProjectionTimelinePageOptions {
   readonly itemId?: TurnItemId;
   readonly view?: "messages" | "activity";
   readonly limit: number;
+  /** Keeps only the rows thread find matches. */
+  readonly query?: string;
 }
 export interface ProjectionTimelinePage {
   readonly items: ReadonlyArray<OrchestrationV2ProjectedTurnItem>;
@@ -5063,25 +5065,38 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
         ),
       );
 
-    const { searchThread, searchThreadStream } = yield* makeThreadFind((threadId) =>
+    const { findPositions, searchThread, searchThreadStream } = yield* makeThreadFind((threadId) =>
       readTimelineIndex(threadId, new Set()).pipe(Effect.map((index) => index.visible)),
     );
 
     const getTimelinePage: ProjectionStoreV2Shape["getTimelinePage"] = (threadId, options) =>
+      // Find parses outside the page's transaction, so a query holds no read open while it scans.
+      options.query === undefined
+        ? readTimelinePage(threadId, options, undefined)
+        : findPositions(threadId, options.query).pipe(
+            Effect.flatMap((found) => readTimelinePage(threadId, options, found)),
+          );
+    const readTimelinePage = (
+      threadId: ThreadId,
+      options: ProjectionTimelinePageOptions,
+      found: ReadonlySet<number> | undefined,
+    ) =>
       sql
         .withTransaction(
           Effect.gen(function* () {
             const index = yield* readTimelineIndex(threadId, new Set());
             const matching = index.visible
               .map((row, position) => ({ ...row, position }))
-              .filter((row) =>
-                options.itemId === undefined
-                  ? row.position > (options.afterPosition ?? -1) &&
-                    (options.view === "activity" ||
-                      ["user_message", "assistant_message", "proposed_plan"].includes(
-                        row.item.type,
-                      ))
-                  : row.sourceItemId === options.itemId,
+              .filter(
+                (row) =>
+                  (found === undefined || found.has(row.position)) &&
+                  (options.itemId === undefined
+                    ? row.position > (options.afterPosition ?? -1) &&
+                      (options.view === "activity" ||
+                        ["user_message", "assistant_message", "proposed_plan"].includes(
+                          row.item.type,
+                        ))
+                    : row.sourceItemId === options.itemId),
               );
             const page = matching.slice(0, options.limit);
             const items = yield* Effect.forEach(page, (row) =>
@@ -6787,12 +6802,24 @@ export const layerMemory: Layer.Layer<ProjectionStoreV2> = Layer.effect(
       getTimelinePage: (threadId, options) =>
         service.getThreadProjection(threadId).pipe(
           Effect.map((projection) => {
-            const matching = projection.visibleTurnItems.filter((row) =>
-              options.itemId === undefined
-                ? row.position > (options.afterPosition ?? -1) &&
-                  (options.view === "activity" ||
-                    ["user_message", "assistant_message", "proposed_plan"].includes(row.item.type))
-                : row.sourceItemId === options.itemId,
+            const found =
+              options.query === undefined
+                ? undefined
+                : findProjectedPositions(
+                    projection.visibleTurnItems,
+                    options.query,
+                    projection.thread.worktreePath ?? undefined,
+                  );
+            const matching = projection.visibleTurnItems.filter(
+              (row) =>
+                (found === undefined || found.has(row.position)) &&
+                (options.itemId === undefined
+                  ? row.position > (options.afterPosition ?? -1) &&
+                    (options.view === "activity" ||
+                      ["user_message", "assistant_message", "proposed_plan"].includes(
+                        row.item.type,
+                      ))
+                  : row.sourceItemId === options.itemId),
             );
             return {
               items: matching.slice(0, options.limit),

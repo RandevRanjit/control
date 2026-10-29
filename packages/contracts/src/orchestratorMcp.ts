@@ -477,6 +477,8 @@ export const OrchestratorMcpThreadReadInput = Schema.Struct({
   limit: Schema.optional(PositiveInt.check(Schema.isLessThanOrEqualTo(100))),
   runLimit: Schema.optional(PositiveInt.check(Schema.isLessThanOrEqualTo(50))),
   maxCharsPerItem: Schema.optional(PositiveInt.check(Schema.isLessThanOrEqualTo(50_000))),
+  /** Keeps only messages and plans containing this text, as the find bar matches it. */
+  query: Schema.optional(TrimmedNonEmptyString.check(Schema.isMaxLength(200))),
 });
 export type OrchestratorMcpThreadReadInput = typeof OrchestratorMcpThreadReadInput.Type;
 

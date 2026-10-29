@@ -2549,6 +2549,7 @@ const make = Effect.gen(function* () {
             limit,
             view,
             ...(input.itemId === undefined ? {} : { itemId: input.itemId }),
+            ...(input.query === undefined ? {} : { query: input.query }),
           })
           .pipe(Effect.mapError(threadManagementFailure));
         const page = timeline.items;

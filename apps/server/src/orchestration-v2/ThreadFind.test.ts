@@ -813,4 +813,52 @@ describe("V2 thread find", () => {
       assert.equal(error._tag, "ProjectionStoreThreadNotFoundError");
     }).pipe(Effect.provide(ProjectionStore.layerMemory)),
   );
+
+  const queriedPages = Effect.gen(function* () {
+    const projection = yield* ProjectionStore.ProjectionStoreV2;
+    yield* Effect.forEach(
+      [
+        thread(threadId, projectId),
+        run(),
+        ...[
+          item("a", 1, "needle"),
+          item("b", 2, "hay"),
+          item("c", 3, "Needle"),
+          item("d", 4, "needle", "proposed_plan"),
+        ].map((payload): OrchestrationV2DomainEvent => ({
+          id: EventId.make(payload.id),
+          threadId,
+          occurredAt: at(1),
+          type: "turn-item.updated",
+          payload,
+        })),
+      ],
+      projection.apply,
+      { discard: true },
+    );
+    const first = yield* projection.getTimelinePage(threadId, { query: "needle", limit: 2 });
+    assert.deepEqual(
+      first.items.map((row) => row.sourceItemId),
+      ["a", "c"],
+    );
+    assert.isTrue(first.hasMore);
+    const rest = yield* projection.getTimelinePage(threadId, {
+      query: "needle",
+      limit: 2,
+      afterPosition: first.items[1]!.position,
+    });
+    assert.deepEqual(
+      rest.items.map((row) => row.sourceItemId),
+      ["d"],
+    );
+    assert.isFalse(rest.hasMore);
+  });
+
+  it.effect("SQL timeline pages keep only the rows find matches", () =>
+    createProject(projectId).pipe(Effect.andThen(queriedPages), Effect.provide(layerTest)),
+  );
+
+  it.effect("memory timeline pages keep only the rows find matches", () =>
+    queriedPages.pipe(Effect.provide(ProjectionStore.layerMemory)),
+  );
 });

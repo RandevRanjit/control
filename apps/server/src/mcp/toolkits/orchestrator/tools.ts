@@ -274,7 +274,7 @@ const TerminalChatReadTool = Tool.make("terminal_chat_read", {
 
 const ThreadReadTool = Tool.make("thread_read", {
   description:
-    "Read any thread by id. `messages` (default): user and assistant messages and plans; `activity`: every timeline item. Page with `afterPosition=nextPosition`. Cut-off text: `itemId` with `textOffset=nextTextOffset` until it is null (UTF-16 offsets). Reading an untruncated final result of your direct child marks it delivered. `pullRequests` lists every linked PR; `linkedPullRequest` is a legacy single link. Link a thread as `[title](control-thread://v1/<threadId>)`, id unencoded.",
+    "Read any thread by id. `messages` (default): user and assistant messages and plans; `activity`: every timeline item. Page with `afterPosition=nextPosition`. `query`: only messages and plans containing that text, paged the same way. Cut-off text: `itemId` with `textOffset=nextTextOffset` until it is null (UTF-16 offsets). Reading an untruncated final result of your direct child marks it delivered. `pullRequests` lists every linked PR; `linkedPullRequest` is a legacy single link. Link a thread as `[title](control-thread://v1/<threadId>)`, id unencoded.",
   parameters: OrchestratorMcpThreadReadInput,
   success: OrchestratorMcpThreadReadResult,
   failure: OrchestratorMcpFailure,

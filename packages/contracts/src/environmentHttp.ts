@@ -482,6 +482,14 @@ const EnvironmentOrchestrationThreadSnapshotParams = Schema.Struct({
 });
 
 /**
+ * `omitIdleSubagents=1` leaves idle subagent children out of the shell. Older
+ * servers ignore the whole query.
+ */
+const EnvironmentOrchestrationShellSnapshotQuery = Schema.Struct({
+  omitIdleSubagents: Schema.optionalKey(Schema.String),
+});
+
+/**
  * `compactTurnItems=1` opts into `turnItemsOmitLocalVisible`. Other values are
  * ignored, and older servers ignore the whole query.
  */
@@ -506,6 +514,7 @@ class EnvironmentOrchestrationHttpApi extends HttpApiGroup.make("orchestration")
   .add(
     HttpApiEndpoint.get("shellSnapshot", "/api/orchestration/shell", {
       headers: OrchestrationProtocolHeaders,
+      query: EnvironmentOrchestrationShellSnapshotQuery,
       success: OrchestrationV2ShellSnapshot,
       error: EnvironmentOrchestrationSnapshotErrors,
     }).middleware(EnvironmentAuthenticatedAuth),

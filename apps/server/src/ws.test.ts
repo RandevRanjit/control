@@ -3,6 +3,8 @@ import {
   ORCHESTRATION_PROTOCOL_VERSION,
   ProviderDriverKind,
   ProviderInstanceId,
+  ThreadId,
+  type OrchestrationV2ThreadShell,
   type ServerConfig,
   type ServerConfigStreamEvent,
   type ServerProvider,
@@ -16,17 +18,25 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as PubSub from "effect/PubSub";
 import * as Queue from "effect/Queue";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import { ChildProcessSpawner } from "effect/process";
 
+import * as ProjectStore from "./orchestration-v2/ProjectStore.ts";
+import * as ThreadManagement from "./orchestration-v2/ThreadManagementService.ts";
+import * as OrchestrationEventStore from "./persistence/OrchestrationEventStore.ts";
+import * as SqlitePersistence from "./persistence/Sqlite.ts";
 import * as ExternalLauncher from "./process/externalLauncher.ts";
+import * as ProjectEnrichment from "./project/ProjectEnrichmentService.ts";
+import * as ProjectService from "./project/ProjectService.ts";
 import {
   hasCompatibleOrchestrationProtocol,
   onDemandRefreshReply,
   resolveAvailableEditorsForConfig,
   shouldUseBoundedThreadSnapshot,
+  subscribeOrchestrationV2Shell,
   withLateEditorConfig,
   withoutWorkspaceSnapshots,
 } from "./ws.ts";
@@ -287,3 +297,73 @@ it("on-demand clients get provider config without workspace snapshots", () => {
   // An untargeted refresh answers like the config stream.
   assert.isUndefined(onDemandRefreshReply([provider], {})[0]?.workspaceSnapshots);
 });
+
+const ReplayTestLayer = OrchestrationEventStore.layer.pipe(
+  Layer.provideMerge(SqlitePersistence.layerMemory),
+);
+
+it.effect("shell snapshots leave idle subagent children out only for clients that ask", () =>
+  Effect.gen(function* () {
+    const shell = (id: string, parent: string | null, activityRunStatus: "running" | null) =>
+      ({
+        id: ThreadId.make(id),
+        archivedAt: null,
+        status: activityRunStatus ?? "completed",
+        activityRunStatus,
+        pendingRuntimeRequest: null,
+        pendingBackgroundTasks: [],
+        lineage: {
+          parentThreadId: parent === null ? null : ThreadId.make(parent),
+          relationshipToParent: parent === null ? null : "subagent",
+          rootThreadId: ThreadId.make("parent"),
+        },
+      }) as unknown as OrchestrationV2ThreadShell;
+    const threads = [
+      shell("parent", null, null),
+      shell("idle", "parent", null),
+      shell("live", "parent", "running"),
+    ];
+    const firstSnapshotThreadIds = (input: { readonly omitIdleSubagents?: boolean }) =>
+      subscribeOrchestrationV2Shell(input).pipe(
+        Effect.flatMap((stream) => stream.pipe(Stream.take(1), Stream.runCollect)),
+        Effect.map(([item]) =>
+          item?.kind === "snapshot" ? item.snapshot.threads.map((thread) => thread.id) : [],
+        ),
+        Effect.provideService(ThreadManagement.ThreadManagementService, {
+          readShellSnapshot: () =>
+            Effect.succeed(
+              Effect.succeed({
+                schemaVersion: 1,
+                snapshotSequence: 0,
+                threads,
+                archivedThreads: [],
+              }),
+            ),
+        } as unknown as ThreadManagement.ThreadManagementService["Service"]),
+        Effect.provideService(ProjectStore.ProjectStoreV2, {
+          listShells: () => Effect.succeed([]),
+        } as unknown as ProjectStore.ProjectStoreV2["Service"]),
+        Effect.provideService(ProjectService.ProjectService, {
+          getShell: () => Effect.succeedNone,
+        } as unknown as ProjectService.ProjectService["Service"]),
+        Effect.provideServiceEffect(
+          ProjectEnrichment.ProjectEnrichmentService,
+          PubSub.unbounded().pipe(
+            Effect.map(
+              (changes) =>
+                ({
+                  subscribeChanges: PubSub.subscribe(changes),
+                }) as unknown as ProjectEnrichment.ProjectEnrichmentService["Service"],
+            ),
+          ),
+        ),
+      );
+
+    // An older client never sends the flag, so it still gets every child.
+    assert.deepEqual(yield* firstSnapshotThreadIds({}), ["parent", "idle", "live"]);
+    assert.deepEqual(yield* firstSnapshotThreadIds({ omitIdleSubagents: true }), [
+      "parent",
+      "live",
+    ]);
+  }).pipe(Effect.scoped, Effect.provide(ReplayTestLayer)),
+);

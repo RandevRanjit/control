@@ -1003,5 +1003,6 @@ export * from "./threadSnapshotHttp.ts";
 export * from "./composerPathSearch.ts";
 export * from "./threadCommands.ts";
 export * from "./threadDetail.ts";
+export * from "./threadFamilies.ts";
 export * from "./threadShell.ts";
 export * from "./threadState.ts";

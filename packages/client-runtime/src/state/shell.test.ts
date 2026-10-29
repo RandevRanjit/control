@@ -7,7 +7,11 @@ import { Atom, AtomRegistry } from "effect/reactivity";
 
 import { PrimaryConnectionTarget } from "../connection/model.ts";
 import type { EnvironmentShellState } from "./shell.ts";
-import { createEnvironmentServerConfigsAtom, createEnvironmentShellSummaryAtom } from "./shell.ts";
+import {
+  createEnvironmentServerConfigsAtom,
+  createEnvironmentShellSummaryAtom,
+  EMPTY_SHELL_STATE,
+} from "./shell.ts";
 import { v2ThreadShell } from "./orchestrationV2TestFixtures.ts";
 
 const ENVIRONMENT_ID = EnvironmentId.make("environment-1");
@@ -33,6 +37,7 @@ function shellState(input: {
   readonly snapshotSequence?: number;
 }): EnvironmentShellState {
   return {
+    ...EMPTY_SHELL_STATE,
     snapshot:
       input.updatedAt === undefined
         ? Option.none()

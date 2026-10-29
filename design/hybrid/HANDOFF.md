@@ -142,7 +142,7 @@ Top to bottom (box numbers are in `measure.md` §Sidebar):
    any (an empty fold shows none; owner, 29 Oct). Archive is
    merged into Settled: *"settled and archived are the same thing for me"*. A click opens the fold in place of the
    list.
-6. **Usage, 90.** `5H 71% 01:10` and `7D 22% Sun`: the key in Plex 10.5 / 500, the percent in Plex 11 / 600 and the
+6. **Usage, 90.** `5H 71% 1h 10m` and `7D 22% Sun` (the time to the reset written as Usage writes it; owner, 29 Oct): the key in Plex 10.5 / 500, the percent in Plex 11 / 600 and the
    reset at the right. Under each is a 3 px plain-ink line on a quiet track (Bloom's usage line). Past 80 %, only the
    leading end breathes.
 7. **Foot, 40.** One icon, the chart, which opens statistics. Statistics and settings are designed later (§12).
@@ -389,7 +389,7 @@ Bloom's lamps, with two version 1 changes:
 | background (agents running) | background lamp | blue | `background · 2 agents` |
 | needs you (approval, input) | bullseye, beats every 1.75 s | arm red, the only red bar | `needs you` |
 | choose on return | half fill, tide | lilac | `choose on return` |
-| failed, limited | cross, two dips every 3.5 s | amber | `failed · exit 1`, `limited · resets 01:10` |
+| failed, limited | cross, two dips every 3.5 s | amber | `failed · exit 1`, `limited · resets 1h 10m` |
 | done | still tick | green | `done` |
 | idle | ring | quiet | `idle` |
 | compacting (housekeeping) | **background lamp** | the safe ramp | `dreaming` |
@@ -1222,8 +1222,9 @@ in the 1.2 export: `v1.2/index.html` renders them after the panels, and `control
    Page names are in sentence case.
 3. **Usage (SC3)** keeps every part the app has, in D's skin: the head's environments, providers, Cost/Tokens/Limits and
    period; the total and each provider's share beside the daily line; totals; cost (or tokens) by type; the ranked
-   breakdown with its share underlined. Limits show the share used, the pace and the reset. Claude's mark and the chart
-   are Claude's orange, `--claude` (the app's `#d97757`).
+   breakdown with its share underlined. Limits show the share used, the pace and the reset, under the sidebar's names
+   (`5H`, `7D`, `7D · Fable`). A limit's bar is neutral until 70 % used, amber to 90 %, then red, with no hatching
+   (owner, 29 Oct). Claude's mark and the chart are Claude's orange, `--claude` (the app's `#d97757`).
 4. **Welcome (SC4)**, **the agent sign-in page (SC5)** and **the thread's details (SC6)** keep their content; T3's
    gradient leaves the sign-in page.
 5. **The panel's views take D's heads** (§5.2–5.6) and keep every control the app has: the common ones as icons in the

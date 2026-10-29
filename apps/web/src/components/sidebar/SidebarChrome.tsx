@@ -1,5 +1,6 @@
 import { useAtomValue } from "@effect/atom-react";
 import type { ServerProviderUsageWindow } from "@control/contracts";
+import { formatDuration } from "@control/shared/usageLimits";
 import type { CSSProperties, ReactNode } from "react";
 import { Fragment, memo, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
@@ -191,7 +192,6 @@ function usageResetLabel(window: ServerProviderUsageWindow, now: number): string
   if (window.kind === "weekly") {
     return new Date(at).toLocaleDateString("en-GB", { weekday: "short" });
   }
-  const minutes = Math.max(0, Math.round((at - now) / 60_000));
-  const pad = (value: number) => String(value).padStart(2, "0");
-  return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+  // Written as Usage writes it, `3h 5m` (owner, 29 Oct).
+  return formatDuration(at - now);
 }

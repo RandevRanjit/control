@@ -55,7 +55,7 @@ Colours are the computed values, Field then Night; `@n%` is alpha. Padding is to
 | usage block | `.hy-use` | 0, 815, 256, 90 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 6 18 8 16 |
 | usage key (5H) | `.hy-uk` | 16, 821.3, 22, 10.5 | Plex 10.5/10.5 500 | #414970 / #c1c6d5 | — | 0 | 0 |
 | usage percent | `.hy-up` | 46, 821, 19.8, 11 | Plex 11/11 600 | #262b5b / #f5ebe4 | — | 0 | 0 |
-| usage reset | `.hy-ur` | 206.5, 821.3, 31.5, 10.5 | Plex 10.5/10.5 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| usage reset | `.hy-ur` | 200.2, 821.3, 37.8, 10.5 | Plex 10.5/10.5 400 | #525a7c / #a9aebf | — | 0 | 0 |
 | usage line | `.use-line` | 16, 841, 222, 3 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | #cdd7ed / #242323 | 999px | 0 |
 | foot | `.t3-foot` | 0, 905, 256, 40 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 8 8 8 |
 

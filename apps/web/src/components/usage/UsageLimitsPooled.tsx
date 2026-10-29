@@ -26,8 +26,9 @@ import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
 import {
   PaceIcon,
   ResetCreditDialog,
-  barColor,
+  limitName,
   resetCreditsSummary,
+  usedColor,
   useResetCredit,
 } from "./UsageLimits";
 
@@ -222,7 +223,6 @@ function PoolSegment({
   account,
   window,
   reset,
-  color,
   now,
   index,
   showAccountName,
@@ -230,7 +230,6 @@ function PoolSegment({
   readonly account: LimitAccount;
   readonly window: LimitPoolMember["window"];
   readonly reset: LimitPoolWindow["resets"][number] | undefined;
-  readonly color: string;
   readonly now: number;
   /** 1-based position in the bar, shown on the strip and its legend row to tie them together. */
   readonly index: number;
@@ -253,23 +252,15 @@ function PoolSegment({
           />
         }
       >
-        {/* Translucent so the label reads over the fill for any provider colour and theme. */}
+        {/* Translucent so the label reads over the fill in either theme; amber and red stronger. */}
         <div
           aria-hidden
-          className="absolute inset-y-0 left-0 rounded-md opacity-35"
-          style={{ width: `${used}%`, backgroundColor: color }}
+          className={cn(
+            "absolute inset-y-0 left-0 rounded-md",
+            used >= 70 ? "opacity-70" : "opacity-35",
+          )}
+          style={{ width: `${used}%`, backgroundColor: usedColor(used) }}
         />
-        {/* The used share is hatched too: it is what the countdown restores. */}
-        {used > 0 && reset ? (
-          <div
-            aria-hidden
-            className="absolute inset-y-0 left-0 opacity-20"
-            style={{
-              width: `${used}%`,
-              backgroundImage: `repeating-linear-gradient(135deg, ${color} 0 1px, transparent 1px 5px)`,
-            }}
-          />
-        ) : null}
         <span
           aria-hidden
           className="absolute inset-0 flex items-center justify-center text-3xs leading-none font-semibold text-foreground/80 tabular-nums @2xl/pool:hidden"
@@ -306,7 +297,7 @@ function PoolSegment({
           </span>
         </div>
       </PopoverTrigger>
-      <LegendRow account={account} window={window} color={color} now={now} index={index} />
+      <LegendRow account={account} window={window} now={now} index={index} />
       {account.redeem ? (
         <RedeemableSegmentPopup
           account={account}
@@ -340,13 +331,11 @@ function PoolSegment({
 function LegendRow({
   account,
   window,
-  color,
   now,
   index,
 }: {
   readonly account: LimitAccount;
   readonly window: LimitPoolMember["window"];
-  readonly color: string;
   readonly now: number;
   readonly index: number;
 }) {
@@ -363,7 +352,7 @@ function LegendRow({
         <span
           aria-hidden
           className="absolute inset-0 rounded-sm opacity-35"
-          style={{ backgroundColor: color }}
+          style={{ backgroundColor: usedColor(used) }}
         />
         <span className="sr-only">Segment </span>
         <span className="relative">{index}</span>
@@ -450,15 +439,7 @@ function RedeemableSegmentPopup({
  * and a legend below lists the accounts in the same order; both open the
  * same popover.
  */
-function PoolBar({
-  pool,
-  color,
-  now,
-}: {
-  readonly pool: LimitPoolWindow;
-  readonly color: string;
-  readonly now: number;
-}) {
+function PoolBar({ pool, now }: { readonly pool: LimitPoolWindow; readonly now: number }) {
   const restores = new Map(pool.resets.map((reset) => [reset.member.account.key, reset]));
   return (
     <div className="@container/pool min-w-0">
@@ -473,7 +454,6 @@ function PoolBar({
               account={member.account}
               window={member.window}
               reset={restores.get(member.account.key)}
-              color={color}
               now={now}
               index={position + 1}
               showAccountName={pool.columns.length > 1}
@@ -489,21 +469,13 @@ function PoolBar({
  * Big pooled number and the segment bar. Accounts keep the same column across
  * windows; each segment's popover shows its own reset time and share restored.
  */
-function PoolWindowCard({
-  pool,
-  color,
-  now,
-}: {
-  readonly pool: LimitPoolWindow;
-  readonly color: string;
-  readonly now: number;
-}) {
+function PoolWindowCard({ pool, now }: { readonly pool: LimitPoolWindow; readonly now: number }) {
   // The soonest reset that hands anything back; an untouched account resets to no effect.
   const nextRefill = pool.resets.find((reset) => reset.restoresPercent > 0);
   return (
     <div className="s-sc-lim grid items-center gap-x-6 gap-y-3 md:grid-cols-[11rem_minmax(0,1fr)]">
       <div className="flex flex-col gap-1">
-        <b>{pool.label}</b>
+        <b>{limitName(pool)}</b>
         <span className="flex items-baseline gap-2">
           <span className="s-sc-pc">{pool.usedPercent}%</span>
           <small>used</small>
@@ -515,13 +487,12 @@ function PoolWindowCard({
           </span>
         ) : null}
       </div>
-      <PoolBar pool={pool} color={color} now={now} />
+      <PoolBar pool={pool} now={now} />
     </div>
   );
 }
 
 function PoolSection({ pool, now }: { readonly pool: LimitPool; readonly now: number }) {
-  const color = barColor(pool.driver);
   const label = getDriverOption(pool.driver)?.label ?? String(pool.driver);
   return (
     <section className="flex flex-col gap-1">
@@ -537,12 +508,7 @@ function PoolSection({ pool, now }: { readonly pool: LimitPool; readonly now: nu
       </h2>
       <div className="s-sc-grp" data-divided="">
         {pool.windows.map((window) => (
-          <PoolWindowCard
-            key={`${window.kind}:${window.id}`}
-            pool={window}
-            color={color}
-            now={now}
-          />
+          <PoolWindowCard key={`${window.kind}:${window.id}`} pool={window} now={now} />
         ))}
       </div>
     </section>

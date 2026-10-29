@@ -135,3 +135,8 @@ it.each([
   await act(async () => answer(result));
   expect(status?.textContent).toBe(`Alpha ${text}`);
 });
+
+it("names the window as the sidebar does (5H, 7D)", () => {
+  const name = document.querySelector(".s-sc-lim b")?.textContent;
+  expect(name).toBe("5H");
+});

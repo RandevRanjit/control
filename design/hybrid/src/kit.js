@@ -56,7 +56,7 @@ function srow(c, ind, o = {}) {
 }
 const grow = (g, n, o = {}) => `<div class="group-row hy-gr">${pearl(g.tint, 12)}<span class="hy-gn">${g.name}</span>${o.home ? `<span class="hy-home">${o.home}</span>` : ''}<span class="n">${n}</span>${G(o.folded ? 'chev-r' : 'chev-d')}</div>`;
 const projHead = (p, n) => `<div class="hy-ph">${G('folder')}<span>${PROJECTS[p].name}</span><span class="n">${n}</span></div>`;
-const usage = () => `<div class="hy-use"><span class="hy-uk">5H</span><span class="hy-up">71%</span><span></span><span class="hy-ur">01:10</span>${Bloom.usageLine(.71, { kind: '5h', w: '100%', label: '5 hour usage 71 %' })}
+const usage = () => `<div class="hy-use"><span class="hy-uk">5H</span><span class="hy-up">71%</span><span></span><span class="hy-ur">1h 10m</span>${Bloom.usageLine(.71, { kind: '5h', w: '100%', label: '5 hour usage 71 %' })}
     <span class="hy-uk">7D</span><span class="hy-up">22%</span><span></span><span class="hy-ur">Sun</span>${Bloom.usageLine(.22, { kind: '7d', w: '100%', label: '7 day usage 22 %' })}</div>`;
 const archive = () => `<div class="hy-arh">${G('chev-r')}<span>Archive</span>${Bloom.pearl({ n: 412, p: 18, label: '412 in the archive' })}</div>`;
 const folds = () => `<div class="hy-folds"><span class="hy-fold">${G('snooze')}Snoozed${Bloom.pearl({ n: snoozed().length })}</span><span class="hy-fold">Settled${Bloom.pearl({ n: 3 })}</span><span class="hy-fold">Archive${Bloom.pearl({ n: 412 })}</span></div>`;

@@ -46,10 +46,15 @@ const PACE: Record<LimitPace, { readonly label: string; readonly icon: typeof Ga
   under: { label: "Under pace: headroom left for the rest of the window", icon: TrendingDownIcon },
 };
 
-/** The series colour the cost chart uses for this driver, so the two views read as one. */
-export function barColor(driver: ServerProvider["driver"]): string {
-  const kind: UsageProviderKind | undefined = driver === "claudeAgent" ? "claude" : undefined;
-  return kind ? PROVIDER_PRESENTATION[kind].color : "var(--foreground)";
+/** A window by the sidebar's names: 5H and 7D, a model's week as `7D · Fable` (owner, 29 Oct). */
+export function limitName(window: Pick<ServerProviderUsageWindow, "kind" | "label">): string {
+  if (window.kind === "session") return "5H";
+  return window.kind === "weekly" ? window.label.replace(/^Weekly/, "7D") : window.label;
+}
+
+/** A limit's bar stays neutral until 70% used, then amber to 90%, then red (owner, 29 Oct). */
+export function usedColor(used: number): string {
+  return used >= 90 ? "var(--danger)" : used >= 70 ? "var(--amber-base)" : "var(--text-secondary)";
 }
 
 /** Pace as a glyph with the words on hover. */
@@ -80,11 +85,9 @@ export function PaceIcon({ pace }: { readonly pace: LimitPace }) {
  * fill. Hover for the exact figures and reset time.
  */
 function WindowBar({
-  color,
   window,
   now,
 }: {
-  readonly color: string;
   readonly window: ServerProviderUsageWindow;
   readonly now: number;
 }) {
@@ -97,7 +100,7 @@ function WindowBar({
   const resetsAt = window.resetsAt
     ? formatUpcomingTimestamp(window.resetsAt, timestampFormat, now)
     : null;
-  const summary = `${window.label}: ${used}% used${
+  const summary = `${limitName(window)}: ${used}% used${
     timeGone === null ? "" : `, ${timeGone}% of the window gone`
   }${resetsIn ? `, ${resetsIn}` : ""}`;
 
@@ -117,7 +120,7 @@ function WindowBar({
         {used > 0 ? (
           <div
             className="absolute inset-y-1.5 left-0 rounded-full"
-            style={{ width: `${used}%`, backgroundColor: color }}
+            style={{ width: `${used}%`, backgroundColor: usedColor(used) }}
           />
         ) : null}
         {timeGone !== null ? (
@@ -153,17 +156,14 @@ function WindowBar({
  * Compact rows fit the composer panel with narrower columns.
  */
 export function LimitWindows({
-  driver,
   windows,
   now,
   compact = false,
 }: {
-  readonly driver: ServerProvider["driver"];
   readonly windows: ReadonlyArray<ServerProviderUsageWindow>;
   readonly now: number;
   readonly compact?: boolean;
 }) {
-  const color = barColor(driver);
   return (
     <div
       className={
@@ -178,12 +178,12 @@ export function LimitWindows({
         return (
           <Fragment key={window.id}>
             <span className="flex min-w-0 items-center gap-2 text-xs">
-              <span className="truncate text-muted-foreground">{window.label}</span>
+              <span className="truncate text-muted-foreground">{limitName(window)}</span>
               <span className="ms-auto shrink-0 font-medium text-foreground tabular-nums">
                 {usedPercent(window)}% used
               </span>
             </span>
-            <WindowBar color={color} window={window} now={now} />
+            <WindowBar window={window} now={now} />
             <span className="flex items-center gap-2 text-xs whitespace-nowrap text-muted-foreground tabular-nums">
               {pace ? <PaceIcon pace={pace} /> : null}
               <span className="ms-auto shrink-0">{resetsIn ?? ""}</span>

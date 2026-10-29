@@ -2590,7 +2590,7 @@ html[data-theme="night"] .s-lk-root .s-lk-tty .s-lk-warn { color: var(--amber-ba
     <p>The chart at the sidebar's foot opens it, and holds down. The page keeps everything it has now, in D's skin: the head's environments and providers, its three views, Cost, Tokens and Limits, and its period. Cost leads with the total and each provider's share, beside the daily line; then the totals, cost by type, and the breakdown by model or by day, ranked, each with its share underlined. Tokens is the same page counted in tokens, with tokens by type. Limits are the sidebar's 5H and 7D lines at full width: how much is used, never how much is left, the pace, and when each resets. Claude keeps its own orange mark wherever the page names it.</p>
   </div>
   <figure class="fig" data-fig="usage"><div data-win="usage"></div><figcaption class="cap"><span class="id">SC3</span><b>Cost, the last 30 days.</b><span>Drawn whole, as it scrolls. The total is Plex 36 / 500. The daily line and its wash are Claude's orange (--claude, the app's #d97757), on seam grid lines with Plex axis labels. Cost by type is one stacked line in the four inks. The model ids stay as the API names them, in Plex; the orange underline is the share.</span></figcaption></figure>
-  <figure class="fig" data-fig="usage-limits"><div data-win="usage-limits"></div><figcaption class="cap"><span class="id">SC3b</span><b>Limits.</b><span>The percent is Plex 20 / 500, used. Pace is the app's icon with its word: ahead, on or under the window's pace. A model's own weekly limit is a third row. The lines are Bloom's usage lines.</span></figcaption></figure>
+  <figure class="fig" data-fig="usage-limits"><div data-win="usage-limits"></div><figcaption class="cap"><span class="id">SC3b</span><b>Limits.</b><span>The percent is Plex 20 / 500, used. Pace is the app's icon with its word: ahead, on or under the window's pace. A model's own weekly limit is a third row. The names are the sidebar's, 5H and 7D. The lines are Bloom's usage lines, neutral until 70 % used, amber to 90 %, then red: 5H at 71 % is amber.</span></figcaption></figure>
 
   <h3 class="bl-sub"><span class="id">SC4</span>Welcome</h3>
   <div class="bl-prose">
@@ -3141,7 +3141,7 @@ function srow(c, ind, o = {}) {
 }
 const grow = (g, n, o = {}) => `<div class="group-row hy-gr">${pearl(g.tint, 12)}<span class="hy-gn">${g.name}</span>${o.home ? `<span class="hy-home">${o.home}</span>` : ''}<span class="n">${n}</span>${G(o.folded ? 'chev-r' : 'chev-d')}</div>`;
 const projHead = (p, n) => `<div class="hy-ph">${G('folder')}<span>${PROJECTS[p].name}</span><span class="n">${n}</span></div>`;
-const usage = () => `<div class="hy-use"><span class="hy-uk">5H</span><span class="hy-up">71%</span><span></span><span class="hy-ur">01:10</span>${Bloom.usageLine(.71, { kind: '5h', w: '100%', label: '5 hour usage 71 %' })}
+const usage = () => `<div class="hy-use"><span class="hy-uk">5H</span><span class="hy-up">71%</span><span></span><span class="hy-ur">1h 10m</span>${Bloom.usageLine(.71, { kind: '5h', w: '100%', label: '5 hour usage 71 %' })}
     <span class="hy-uk">7D</span><span class="hy-up">22%</span><span></span><span class="hy-ur">Sun</span>${Bloom.usageLine(.22, { kind: '7d', w: '100%', label: '7 day usage 22 %' })}</div>`;
 const archive = () => `<div class="hy-arh">${G('chev-r')}<span>Archive</span>${Bloom.pearl({ n: 412, p: 18, label: '412 in the archive' })}</div>`;
 const folds = () => `<div class="hy-folds"><span class="hy-fold">${G('snooze')}Snoozed${Bloom.pearl({ n: snoozed().length })}</span><span class="hy-fold">Settled${Bloom.pearl({ n: 3 })}</span><span class="hy-fold">Archive${Bloom.pearl({ n: 412 })}</span></div>`;
@@ -4192,10 +4192,12 @@ function usageCost() {
   return usageHead('Cost') + `<div class="s-sc-body"><div class="s-sc-col s-sc-wide">${top}${totals}${bytype}${br}</div></div>`;
 }
 function usageLimits() {
-  const lim = (label, span, v, pace, rs) => `<div class="s-sc-lim"><div><b>${label}</b><span>${span}</span></div><span class="s-sc-pc">${Math.round(v * 100)}%<small>used</small></span>`
+  /* the sidebar's names; the bar neutral until 70 % used, amber to 90 %, then red, no hatching (owner, 29 Oct) */
+  const ink = v => v >= .9 ? 'var(--danger)' : v >= .7 ? 'var(--amber-base)' : 'var(--text-secondary)';
+  const lim = (label, span, v, pace, rs) => `<div class="s-sc-lim" style="--use-ink:${ink(v)}"><div><b>${label}</b><span>${span}</span></div><span class="s-sc-pc">${Math.round(v * 100)}%<small>used</small></span>`
     + `${Bloom.usageLine(v, { kind: span === '5 hours' ? '5h' : '7d', w: '100%', label: `${label} ${Math.round(v * 100)} % used` })}<span class="s-sc-rs">${G(PACE[pace][0])}${PACE[pace][1]}<i>·</i>${G('reload')}${rs}</span></div>`;
   return usageHead('Limits') + `<div class="s-sc-body"><div class="s-sc-col s-sc-wide"><div class="s-sc-h s-sc-ph">${CL()}Claude</div><div class="s-sc-grp">`
-    + lim('Session', '5 hours', .71, 'ahead', '1h 10m') + lim('Weekly', '7 days', .22, 'under', '4d 13h') + lim('Weekly · Fable', '7 days', .04, 'under', '4d 13h') + `</div></div></div>`;
+    + lim('5H', '5 hours', .71, 'ahead', '1h 10m') + lim('7D', '7 days', .22, 'under', '4d 13h') + lim('7D · Fable', '7 days', .04, 'under', '4d 13h') + `</div></div></div>`;
 }
 const usageSide = () => sideOf().replace(/<div class="t3-util"><span class="t3-ib">/, '<div class="t3-util"><span class="t3-ib s-sc-held">');
 const pageTall = (side, main, h) => page(side, main).replace('data-h="945"', `data-h="${h}"`).replace('s-sc-page"', `s-sc-page" style="height:${h}px"`);

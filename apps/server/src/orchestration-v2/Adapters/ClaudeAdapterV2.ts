@@ -236,6 +236,11 @@ export function claudeContextUsage(
 export const CLAUDE_DEFAULT_INSTANCE_ID = defaultInstanceIdForDriver(CLAUDE_PROVIDER);
 const DEFAULT_CLAUDE_SETTINGS = Schema.decodeSync(ClaudeSettings)({});
 
+const CLAUDE_GROUP_WATCH_SCRIPT = [
+  "{ trap '' TERM; read -r _ <&3; kill -TERM 0; sleep 5; kill -KILL 0; } </dev/null >/dev/null 2>&1 &",
+  'exec "$@" 3<&-',
+].join("\n");
+
 /**
  * Starts the Claude CLI as the leader of its own process group. When the CLI
  * exits it stops the MCP servers it started, but not their children: a
@@ -248,15 +253,24 @@ const DEFAULT_CLAUDE_SETTINGS = Schema.decodeSync(ClaudeSettings)({});
  * The SDK reads stderr only from its own spawn, where it redacts credentials
  * before adding the tail to exit errors. Here stderr is dropped instead, so
  * exit errors carry only the code or signal.
+ *
+ * That cleanup needs this server alive, and the CLI finishes its turn after its pipes
+ * close. A server that crashes or is killed would leave the CLI working next to the
+ * session it resumes (#23370), so a watcher in the group reads a pipe only this server
+ * holds and stops the group at its end-of-file.
  */
-function spawnClaudeProcessGroup(options: ClaudeSpawnOptions): ClaudeSpawnedProcess {
-  const child = NodeChildProcess.spawn(options.command, options.args, {
-    cwd: options.cwd,
-    env: options.env,
-    signal: options.signal,
-    stdio: ["pipe", "pipe", "ignore"],
-    detached: true,
-  });
+export function spawnClaudeProcessGroup(options: ClaudeSpawnOptions): ClaudeSpawnedProcess {
+  const child = NodeChildProcess.spawn(
+    "/bin/sh",
+    ["-c", CLAUDE_GROUP_WATCH_SCRIPT, "control-claude", options.command, ...options.args],
+    {
+      cwd: options.cwd,
+      env: options.env,
+      signal: options.signal,
+      stdio: ["pipe", "pipe", "ignore", "pipe"],
+      detached: true,
+    },
+  );
   child.once("exit", () => {
     try {
       signalProcessGroup(child.pid ?? 0, "SIGKILL");
@@ -264,7 +278,8 @@ function spawnClaudeProcessGroup(options: ClaudeSpawnOptions): ClaudeSpawnedProc
       // The group is already empty.
     }
   });
-  return child;
+  // Node's typings make stdin and stdout nullable once stdio has a fourth entry; both are pipes.
+  return child as ClaudeSpawnedProcess;
 }
 
 export const ClaudeProviderCapabilitiesV2 = {

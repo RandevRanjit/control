@@ -97,7 +97,7 @@ export const PreviewAutomationStatus = Schema.Struct({
   viewportSetting: Schema.optional(PreviewViewportSetting),
   /** Measured guest-page viewport in CSS pixels when a webview is ready. */
   viewport: Schema.optional(PreviewRenderedViewportSize),
-  /** Server hosts: a file picker the page opened, answered with preview_upload. */
+  /** Server hosts: a file picker the page opened, answered with preview_act's upload. */
   fileChooser: Schema.optional(
     Schema.NullOr(Schema.Struct({ multiple: Schema.Boolean, accept: Schema.String })),
   ),
@@ -548,6 +548,51 @@ export const PreviewAutomationScrollInput = Schema.Struct({
     description: "deltaX, deltaY, or both.",
   });
 export type PreviewAutomationScrollInput = typeof PreviewAutomationScrollInput.Type;
+
+/** Strict input for each `preview_act` action. */
+export const PreviewAutomationActInputs = {
+  click: PreviewAutomationClickInput,
+  type: PreviewAutomationTypeInput,
+  hover: PreviewAutomationHoverInput,
+  select: PreviewAutomationSelectInput,
+  drag: PreviewAutomationDragInput,
+  upload: PreviewAutomationUploadInput,
+  press: PreviewAutomationPressInput,
+  scroll: PreviewAutomationScrollInput,
+} as const;
+
+/** One flat shape for every page action. The server decodes it with the action's strict input. */
+export const PreviewAutomationActInput = Schema.Struct({
+  action: Schema.Literals([
+    "click",
+    "type",
+    "hover",
+    "select",
+    "drag",
+    "upload",
+    "press",
+    "scroll",
+  ]),
+  ...PreviewAutomationTabTargetFields,
+  locator: Schema.optional(Locator),
+  selector: Schema.optional(LegacySelector),
+  x: Schema.optional(Schema.Finite),
+  y: Schema.optional(Schema.Finite),
+  button: Schema.optional(Schema.Literals(["left", "right", "middle"])),
+  clickCount: Schema.optional(Schema.Int),
+  text: Schema.optional(Schema.String),
+  clear: Schema.optional(Schema.Boolean),
+  values: Schema.optional(Schema.Array(Schema.String)),
+  source: Schema.optional(Locator),
+  target: Schema.optional(Locator),
+  paths: Schema.optional(Schema.Array(Schema.String)),
+  key: Schema.optional(Schema.String),
+  modifiers: PreviewAutomationPressInput.fields.modifiers,
+  deltaX: Schema.optional(Schema.Finite),
+  deltaY: Schema.optional(Schema.Finite),
+  timeoutMs: Schema.optional(Schema.Int),
+});
+export type PreviewAutomationActInput = typeof PreviewAutomationActInput.Type;
 
 export const PreviewAutomationEvaluateInput = Schema.Struct({
   ...PreviewAutomationTabTargetFields,

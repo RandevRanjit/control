@@ -145,6 +145,57 @@ it.effect("production mcp layer lists worktree tools over http", () =>
       for (const tool of tools) {
         expect(tool.inputSchema.type, `inputSchema.type of ${tool.name}`).toBe("object");
       }
+
+      // Every thread pays for the advertised input schemas, so they carry no
+      // JSON noise; decoding still uses the full schema.
+      const advertised = JSON.stringify(
+        (
+          JSON.parse(bodyText.match(/\{.*\}/s)![0]) as {
+            result: { tools: Array<{ inputSchema: unknown }> };
+          }
+        ).result.tools.map((tool) => tool.inputSchema),
+      );
+      expect(advertised).not.toContain('"additionalProperties":true');
+      expect(advertised).not.toContain(`"maximum":${Number.MAX_SAFE_INTEGER}`);
+      expect(advertised).not.toContain('"contentMediaType":"application/json"');
+
+      // Action tools replace the single-purpose tools they merged.
+      expect(toolNames).toEqual(
+        expect.arrayContaining([
+          "preview_act",
+          "thread_queue",
+          "pending_request",
+          "thread_transfer",
+          "thread_configure",
+          "schedule_task",
+        ]),
+      );
+      for (const merged of [
+        "preview_click",
+        "preview_type",
+        "preview_hover",
+        "preview_select",
+        "preview_drag",
+        "preview_upload",
+        "preview_press",
+        "preview_scroll",
+        "queue_list",
+        "queue_read",
+        "queue_edit",
+        "queue_cancel",
+        "queue_reorder",
+        "queue_promote_to_steer",
+        "pending_request_list",
+        "pending_request_read",
+        "pending_request_respond",
+        "thread_fork",
+        "thread_merge_back",
+        "thread_transfers",
+        "thread_configuration",
+        "update_scheduled_task",
+      ]) {
+        expect(toolNames, merged).not.toContain(merged);
+      }
     }),
   ).pipe(
     Effect.provide(

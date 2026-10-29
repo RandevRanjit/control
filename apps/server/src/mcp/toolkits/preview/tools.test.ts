@@ -47,6 +47,8 @@ it("exports provider-compatible object schemas with described parameters", () =>
       schema.properties?.tabId,
       `${tool.name} must allow an explicit collaborative browser tab target`,
     ).toBeDefined();
+    // preview_act's flat fields serve several actions; its description says which.
+    if (tool.name === "preview_act") continue;
     for (const [field, fieldSchema] of Object.entries(schema.properties ?? {})) {
       expect(
         schemaHasDescription(fieldSchema),
@@ -57,17 +59,13 @@ it("exports provider-compatible object schemas with described parameters", () =>
 });
 
 it("exports exact object result schemas for preview actions", () => {
-  const actionNames = [
-    "preview_click",
-    "preview_type",
-    "preview_hover",
-    "preview_drag",
-    "preview_upload",
-    "preview_press",
-    "preview_scroll",
-    "preview_wait_for",
-  ] as const;
-  for (const name of actionNames) {
+  expect(Tool.getJsonSchemaFromSchema(PreviewToolkit.tools.preview_act.successSchema)).toEqual({
+    anyOf: [
+      expect.objectContaining({ required: ["selected"] }),
+      expect.objectContaining({ description: "The preview action completed successfully." }),
+    ],
+  });
+  for (const name of ["preview_wait_for"] as const) {
     // Effect's tool schemas follow the decoder default since rc.113 and leave
     // unmodeled result keys open.
     expect(Tool.getJsonSchemaFromSchema(PreviewToolkit.tools[name].successSchema)).toEqual({

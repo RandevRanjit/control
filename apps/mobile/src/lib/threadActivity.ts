@@ -597,8 +597,8 @@ function itemToolPresentation(item: OrchestrationV2TurnItem): ControlMcpToolPres
     return null;
   }
   return (
-    resolveControlMcpToolPresentation(item.toolName) ??
-    resolveControlMcpToolPresentation(item.title)
+    resolveControlMcpToolPresentation(item.toolName, item.input) ??
+    resolveControlMcpToolPresentation(item.title, item.input)
   );
 }
 

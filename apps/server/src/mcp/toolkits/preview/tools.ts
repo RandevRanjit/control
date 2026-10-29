@@ -1,29 +1,22 @@
 import {
   OrchestratorMcpFailure,
+  PreviewAutomationActInput,
   ToolActivityIcon,
-  PreviewAutomationClickInput,
   PreviewAutomationDialogInput,
-  PreviewAutomationDragInput,
   PreviewAutomationError,
   PreviewAutomationEvaluateInput,
-  PreviewAutomationHoverInput,
   PreviewAutomationNavigateInput,
   PreviewAutomationOpenInput,
-  PreviewAutomationPressInput,
   PreviewAutomationRecordingArtifact,
   PreviewAutomationRecordingStatus,
   PreviewAutomationResizeInput,
   PreviewAutomationResizeResult,
-  PreviewAutomationScrollInput,
-  PreviewAutomationSelectInput,
   PreviewAutomationSelectResult,
   PreviewAutomationSetColorSchemeInput,
   PreviewAutomationSetColorSchemeResult,
   PreviewAutomationSnapshot,
   PreviewAutomationStatus,
   PreviewAutomationTabTargetInput,
-  PreviewAutomationTypeInput,
-  PreviewAutomationUploadInput,
   PreviewAutomationWaitForInput,
 } from "@control/contracts";
 import * as Schema from "effect/Schema";
@@ -164,91 +157,18 @@ export const PreviewSnapshotTool = readonlyBrowserTool(
   }).annotate(Tool.Title, "Inspect browser page"),
 );
 
-const PreviewClickTool = browserTool(
-  Tool.make("preview_click", {
+const PreviewActTool = browserTool(
+  Tool.make("preview_act", {
     description:
-      "Click exactly one target. Prefer a Playwright locator. `x` and `y` go together. `button='right'` opens a context menu; `clickCount=2` double-clicks (server tabs only).",
-    parameters: PreviewAutomationClickInput,
-    success: PreviewActionResult,
+      "Act on the chosen tab. Target with `locator='aria-ref=<ref>'` from `preview_snapshot`, a Playwright locator, or `x` and `y` together. click: `button`, `clickCount` 1 to 3. type: literal `text`; `clear=true` replaces it; no target types into the focused element. hover: shows menus or tooltips. select: `values` in one native <select>, by value or label; for a custom dropdown, click it open, then click the option. drag: `source` onto `target`. upload: absolute `paths` answer the file picker `preview_status` reports, [] cancels it, or a `locator` sets an <input type=file>. press: one `key`, such as 'Enter', with `modifiers`. scroll: the tab, or one container with a locator; positive `deltaY` scrolls down, positive `deltaX` right. hover, select, drag, upload, and right or repeated clicks need a server tab.",
+    parameters: PreviewAutomationActInput,
+    success: Schema.Union([
+      Schema.Struct({ ...PreviewAutomationSelectResult.fields, ...presentationFields }),
+      PreviewActionResult,
+    ]),
     failure: PreviewToolFailure,
     dependencies,
-  }).annotate(Tool.Title, "Click preview page"),
-);
-
-const PreviewTypeTool = browserTool(
-  Tool.make("preview_type", {
-    description: "Type literal text into one input. `clear=true` replaces the current text.",
-    parameters: PreviewAutomationTypeInput,
-    success: PreviewActionResult,
-    failure: PreviewToolFailure,
-    dependencies,
-  }).annotate(Tool.Title, "Type into preview page"),
-);
-
-const PreviewHoverTool = safeBrowserTool(
-  Tool.make("preview_hover", {
-    description: "Hover one target to show menus or tooltips. Server tabs only.",
-    parameters: PreviewAutomationHoverInput,
-    success: PreviewActionResult,
-    failure: PreviewToolFailure,
-    dependencies,
-  }).annotate(Tool.Title, "Hover preview page"),
-);
-
-const PreviewSelectTool = browserTool(
-  Tool.make("preview_select", {
-    description:
-      "Pick options in one native <select>, by value or label. For a custom dropdown, click it open, then click the option. Server tabs only.",
-    parameters: PreviewAutomationSelectInput,
-    success: Schema.Struct({
-      ...PreviewAutomationSelectResult.fields,
-      ...presentationFields,
-    }),
-    failure: PreviewToolFailure,
-    dependencies,
-  }).annotate(Tool.Title, "Select preview option"),
-);
-
-const PreviewDragTool = browserTool(
-  Tool.make("preview_drag", {
-    description: "Drag one element onto another. Server tabs only.",
-    parameters: PreviewAutomationDragInput,
-    success: PreviewActionResult,
-    failure: PreviewToolFailure,
-    dependencies,
-  }).annotate(Tool.Title, "Drag in preview page"),
-);
-
-const PreviewUploadTool = browserTool(
-  Tool.make("preview_upload", {
-    description:
-      "Give files from this environment to the page. After a click opens a file picker, `preview_status` reports it: pass absolute paths to answer it, or an empty list to cancel. Or pass a `locator` for an <input type=file>. Server tabs only.",
-    parameters: PreviewAutomationUploadInput,
-    success: PreviewActionResult,
-    failure: PreviewToolFailure,
-    dependencies,
-  }).annotate(Tool.Title, "Upload files to preview page"),
-);
-
-const PreviewPressTool = browserTool(
-  Tool.make("preview_press", {
-    description: "Press one key, such as {key:'Enter'} or {key:'a',modifiers:['Meta']}.",
-    parameters: PreviewAutomationPressInput,
-    success: PreviewActionResult,
-    failure: PreviewToolFailure,
-    dependencies,
-  }).annotate(Tool.Title, "Press key in preview page"),
-);
-
-const PreviewScrollTool = safeBrowserTool(
-  Tool.make("preview_scroll", {
-    description:
-      "Scroll the chosen tab, or one container with a locator or selector. Positive `deltaY` scrolls down. Positive `deltaX` scrolls right.",
-    parameters: PreviewAutomationScrollInput,
-    success: PreviewActionResult,
-    failure: PreviewToolFailure,
-    dependencies,
-  }).annotate(Tool.Title, "Scroll preview page"),
+  }).annotate(Tool.Title, "Act in preview page"),
 );
 
 /**
@@ -314,14 +234,7 @@ export const PreviewToolkit = Toolkit.make(
   PreviewResizeTool,
   PreviewSetAppearanceTool,
   PreviewSnapshotTool,
-  PreviewClickTool,
-  PreviewTypeTool,
-  PreviewHoverTool,
-  PreviewSelectTool,
-  PreviewDragTool,
-  PreviewUploadTool,
-  PreviewPressTool,
-  PreviewScrollTool,
+  PreviewActTool,
   PreviewEvaluateTool,
   PreviewWaitForTool,
   PreviewRecordingStartTool,
@@ -335,14 +248,7 @@ export const PreviewStandardToolkit = Toolkit.make(
   PreviewNavigateTool,
   PreviewResizeTool,
   PreviewSetAppearanceTool,
-  PreviewClickTool,
-  PreviewTypeTool,
-  PreviewHoverTool,
-  PreviewSelectTool,
-  PreviewDragTool,
-  PreviewUploadTool,
-  PreviewPressTool,
-  PreviewScrollTool,
+  PreviewActTool,
   PreviewEvaluateTool,
   PreviewWaitForTool,
   PreviewRecordingStartTool,

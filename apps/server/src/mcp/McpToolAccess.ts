@@ -264,6 +264,19 @@ export const startsThreads = <P, A, E, R>(
     }),
   );
 
+/**
+ * One action tool with two access rules, picked per call, such as reading a
+ * queue versus editing it. Each branch keeps the check of the tool it replaced.
+ */
+export const either = <P, A, E, R, A2, E2, R2>(
+  useFirst: (params: P) => boolean,
+  first: Declaration<(params: P) => Effect.Effect<A, E, R>>,
+  second: Declaration<(params: P) => Effect.Effect<A2, E2, R2>>,
+) =>
+  declare((params: P): Effect.Effect<A | A2, E | E2, R | R2> =>
+    useFirst(params) ? checkedHandler(first)(params) : checkedHandler(second)(params),
+  );
+
 const fullAccessRequired =
   "Changing projects or environment settings needs a live full-access/default calling thread or a full-access client.";
 

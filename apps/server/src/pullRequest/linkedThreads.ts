@@ -9,6 +9,7 @@ import {
   type ThreadPullRequestKey,
 } from "@control/contracts";
 import * as Effect from "effect/Effect";
+import * as NodeSqliteClient from "@control/shared/nodeSqliteClient";
 import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 
@@ -52,7 +53,7 @@ export const listLinkedPullRequestThreads = Effect.fn("listLinkedPullRequestThre
         AND json_extract(t.payload_json, '$.linkedPullRequest.number') = ${key.number}
         AND t.deleted_at IS NULL
       ORDER BY "updatedAt" DESC, id ASC
-    `;
+    `.pipe(NodeSqliteClient.readOnly);
     const threads = rows
       .filter((row) =>
         threadPullRequestKeysEqual(

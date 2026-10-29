@@ -17,6 +17,7 @@ import type {
 } from "@control/contracts";
 import { resolveWorktreeCleanup } from "@control/shared/projectSettings";
 import { makeDrainableWorker } from "@control/shared/DrainableWorker";
+import * as NodeSqliteClient from "@control/shared/nodeSqliteClient";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Layer from "effect/Layer";
@@ -356,7 +357,7 @@ const make = Effect.gen(function* () {
           FROM orchestration_v2_projection_threads t
           JOIN projection_projects p ON p.project_id = t.project_id
           WHERE t.deleted_at IS NOT NULL
-        `;
+        `.pipe(NodeSqliteClient.readOnly);
     const deletedThreads = (yield* Effect.forEach(deletedRows, (row) =>
       decodeCleanupThread(row.payload_json).pipe(
         Effect.map((thread) => ({ ...thread, workspaceRoot: row.workspaceRoot })),
@@ -501,7 +502,7 @@ const make = Effect.gen(function* () {
           const pendingCleanup = yield* sql`
             SELECT 1 FROM orchestration_v2_effect_outbox
             WHERE thread_id = ${thread.id} AND status NOT IN ('succeeded', 'cancelled') LIMIT 1
-          `;
+          `.pipe(NodeSqliteClient.readOnly);
           if (pendingCleanup.length > 0) return keep("thread deletion is still pending");
         } else if (
           latest.length !== 1 ||
@@ -514,7 +515,7 @@ const make = Effect.gen(function* () {
         const sessionRows = yield* sql<{ payload_json: string }>`
           SELECT payload_json FROM orchestration_v2_projection_provider_sessions
           WHERE status != 'stopped'
-        `;
+        `.pipe(NodeSqliteClient.readOnly);
         const sessions = yield* Effect.forEach(sessionRows, (row) =>
           decodeCleanupSession(row.payload_json),
         );

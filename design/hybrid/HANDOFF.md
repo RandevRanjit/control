@@ -303,7 +303,8 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
   remote outlined), and the date in Plex. The upstream and the remote's default branch draw beside HEAD in their own
   lanes. A click opens the commit under its row, lined up under its subject: author, date (`25 Oct, 17:20`) and
   short sha, the message body, then its files as rows with Git's letter and `+n −n`; a file opens in Folder. **Show older** loads 60 more, up to 200.
-- **Summary, 26.** `4 files +38 −12`. Plus is in the green mark, minus in the red mark (Plex 11.5 / 520).
+- **Summary, 26.** `4 files +38 −12`. Plus is in the green mark, minus in the red mark (Plex 11.5 / 520). Everywhere
+  counts show, a side with nothing is left out, and a binary file shows none.
 - **Changed files.** 24 high, radius 8. A status letter (M, A, D, R) after the chevron, in place of T3's icons,
   the path in Plex 11.5, and `+n −n` at the right, added before removed everywhere. Copy path shows on the row's
   hover only.
@@ -335,7 +336,8 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 - **Tabs** (owner, 29 Oct). Each opened file is a tab in the row under the panel's tabs, after **Files**, the tree,
   which is pinned first and has no close. Files goes back to the tree with the files still open; closing the others
   leaves it. Below 720 px the file has the panel to itself; wider, the tree can sit beside it.
-- **Head.** The breadcrumb `orbit-website › site-v2` in Plex, then `4 changed`. The breadcrumb names folders only;
+- **Head.** The breadcrumb `orbit-website › site-v2` in Plex, then `4 changed` (the tree's head carries the count;
+  built 29 Oct). The breadcrumb names folders only;
   the open file's name is its tab's (29 Oct). The tab row shows with Files alone, so opening a file moves nothing.
 - **Tree.** Rows are 26 high and step in 16 px per level, with chevrons on folders and file icons on files.
   - Git's mark sits next to the age at the right: **M** in the write green, **A** in the read blue. A folder holding
@@ -362,7 +364,7 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 ### 5.6 Terminal
 
 - **Head.** The session's shells as tabs: `1 claude`, `2 bun dev` (on), `3 zsh`, then `+`, with the worktree at the
-  right.
+  right. One shell still shows its tab (29 Oct).
 - **Body.** The shell, in Plex 11 / 16, bottom-aligned, with success marks in the write green and a block cursor.
 - These are the app's own shells. Claude never types into them, and they die when the owner quits from the menu bar.
   There is no drawer under the conversation: the terminal is this tab.

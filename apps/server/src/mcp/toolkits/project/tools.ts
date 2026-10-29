@@ -120,7 +120,7 @@ const ThreadLaunchTool = Tool.make("thread_launch", {
     message: Schema.optional(
       Schema.String.check(Schema.isMaxLength(120000)).annotate({
         description:
-          "The task, sent once the workspace is ready. Omit with attachments for an idle thread.",
+          "The task, sent once the workspace is ready. Omit it and attachments for an idle thread.",
       }),
     ),
     attachments: Schema.optional(Schema.Array(McpAttachmentInput).check(Schema.isMaxLength(8))),

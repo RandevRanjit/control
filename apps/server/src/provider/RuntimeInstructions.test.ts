@@ -4,7 +4,10 @@ import { buildRuntimeInstructions } from "./RuntimeInstructions.ts";
 describe("buildRuntimeInstructions", () => {
   it("requires explicit registration of every PR and stack layer", () => {
     const instructions = buildRuntimeInstructions({ harness: "Codex" });
-    expect(instructions).toContain("Link each PR you create or work on");
+    // The block reaches threads with no Control MCP too, so it only applies when the tool exists.
+    expect(instructions).toContain(
+      "When the control MCP server has link_pull_request, link each PR you create or work on",
+    );
     expect(instructions).toContain("one link_pull_request per PR, full URL, every stack layer");
     expect(instructions).toContain("Host CLIs and APIs do not link for you.");
     expect(instructions).toContain("If linking fails, say so.");
@@ -14,9 +17,14 @@ describe("buildRuntimeInstructions", () => {
 
   it("waits on a PR only with the watch, and unwatches before handing back", () => {
     const instructions = buildRuntimeInstructions({ harness: "Claude Code" });
-    expect(instructions).toContain("call watch_pull_request and end your turn");
+    expect(instructions).toContain(
+      "and watch_pull_request is available, call it and end your turn",
+    );
     expect(instructions).toContain("do not poll or run your own watcher");
     expect(instructions).toContain("call unwatch_pull_request");
+    expect(instructions).toContain(
+      "Without these tools, say the PR is not linked or watched rather than polling it.",
+    );
   });
 
   it("costs every thread well under half its former 1.6 KB", () => {

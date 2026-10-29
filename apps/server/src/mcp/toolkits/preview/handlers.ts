@@ -222,7 +222,11 @@ const handlers = {
   preview_act: McpToolAccess.actsAsCaller(({ action, ...input }) =>
     decodeActInput[action](input).pipe(
       Effect.mapError(
-        (cause) => new OrchestratorMcpFailure({ code: "invalid_request", message: cause.message }),
+        () =>
+          new OrchestratorMcpFailure({
+            code: "invalid_request",
+            message: `The ${action} action got input it does not take, or lacks a field it needs.`,
+          }),
       ),
       Effect.flatMap((decoded) =>
         invokeTargeted<object>(

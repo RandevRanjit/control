@@ -53,6 +53,11 @@ export function useThreadFamily(
   }, [environmentId, rootThreadId]);
 }
 
+/** A thread a chip or link names: its row, or loading while the shell has left it out. */
+export function useReferencedThread(environmentId: EnvironmentId, threadId: ThreadId) {
+  return useAtomValue(threadFamilies.referencedThreadAtom(environmentId, threadId));
+}
+
 const EMPTY_THREAD_STATE_ATOM = Atom.make(AsyncResult.success(EMPTY_ENVIRONMENT_THREAD_STATE)).pipe(
   Atom.withLabel("web-environment-thread:empty"),
 );

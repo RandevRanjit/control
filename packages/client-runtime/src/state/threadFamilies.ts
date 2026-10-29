@@ -30,6 +30,11 @@ const EMPTY_MOUNTS: ReadonlyMap<string, MountedRows> = new Map();
 // for it would be thrown away once that snapshot lands, so it waits instead.
 const AWAITING_AUTHORITATIVE_SHELL = AsyncResult.initial<never, never>(true);
 
+/** A thread that something points at. "loading" covers a thread the shell left out. */
+export type ReferencedThread =
+  | { readonly status: "ready"; readonly thread: OrchestrationV2ThreadShell }
+  | { readonly status: "loading" | "failed" | "missing" };
+
 /** Whether a family read can decide anything yet. Only a settled read can prove a thread is gone. */
 export type ThreadFamilyRead = "pending" | "failed" | "settled";
 
@@ -244,9 +249,31 @@ export function createThreadFamilyAtoms<R, ER, E>(
     }).pipe(Atom.withLabel(`environment-snapshot-with-families:${environmentId}`));
   });
 
+  // The shell can leave a thread out, so a missing row reads the thread's family before it can
+  // say the thread is gone; only a settled read without it proves that.
+  const referencedThreadAtom = Atom.family((key: string) => {
+    const [environmentId, threadId] = JSON.parse(key) as [EnvironmentId, ThreadId];
+    return Atom.make((get): ReferencedThread => {
+      const shellRow = get(snapshotAtom(environmentId))?.threads.find(({ id }) => id === threadId);
+      if (shellRow !== undefined) return { status: "ready", thread: shellRow };
+      const result = get(familyAtom(key));
+      const read = threadFamilyRead(result);
+      if (read !== "settled") return { status: read === "failed" ? "failed" : "loading" };
+      const familyRow = selectEnvironmentQueryData(result)?.threads.find(
+        ({ id }) => id === threadId,
+      );
+      return familyRow === undefined
+        ? { status: "missing" }
+        : { status: "ready", thread: familyRow };
+    }).pipe(Atom.withLabel(`environment-referenced-thread:${key}`));
+  });
+
   return {
     /** The shell snapshot plus the rows of every mounted family. */
     snapshotAtom,
+    /** A thread something points at, such as a context chip: its row, or why there is none. */
+    referencedThreadAtom: (environmentId: EnvironmentId, threadId: ThreadId) =>
+      referencedThreadAtom(familyKey(environmentId, threadId)),
     /** The current generation's family read, for decisions that need a settled answer. */
     familyAtom: (environmentId: EnvironmentId, threadId: ThreadId) =>
       familyAtom(familyKey(environmentId, threadId)),

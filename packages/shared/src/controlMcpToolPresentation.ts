@@ -181,6 +181,7 @@ const CONTROL_MCP_TOOLS: Readonly<Record<string, ControlMcpToolDefinition>> = {
     "browser",
     "Snapshot the preview page",
   ),
+  preview_act: tool(["Use", "Using", "Used", "the preview browser"], "browser", "browser"),
   preview_click: tool(
     ["Click", "Clicking", "Clicked", "in the preview browser"],
     "browser",
@@ -263,6 +264,8 @@ const CONTROL_MCP_TOOLS: Readonly<Record<string, ControlMcpToolDefinition>> = {
     ["Run", "Running", "Requested a run of", "a scheduled task"],
     "schedule-run",
   ),
+  thread_queue: tool(["Manage", "Managing", "Managed", "queued messages"], "queue-edit"),
+  pending_request: tool(["Handle", "Handling", "Handled", "pending questions"], "question-respond"),
   queue_list: tool(["List", "Listing", "Listed", "queued messages"], "queue-list"),
   queue_read: tool(["Read", "Reading", "Read", "a queued message"], "queue-read"),
   queue_edit: tool(["Edit", "Editing", "Edited", "a queued message"], "queue-edit"),
@@ -286,6 +289,7 @@ const CONTROL_MCP_TOOLS: Readonly<Record<string, ControlMcpToolDefinition>> = {
     "thread-configuration",
   ),
   thread_configure: tool(["Set", "Setting", "Set", "thread model"], "thread-configure"),
+  thread_transfer: tool(["Use", "Using", "Used", "thread transfers"], "thread-fork"),
   thread_fork: tool(["Fork", "Forking", "Requested a fork of", "this thread"], "thread-fork"),
   thread_merge_back: tool(
     ["Merge", "Merging", "Requested a merge of", "thread context"],
@@ -394,22 +398,64 @@ export function resolveControlMcpToolId(toolName: string | null | undefined): st
   return name !== null && Object.hasOwn(CONTROL_MCP_TOOLS, name) ? name : null;
 }
 
+type SummaryInput = Readonly<Record<string, unknown>>;
+
+const asSummaryInput = (input: unknown): SummaryInput | undefined =>
+  typeof input === "object" && input !== null ? (input as SummaryInput) : undefined;
+
+/** Action tools present each call as the single-purpose tool its action replaced. */
+const ACTION_TOOLS: Readonly<Record<string, (action: string) => string | undefined>> = {
+  preview_act: (action) => `preview_${action}`,
+  thread_queue: (action) => `queue_${action}`,
+  pending_request: (action) => `pending_request_${action}`,
+  thread_transfer: (action) =>
+    ({ fork: "thread_fork", merge_back: "thread_merge_back", status: "thread_transfers" })[action],
+};
+
+/** Tools whose summary depends on which fields a call sets. */
+const FIELD_SUMMARIES: Readonly<
+  Record<string, (input: SummaryInput) => ControlMcpToolSummaryAction>
+> = {
+  thread_configure: ({ modelSelection }) =>
+    modelSelection === undefined ? "thread-configuration" : "thread-configure",
+  schedule_task: ({ scheduledTaskId }) =>
+    scheduledTaskId === undefined ? "schedule-create" : "schedule-update",
+};
+
+/**
+ * Pass the call's input so an action tool resolves to the labels of its action;
+ * older threads' single-purpose tool names keep their own entries.
+ */
 export function resolveControlMcpToolDefinition(
   toolName: string | null | undefined,
+  input?: unknown,
 ): ControlMcpToolDefinition | null {
   const name = toolName == null ? null : resolveControlMcpToolName(toolName);
-  return name !== null && Object.hasOwn(CONTROL_MCP_TOOLS, name) ? CONTROL_MCP_TOOLS[name]! : null;
+  if (name === null || !Object.hasOwn(CONTROL_MCP_TOOLS, name)) return null;
+  const action = asSummaryInput(input)?.action;
+  const actionTool = typeof action === "string" ? ACTION_TOOLS[name]?.(action) : undefined;
+  return actionTool !== undefined && Object.hasOwn(CONTROL_MCP_TOOLS, actionTool)
+    ? CONTROL_MCP_TOOLS[actionTool]!
+    : CONTROL_MCP_TOOLS[name]!;
 }
 
 export function resolveControlMcpToolPresentation(
   toolName: string | null | undefined,
+  input?: unknown,
 ): ControlMcpToolPresentation | null {
-  const definition = resolveControlMcpToolDefinition(toolName);
+  const definition = resolveControlMcpToolDefinition(toolName, input);
   return definition === null ? null : { displayName: definition.displayName, logo: "control" };
 }
 
 export function resolveControlMcpToolSummaryAction(
   toolName: string | null | undefined,
+  input?: unknown,
 ): ControlMcpToolSummaryAction | null {
-  return resolveControlMcpToolDefinition(toolName)?.summaryAction ?? null;
+  const definition = resolveControlMcpToolDefinition(toolName, input);
+  if (definition === null) return null;
+  const fields = asSummaryInput(input);
+  const summarize = FIELD_SUMMARIES[resolveControlMcpToolName(toolName!) ?? ""];
+  return fields !== undefined && summarize !== undefined
+    ? summarize(fields)
+    : definition.summaryAction;
 }

@@ -11,11 +11,10 @@ import {
   OrchestratorMcpFailure,
   OrchestratorMcpListScheduledTasksInput,
   OrchestratorMcpListScheduledTasksResult,
-  OrchestratorMcpScheduleTaskInput,
+  OrchestratorMcpSaveScheduledTaskInput,
   OrchestratorMcpScheduleTaskResult,
   OrchestratorMcpTaskCancelInput,
   OrchestratorMcpTaskCancelResult,
-  OrchestratorMcpUpdateScheduledTaskInput,
   OrchestratorMcpTaskStatusInput,
   OrchestratorMcpThreadInterruptInput,
   OrchestratorMcpThreadInterruptResult,
@@ -114,8 +113,8 @@ const TaskCancelTool = Tool.make("task_cancel", {
 
 export const ScheduleTaskTool = Tool.make("schedule_task", {
   description:
-    "Create scheduled work that runs with no turn active. `schedule` is an object, not text: {type:'interval',everyMs:3600000}, {type:'fixed_time',timeOfDay:'09:00',weekdays:[1,2,3,4,5]}, or {type:'webhook'}. A webhook run sees the request only through prompt placeholders: {{body.path}}, {{headers.name}}, {{query.name}}, {{body}}, {{request}}. For a sender that signs requests, get a `secretRef` from `request_secret` and set `signature`, e.g. GitHub: {header:'x-hub-signature-256',encoding:'hex',prefix:'sha256=',secretRef}. Report the returned `nextRunAt` or `webhookUrl`; no `webhookUrl` means Control Connect remote access is off. Omit `projectId` for this thread's project, where runs post into this thread unless `bindToCurrentThread=false`; elsewhere each run gets a fresh thread. Settings inherit from this thread, or the project default.",
-  parameters: OrchestratorMcpScheduleTaskInput,
+    "Create scheduled work that runs with no turn active; it needs `prompt` and `schedule`. With `scheduledTaskId`, update that task instead: only given fields change, `enabled=false` pauses it. `schedule` is an object, not text: {type:'interval',everyMs:3600000}, {type:'fixed_time',timeOfDay:'09:00',weekdays:[1,2,3,4,5]}, or {type:'webhook'}. A webhook run sees the request only through prompt placeholders: {{body.path}}, {{headers.name}}, {{query.name}}, {{body}}, {{request}}. For a sender that signs requests, get a `secretRef` from `request_secret` and set `signature`, e.g. GitHub: {header:'x-hub-signature-256',encoding:'hex',prefix:'sha256=',secretRef}. Report the returned `nextRunAt` or `webhookUrl`; no `webhookUrl` means Control Connect remote access is off. Omit `projectId` for this thread's project, where runs post into this thread unless `bindToCurrentThread=false`; elsewhere each run gets a fresh thread. Settings inherit from this thread, or the project default.",
+  parameters: OrchestratorMcpSaveScheduledTaskInput,
   success: OrchestratorMcpScheduleTaskResult,
   failure: OrchestratorMcpFailure,
   failureMode: "return",
@@ -128,7 +127,7 @@ export const ScheduleTaskTool = Tool.make("schedule_task", {
 const ListScheduledTasksTool = Tool.make("list_scheduled_tasks", {
   parameters: OrchestratorMcpListScheduledTasksInput,
   description:
-    "List scheduled tasks. Omit `projectId` for this thread's project (every project outside a thread). Pass a `scheduledTaskId` to update_scheduled_task or delete_scheduled_task.",
+    "List scheduled tasks. Omit `projectId` for this thread's project (every project outside a thread). Pass a `scheduledTaskId` to schedule_task or delete_scheduled_task.",
   success: OrchestratorMcpListScheduledTasksResult,
   failure: OrchestratorMcpFailure,
   failureMode: "return",
@@ -139,21 +138,9 @@ const ListScheduledTasksTool = Tool.make("list_scheduled_tasks", {
   .annotate(Tool.Destructive, false)
   .annotate(Tool.Idempotent, true);
 
-const UpdateScheduledTaskTool = Tool.make("update_scheduled_task", {
-  description:
-    "Update one scheduled task by `scheduledTaskId`. Only given fields change. `enabled=false` pauses it. `bindToCurrentThread` switches between posting here and a fresh thread per run.",
-  parameters: OrchestratorMcpUpdateScheduledTaskInput,
-  success: OrchestratorMcpScheduleTaskResult,
-  failure: OrchestratorMcpFailure,
-  failureMode: "return",
-  dependencies,
-})
-  .annotate(Tool.Title, "Update a scheduled task")
-  .annotate(Tool.Destructive, true);
-
 const DeleteScheduledTaskTool = Tool.make("delete_scheduled_task", {
   description:
-    "Delete one scheduled task by `scheduledTaskId`. It stops at once. To pause instead, use update_scheduled_task with `enabled=false`.",
+    "Delete one scheduled task by `scheduledTaskId`. It stops at once. To pause instead, use schedule_task with `enabled=false`.",
   parameters: OrchestratorMcpDeleteScheduledTaskInput,
   success: OrchestratorMcpDeleteScheduledTaskResult,
   failure: OrchestratorMcpFailure,
@@ -301,7 +288,7 @@ const ThreadReadTool = Tool.make("thread_read", {
 
 export const ThreadUpdateTool = Tool.make("thread_update", {
   description:
-    "Rename a thread (`action:'rename'` with `title`), regenerate its title, or link or unlink a PR (`pullRequest`). Omit `threadId` for this thread. Workspace and branch changes are not supported here. `clientRequestId` makes retries safe.",
+    "Rename a thread (`action:'rename'` with `title`) or regenerate its title. Omit `threadId` for this thread. Workspace and branch changes are not supported here. `clientRequestId` makes retries safe.",
   parameters: ThreadMetadataMcpUpdateInput,
   success: ThreadMetadataMcpUpdateResult,
   failure: OrchestratorMcpFailure,
@@ -358,7 +345,6 @@ export const OrchestratorToolkit = Toolkit.make(
   TaskCancelTool,
   ScheduleTaskTool,
   ListScheduledTasksTool,
-  UpdateScheduledTaskTool,
   DeleteScheduledTaskTool,
   RequestSecretTool,
   CreateThreadsTool,

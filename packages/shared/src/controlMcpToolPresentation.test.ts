@@ -2,8 +2,10 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   CONTROL_MCP_TOOL_NAMES,
+  resolveControlMcpToolDefinition,
   resolveControlMcpToolId,
   resolveControlMcpToolPresentation,
+  resolveControlMcpToolSummaryAction,
 } from "./controlMcpToolPresentation.ts";
 
 describe("resolveControlMcpToolPresentation", () => {
@@ -110,5 +112,45 @@ describe("resolveControlMcpToolPresentation", () => {
   it("keeps unknown MCP tools on the generic renderer path", () => {
     expect(resolveControlMcpToolPresentation("mcp__github__search_issues")).toBeNull();
     expect(resolveControlMcpToolPresentation("control.not_a_real_tool")).toBeNull();
+  });
+});
+
+describe("resolveControlMcpToolDefinition", () => {
+  it("labels an action tool call as the action it ran", () => {
+    expect(
+      resolveControlMcpToolDefinition("mcp__control__preview_act", { action: "type" })?.labels,
+    ).toEqual(resolveControlMcpToolDefinition("preview_type")?.labels);
+    expect(
+      resolveControlMcpToolDefinition("thread_transfer", { action: "fork" })?.displayName,
+    ).toBe(resolveControlMcpToolDefinition("thread_fork")?.displayName);
+    expect(resolveControlMcpToolDefinition("preview_act", { action: "unknown" })?.labels[2]).toBe(
+      "Used",
+    );
+  });
+});
+
+describe("resolveControlMcpToolSummaryAction", () => {
+  it("summarizes an action tool by the action each call ran", () => {
+    expect(
+      resolveControlMcpToolSummaryAction("mcp__control__thread_queue", { action: "list" }),
+    ).toBe("queue-list");
+    expect(resolveControlMcpToolSummaryAction("thread_queue", { action: "edit" })).toBe(
+      "queue-edit",
+    );
+    expect(resolveControlMcpToolSummaryAction("pending_request", { action: "respond" })).toBe(
+      "question-respond",
+    );
+    expect(resolveControlMcpToolSummaryAction("thread_transfer", { action: "status" })).toBe(
+      "thread-transfers",
+    );
+    expect(resolveControlMcpToolSummaryAction("thread_configure", {})).toBe("thread-configuration");
+    expect(resolveControlMcpToolSummaryAction("schedule_task", { scheduledTaskId: "task-1" })).toBe(
+      "schedule-update",
+    );
+    expect(resolveControlMcpToolSummaryAction("delegate_task", { task: "x" })).toBe("delegate");
+    // Older threads name the single-purpose tools, which keep their own labels.
+    expect(resolveControlMcpToolSummaryAction("mcp__control__queue_promote_to_steer")).toBe(
+      "queue-steer",
+    );
   });
 });

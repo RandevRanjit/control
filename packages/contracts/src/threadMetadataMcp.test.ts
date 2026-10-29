@@ -14,43 +14,11 @@ describe("ThreadMetadataMcpUpdateInput", () => {
     assert.deepEqual(decodeUpdate({ action: "regenerate_title" }), {
       action: "regenerate_title",
     });
-    assert.deepEqual(
-      decodeUpdate({
-        action: "link_pull_request",
-        pullRequest: {
-          repository: "acme/control",
-          number: 8689,
-          url: "https://github.com/acme/control/pull/8689",
-        },
-      }),
-      {
-        action: "link_pull_request",
-        pullRequest: {
-          repository: "acme/control",
-          number: 8689,
-          url: "https://github.com/acme/control/pull/8689",
-        },
-      },
-    );
-    assert.deepEqual(decodeUpdate({ action: "unlink_pull_request" }), {
-      action: "unlink_pull_request",
-    });
   });
 
   it("rejects missing action data and fields from another action", () => {
     assert.throws(() => decodeUpdate({ action: "rename" }));
     assert.throws(() => decodeUpdate({ action: "regenerate_title", title: "Not allowed" }));
-    assert.throws(() => decodeUpdate({ action: "link_pull_request" }));
-    assert.throws(() =>
-      decodeUpdate({
-        action: "unlink_pull_request",
-        pullRequest: {
-          repository: "acme/control",
-          number: 8689,
-          url: "https://github.com/acme/control/pull/8689",
-        },
-      }),
-    );
   });
 
   it("rejects unknown actions", () => {
@@ -69,32 +37,5 @@ describe("ThreadMetadataMcpUpdateInput", () => {
     assert.throws(() =>
       decodeUpdate({ action: "regenerate_title", clientRequestId: "metadata-\udc00" }),
     );
-  });
-
-  it("accepts HTTP(S) pull request URLs and rejects other or malformed URLs", () => {
-    assert.deepEqual(
-      decodeUpdate({
-        action: "link_pull_request",
-        pullRequest: {
-          repository: "engineering/control",
-          number: 42,
-          url: "https://git.corp.example/engineering/control/pulls/42",
-        },
-      }).pullRequest,
-      {
-        repository: "engineering/control",
-        number: 42,
-        url: "https://git.corp.example/engineering/control/pulls/42",
-      },
-    );
-
-    for (const url of ["not a URL", "javascript:alert(1)", "file:///tmp/pull-request"]) {
-      assert.throws(() =>
-        decodeUpdate({
-          action: "link_pull_request",
-          pullRequest: { repository: "acme/control", number: 8690, url },
-        }),
-      );
-    }
   });
 });

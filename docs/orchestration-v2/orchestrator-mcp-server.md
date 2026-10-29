@@ -283,13 +283,12 @@ wakes early when it has a pending request, fails, or completes after the snooze.
 ### `thread_update`
 
 Updates metadata for the calling thread or any other thread in the environment.
-The typed actions are `rename`, `regenerate_title`, `link_pull_request`, and
-`unlink_pull_request`. A link input supplies the repository, number, and URL;
-the server records the target thread's project ID. Branch and workspace changes
+The typed actions are `rename` and `regenerate_title`; pull requests are linked
+with `link_pull_request` and `unlink_pull_request`. Branch and workspace changes
 are outside this tool.
 
 The result includes the command ID and durable event sequence together with the
-resultant title, title-regeneration marker, and linked pull request. Reusing a
+resultant title, title-regeneration marker, and legacy linked pull request. Reusing a
 `clientRequestId` for the same action and thread replays the same command
 receipt. Thread list and read results expose the linked pull request, and thread
 detail also exposes an in-flight title regeneration.

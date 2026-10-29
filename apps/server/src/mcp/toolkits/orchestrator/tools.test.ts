@@ -66,8 +66,10 @@ describe("orchestrator MCP tool guidance", () => {
     };
 
     assert.equal(schema.type, "object");
-    assert.isString(schema.properties?.schedule?.description);
-    assert.isAtLeast(schema.properties?.schedule?.anyOf?.length ?? 0, 2);
+    // `schedule` is optional since schedule_task also updates a task by `scheduledTaskId`.
+    const schedule = JSON.stringify(schema.properties?.schedule);
+    assert.include(schedule, "An object, not text");
+    assert.include(schedule, '"contentMediaType":"application/json"');
     assert.include(ScheduleTaskTool.description ?? "", "is an object, not text");
     assert.include(ScheduleTaskTool.description ?? "", "nextRunAt");
   });
@@ -79,13 +81,7 @@ describe("orchestrator MCP tool guidance", () => {
     };
 
     assert.equal(schema.type, "object");
-    assert.hasAllKeys(schema.properties ?? {}, [
-      "threadId",
-      "action",
-      "title",
-      "pullRequest",
-      "clientRequestId",
-    ]);
+    assert.hasAllKeys(schema.properties ?? {}, ["threadId", "action", "title", "clientRequestId"]);
     assert.include(ThreadUpdateTool.description ?? "", "Workspace and branch changes are not");
   });
 });

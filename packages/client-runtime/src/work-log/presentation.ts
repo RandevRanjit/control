@@ -10,6 +10,7 @@ import {
 } from "@control/contracts";
 import {
   resolveControlMcpToolDefinition,
+  resolveControlMcpToolSummaryAction,
   type ControlMcpToolDefinition,
   type ControlMcpToolSummaryAction,
 } from "@control/shared/controlMcpToolPresentation";
@@ -128,6 +129,16 @@ function workEntryToolName(
   return resolveControlMcpToolDefinition(entry.toolTitle) ? entry.toolTitle : entry.label;
 }
 
+function workEntryToolInput(
+  entry: Pick<WorkLogPresentationEntry, "toolData" | "structuredPayload">,
+): unknown {
+  const item = entry.structuredPayload;
+  const data = asRecord(entry.toolData);
+  return item?.type === "dynamic_tool"
+    ? item.input
+    : (data?.arguments ?? data?.input ?? data?.rawInput);
+}
+
 function workEntryToolOutput(
   entry: Pick<WorkLogPresentationEntry, "toolData" | "structuredPayload">,
 ): unknown {
@@ -203,7 +214,10 @@ export function resolveWorkEntryToolPresentation(
   >,
   fallbackStatus?: "inProgress" | "completed",
 ) {
-  const definition = resolveControlMcpToolDefinition(workEntryToolName(entry));
+  const definition = resolveControlMcpToolDefinition(
+    workEntryToolName(entry),
+    workEntryToolInput(entry),
+  );
   const status = entry.toolLifecycleStatus ?? fallbackStatus;
   return resolveControlMcpToolPresentation(
     definition,
@@ -581,16 +595,8 @@ function toolGroupActionLabel(action: ToolGroupAction, count: number): string {
 }
 
 function controlToolSummaryCall(entry: WorkLogPresentationEntry): ControlToolSummaryCall {
-  const item = entry.structuredPayload;
-  const data =
-    entry.toolData !== null && typeof entry.toolData === "object"
-      ? (entry.toolData as Record<string, unknown>)
-      : undefined;
   return {
-    input:
-      item?.type === "dynamic_tool"
-        ? item.input
-        : (data?.arguments ?? data?.input ?? data?.rawInput),
+    input: workEntryToolInput(entry),
     output: workEntryToolOutput(entry),
     outcome:
       entry.toolLifecycleStatus === "failed" ||
@@ -667,8 +673,10 @@ export function summarizeToolGroup(entries: ReadonlyArray<WorkLogPresentationEnt
   >();
   const sources = new Map<string, ToolActivitySource>();
   for (const entry of entries) {
-    const controlAction =
-      resolveControlMcpToolDefinition(workEntryToolName(entry))?.summaryAction ?? null;
+    const controlAction = resolveControlMcpToolSummaryAction(
+      workEntryToolName(entry),
+      workEntryToolInput(entry),
+    );
     if (entry.toolSource && controlAction === null) {
       sources.set(entry.toolSource.key, entry.toolSource);
       continue;

@@ -376,7 +376,7 @@ it.effect("refuses preview tools to a client outside a thread before they run", 
       client: { sessionId: "session-1", label: "Claude Code", access: "read-only" as const },
     };
     const click = yield* server
-      .callTool({ name: "preview_click", arguments: { locator: "text=Send" } })
+      .callTool({ name: "preview_act", arguments: { action: "click", locator: "text=Send" } })
       .pipe(
         Effect.provideService(McpInvocationContext.McpInvocationContext, readOnly),
         Effect.provideService(McpSchema.McpServerClient, client),
@@ -386,6 +386,38 @@ it.effect("refuses preview tools to a client outside a thread before they run", 
       { type: "text", text: expect.stringContaining("needs an agent running inside Control") },
     ]);
   }).pipe(Effect.provide(layerTest)),
+);
+
+it.effect("checks each preview_act action against that action's own input", () =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const inputs = yield* serveSnapshots("mcp-act-client", {});
+      const server = yield* McpServer.McpServer;
+      const act = (args: Record<string, unknown>) =>
+        server
+          .callTool({ name: "preview_act", arguments: args })
+          .pipe(
+            Effect.provideService(McpInvocationContext.McpInvocationContext, invocation),
+            Effect.provideService(McpSchema.McpServerClient, client),
+          );
+
+      // press needs a key, and a click needs exactly one target, as preview_press and preview_click did.
+      const missingKey = yield* act({ action: "press" });
+      expect(missingKey.isError).toBe(true);
+      const twoTargets = yield* act({ action: "click", locator: "text=Send", x: 1, y: 2 });
+      expect(twoTargets.isError).toBe(true);
+      expect(inputs).toEqual([]);
+
+      // Fields another action uses are dropped before the browser sees them.
+      const click = yield* act({ action: "click", locator: "text=Send", key: "Enter" });
+      expect(click.isError).toBe(false);
+      // Each action is followed by a status read for the tool icon.
+      expect(inputs[0]).toEqual({ locator: "text=Send" });
+
+      yield* act({ action: "type", selector: "#name", text: "Ada" });
+      expect(inputs.at(-2)).toEqual({ selector: "#name", text: "Ada" });
+    }),
+  ).pipe(Effect.provide(layerTest)),
 );
 
 it.effect("rejects non-boolean snapshot image options before selecting a browser host", () =>
@@ -857,15 +889,13 @@ it.effect("registers annotated tools and preserves authenticated request context
       expect(snapshotTool?.tool.annotations?.idempotentHint).toBe(true);
       expect(snapshotTool?.tool.annotations?.openWorldHint).toBe(true);
 
-      const clickTool = server.tools.find(({ tool }) => tool.name === "preview_click");
-      expect(clickTool?.tool.annotations?.readOnlyHint).toBe(false);
-      expect(clickTool?.tool.annotations?.destructiveHint).toBe(true);
-      expect(clickTool?.tool.annotations?.openWorldHint).toBe(true);
-      expect(clickTool?.tool.outputSchema).toMatchObject({
-        type: "object",
-        additionalProperties: true,
-        description: "The preview action completed successfully.",
-      });
+      const actTool = server.tools.find(({ tool }) => tool.name === "preview_act");
+      expect(actTool?.tool.annotations?.readOnlyHint).toBe(false);
+      expect(actTool?.tool.annotations?.destructiveHint).toBe(true);
+      expect(actTool?.tool.annotations?.openWorldHint).toBe(true);
+      expect(JSON.stringify(actTool?.tool.outputSchema)).toContain(
+        "The preview action completed successfully.",
+      );
 
       const navigateTool = server.tools.find(({ tool }) => tool.name === "preview_navigate");
       expect(navigateTool?.tool.annotations?.destructiveHint).toBe(false);
@@ -884,7 +914,7 @@ it.effect("registers annotated tools and preserves authenticated request context
       });
 
       const malformed = yield* server
-        .callTool({ name: "preview_click", arguments: { selector: "" } })
+        .callTool({ name: "preview_act", arguments: { action: "click", selector: "" } })
         .pipe(
           Effect.provideService(McpInvocationContext.McpInvocationContext, invocation),
           Effect.provideService(McpSchema.McpServerClient, client),
@@ -926,10 +956,10 @@ it.effect("registers annotated tools and preserves authenticated request context
       });
 
       const actionRequests = [
-        { name: "preview_click", arguments: { x: 10, y: 10 } },
-        { name: "preview_type", arguments: { text: "Hello" } },
-        { name: "preview_press", arguments: { key: "Enter" } },
-        { name: "preview_scroll", arguments: { deltaY: 100 } },
+        { name: "preview_act", arguments: { action: "click", x: 10, y: 10 } },
+        { name: "preview_act", arguments: { action: "type", text: "Hello" } },
+        { name: "preview_act", arguments: { action: "press", key: "Enter" } },
+        { name: "preview_act", arguments: { action: "scroll", deltaY: 100 } },
         { name: "preview_wait_for", arguments: { text: "Example" } },
       ];
       for (const request of actionRequests) {

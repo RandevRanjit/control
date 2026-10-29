@@ -20,6 +20,7 @@ import * as ServerConfig from "../config.ts";
 import * as DeviceService from "../device/DeviceService.ts";
 import * as HtmlRender from "../htmlRender/HtmlRender.ts";
 import * as ThreadManagementService from "../orchestration-v2/ThreadManagementService.ts";
+import { advertisedInputSchema, advertisedJsonSchema } from "./advertisedJsonSchema.ts";
 import * as McpInvocationContext from "./McpInvocationContext.ts";
 import * as McpToolAccess from "./McpToolAccess.ts";
 import * as OrchestratorMcpService from "./OrchestratorMcpService.ts";
@@ -464,7 +465,7 @@ const registerPreviewSnapshot = Effect.fn("McpHttpServer.registerPreviewSnapshot
     tool: new McpSchema.Tool({
       name: tool.name,
       description: Tool.getDescription(tool),
-      inputSchema: Tool.getJsonSchema(tool),
+      inputSchema: advertisedJsonSchema(tool),
       annotations: {
         ...Context.getOption(tool.annotations, Tool.Title).pipe(
           Option.map((title) => ({ title })),
@@ -651,7 +652,7 @@ const registerImageTool = <T extends Tool.Any, E, R>(
       tool: new McpSchema.Tool({
         name: tool.name,
         description: Tool.getDescription(tool),
-        inputSchema: Tool.getJsonSchema(tool),
+        inputSchema: advertisedJsonSchema(tool),
         annotations: {
           ...Context.getOption(tool.annotations, Tool.Title).pipe(
             Option.map((title) => ({ title })),
@@ -765,7 +766,30 @@ const registerHtmlPreview = Effect.fn("McpHttpServer.registerHtmlPreview")(funct
 export const toolkitRegistration = <Tools extends Record<string, Tool.Any>, EX, RX>(
   toolkit: Toolkit.Toolkit<Tools>,
   handlers: McpToolAccess.HandlersLayer<Tools, EX, RX>,
-) => McpServer.toolkit(toolkit).pipe(Layer.provide(McpToolAccess.HandlersLayer.layer(handlers)));
+) =>
+  Layer.effectDiscard(
+    Effect.gen(function* () {
+      const server = yield* McpServer.McpServer;
+      // Advertise each tool's compact input schema; calls still decode with the full one.
+      const advertising = McpServer.McpServer.of({
+        ...server,
+        addTool: (registration) =>
+          server.addTool({
+            ...registration,
+            tool: new McpSchema.Tool({
+              ...registration.tool,
+              inputSchema: advertisedInputSchema(registration.tool.inputSchema),
+            }),
+          }),
+      });
+      yield* McpServer.registerToolkit(toolkit).pipe(
+        Effect.provideService(McpServer.McpServer, advertising),
+      );
+    }),
+  ).pipe(
+    Layer.provide(McpServer.McpServer.layer),
+    Layer.provide(McpToolAccess.HandlersLayer.layer(handlers)),
+  );
 
 /** A hand-registered tool, also only with handlers that declared their access. */
 const imageToolRegistration = <Tools extends Record<string, Tool.Any>, A, E, R, EX, RX>(

@@ -130,6 +130,10 @@ request to review changes and comments, request reviewers, check out a branch, o
 its back arrow to return to the list. You can edit review titles and descriptions and your own
 comments where the host allows it. GitLab calls these merge requests.
 
+A pull request's comments hide bot comments and resolved or dismissed ones by default; the
+**Filter** button above them says how many are hidden and turns either kind back on. The choice
+stays on that browser for every pull request.
+
 Enable **Remove agent credits when merging** in Settings → Source Control to remove recognized
 agent co-author and generated-by lines from GitHub merge and squash commit messages. Human
 co-authors stay credited. The setting is off by default and projects can override it. It also

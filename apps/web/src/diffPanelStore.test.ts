@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { scopeThreadRef } from "@control/client-runtime/environment";
 import { EnvironmentId, ThreadId, RunId } from "@control/contracts";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
@@ -18,6 +20,17 @@ describe("diffPanelStore", () => {
     expect(
       selectThreadDiffPanelSelection(useDiffPanelStore.getState().byThreadKey, THREAD_REF),
     ).toEqual({ kind: "branch", baseRef: null });
+  });
+
+  it("shows what the latest turn changed until a scope is picked, and the pick after", () => {
+    const latest = RunId.make("turn-9");
+    expect(
+      selectThreadDiffPanelSelection(useDiffPanelStore.getState().byThreadKey, THREAD_REF, latest),
+    ).toEqual({ kind: "turn", turnId: latest, filePath: null, revealRequestId: 0 });
+    useDiffPanelStore.getState().selectGitScope(THREAD_REF, "unstaged");
+    expect(
+      selectThreadDiffPanelSelection(useDiffPanelStore.getState().byThreadKey, THREAD_REF, latest),
+    ).toEqual({ kind: "unstaged" });
   });
 
   it("defaults to Changes before a thread is selected", () => {
@@ -120,6 +133,37 @@ describe("diffPanelStore", () => {
       turnId: latestTurnId,
       filePath: "src/app.ts",
       revealRequestId: 1,
+    });
+  });
+
+  it("follows the latest turn again once a turn finishes", () => {
+    const latest = RunId.make("turn-9");
+    useDiffPanelStore.getState().selectTurn(THREAD_REF, RunId.make("turn-2"), "src/app.ts");
+    useDiffPanelStore.getState().showLatestTurn(THREAD_REF);
+    expect(
+      selectThreadDiffPanelSelection(useDiffPanelStore.getState().byThreadKey, THREAD_REF, latest),
+    ).toEqual({ kind: "turn", turnId: latest, filePath: null, revealRequestId: 0 });
+  });
+
+  it("forgets the Changes scope every Git open used to save, but keeps a real pick", async () => {
+    localStorage.setItem(
+      "control:diff-panel-state:v1",
+      JSON.stringify({
+        version: 2,
+        state: {
+          byThreadKey: {
+            opened: { kind: "branch", baseRef: null },
+            based: { kind: "branch", baseRef: "origin/release" },
+            uncommitted: { kind: "unstaged" },
+          },
+          branchBaseRefByThreadKey: {},
+        },
+      }),
+    );
+    await useDiffPanelStore.persist.rehydrate();
+    expect(useDiffPanelStore.getState().byThreadKey).toEqual({
+      based: { kind: "branch", baseRef: "origin/release" },
+      uncommitted: { kind: "unstaged" },
     });
   });
 });

@@ -7,7 +7,7 @@ import type { EnvironmentId, ProjectEntry } from "@control/contracts";
 import { FileTree, useFileTree, useFileTreeSearch, useFileTreeSelector } from "@pierre/trees/react";
 import { serializeComposerFileLink } from "@control/shared/composerTrigger";
 import { ChevronsDownUp, ChevronsUpDown } from "lucide";
-import { ArrowLeft } from "lucide-react";
+import { FolderUp } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "~/components/ui/button";
@@ -536,7 +536,7 @@ export default function FileBrowserPanel({
               />
             }
           >
-            <ArrowLeft className="size-3.5" />
+            <FolderUp className="size-3.5" />
           </TooltipTrigger>
           <TooltipPopup>Up one level</TooltipPopup>
         </Tooltip>

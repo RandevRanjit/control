@@ -21,7 +21,9 @@ import { type DraftId } from "../composerDraftStore";
 import { openDiffFilePrimaryAction } from "../diffFileActions";
 import { useCheckpointDiff } from "~/lib/checkpointDiffState";
 import { cn } from "~/lib/utils";
-import { selectThreadDiffPanelSelection, useDiffPanelStore } from "../diffPanelStore";
+import { scopedThreadKey } from "@control/client-runtime/environment";
+import { defaultDiffPanelSelection, useDiffPanelStore } from "../diffPanelStore";
+import { useRightPanelStore } from "../rightPanelStore";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useTheme } from "../hooks/useTheme";
 import {
@@ -247,9 +249,6 @@ export default function DiffPanel({
         })
       : null,
   );
-  const diffSelection = useDiffPanelStore((state) =>
-    selectThreadDiffPanelSelection(state.byThreadKey, routeThreadRef),
-  );
   const isGitRepo = gitStatusQuery.data?.isRepo ?? true;
   const { turnDiffSummaries, inferredCheckpointTurnCountByRunId } =
     useTurnDiffSummaries(activeThreadProjection);
@@ -266,6 +265,16 @@ export default function DiffPanel({
         return right.completedAt.localeCompare(left.completedAt);
       }),
     [inferredCheckpointTurnCountByRunId, turnDiffSummaries],
+  );
+  const latestChangedTurnId =
+    orderedTurnDiffSummaries.find((summary) => summary.files.length > 0)?.runId ?? null;
+  const pickedDiffSelection = useDiffPanelStore((state) =>
+    routeThreadRef ? state.byThreadKey[scopedThreadKey(routeThreadRef)] : undefined,
+  );
+  // Until the reader picks a scope, Diff shows what the latest turn changed (design §5.2).
+  const diffSelection = useMemo(
+    () => pickedDiffSelection ?? defaultDiffPanelSelection(latestChangedTurnId),
+    [latestChangedTurnId, pickedDiffSelection],
   );
 
   useEffect(() => {
@@ -1043,12 +1052,23 @@ export default function DiffPanel({
                   }
                 />
               ) : (
-                <div className="flex h-full items-center justify-center px-3 py-2 text-xs text-muted-foreground/70">
+                <div className="flex h-full flex-col items-center justify-center gap-3 px-3 py-2 text-xs text-muted-foreground/70">
                   <p>
                     {hasNoNetChanges
                       ? "No net changes in this selection."
                       : "No patch available for this selection."}
                   </p>
+                  {routeThreadRef ? (
+                    // Not a dead end: the branch's history is one click away.
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="outline"
+                      onClick={() => useRightPanelStore.getState().open(routeThreadRef, "graph")}
+                    >
+                      Graph
+                    </Button>
+                  ) : null}
                 </div>
               )
             ) : lazySource || renderablePatch?.kind === "files" ? (

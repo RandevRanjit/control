@@ -10,6 +10,13 @@ import { vcsEnvironment } from "~/state/vcs";
 
 import { type CommitGraphRow, layoutCommitGraph } from "./commitGraph";
 
+/** `25 Oct, 17:20`, beside the rows' `25 Oct`. */
+const COMMIT_TIME = new Intl.DateTimeFormat(undefined, {
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+});
 const LANE = 12;
 const PAGE = 60;
 const ROW = 28;
@@ -94,7 +101,7 @@ function CommitFiles(props: {
   return (
     <div className="s-gg-open" data-continues={props.continues ? "" : undefined}>
       <p className="s-gg-by">
-        {props.commit.authorName} · {new Date(props.commit.authoredAt).toLocaleString()} ·{" "}
+        {props.commit.authorName} · {COMMIT_TIME.format(new Date(props.commit.authoredAt))} ·{" "}
         {props.commit.sha.slice(0, 7)}
       </p>
       {data.body ? <p className="s-gg-body">{data.body}</p> : null}
@@ -212,9 +219,9 @@ export function GitGraphPanel(props: {
                   <CommitRefs refs={commit.refs} />
                   <span className="dp-mt">{whenLabel(Date.parse(commit.authoredAt), nowMs)}</span>
                   {open ? (
-                    <ChevronDown className="size-3 text-muted-foreground" />
+                    <ChevronDown className="s-gg-cv size-3" />
                   ) : (
-                    <ChevronRight className="size-3 text-muted-foreground" />
+                    <ChevronRight className="s-gg-cv size-3" />
                   )}
                 </button>
                 {open ? (

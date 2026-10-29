@@ -96,6 +96,10 @@
 .s-gg-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto 12px; align-items: center; column-gap: 8px; width: 100%; height: 28px; padding: 0 8px 0 2px; border-radius: var(--r-s); text-align: left; cursor: pointer; color: var(--text-secondary); }
 .s-gg-row:hover,
 .s-gg-row[data-on] { background: var(--hy-card); box-shadow: inset 0 1px 0 var(--lip); }
+.s-gg-cv { color: var(--text-caption); opacity: 0; }
+.s-gg-row:hover .s-gg-cv,
+.s-gg-row[data-on] .s-gg-cv,
+.s-gg-row:focus-visible .s-gg-cv { opacity: 1; }
 .s-gg-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--w-reg) 12.5px/1 var(--f-chrome); color: var(--text-strong); }
 .s-gg-refs { display: inline-flex; gap: 4px; min-width: 0; overflow: hidden; }
 .s-gg-ref { flex: none; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 6px; border-radius: var(--r-pill); background: var(--hy-card); font: 400 10px/1 var(--f-mono); color: var(--text-strong); }

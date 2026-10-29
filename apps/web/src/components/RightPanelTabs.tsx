@@ -39,7 +39,12 @@ import {
 
 import { isElectron } from "~/env";
 import type { DesktopPreviewOverlay } from "~/previewStateStore";
-import { type PanelTab, panelTabOf, type RightPanelSurface } from "~/rightPanelStore";
+import {
+  type PanelTab,
+  panelTabOf,
+  type RightPanelKind,
+  type RightPanelSurface,
+} from "~/rightPanelStore";
 import { cn } from "~/lib/utils";
 import { resolveShortcutCommand, type ShortcutMatchContext } from "~/keybindings";
 import { readLocalApi } from "~/localApi";
@@ -152,6 +157,8 @@ export interface PullRequestTabStatus {
 export interface PanelTabsConfig {
   /** The tab on show; with no surface open, the default view's tab. */
   selected: PanelTab;
+  /** The view on show, which may be the default one rather than an open surface. */
+  shownKind: RightPanelKind;
   /** Why a tab can't open here; a tab missing from this map can. */
   unavailable: Partial<Record<PanelTab, string>>;
   onSelect: (tab: PanelTab) => void;
@@ -540,7 +547,6 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
     props.pullRequestsAvailable || gitPullRequest !== undefined
       ? ["Graph", "Diff", "PR"]
       : ["Graph", "Diff"];
-  const activeTabSurface = tabSurfaces.find((surface) => surface.id === props.activeSurfaceId);
   // A tab shows its own row of chips once it holds more than one surface, or has something to add.
   const showChips = tab !== "git" && (tab === null || tabSurfaces.length > 1 || canAdd);
 
@@ -1021,9 +1027,9 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
             label="Git view"
             options={gitViews}
             value={
-              activeTabSurface?.kind === "graph"
+              props.tabs?.shownKind === "graph"
                 ? "Graph"
-                : activeTabSurface?.kind === "diff"
+                : props.tabs?.shownKind === "diff"
                   ? "Diff"
                   : "PR"
             }

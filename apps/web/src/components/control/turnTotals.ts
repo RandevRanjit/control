@@ -57,15 +57,16 @@ export function turnTotalsByRun(
   );
 }
 
-/** `18s · ↑ 2.1k · ↓ 640 · no changes`; a part the turn has no data for is left out. */
+/**
+ * `18s · ↑ 2.1k · ↓ 640 · no changes`; a part the turn has no data for is left out, and so are
+ * changed files, which the turn's changed-files card counts (say each fact once).
+ */
 export function formatTurnTotals(totals: TurnTotals): string {
   return [
     totals.durationMs === null ? null : formatDuration(totals.durationMs),
     totals.inputTokens === null ? null : `↑ ${formatContextWindowTokens(totals.inputTokens)}`,
     totals.outputTokens === null ? null : `↓ ${formatContextWindowTokens(totals.outputTokens)}`,
-    totals.filesChanged === 0
-      ? "no changes"
-      : `${totals.filesChanged} ${totals.filesChanged === 1 ? "file" : "files"} changed`,
+    totals.filesChanged === 0 ? "no changes" : null,
   ]
     .filter((part) => part !== null)
     .join(" · ");

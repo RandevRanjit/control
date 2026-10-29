@@ -20,6 +20,7 @@ interface DiffPanelStoreState {
   selectBranchBaseRef: (ref: ScopedThreadRef, baseRef: string | null) => void;
   selectTurn: (ref: ScopedThreadRef, turnId: RunId, filePath?: string) => void;
   reconcileTurnSelection: (ref: ScopedThreadRef, availableTurnIds: ReadonlyArray<RunId>) => void;
+  showLatestTurn: (ref: ScopedThreadRef) => void;
   removeThread: (ref: ScopedThreadRef) => void;
 }
 
@@ -105,6 +106,12 @@ export const useDiffPanelStore = create<DiffPanelStoreState>()(
             },
           };
         }),
+      // A finished turn opens Git on itself: drop the pick so the default (latest turn) shows.
+      showLatestTurn: (ref) =>
+        set((state) => {
+          const { [scopedThreadKey(ref)]: _dropped, ...byThreadKey } = state.byThreadKey;
+          return { byThreadKey };
+        }),
       removeThread: (ref) =>
         set((state) => {
           const threadKey = scopedThreadKey(ref);
@@ -119,7 +126,25 @@ export const useDiffPanelStore = create<DiffPanelStoreState>()(
     }),
     {
       name: "control:diff-panel-state:v1",
-      version: 2,
+      version: 3,
+      // Up to version 2 every Git open saved Changes with no base, so that was never a pick; drop
+      // it and the thread shows its latest turn (29 Oct). A custom base, a turn or Uncommitted
+      // stays.
+      migrate: (persisted, version) => {
+        const state = persisted as Pick<
+          DiffPanelStoreState,
+          "byThreadKey" | "branchBaseRefByThreadKey"
+        >;
+        if (version >= 3) return state;
+        return {
+          ...state,
+          byThreadKey: Object.fromEntries(
+            Object.entries(state.byThreadKey ?? {}).filter(
+              ([, selection]) => !(selection.kind === "branch" && selection.baseRef === null),
+            ),
+          ),
+        };
+      },
       storage: createJSONStorage(() =>
         resolveStorage(typeof window !== "undefined" ? window.localStorage : undefined),
       ),
@@ -131,10 +156,23 @@ export const useDiffPanelStore = create<DiffPanelStoreState>()(
   ),
 );
 
+/**
+ * The scope the reader picked for a thread, else what its latest turn changed (design §5.2's
+ * "this turn"), else the checkout's changes.
+ */
 export function selectThreadDiffPanelSelection(
   byThreadKey: Record<string, DiffPanelSelection>,
   ref: ScopedThreadRef | null | undefined,
+  latestChangedTurnId: RunId | null = null,
 ): DiffPanelSelection {
-  if (!ref) return DEFAULT_SELECTION;
-  return byThreadKey[scopedThreadKey(ref)] ?? DEFAULT_SELECTION;
+  return (
+    (ref ? byThreadKey[scopedThreadKey(ref)] : undefined) ??
+    defaultDiffPanelSelection(latestChangedTurnId)
+  );
+}
+
+export function defaultDiffPanelSelection(latestChangedTurnId: RunId | null): DiffPanelSelection {
+  return latestChangedTurnId
+    ? { kind: "turn", turnId: latestChangedTurnId, filePath: null, revealRequestId: 0 }
+    : DEFAULT_SELECTION;
 }

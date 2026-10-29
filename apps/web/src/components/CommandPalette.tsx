@@ -715,14 +715,9 @@ function OpenCommandPaletteDialog(props: {
   const isActionsOnly = deferredQuery.startsWith(">");
   const [highlightedItemValue, setHighlightedItemValue] = useState<string | null>(null);
   const resultListRef = useRef<LegendListRef | null>(null);
-  // Typing or entering a submenu clears the highlight. Base UI keeps its own on the
-  // first row, but the palette shows none until the user navigates, and the first
-  // ArrowDown lands on it.
+  // Entering a submenu clears the highlight. Base UI keeps its own on the first row, but
+  // the palette shows none until the user navigates, and the first ArrowDown lands on it.
   const highlightClearedRef = useRef(false);
-  function clearTypedHighlight(): void {
-    highlightClearedRef.current = true;
-    setHighlightedItemValue(null);
-  }
   const clientSettings = useClientSettings();
   const createProject = useAtomCommand(projectEnvironment.create, {
     reportFailure: false,
@@ -1541,7 +1536,9 @@ function OpenCommandPaletteDialog(props: {
 
   function handleQueryChange(nextQuery: string): void {
     browseNavigation.invalidate();
-    clearTypedHighlight();
+    // Typing shows the first match highlighted, as Enter runs it (unlike entering a submenu).
+    highlightClearedRef.current = false;
+    setHighlightedItemValue(null);
     setQuery(nextQuery);
     if (nextQuery === "" && currentView?.initialQuery) {
       popView();
@@ -2020,6 +2017,22 @@ function OpenCommandPaletteDialog(props: {
         run: async () => {
           const store = useRightPanelStore.getState();
           if (!store.activateTab(threadRef, tab)) store.open(threadRef, kind);
+        },
+      });
+    }
+    // Git's own views, so "graph" and "diff" find them by name.
+    for (const [kind, title] of [
+      ["graph", "Show Git graph"],
+      ["diff", "Show Git diff"],
+    ] as const) {
+      actionItems.push({
+        kind: "action",
+        value: `action:git-${kind}`,
+        searchTerms: ["git", kind, kind === "graph" ? "history commits log" : "changes"],
+        title,
+        icon: <FileDiffIcon className={ITEM_ICON_CLASS} />,
+        run: async () => {
+          useRightPanelStore.getState().open(threadRef, kind);
         },
       });
     }

@@ -108,7 +108,14 @@ async function renderPanel(
         terminalAvailable
         pullRequestsAvailable={false}
         deviceAvailable={false}
-        tabs={{ selected, unavailable: {}, onSelect: noop }}
+        tabs={{
+          selected,
+          shownKind:
+            overrides.surfaces?.find((surface) => surface.id === overrides.activeSurfaceId)?.kind ??
+            "diff",
+          unavailable: {},
+          onSelect: noop,
+        }}
         {...overrides}
       >
         content
@@ -280,6 +287,14 @@ describe("right panel tabs", () => {
     expect(seg("PR").getAttribute("aria-pressed")).toBe("true");
     await act(() => seg("Diff").click());
     expect(onAddDiff).toHaveBeenCalledOnce();
+  });
+
+  it("marks Diff while Git shows its default view with nothing open, even where PR is offered", async () => {
+    await renderPanel({ surfaces: [], activeSurfaceId: null, pullRequestsAvailable: true });
+    const pressed = [
+      ...container.querySelectorAll<HTMLButtonElement>('[aria-label="Git view"] button'),
+    ].find((button) => button.getAttribute("aria-pressed") === "true");
+    expect(pressed?.textContent).toBe("Diff");
   });
 
   it("opens Git's Graph from the switch, and offers Graph and Diff where pull requests cannot be read", async () => {

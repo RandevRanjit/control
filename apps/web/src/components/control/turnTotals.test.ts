@@ -50,7 +50,7 @@ describe("turnTotalsByRun", () => {
     expect(formatTurnTotals(totals.get(run)!)).toBe("18s · ↑ 2.1k · ↓ 640 · no changes");
   });
 
-  it("leaves out what a running turn does not know yet and counts changed files", () => {
+  it("leaves out what a running turn does not know yet, and changed files the card counts", () => {
     const run = RunId.make("run-2");
     const totals = turnTotalsByRun(
       {
@@ -60,6 +60,6 @@ describe("turnTotalsByRun", () => {
       },
       [{ runId: run, files: ["lib/release.ts", "app/admin/page.tsx"] }],
     );
-    expect(formatTurnTotals(totals.get(run)!)).toBe("2 files changed");
+    expect(formatTurnTotals(totals.get(run)!)).toBe("");
   });
 });

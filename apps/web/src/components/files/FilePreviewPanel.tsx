@@ -1263,8 +1263,10 @@ export default function FilePreviewPanel({
       {relativePath && attachment === undefined ? (
         <div className={FILE_SURFACE_SUBHEADER_CLASS} data-surface-subheader>
           {asOutput ? (
-            // Outputs' row already names the file.
-            <span className="min-w-0 flex-1" />
+            // Names the file once the list has scrolled out of view; Outputs has no breadcrumb trail.
+            <span className="min-w-0 flex-1 truncate font-mono text-xs" data-output-preview-name>
+              {relativePath}
+            </span>
           ) : (
             <ScrollArea
               radius="none"

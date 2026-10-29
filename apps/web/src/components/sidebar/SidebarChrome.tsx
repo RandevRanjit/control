@@ -25,11 +25,17 @@ export const SidebarChromeHeader = memo(function SidebarChromeHeader({
   isElectron: boolean;
 }) {
   const navigate = useNavigate();
+  const navigateToMainApp = useNavigateToMainApp();
   const { isMobile, setOpenMobile, toggleSidebar } = useSidebar();
+  // Settings takes the sidebar's place under the held gear (design §22.2); the gear leads back.
+  const onSettings = useLocation({
+    select: (location) =>
+      location.pathname === "/settings" || location.pathname.startsWith("/settings/"),
+  });
   const handleSettingsClick = useCallback(() => {
     if (isMobile) setOpenMobile(false);
-    void navigate({ to: "/settings" });
-  }, [isMobile, navigate, setOpenMobile]);
+    void (onSettings ? navigateToMainApp() : navigate({ to: "/settings" }));
+  }, [isMobile, navigate, navigateToMainApp, onSettings, setOpenMobile]);
 
   return (
     <div className={cn("t3-top", isElectron && "drag-region")}>
@@ -42,7 +48,12 @@ export const SidebarChromeHeader = memo(function SidebarChromeHeader({
       <SidebarChromeButton className="t3-tg" label="Toggle main sidebar" onClick={toggleSidebar}>
         <PanelLeftIcon className="t3g" />
       </SidebarChromeButton>
-      <SidebarChromeButton className="t3-ib d-set" label="Settings" onClick={handleSettingsClick}>
+      <SidebarChromeButton
+        className="t3-ib d-set"
+        label={onSettings ? "Close settings" : "Settings"}
+        pressed={onSettings}
+        onClick={handleSettingsClick}
+      >
         <SettingsIcon className="t3g" />
       </SidebarChromeButton>
       <Link aria-label="Go to threads" className="t3-wm d-wm [-webkit-app-region:no-drag]" to="/">
@@ -55,6 +66,7 @@ export const SidebarChromeHeader = memo(function SidebarChromeHeader({
 function SidebarChromeButton(props: {
   readonly className: string;
   readonly label: string;
+  readonly pressed?: boolean;
   readonly onClick: () => void;
   readonly children: ReactNode;
 }) {
@@ -65,6 +77,8 @@ function SidebarChromeButton(props: {
           <button
             type="button"
             aria-label={props.label}
+            aria-pressed={props.pressed}
+            data-on={props.pressed ? "" : undefined}
             className={`${props.className} [-webkit-app-region:no-drag]`}
             onClick={props.onClick}
           />

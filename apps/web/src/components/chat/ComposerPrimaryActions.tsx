@@ -385,8 +385,8 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
           }
         >
           <Minimize2Icon aria-hidden="true" />
+          {/* The strip under the composer already says how big the thread is. */}
           {keepFullHistory ? "Full" : "Compact"}
-          <span>{compactTokens}</span>
         </TooltipTrigger>
         <TooltipPopup>
           {keepFullHistory

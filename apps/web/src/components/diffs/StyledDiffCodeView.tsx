@@ -233,10 +233,22 @@ const DIFF_VIEW_UNSAFE_CSS = `${DIFF_SURFACE_THEME_UNSAFE_CSS}
   flex-shrink: 0;
 }
 
+/* Paths in Plex 11.5, as Graph and Outputs list them (design §5.2). */
 [data-title] {
   cursor: pointer;
   transition: color 120ms ease;
-  font-family: var(--font-sans) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11.5px !important;
+}
+
+/* A file's own actions (copy path) wait for its row, so names line up clean. Slotted content
+   inherits this through the slot. */
+[data-diffs-header] {
+  --diff-header-hover: 0;
+}
+
+[data-diffs-header]:is(:hover, :focus-within) {
+  --diff-header-hover: 1;
 }
 
 [data-title]:hover {

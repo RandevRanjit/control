@@ -10,8 +10,8 @@ import { vcsEnvironment } from "~/state/vcs";
 
 import { type CommitGraphRow, layoutCommitGraph } from "./commitGraph";
 
-/** `25 Oct, 17:20`, beside the rows' `25 Oct`. */
-const COMMIT_TIME = new Intl.DateTimeFormat(undefined, {
+/** `25 Oct, 17:20`, in the rows' `25 Oct` style whatever the machine's locale. */
+const COMMIT_TIME = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
   month: "short",
   hour: "2-digit",
@@ -85,6 +85,8 @@ function GraphCell({ row, width, head }: { row: CommitGraphRow; width: number; h
 function CommitFiles(props: {
   /** The commit's lane carries on below it, so the line runs past its files. */
   continues: boolean;
+  /** The graph's width, so the commit's details line up under its subject. */
+  graphWidth: number;
   environmentId: EnvironmentId;
   cwd: string;
   commit: VcsCommit;
@@ -99,7 +101,11 @@ function CommitFiles(props: {
   if (error) return <p className="s-gg-note">{error}</p>;
   if (data === null) return <p className="s-gg-note">Reading the commit…</p>;
   return (
-    <div className="s-gg-open" data-continues={props.continues ? "" : undefined}>
+    <div
+      className="s-gg-open"
+      data-continues={props.continues ? "" : undefined}
+      style={{ paddingLeft: props.graphWidth - 5 }}
+    >
       <p className="s-gg-by">
         {props.commit.authorName} · {COMMIT_TIME.format(new Date(props.commit.authoredAt))} ·{" "}
         {props.commit.sha.slice(0, 7)}
@@ -227,6 +233,7 @@ export function GitGraphPanel(props: {
                 {open ? (
                   <CommitFiles
                     continues={commit.parents.length > 0}
+                    graphWidth={width}
                     environmentId={props.environmentId}
                     cwd={props.cwd}
                     commit={commit}

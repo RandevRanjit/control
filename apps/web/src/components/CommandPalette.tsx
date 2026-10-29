@@ -54,6 +54,7 @@ import {
   CornerLeftUpIcon,
   FileDiffIcon,
   FileOutputIcon,
+  GitGraphIcon,
   FileSearchIcon,
   FilesIcon,
   FolderGit2Icon,
@@ -2030,7 +2031,12 @@ function OpenCommandPaletteDialog(props: {
         value: `action:git-${kind}`,
         searchTerms: ["git", kind, kind === "graph" ? "history commits log" : "changes"],
         title,
-        icon: <FileDiffIcon className={ITEM_ICON_CLASS} />,
+        icon:
+          kind === "graph" ? (
+            <GitGraphIcon className={ITEM_ICON_CLASS} />
+          ) : (
+            <FileDiffIcon className={ITEM_ICON_CLASS} />
+          ),
         run: async () => {
           useRightPanelStore.getState().open(threadRef, kind);
         },

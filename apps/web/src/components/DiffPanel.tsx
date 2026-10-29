@@ -172,7 +172,9 @@ function DiffFileHeaderSuffix({
 }) {
   return (
     <>
-      <DiffFilePathCopyButton filePath={filePath} />
+      <span className="inline-flex" style={{ opacity: "var(--diff-header-hover, 1)" }}>
+        <DiffFilePathCopyButton filePath={filePath} />
+      </span>
       {hasStat ? (
         <DiffFileStatus error={error} truncated={truncated} retry={() => onRetry(filePath)} />
       ) : null}

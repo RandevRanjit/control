@@ -310,6 +310,17 @@ describe("workspace command discovery retry", () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
+  it("stops rescanning a cwd that never answers, such as a deleted worktree", async () => {
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a" }));
+    });
+    for (let step = 0; step < 6; step += 1) {
+      await act(() => vi.advanceTimersByTimeAsync(10_000));
+    }
+    expect(refreshProviders).toHaveBeenCalledTimes(3);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it("cancels a scheduled retry when the composer unmounts", async () => {
     await act(async () => {
       root.render(createElement(Probe, { cwd: "/project-a" }));

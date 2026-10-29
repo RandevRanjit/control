@@ -11,19 +11,19 @@ const STATES = [
 const FEATURES = [
   {
     title: "Groups",
-    body: "Name a group and put any chat in it, from any folder. Coursework, a client, a side project: you decide how the sidebar is cut, not your file system.",
+    body: "Name a group and put any thread in it, from any folder. Coursework, a client, a side project: you decide how the sidebar is cut, not your file system.",
   },
   {
     title: "Nothing gets lost",
-    body: "Chats keep running when the window is closed. After a crash every chat comes back, and the ones that were mid-turn say so. Restarting never sends a message for you.",
+    body: "Threads keep running when the window is closed. After a crash every thread comes back, and the ones that were mid-turn say so. Restarting never sends a message for you.",
   },
   {
     title: "Usage you can see",
-    body: "Your 5-hour and weekly limits sit at the foot of the sidebar. When the 5-hour window is running ahead of pace, Control asks working chats to stop spawning subagents and work one step at a time.",
+    body: "Your 5-hour and weekly limits sit at the foot of the sidebar. When the 5-hour window is running ahead of pace, Control asks working threads to stop spawning subagents and work one step at a time.",
   },
   {
     title: "Compaction on time",
-    body: "A big chat that has been idle for 25 minutes is compacted while the prompt cache is still warm, so it costs a cache hit rather than a full re-read.",
+    body: "A big thread that has been idle for 25 minutes is compacted while the prompt cache is still warm, so it costs a cache hit rather than a full re-read.",
   },
   {
     title: "Lock",
@@ -31,27 +31,27 @@ const FEATURES = [
   },
   {
     title: "Loose ends",
-    body: "When an agent hands you something only you can do, like making an account or sending a drafted email, it stays pinned to that chat until it's done.",
+    body: "When an agent hands you something only you can do, like making an account or sending a drafted email, it stays pinned to that thread until it's done.",
   },
   {
     title: "A browser Claude drives",
-    body: "Each chat gets a tab in Control's own browser, on one profile that stays signed in. You can watch it work without it taking over your screen. Anything else that would steal focus asks first.",
+    body: "Each thread gets a tab in Control's own browser, on one profile that stays signed in. You can watch it work without it taking over your screen. Anything else that would steal focus asks first.",
   },
   {
     title: "Local models",
-    body: "Hand private files to a model running on your Mac instead of to Claude. Only its answer comes back to the chat.",
+    body: "Hand private files to a model running on your Mac instead of to Claude. Only its answer comes back to the thread.",
   },
   {
-    title: "See what a chat loaded",
-    body: "The chat's header lists the hooks, skills, MCP servers, plugins and subagents it's working with.",
+    title: "See what a thread loaded",
+    body: "The thread's header lists the hooks, skills, MCP servers, plugins and subagents it's working with.",
   },
   {
     title: "Your settings, in place",
     body: "Settings that live in ~/.claude/settings.json are edited there, and Control keeps the previous copy before every write.",
   },
   {
-    title: "Chats that talk",
-    body: "Agents can see the other chats in their group and message them. Claude in your terminal can read Control's chats too, over MCP.",
+    title: "Threads that talk",
+    body: "Agents can see the other threads in their group and message them. Claude in your terminal can read Control's threads too, over MCP.",
   },
   {
     title: "On your phone",
@@ -64,7 +64,7 @@ const FROM_T3 = [
   "A checkpoint after every turn, with diff and restore",
   "The Agent SDK adapter that runs your installed claude",
   "Worktrees, terminals and source-control integrations",
-  "The MCP server agents use to start and message chats",
+  "The MCP server agents use to start and message threads",
   "The preview browser, HTML answers and the device panel",
   "Desktop, web and phone apps, paired over LAN or Tailscale",
 ];
@@ -74,12 +74,12 @@ const ADDED = [
   "Lock and loose ends",
   "Pace notices when usage runs ahead",
   "Auto-compact while the prompt cache is warm",
-  "Idle release that spares chats with a pending loop or cron",
-  "Claude updates that wait for working chats to finish",
+  "Idle release that spares threads with a pending loop or cron",
+  "Claude updates that wait for working threads to finish",
   "Quiet by default: nothing steals focus without asking",
   "Local models for private files",
   "Settings that edit ~/.claude/settings.json, with backups",
-  "Agents that see their siblings; reading your terminal chats",
+  "Agents that see their siblings; reading your terminal sessions",
   "Its own design",
 ];
 
@@ -138,11 +138,11 @@ export default function Home() {
       <main>
         <section className="hero">
           <p className="eyebrow">Free and open source · macOS</p>
-          <h1>All your Claude Code chats in one window.</h1>
+          <h1>All your Claude Code threads in one window.</h1>
           <p className="lede">
-            Control runs the <code>claude</code> you already use, keeps every chat alive, and shows
-            you at a glance which one is working, which is done and which needs you. Your phone sees
-            the same chats.
+            Control runs the <code>claude</code> you already use, keeps every thread alive, and
+            shows you at a glance which one is working, which is done and which needs you. Your
+            phone sees the same threads.
           </p>
           <div className="actions">
             <a className="button primary" href={DOWNLOAD_URL}>
@@ -162,15 +162,15 @@ export default function Home() {
               src={asset("/fig/app-field.jpg")}
               width={1512}
               height={945}
-              alt="Control's window: chats in named groups down the left, each with a coloured state bar, and the conversation in the middle with its tool calls folded into steps."
+              alt="Control's window: threads in named groups down the left, each with a coloured state bar, and the conversation in the middle with its tool calls folded into steps."
             />
           </picture>
         </figure>
 
         <section className="band">
-          <h2>Know which chat needs you</h2>
+          <h2>Know which thread needs you</h2>
           <p>
-            Each chat carries a bar in its state's colour. The menu bar icon counts the chats
+            Each thread carries a bar in its state's colour. The menu bar icon counts the threads
             waiting on you, so you can keep the window shut until one is.
           </p>
           <ul className="states">
@@ -198,8 +198,8 @@ export default function Home() {
             Control started as a way to run Claude on everything: coursework, research, job
             applications and admin as well as code. Agents can answer with a chart or a table
             instead of a wall of text, open PDFs and Markdown in the side panel, fill in forms in
-            the browser and leave you a short list of what's left. Group your chats by the parts of
-            your life they belong to.
+            the browser and leave you a short list of what's left. Group your threads by the parts
+            of your life they belong to.
           </p>
         </section>
 

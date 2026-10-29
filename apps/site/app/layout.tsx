@@ -4,11 +4,11 @@ import "./tokens.css";
 import "./globals.css";
 
 const description =
-  "A desktop and phone app for Claude Code. Every chat in one window, grouped your way, with a clear signal when one needs you. Free and open source.";
+  "A desktop and phone app for Claude Code. Every thread in one window, grouped your way, with a clear signal when one needs you. Free and open source.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(`${SITE_URL}/`),
-  title: "Control: all your Claude Code chats in one window",
+  title: "Control: all your Claude Code threads in one window",
   description,
   openGraph: {
     title: "Control",

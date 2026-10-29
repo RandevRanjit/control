@@ -295,7 +295,9 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 
 ### 5.2 Git (Diff mode shown)
 
-- **Head, 34.** `Graph | Diff | PR` as a segmented control, then `this turn · vs HEAD` at the right.
+- **Head, 34.** `Graph | Diff | PR` as a segmented control, then `this turn · vs HEAD` at the right. Diff opens on
+  the latest turn that changed files; a scope picked from its menu (another turn, Changes against a branch,
+  Uncommitted) stays (owner, 29 Oct).
 - **Graph** (built 29 Oct). The branch's commits newest first, each 28 high: its lane and node at the left (lanes
   take the tool inks in turn; HEAD's node is filled), the subject in Regrade 12.5, its refs as pills (local filled,
   remote outlined), and the date in Plex. The upstream and the remote's default branch draw beside HEAD in their own
@@ -335,7 +337,8 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 - **Tree.** Rows are 26 high and step in 16 px per level, with chevrons on folders and file icons on files.
   - Git's mark sits next to the age at the right: **M** in the write green, **A** in the read blue.
   - Ignored folders (`dist`) are dimmed, with `ignored` in place of an age.
-- **Quick Look.** The picked file shows on `--deep`, radius 10, in Plex 11.5 / 18, with line numbers. Keywords take
+- **Quick Look.** The picked file shows on `--deep`, radius 10, in Plex 11.5 / 18, with line numbers. Markdown shows
+  rendered, with a switch to its source. Keywords take
   the lilac; strings take the green.
 - **Foot.** `lib/release.ts · 14 lines`, then **Preview** and **Reveal**.
 

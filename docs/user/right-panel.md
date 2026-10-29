@@ -12,11 +12,13 @@ The right panel sits beside a thread. Open it with the panel toggle in the threa
   also sit beside a file.
 - **Browser**: pages the agent or you opened, and devices. Use **+** for another page or a device.
 - **Git**: **Graph** shows the branch's commits beside its upstream and default branch; click a
-  commit for its message and files, and a file to open it in Folder. **Diff** shows what changed,
-  by turn or against a branch, each file marked M, A, D or R. **PR** holds the pull requests.
+  commit for its message and files, and a file to open it in Folder. **Diff** opens on what the
+  latest turn changed; its menu picks another turn, **Changes** against a branch, or uncommitted
+  work. Each file is marked M, A, D or R. **PR** holds the pull requests.
 - **Terminal**: the thread's own shells.
 
 With nothing open, the panel shows Git. A tab remembers what it last showed. When a tab holds more
 than one page, file or shell, they show as a row under the tabs; middle-click one or use its menu to
 close it. `mod+t` opens a new page, or a new shell while Terminal is on show. The command palette
-has **Show outputs**, **Show folder**, **Show browser** and **Show Git**.
+has **Show outputs**, **Show folder**, **Show browser** and **Show Git**, plus **Show Git graph** and
+**Show Git diff**.

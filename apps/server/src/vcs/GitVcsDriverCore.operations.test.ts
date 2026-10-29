@@ -310,6 +310,30 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         }),
     );
 
+    it.effect("records no PR base for a worktree started from a commit", () =>
+      Effect.gen(function* () {
+        const cwd = yield* makeTmpDir();
+        yield* initRepoWithCommit(cwd);
+        const path = yield* Path.Path;
+        const driver = yield* GitVcsDriver.GitVcsDriver;
+        const commit = yield* git(cwd, ["rev-parse", "HEAD"]);
+
+        yield* driver.createWorktree({
+          cwd,
+          path: path.join(yield* makeTmpDir("git-worktrees-"), "from-commit"),
+          refName: commit,
+          newRefName: "feature/from-commit",
+          baseRefName: commit,
+        });
+
+        // gh pr create reads gh-merge-base as a branch, so a commit must not land there.
+        assert.equal(
+          yield* driver.readConfigValue(cwd, "branch.feature/from-commit.gh-merge-base"),
+          null,
+        );
+      }),
+    );
+
     it.effect("checks out submodules in a new worktree", () =>
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;

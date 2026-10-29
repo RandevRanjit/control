@@ -2529,15 +2529,18 @@ it.effect.each(
             )
           : Effect.succeed({ commitSha: "parent-local-commit" }),
       );
-      const execute = vi.fn(() =>
-        Effect.succeed({
-          exitCode: ChildProcessSpawner.ExitCode(outsideGit ? 128 : 0),
-          stdout: outsideGit ? "" : "true\n",
-          stderr: outsideGit ? "fatal: not a git repository" : "",
+      // Outside Git means the project root, where the worktree would be made; the
+      // parent's own checkout is always in Git here.
+      const execute = vi.fn((input: { readonly cwd: string }) => {
+        const notRepository = outsideGit && input.cwd === "/repo";
+        return Effect.succeed({
+          exitCode: ChildProcessSpawner.ExitCode(notRepository ? 128 : 0),
+          stdout: notRepository ? "" : "true\n",
+          stderr: notRepository ? "fatal: not a git repository" : "",
           stdoutTruncated: false,
           stderrTruncated: false,
-        }),
-      );
+        });
+      });
       const harness = makeHarness({
         closeTerminal: () => Deferred.succeed(terminalClosed, undefined).pipe(Effect.asVoid),
         adapters: [

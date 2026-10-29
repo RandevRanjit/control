@@ -3661,7 +3661,13 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
       );
     }
 
-    if (input.newRefName && input.baseRefName) {
+    // gh pr create reads gh-merge-base as a branch, so a worktree started from a
+    // commit (a delegated task's) records no base.
+    if (
+      input.newRefName &&
+      input.baseRefName &&
+      !/^[0-9a-f]{40}(?:[0-9a-f]{24})?$/.test(input.baseRefName)
+    ) {
       const remoteNames = yield* listRemoteNames(input.cwd).pipe(Effect.orElseSucceed(() => []));
       const parsedBaseRef = parseRemoteRefWithRemoteNames(
         input.baseRefName,

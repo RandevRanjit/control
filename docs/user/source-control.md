@@ -162,6 +162,16 @@ PR creation from Git actions continue to use the project's environment.
 For Azure DevOps, use the host website to change comments. Bitbucket does not support reopening a
 declined pull request.
 
+### Delete a merged branch
+
+Once a GitHub pull request is merged or closed, its menu offers **Delete branch**, which removes
+the source branch from GitHub after you confirm. It needs write access to the repository the branch
+lives in, fork included. Nothing deletes a branch on its own.
+
+CONTROL keeps the branch when GitHub's copy has commits the pull request does not, when it is the
+base or default branch, or when it is checked out in this project's folder or any of its worktrees.
+Local branches and worktrees are never changed. Deleting is on web and desktop only.
+
 ### Mark files as viewed
 
 Tick a file off in the **Code** tab once you have read it and it collapses; the toolbar keeps a

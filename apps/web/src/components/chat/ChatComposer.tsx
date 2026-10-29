@@ -47,7 +47,6 @@ import {
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
   PROVIDER_SEND_TURN_MAX_IMAGE_BYTES,
   PROVIDER_SEND_TURN_MAX_INPUT_CHARS,
-  PROVIDER_WORKSPACE_SNAPSHOT_TTL_MS,
 } from "@control/contracts";
 import type { EnvironmentConnectionPresentation } from "@control/client-runtime/connection";
 import {
@@ -65,7 +64,6 @@ import {
   type ComponentProps,
   type ReactNode,
   useCallback,
-  useContext,
   useEffect,
   useId,
   useImperativeHandle,
@@ -76,7 +74,6 @@ import {
   useSyncExternalStore,
 } from "react";
 import { createPortal, flushSync } from "react-dom";
-import { RegistryContext } from "@effect/atom-react";
 import {
   clampCollapsedComposerCursor,
   type ComposerTrigger,
@@ -1140,9 +1137,6 @@ import {
   formatProviderSkillDisplayName,
   getProviderSlashCommandsForSlashMenu,
   getProviderSkillsForSlashMenu,
-  hasCompleteProviderWorkspaceSnapshot,
-  hasCurrentProviderWorkspaceSnapshot,
-  hasRefreshedProviderWorkspaceSnapshot,
   resolveProviderSkillsForCwd,
   resolveProviderSlashCommandsForCwd,
 } from "@control/client-runtime/providerSkills";
@@ -1150,14 +1144,9 @@ import { searchProviderSkills } from "../../providerSkillSearch";
 import { useDelayedStatus } from "../../hooks/useDelayedStatus";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { usePanelAnimationSettings } from "../../panelAnimations";
-import { useAtomCommand } from "../../state/use-atom-command";
 import { readEnvironmentScope } from "../../state/session";
-import { serverEnvironment } from "../../state/server";
+import { useWorkspaceSnapshotRefresh } from "./useWorkspaceSnapshotRefresh";
 import type { ReviewCommentContext } from "../../reviewCommentContext";
-
-const WORKSPACE_SNAPSHOT_RETRY_COOLDOWN_MS = 10_000;
-// A cwd that never scans, such as a deleted worktree, would otherwise retry forever.
-const WORKSPACE_SNAPSHOT_MAX_ATTEMPTS = 3;
 
 const extendReplacementRangeForTrailingSpace = (
   text: string,
@@ -2222,110 +2211,13 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
         : [],
     [gitCwd, selectedProviderStatus],
   );
-  const refreshProviders = useAtomCommand(serverEnvironment.refreshProviders, {
-    reportFailure: false,
-  });
-  const registry = useContext(RegistryContext);
-  // The last scan this composer asked for. A request inside the TTL is not
-  // repeated, so a client clock ahead of the server's cannot loop rescans.
-  const workspaceRefreshKeyRef = useRef<{ key: string; requestedAt: number } | null>(null);
-  const failedRefreshesRef = useRef<{ key: string; count: number } | null>(null);
-  const [workspaceRefreshRetry, setWorkspaceRefreshRetry] = useState<{
-    key: string;
-    notBefore: number;
-  } | null>(null);
-  const workspaceRefreshScopeKey =
-    gitCwd && selectedProviderEntry
-      ? `${environmentId}:${selectedProviderEntry.instanceId}:${gitCwd}`
-      : null;
-  const workspaceSlashCommandsPending =
-    selectedProviderStatus?.workspaceSnapshots?.some(
-      (snapshot) => snapshot.cwd === gitCwd && snapshot.slashCommandsPending === true,
-    ) ?? false;
-  useEffect(() => {
-    if (
-      !workspaceSlashCommandsPending ||
-      !workspaceRefreshRetry ||
-      workspaceRefreshRetry.key !== workspaceRefreshScopeKey
-    )
-      return;
-    const timeout = setTimeout(
-      () => {
-        setWorkspaceRefreshRetry((current) => (current === workspaceRefreshRetry ? null : current));
-      },
-      Math.max(0, workspaceRefreshRetry.notBefore - Date.now()),
-    );
-    return () => clearTimeout(timeout);
-  }, [workspaceRefreshRetry, workspaceRefreshScopeKey, workspaceSlashCommandsPending]);
-  const hadWorkspaceSnapshotRef = useRef(false);
-  useEffect(() => {
-    const hasWorkspaceSnapshot = hasCompleteProviderWorkspaceSnapshot(
-      selectedProviderStatus,
-      gitCwd,
-    );
-    if (hadWorkspaceSnapshotRef.current && !hasWorkspaceSnapshot) {
-      // A snapshot this cwd had is gone, so earlier failed scans no longer count.
-      workspaceRefreshKeyRef.current = null;
-      failedRefreshesRef.current = null;
-      setWorkspaceRefreshRetry(null);
-    }
-    hadWorkspaceSnapshotRef.current = hasWorkspaceSnapshot;
-  }, [gitCwd, selectedProviderStatus]);
-  useEffect(() => {
-    if (!gitCwd || !selectedProviderEntry) return;
-    const key = `${environmentId}:${selectedProviderEntry.instanceId}:${gitCwd}`;
-    const now = Date.now();
-    const lastRequest = workspaceRefreshKeyRef.current;
-    if (
-      lastRequest?.key === key &&
-      now - lastRequest.requestedAt < PROVIDER_WORKSPACE_SNAPSHOT_TTL_MS
-    )
-      return;
-    if (hasCurrentProviderWorkspaceSnapshot(selectedProviderStatus, gitCwd, now)) {
-      setWorkspaceRefreshRetry(null);
-      return;
-    }
-    const retry = workspaceRefreshRetry;
-    if (retry?.key === key && now < retry.notBefore) return;
-    const request = { key, requestedAt: now };
-    workspaceRefreshKeyRef.current = request;
-    const retryLater = () => {
-      if (workspaceRefreshKeyRef.current !== request) return;
-      const failed = failedRefreshesRef.current;
-      const count = failed?.key === key ? failed.count + 1 : 1;
-      failedRefreshesRef.current = { key, count };
-      // Keeping the request marker lets the TTL hold off the next scan.
-      if (count >= WORKSPACE_SNAPSHOT_MAX_ATTEMPTS) return;
-      workspaceRefreshKeyRef.current = null;
-      setWorkspaceRefreshRetry({
-        key,
-        notBefore: Date.now() + WORKSPACE_SNAPSHOT_RETRY_COOLDOWN_MS,
-      });
-    };
-    void refreshProviders({
-      environmentId,
-      input: { instanceId: selectedProviderEntry.instanceId, cwd: gitCwd },
-    }).then((result) => {
-      const hasWorkspaceSnapshot =
-        result._tag === "Success" &&
-        hasRefreshedProviderWorkspaceSnapshot(
-          registry.get(serverEnvironment.configValueAtom(environmentId)),
-          result.value.providers,
-          selectedProviderEntry.instanceId,
-          gitCwd,
-        );
-      if (!hasWorkspaceSnapshot) retryLater();
-      else failedRefreshesRef.current = null;
-    }, retryLater);
-  }, [
+  useWorkspaceSnapshotRefresh({
     environmentId,
-    gitCwd,
-    prompt,
-    refreshProviders,
-    registry,
-    selectedProviderEntry,
-    workspaceRefreshRetry,
-  ]);
+    instanceId: selectedProviderEntry?.instanceId,
+    cwd: gitCwd,
+    providerStatus: selectedProviderStatus,
+    draft: prompt,
+  });
   const selectedProviderModels = useMemo<ReadonlyArray<ServerProvider["models"][number]>>(
     () => selectedProviderEntry?.models ?? [],
     [selectedProviderEntry],

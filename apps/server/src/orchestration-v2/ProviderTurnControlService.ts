@@ -90,6 +90,7 @@ export const layer: Layer.Layer<
       readonly providerTurnId: ProviderTurnId;
       readonly operation: "interrupt" | "restart" | "steer";
       readonly messageId?: MessageId;
+      readonly stopsSubagent?: boolean;
     }) =>
       Effect.gen(function* () {
         const context = yield* projections.getProviderControlContext(input.threadId, input);
@@ -100,10 +101,14 @@ export const layer: Layer.Layer<
           input.operation === "restart" &&
           input.replacementProviderSessionId !== undefined &&
           providerThread?.providerSessionId === input.replacementProviderSessionId;
+        // A subagent runs in the process that started it, so its Stop goes to
+        // that session even after the thread moved to a new one.
         if (
           providerThread === undefined ||
           providerTurn === undefined ||
-          (!targetsRecordedSession && !targetsCommittedReplacement) ||
+          (!targetsRecordedSession &&
+            !targetsCommittedReplacement &&
+            input.stopsSubagent !== true) ||
           providerTurn.providerThreadId !== providerThread.id
         ) {
           return yield* new ProviderTurnControlError({
@@ -174,7 +179,11 @@ export const layer: Layer.Layer<
     return ProviderTurnControlServiceV2.of({
       interrupt: (input) =>
         Effect.gen(function* () {
-          const loaded = yield* load({ ...input, operation: "interrupt" });
+          const loaded = yield* load({
+            ...input,
+            operation: "interrupt",
+            stopsSubagent: input.subagent !== undefined,
+          });
           const session = Option.isSome(loaded.session)
             ? loaded.session
             : yield* sessions.get(input.providerSessionId);

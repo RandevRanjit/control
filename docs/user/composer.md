@@ -52,7 +52,9 @@ See [images and videos](#images-and-videos-in-messages) for previewing and savin
 ## Send while the agent is working
 
 On web and desktop, choose **Settings → General → Follow-up behavior** to queue
-new messages for a later turn or steer the running turn immediately. The setting
+new messages for a later turn or steer the running turn immediately. Steer is the
+default. A steer only redirects a turn that is already running; when nothing is
+running, the message starts a turn as usual. The setting
 applies to this client; already queued messages keep their place. Queued messages
 are saved on the server and can be edited, reordered, or removed above the composer.
 `Cmd+Enter` on macOS or `Ctrl+Enter` on Windows and Linux uses the opposite action:

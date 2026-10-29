@@ -612,18 +612,23 @@ export function resolveServerConfigValue(
   return initialConfig ?? projection?.config ?? null;
 }
 
-type ServerProviderEntry = ServerConfig["providers"][number];
-
 /**
- * The provider-wide fields a workspace snapshot builds on. A live session, a sign-out, or a
- * /usage-limits change shows up here, so a snapshot fetched before it no longer applies.
+ * What a workspace snapshot builds on. A live session, a sign-out, or a /usage-limits change
+ * shows up in the provider's own commands and skills. Reconfiguring the instance rebuilds it and
+ * the server drops its snapshots, which the config no longer reports, so its settings count too.
  */
-const snapshotBasis = (provider: ServerProviderEntry | undefined) =>
-  provider && {
-    enabled: provider.enabled,
-    slashCommands: provider.slashCommands,
-    skills: provider.skills,
-  };
+const snapshotBasis = (config: ServerConfig | null, instanceId: ProviderInstanceId) => {
+  const provider = config?.providers.find((entry) => entry.instanceId === instanceId);
+  return (
+    provider && {
+      enabled: provider.enabled,
+      slashCommands: provider.slashCommands,
+      skills: provider.skills,
+      instanceSettings: config?.settings.providerInstances[instanceId],
+      legacySettings: config?.settings.providers,
+    }
+  );
+};
 
 interface FetchedWorkspaceSnapshot {
   readonly instanceId: ProviderInstanceId;
@@ -655,7 +660,7 @@ export function withFetchedWorkspaceSnapshots(
       const own = fetched.filter(
         (entry) =>
           entry.instanceId === provider.instanceId &&
-          Equal.equals(entry.basis, snapshotBasis(provider)),
+          Equal.equals(entry.basis, snapshotBasis(config, provider.instanceId)),
       );
       return own.length === 0
         ? provider
@@ -668,9 +673,9 @@ export function recordFetchedWorkspaceSnapshot(
   current: ReadonlyArray<FetchedWorkspaceSnapshot>,
   input: { readonly instanceId: ProviderInstanceId; readonly cwd: string; readonly fresh: boolean },
   providers: ServerConfig["providers"],
-  configProvider: ServerProviderEntry | undefined,
+  config: ServerConfig | null,
 ): ReadonlyArray<FetchedWorkspaceSnapshot> {
-  const basis = snapshotBasis(configProvider);
+  const basis = snapshotBasis(config, input.instanceId);
   const snapshot = providers
     .find((provider) => provider.instanceId === input.instanceId)
     ?.workspaceSnapshots?.find((candidate) => candidate.cwd === input.cwd);
@@ -1248,9 +1253,7 @@ export function createServerEnvironmentAtoms<R, E>(
               current,
               { instanceId, cwd, fresh: input.fresh === true },
               result.providers,
-              registry
-                .get(configValueAtom(environmentId))
-                ?.providers.find((provider) => provider.instanceId === instanceId),
+              registry.get(configValueAtom(environmentId)),
             ),
           );
         }),

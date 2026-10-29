@@ -531,8 +531,9 @@ export function useThreadActions() {
         ? resolveWorktreeCleanup(environmentSettings, thread.projectId).worktreeOnDelete
         : false;
       // The server refuses to remove a worktree with uncommitted changes. Ask it by
-      // the same rule and say so up front; a failed read (or an older server)
-      // leaves that to the removal.
+      // the same rule and say so up front. Removal is offered only for a worktree
+      // it reports clean: an older server can't check, and its removal may not
+      // guard, so then the worktree stays too. Automatic cleanup is the server's.
       const changes =
         canDeleteWorktree && orphanedWorktreePath !== null
           ? await loadUncommittedChanges({
@@ -540,19 +541,20 @@ export function useThreadActions() {
               input: { cwd: orphanedWorktreePath },
             })
           : null;
-      if (
-        localApi &&
-        changes?._tag === "Success" &&
-        (changes.value.files > 0 || changes.value.truncated)
-      ) {
+      const keepReason =
+        changes === null
+          ? null
+          : changes._tag === "Success"
+            ? changes.value.files > 0 || changes.value.truncated
+              ? "Its worktree has uncommitted changes, so it stays on disk:"
+              : null
+            : automaticWorktreeCleanup
+              ? null
+              : "Couldn't check its worktree for uncommitted changes, so it stays on disk:";
+      if (localApi && keepReason !== null) {
         const confirmationResult = await settlePromise(() =>
           localApi.dialogs.confirm(
-            [
-              "Its worktree has uncommitted changes, so it stays on disk:",
-              orphanedWorktreePath,
-              "",
-              "Delete the thread?",
-            ].join("\n"),
+            [keepReason, orphanedWorktreePath, "", "Delete the thread?"].join("\n"),
             { variant: "destructive" },
           ),
         );
@@ -562,7 +564,7 @@ export function useThreadActions() {
         if (!confirmationResult.value) {
           return AsyncResult.success(undefined);
         }
-      } else if (canDeleteWorktree && localApi && !automaticWorktreeCleanup) {
+      } else if (changes?._tag === "Success" && localApi && !automaticWorktreeCleanup) {
         const confirmationResult = await settlePromise(() =>
           localApi.dialogs.confirm(
             [
@@ -641,11 +643,8 @@ export function useThreadActions() {
       )
         ? await removeWorktree({
             environmentId: threadRef.environmentId,
-            input: {
-              cwd: threadProject.workspaceRoot,
-              path: orphanedWorktreePath,
-              force: true,
-            },
+            // Never forced: a server without the clean check still has Git refuse a dirty worktree.
+            input: { cwd: threadProject.workspaceRoot, path: orphanedWorktreePath },
           })
         : AsyncResult.failure(
             Cause.fail(

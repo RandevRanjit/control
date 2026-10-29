@@ -12,7 +12,7 @@ import {
 import type { PanelTab } from "~/rightPanelStore";
 
 import { RightPanelTabs } from "./RightPanelTabs";
-import { RightPanelToolsSlot } from "./rightPanelToolsSlot";
+import { RightPanelChipsSlot, RightPanelToolsSlot } from "./rightPanelToolsSlot";
 
 vi.mock("~/hooks/useTheme", () => ({ useTheme: () => ({ resolvedTheme: "light" }) }));
 vi.mock("~/browser/browserDefaults", () => ({ useBrowserDefaults: () => ({ profiles: [] }) }));
@@ -352,27 +352,45 @@ describe("Folder's tabs", () => {
     revealRequestId: 1,
   };
 
-  it("keep the tree as a first tab without a close, and go back to it on a click", async () => {
-    const onActivate = vi.fn();
+  // The file view: the tree at the left, and over the file the row it gives the tabs.
+  function FolderBody() {
+    const slot = useContext(RightPanelChipsSlot);
+    return <div data-file-column>{slot && slot.count > 0 ? <div ref={slot.attach} /> : null}</div>;
+  }
+  const fileColumnTitles = () =>
+    [...container.querySelectorAll("[data-file-column] [role='tab']")].map(
+      (tab) => tab.textContent,
+    );
+
+  it("sit over the file, beside the tree, with no tab for the tree itself", async () => {
     const onCloseSurface = vi.fn();
     await renderPanel(
-      { surfaces: [tree, file], activeSurfaceId: file.id, onActivate, onCloseSurface },
+      {
+        surfaces: [tree, file],
+        activeSurfaceId: file.id,
+        onCloseSurface,
+        children: <FolderBody />,
+      },
       "folder",
     );
-    expect(chipTitles()).toEqual(["Files", "app.ts"]);
-    expect(container.querySelector('[aria-label="Close Files"]')).toBeNull();
-    expect(container.querySelector('[aria-label="Close app.ts"]')).not.toBeNull();
+    expect(container.querySelector("[data-right-panel-subtabs]")).toBeNull();
+    expect(fileColumnTitles()).toEqual(["app.ts"]);
 
-    const treeChip = [
-      ...container.querySelectorAll<HTMLElement>("[data-right-panel-subtabs] button"),
-    ].find((button) => button.textContent === "Files")!;
-    await act(() => treeChip.click());
-    expect(onActivate).toHaveBeenCalledWith(tree);
+    await act(() =>
+      container
+        .querySelector<HTMLElement>('[data-file-column] [aria-label="Close app.ts"]')!
+        .click(),
+    );
+    expect(onCloseSurface).toHaveBeenCalledWith(file);
   });
 
-  it("show the row with the tree alone, so the first file doesn't move it", async () => {
-    await renderPanel({ surfaces: [tree], activeSurfaceId: tree.id }, "folder");
-    expect(chipTitles()).toEqual(["Files"]);
+  it("show no tabs while the tree is alone", async () => {
+    await renderPanel(
+      { surfaces: [tree], activeSurfaceId: tree.id, children: <FolderBody /> },
+      "folder",
+    );
+    expect(container.querySelector("[data-right-panel-subtabs]")).toBeNull();
+    expect(fileColumnTitles()).toEqual([]);
   });
 });
 

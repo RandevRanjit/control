@@ -333,12 +333,13 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 
 ### 5.4 Folder (F31)
 
-- **Tabs** (owner, 29 Oct). Each opened file is a tab in the row under the panel's tabs, after **Files**, the tree,
-  which is pinned first and has no close. Files goes back to the tree with the files still open; closing the others
-  leaves it. Below 720 px the file has the panel to itself; wider, the tree can sit beside it.
+- **Layout** (owner, 29 Oct). The tree sits at the left and an opened file at its right. Each opened file is a tab
+  in a row over the file, not across the panel, and the tree has no tab. The row starts with the tree button, which
+  hides the tree and shows it again. With nothing open the tree has the panel; closing the last file leaves it so.
+  Below 480 px there is room for one: the file shows alone, and the tree button shows the tree alone.
 - **Head.** The breadcrumb `orbit-website › site-v2` in Plex, then `4 changed` (the tree's head carries the count;
   built 29 Oct). The breadcrumb names folders only;
-  the open file's name is its tab's (29 Oct). The tab row shows with Files alone, so opening a file moves nothing.
+  the open file's name is its tab's (29 Oct).
 - **Tree.** Rows are 26 high and step in 16 px per level, with chevrons on folders and file icons on files.
   - Git's mark sits next to the age at the right: **M** in the write green, **A** in the read blue. A folder holding
     changes takes a dot (built 29 Oct; the age isn't built). The marks come from the working tree's status, mapped
@@ -346,7 +347,7 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
   - Ignored folders (`dist`) are dimmed, with `ignored` in place of an age.
 - **A file's tab.** The opened file shows on `--deep`, radius 10, in Plex 11.5 / 18, with line numbers. Markdown shows
   rendered, with a switch to its source. Keywords take the lilac; strings take the green. S7b draws the tree with
-  `release.ts` open in its tab and Files picked; the foot went with the tabs (29 Oct).
+  `release.ts` open beside it; the foot went with the tabs (29 Oct).
 
 ### 5.5 Browser (F36, F37)
 

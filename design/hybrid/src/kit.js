@@ -358,9 +358,16 @@ const dOutputs = () => `<div class="pane hy-v dp-v"><div class="hy-vh"><b>Output
 const TREE = [[0, 'app', 'o', 'M'], [1, 'admin', 'o', 'A'], [2, 'page.tsx', '', 'A', 'now'], [1, 'download', 'o', 'M'], [2, 'page.tsx', '', 'M', 'now'], [1, 'layout.tsx', '', '', '3d'], [1, 'page.tsx', '', '', '3d'],
   [0, 'dist', 'c', 'ignored'], [0, 'docs', 'o', 'M'], [1, 'DESIGN.md', '', 'M', 'now'], [0, 'lib', 'o', 'M'], [1, 'format.ts', '', '', '2d'], [1, 'release.ts', '', 'M', 'now', 1],
   [0, 'public', 'c'], [0, 'package.json', '', '', '1w'], [0, 'README.md', '', '', '1w']];
-const dFolder = () => `<div class="pane hy-v dp-v"><div class="hy-vh hy-tmux"><span class="hy-tx" data-on>${G('files')}Files</span><span class="hy-tx">${G('file')}release.ts</span></div>
-  <div class="hy-vh"><span class="dp-crumb">orbit-website<span>›</span><b>site-v2</b></span><span class="sp"></span><span>4 changed</span></div>
-  <div class="dp-list">${TREE.map(([d, n, dir, gs, age, on]) => `<div class="dp-f${gs === 'ignored' ? ' dp-dim' : ''}" style="--l:${d}"${on ? ' data-on' : ''}>${dir ? G(dir === 'o' ? 'chev-d' : 'chev-r', 'dp-cv') : '<i></i>'}${G(dir ? 'folder' : 'file')}<span class="dp-nm">${n}</span><span class="dp-gs" data-g="${gs || ''}">${gs && gs !== 'ignored' ? (dir ? '•' : gs) : ''}</span><span class="dp-mt">${gs === 'ignored' ? 'ignored' : age || ''}</span></div>`).join('')}</div></div>`;
+/* release.ts as the file's tab shows it: Plex on --deep, keywords lilac, strings green */
+const SRC = ['<span class="dp-kw">import</span> { statSync } <span class="dp-kw">from</span> <span class="dp-st">"node:fs"</span>;', '',
+  '<span class="dp-kw">export const</span> release = {', '  version: <span class="dp-st">"0.2.3"</span>,', '  size: statSync(<span class="dp-st">"dist/ORBIT-0.2.3.dmg"</span>).size,', '};', '',
+  '<span class="dp-kw">export function</span> formatSize(bytes: <span class="dp-kw">number</span>) {', '  <span class="dp-kw">return</span> `${(bytes / 1e6).toFixed(1)} MB`;', '}'];
+/* The tree at the left and the open file at its right, its tabs over it; the side glyph hides the tree (owner, 29 Oct) */
+const dFolder = () => `<div class="pane hy-v dp-v dp-fold"><div class="dp-tree"><div class="hy-vh"><span class="input hy-url">Search files</span><span>4 changed</span></div>
+  <div class="dp-list">${TREE.map(([d, n, dir, gs, age, on]) => `<div class="dp-f${gs === 'ignored' ? ' dp-dim' : ''}" style="--l:${d}"${on ? ' data-on' : ''}>${dir ? G(dir === 'o' ? 'chev-d' : 'chev-r', 'dp-cv') : '<i></i>'}${G(dir ? 'folder' : 'file')}<span class="dp-nm">${n}</span><span class="dp-gs" data-g="${gs || ''}">${gs && gs !== 'ignored' ? (dir ? '•' : gs) : ''}</span><span class="dp-mt">${gs === 'ignored' ? 'ignored' : age || ''}</span></div>`).join('')}</div></div>
+  <div class="dp-file"><div class="hy-vh hy-tmux"><span class="hy-ib" data-on>${G('side')}</span><span class="hy-tx" data-on>${G('file')}release.ts</span><span class="hy-tx">${G('file')}DESIGN.md</span></div>
+  <div class="hy-vh"><span class="dp-crumb">site-v2<span>›</span><b>lib</b></span></div>
+  <div class="dp-src">${SRC.map((l, i) => `<div class="hy-dl"><span class="hy-ln">${i + 1}</span><span></span><span>${l}</span></div>`).join('')}</div></div></div>`;
 const dBrowser = () => `<div class="pane hy-v dp-v"><div class="hy-vh">${G('chev-l')}${G('chev-r')}${G('reload')}<span class="input hy-url">localhost:3000/download</span><span class="hy-pk" data-on>${G('pick')}</span><span class="hy-pk">${G('shot')}</span></div>
   <div class="hy-site dp-site"><div class="hy-snav"><b>ORBIT</b><span>Features</span><span>Download</span><span>Changelog</span></div><h4 class="hy-sh1">Download ORBIT</h4>
   <p class="hy-sp">The arming layer for your DAW. One key, every track ready.</p><span class="hy-cta dp-picked">Download for macOS · 11.2 MB</span>
@@ -384,7 +391,7 @@ document.addEventListener('click', e => {
   p.querySelectorAll('.hy-tab').forEach(x => x.setAttribute('aria-selected', String(x === t)));
   p.querySelectorAll('.hy-views > [data-tab]').forEach(v => { v.hidden = v.dataset.tab !== t.title; });
 });
-const dPanel = tab => `<div class="bl-scale" data-w="440" data-h="945"><div class="t3w t3-bloom t3-d dp-w" data-region><div class="t3d-panel"><div class="hy-panel">${dtabs(tab)}<div class="hy-views">${DVIEW[tab]()}</div></div></div></div></div>`;
+const dPanel = (tab, w = 440) => `<div class="bl-scale" data-w="${w}" data-h="945"><div class="t3w t3-bloom t3-d dp-w" style="width:${w}px" data-region><div class="t3d-panel"><div class="hy-panel">${dtabs(tab)}<div class="hy-views">${DVIEW[tab]()}</div></div></div></div></div>`;
 /* the turn's dashed line runs from under the prompt's arrow to the last reply's arrow, in whole dashes: the gap is
    stretched so a dash starts and ends the line exactly. Layout units, so the window's scale doesn't matter */
 const DASH = 13, GAP = 20;    /* the owner's, tuned on S6 (10 Oct) */

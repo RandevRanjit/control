@@ -10,6 +10,7 @@
 .s-shell-root .s-shell-mt b { font-weight: var(--w-med); color: var(--text-strong); }
 .s-shell-root .s-shell-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 440px)); gap: 0 var(--s-7); margin-top: var(--s-6); }
 @media (max-width: 1000px) { .s-shell-root .s-shell-tabs { grid-template-columns: minmax(0, 440px); } }
+.s-shell-root .s-shell-tabs > [data-fig="p-folder"] { grid-column: 1 / -1; max-width: 720px; }
 .s-shell-root .s-shell-mt .s-shell-from { font: 400 10.5px/1.3 var(--f-mono); color: var(--text-caption); }
 </style>
 <section id="shell" class="bl-sec s-shell-root">
@@ -71,11 +72,11 @@
 
   <h3 class="bl-sub"><span class="id">S7</span>D's right panel, tab by tab</h3>
   <div class="bl-prose">
-    <p>The rest of the panel, at 1:1 in D's flat panel. Outputs is everything this chat made, newest first, grouped by turn, with the picked one rendered underneath: a Markdown report here (F28, F30). Folder is a plain Finder for the session's worktree with git's marks and a Quick Look of the picked file (F31). Browser is the live dev server, with the pick tool on <code>button.cta</code> and Add putting it in the composer as a draft, never sent (F36, F37). Terminal is the session's own shells, tab 2 running <code>bun dev</code>. Git is S6's.</p>
+    <p>The rest of the panel, at 1:1 in D's flat panel. Outputs is everything this chat made, newest first, grouped by turn, with the picked one rendered underneath: a Markdown report here (F28, F30). Folder is the session's worktree as a tree with git's marks, and the picked file open at its right under its own tabs, at 720 so both fit (F31). Browser is the live dev server, with the pick tool on <code>button.cta</code> and Add putting it in the composer as a draft, never sent (F36, F37). Terminal is the session's own shells, tab 2 running <code>bun dev</code>. Git is S6's.</p>
   </div>
   <div class="s-shell-tabs">
     <figure class="fig" data-fig="p-outputs"><div data-panel="Outputs"></div><figcaption class="cap"><span class="id">S7a</span><b>Outputs.</b><span>F28, F30</span></figcaption></figure>
-    <figure class="fig" data-fig="p-folder"><div data-panel="Folder"></div><figcaption class="cap"><span class="id">S7b</span><b>Folder.</b><span>F31</span></figcaption></figure>
+    <figure class="fig" data-fig="p-folder"><div data-panel="Folder" data-w="720"></div><figcaption class="cap"><span class="id">S7b</span><b>Folder.</b><span>F31</span></figcaption></figure>
     <figure class="fig" data-fig="p-browser"><div data-panel="Browser"></div><figcaption class="cap"><span class="id">S7c</span><b>Browser.</b><span>F36, F37</span></figcaption></figure>
     <figure class="fig" data-fig="p-terminal"><div data-panel="Terminal"></div><figcaption class="cap"><span class="id">S7d</span><b>Terminal.</b><span>tab 2, the dev server</span></figcaption></figure>
   </div>
@@ -92,7 +93,7 @@ Bloom.section('shell', { init(el) {
     d: () => Hy.dWin(),
   };
   el.querySelectorAll('[data-win]').forEach(d => { d.outerHTML = W[d.dataset.win](); });
-  el.querySelectorAll('[data-panel]').forEach(d => { d.outerHTML = Hy.dPanel(d.dataset.panel); });
+  el.querySelectorAll('[data-panel]').forEach(d => { d.outerHTML = Hy.dPanel(d.dataset.panel, d.dataset.w); });
   /* trace comparison: Hue is version 1.0 and needs no attribute; the others override it on D's window only. Simple is version 1.1, the default */
   const dw = el.querySelector('.t3w.t3-d:not(.dp-w)'), tp = el.querySelector('[data-tv-pick]'), tv = new URLSearchParams(location.search).get('tv');
   const setTv = v => { if (v === 'hue') delete dw.dataset.tv; else dw.dataset.tv = v; tp.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === v))); };

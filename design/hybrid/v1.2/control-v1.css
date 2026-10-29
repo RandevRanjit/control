@@ -970,6 +970,28 @@ html[data-theme="night"] .t3-d { --diff-rem-wash: rgb(239 68 68 / .10); --diff-r
 
 .dp-f .dp-mt { text-align: right; }
 
+/* Folder (§5.4): the tree at the left, the open file at its right under its own tabs */
+.hy-v.pane.dp-fold { display: grid; grid-template-columns: 300px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+
+.dp-tree,
+.dp-file { display: flex; flex-direction: column; min-width: 0; }
+
+.dp-tree { box-shadow: inset -1px 0 0 var(--seam); }
+
+.dp-tree .hy-url { flex: 1; }
+
+.dp-file .hy-ib[data-on] { color: var(--text-strong); }
+
+.dp-src { margin: 2px 12px 12px; padding: 6px 0; border-radius: var(--r-m); background: var(--deep); font: 400 11.5px/18px var(--f-mono); }
+
+.dp-src .hy-dl { grid-template-columns: 34px 10px minmax(0, 1fr); }
+
+.dp-src .hy-ln { background: none; }
+
+.dp-kw { color: var(--lilac-deep); }
+
+.dp-st { color: var(--green-deep); }
+
 .dp-gs { font: 500 10px/1 var(--f-mono); text-align: center; }
 
 .dp-gs[data-g="M"] { color: var(--tv-write); }

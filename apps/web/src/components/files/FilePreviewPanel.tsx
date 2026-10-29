@@ -37,10 +37,10 @@ import {
   squashAtomCommandFailure,
 } from "@control/client-runtime/state/runtime";
 import { mediaFileReference } from "@control/client-runtime/media-reference";
-import { FolderTree, Globe, WrapTextIcon } from "lucide-react";
+import { Globe, PanelLeft, WrapTextIcon } from "lucide-react";
 import { Code2, Eye, Table2 } from "lucide";
 import * as Schema from "effect/Schema";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { isBrowserPreviewFile, openFileInPreview } from "~/browser/openFileInPreview";
 import { useAssetUrlRefresh, useAssetUrlState } from "~/assets/assetUrls";
@@ -54,6 +54,7 @@ import { useTheme } from "~/hooks/useTheme";
 import { getLocalStorageItem, setLocalStorageItem, useLocalStorage } from "~/hooks/useLocalStorage";
 import { useResizableWidth } from "~/hooks/useResizableWidth";
 import { RightPanelResizeHandle } from "~/components/preview/RightPanelResizeHandle";
+import { RightPanelChipsSlot } from "../rightPanelToolsSlot";
 import { useWorkspaceMutationRefresh } from "~/hooks/useWorkspaceMutationRefresh";
 import { resolveDiffThemeName } from "~/lib/diffRendering";
 import { PREFERRED_HIGHLIGHTER } from "~/lib/syntaxHighlighting";
@@ -140,8 +141,9 @@ interface FilePreviewPanelProps {
 }
 
 const FILE_EXPLORER_STORAGE_KEY = "control.fileExplorerOpen";
-/** Narrower, a file gets the panel to itself and Folder's Files tab is the way to the tree. */
-const EXPLORER_BESIDE_MIN_WIDTH = 720;
+/** Narrower, a file gets the panel to itself and the tree button shows the tree alone. */
+const EXPLORER_BESIDE_MIN_WIDTH = 480;
+const NO_TABS = { attach: () => undefined, count: 0 };
 const FILE_EXPLORER_WIDTH_STORAGE_KEY = "control.fileExplorerWidth";
 const RENDER_MARKDOWN_STORAGE_KEY = "control.renderMarkdown";
 const RENDER_BROWSER_FILE_STORAGE_KEY = "control.renderBrowserFile";
@@ -1077,6 +1079,8 @@ export default function FilePreviewPanel({
   // Everything preview-related keys off previewPath; a folder has no preview.
   const previewPath = isDirectory ? null : relativePath;
   const [explorerOpen, setExplorerOpen] = useState(initialExplorerOpen);
+  // Where the panel puts Folder's tabs; no row while it holds none.
+  const { attach: attachTabs, count: tabCount } = useContext(RightPanelChipsSlot) ?? NO_TABS;
   const [setRootElement, rootWidth] = useElementWidth<HTMLDivElement>();
   const roomForExplorer = rootWidth === null || rootWidth >= EXPLORER_BESIDE_MIN_WIDTH;
   // The folder the explorer shows once the owner goes above the chat's; null shows the chat's.
@@ -1114,13 +1118,13 @@ export default function FilePreviewPanel({
     true,
     Schema.Boolean,
   );
-  // The tree beside a preview resizes from its left edge, like the panel itself.
+  // The tree at the file's left resizes from its right edge.
   const explorerWidth = useResizableWidth({
     storageKey: FILE_EXPLORER_WIDTH_STORAGE_KEY,
     defaultWidth: 256,
     minWidth: 192,
     maxWidth: 720,
-    edge: "left",
+    edge: "right",
   });
   // Paired with the path on purpose: each file surface counts its reveals from
   // one, so a bare id would let a dismissed reveal on one file swallow the first
@@ -1256,13 +1260,50 @@ export default function FilePreviewPanel({
     );
   }
 
+  // Folder (design §5.4; owner, 29 Oct): the tree at the left and the file at its right, with the
+  // open files' tabs over the file; the tree alone until a file opens, or the file alone once
+  // the tree is hidden. One grid, so the tree keeps its state as the layout changes.
+  const treeBeside = showExplorer && previewPath !== null;
+  const layout = treeBeside
+    ? {
+        gridTemplateColumns: `min(${explorerWidth.width}px, 45%) minmax(0, 1fr)`,
+        gridTemplateAreas: '"tree tabs" "tree sub" "tree notes" "tree body"',
+      }
+    : {
+        gridTemplateColumns: "minmax(0, 1fr)",
+        gridTemplateAreas: `"tabs" "sub" "notes" "${showExplorer ? "tree" : "body"}"`,
+      };
+  const canShowTree = (!isHostFile || browsedAbove) && previewPath !== null;
+  const tabsRow =
+    asOutput || tabCount === 0 ? null : (
+      <div className="hy-vh flex min-w-0 shrink-0 px-2" style={{ gridArea: "tabs" }}>
+        {canShowTree ? (
+          <FileSurfaceAction
+            label={showExplorer ? "Hide file tree" : "Show file tree"}
+            pressed={showExplorer}
+            // Too narrow for both, the tree shows alone; a click on a file brings the file back.
+            onPress={roomForExplorer ? toggleExplorer : () => onOpenFile(".")}
+          >
+            <PanelLeft className="size-3.5" />
+          </FileSurfaceAction>
+        ) : null}
+        <div ref={attachTabs} className="flex h-full min-w-0 flex-1" />
+      </div>
+    );
+
   return (
     <div
       ref={setRootElement}
-      className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background"
+      className="grid min-h-0 flex-1 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden bg-background"
+      style={layout}
     >
+      {tabsRow}
       {relativePath && attachment === undefined ? (
-        <div className={FILE_SURFACE_SUBHEADER_CLASS} data-surface-subheader>
+        <div
+          className={FILE_SURFACE_SUBHEADER_CLASS}
+          style={{ gridArea: "sub" }}
+          data-surface-subheader
+        >
           {asOutput ? (
             // Names the file once the list has scrolled out of view; Outputs has no breadcrumb trail.
             <span className="min-w-0 flex-1 truncate font-mono text-xs" data-output-preview-name>
@@ -1333,215 +1374,211 @@ export default function FilePreviewPanel({
               <Globe className="size-3.5" />
             </FileSurfaceAction>
           ) : null}
-          {!asOutput && roomForExplorer && (!isHostFile || browsedAbove) && previewPath !== null ? (
-            <FileSurfaceAction
-              label={explorerOpen ? "Hide file explorer" : "Show file explorer"}
-              pressed={explorerOpen}
-              onPress={toggleExplorer}
-            >
-              <FolderTree className="size-3.5" />
-            </FileSurfaceAction>
-          ) : null}
         </div>
       ) : null}
-      {relativePath && !attachment && !isHostFile && !canWriteFiles && !fileAccess.isPending ? (
-        <div className="shrink-0 border-b px-3 py-1.5 text-2xs text-muted-foreground">
-          Read-only connection. Unsaved edits are kept until write access returns.
-        </div>
-      ) : null}
-      {previewPath &&
-      attachment === undefined &&
-      !isMedia &&
-      !renderBrowserFile &&
-      file.data?.truncated ? (
-        <div className="shrink-0 border-b border-warning/20 bg-warning-surface px-3 py-1.5 text-2xs text-warning-foreground">
-          Preview limited to the first 1 MB of a {file.data.byteLength.toLocaleString()} byte file.
-        </div>
-      ) : null}
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        <div
-          className={cn("min-w-0 flex-1 flex-col overflow-hidden", previewPath ? "flex" : "hidden")}
-        >
-          {isDirectory ? null : relativePath && attachment ? (
-            <AttachmentFilePreview
-              key={`${environmentId}:${attachment.id}`}
-              name={attachment.name}
-              mimeType={attachment.mimeType}
-              sizeBytes={attachment.sizeBytes}
-              asset={{ environmentId, attachmentId: attachment.id }}
-              htmlRender={attachment.htmlRender === true}
-            />
-          ) : relativePath && isVideo && absolutePath ? (
-            <WorkspaceVideoPreview
-              key={`${environmentId}:${threadRef.threadId}:${absolutePath}`}
-              environmentId={environmentId}
-              threadRef={threadRef}
-              absolutePath={absolutePath}
-              workspaceRoot={cwd}
-              name={relativePath}
-              workspaceMutationId={workspaceMutationId}
-            />
-          ) : relativePath && isAudio && absolutePath ? (
-            <WorkspaceAudioPreview
-              key={`${environmentId}:${threadRef.threadId}:${absolutePath}`}
-              environmentId={environmentId}
-              threadRef={threadRef}
-              absolutePath={absolutePath}
-              name={relativePath}
-              workspaceMutationId={workspaceMutationId}
-            />
-          ) : relativePath && isImage && absolutePath ? (
-            <WorkspaceImagePreview
-              key={absolutePath}
-              environmentId={environmentId}
-              threadRef={threadRef}
-              absolutePath={absolutePath}
-              workspaceRoot={cwd}
-              alt={relativePath}
-              workspaceMutationId={workspaceMutationId}
-            />
-          ) : relativePath && renderBrowserFile && absolutePath ? (
-            <WorkspaceBrowserPreview
-              key={absolutePath}
-              environmentId={environmentId}
-              threadRef={threadRef}
-              absolutePath={absolutePath}
-              workspaceRoot={cwd}
-              title={relativePath}
-              workspaceMutationId={workspaceMutationId}
-            />
-          ) : relativePath && absolutePath && file.readError?.failure === "binary_file" ? (
-            <AttachmentFilePreview
-              key={`${environmentId}:${absolutePath}`}
-              name={relativePath.split(/[\\/]/).at(-1) || relativePath}
-              mimeType="application/octet-stream"
-              sizeBytes={0}
-              asset={{
-                environmentId,
-                resource: {
-                  _tag: "media-file",
-                  threadId: threadRef.threadId,
-                  path: absolutePath,
-                  disposition: "attachment",
-                },
-              }}
-              origin="File"
-            />
-          ) : relativePath && file.error && file.data === null ? (
-            <div role="alert" className="flex min-h-0 flex-1 flex-col overflow-auto">
-              <div className="my-auto flex shrink-0 flex-col gap-3 px-6 py-6 text-center text-xs leading-relaxed">
-                <p className="text-destructive">
-                  {file.readError ? filePreviewReadErrorMessage(file.readError) : file.error}
+      <div style={{ gridArea: "notes" }}>
+        {relativePath && !attachment && !isHostFile && !canWriteFiles && !fileAccess.isPending ? (
+          <div className="shrink-0 border-b px-3 py-1.5 text-2xs text-muted-foreground">
+            Read-only connection. Unsaved edits are kept until write access returns.
+          </div>
+        ) : null}
+        {previewPath &&
+        attachment === undefined &&
+        !isMedia &&
+        !renderBrowserFile &&
+        file.data?.truncated ? (
+          <div className="shrink-0 border-b border-warning/20 bg-warning-surface px-3 py-1.5 text-2xs text-warning-foreground">
+            Preview limited to the first 1 MB of a {file.data.byteLength.toLocaleString()} byte
+            file.
+          </div>
+        ) : null}
+      </div>
+      <div
+        className={cn("min-h-0 min-w-0 flex-col overflow-hidden", previewPath ? "flex" : "hidden")}
+        style={{ gridArea: "body" }}
+      >
+        {isDirectory ? null : relativePath && attachment ? (
+          <AttachmentFilePreview
+            key={`${environmentId}:${attachment.id}`}
+            name={attachment.name}
+            mimeType={attachment.mimeType}
+            sizeBytes={attachment.sizeBytes}
+            asset={{ environmentId, attachmentId: attachment.id }}
+            htmlRender={attachment.htmlRender === true}
+          />
+        ) : relativePath && isVideo && absolutePath ? (
+          <WorkspaceVideoPreview
+            key={`${environmentId}:${threadRef.threadId}:${absolutePath}`}
+            environmentId={environmentId}
+            threadRef={threadRef}
+            absolutePath={absolutePath}
+            workspaceRoot={cwd}
+            name={relativePath}
+            workspaceMutationId={workspaceMutationId}
+          />
+        ) : relativePath && isAudio && absolutePath ? (
+          <WorkspaceAudioPreview
+            key={`${environmentId}:${threadRef.threadId}:${absolutePath}`}
+            environmentId={environmentId}
+            threadRef={threadRef}
+            absolutePath={absolutePath}
+            name={relativePath}
+            workspaceMutationId={workspaceMutationId}
+          />
+        ) : relativePath && isImage && absolutePath ? (
+          <WorkspaceImagePreview
+            key={absolutePath}
+            environmentId={environmentId}
+            threadRef={threadRef}
+            absolutePath={absolutePath}
+            workspaceRoot={cwd}
+            alt={relativePath}
+            workspaceMutationId={workspaceMutationId}
+          />
+        ) : relativePath && renderBrowserFile && absolutePath ? (
+          <WorkspaceBrowserPreview
+            key={absolutePath}
+            environmentId={environmentId}
+            threadRef={threadRef}
+            absolutePath={absolutePath}
+            workspaceRoot={cwd}
+            title={relativePath}
+            workspaceMutationId={workspaceMutationId}
+          />
+        ) : relativePath && absolutePath && file.readError?.failure === "binary_file" ? (
+          <AttachmentFilePreview
+            key={`${environmentId}:${absolutePath}`}
+            name={relativePath.split(/[\\/]/).at(-1) || relativePath}
+            mimeType="application/octet-stream"
+            sizeBytes={0}
+            asset={{
+              environmentId,
+              resource: {
+                _tag: "media-file",
+                threadId: threadRef.threadId,
+                path: absolutePath,
+                disposition: "attachment",
+              },
+            }}
+            origin="File"
+          />
+        ) : relativePath && file.error && file.data === null ? (
+          <div role="alert" className="flex min-h-0 flex-1 flex-col overflow-auto">
+            <div className="my-auto flex shrink-0 flex-col gap-3 px-6 py-6 text-center text-xs leading-relaxed">
+              <p className="text-destructive">
+                {file.readError ? filePreviewReadErrorMessage(file.readError) : file.error}
+              </p>
+              {attemptedPath ? (
+                <p className="text-muted-foreground">
+                  Attempted path
+                  <code className="block break-all font-mono text-foreground select-all">
+                    {attemptedPath}
+                  </code>
                 </p>
-                {attemptedPath ? (
-                  <p className="text-muted-foreground">
-                    Attempted path
-                    <code className="block break-all font-mono text-foreground select-all">
-                      {attemptedPath}
-                    </code>
-                  </p>
-                ) : null}
-                {!isHostFile ? (
-                  <p className="text-muted-foreground">
-                    Workspace folder:{" "}
-                    <code className="break-all font-mono select-all">
-                      {file.readError?.cwd ?? cwd}
-                    </code>
-                    . Check the link's path or locate the file in Files.
-                  </p>
-                ) : null}
-              </div>
+              ) : null}
+              {!isHostFile ? (
+                <p className="text-muted-foreground">
+                  Workspace folder:{" "}
+                  <code className="break-all font-mono select-all">
+                    {file.readError?.cwd ?? cwd}
+                  </code>
+                  . Check the link's path or locate the file in Files.
+                </p>
+              ) : null}
             </div>
-          ) : relativePath && file.data === null ? (
-            <div className="flex min-h-0 flex-1 items-center justify-center text-muted-foreground">
-              <Spinner size="lg" />
-            </div>
-          ) : relativePath && file.data ? (
-            isMarkdown && renderMarkdown ? (
-              // Markdown reconciles in place across text updates, so a file
-              // switch needs a new key or the previous file's disclosure and
-              // wrap state carries into the next document.
-              <RenderedMarkdownSurface
-                key={relativePath}
+          </div>
+        ) : relativePath && file.data === null ? (
+          <div className="flex min-h-0 flex-1 items-center justify-center text-muted-foreground">
+            <Spinner size="lg" />
+          </div>
+        ) : relativePath && file.data ? (
+          isMarkdown && renderMarkdown ? (
+            // Markdown reconciles in place across text updates, so a file
+            // switch needs a new key or the previous file's disclosure and
+            // wrap state carries into the next document.
+            <RenderedMarkdownSurface
+              key={relativePath}
+              environmentId={environmentId}
+              cwd={cwd}
+              relativePath={relativePath}
+              threadRef={threadRef}
+              contents={file.data.contents}
+              readOnly={isHostFile || !canWriteFiles}
+              onPendingChange={onPendingChange}
+            />
+          ) : tableDelimiter && renderTable ? (
+            <DelimitedTablePreview
+              key={relativePath}
+              name={relativePath}
+              text={file.data.contents}
+              delimiter={tableDelimiter}
+            />
+          ) : file.data.truncated || isHostFile || !canWriteFiles ? (
+            <SourceFilePreview
+              name={relativePath}
+              text={file.data.contents}
+              cacheKey={projectFileCacheKey(cwd, relativePath, file.data.contents)}
+              onPostRender={onFilePostRender}
+            />
+          ) : (
+            <DiffWorkerPoolProvider>
+              <EditableFileSurface
+                key={`${relativePath}:${resolvedTheme}`}
                 environmentId={environmentId}
                 cwd={cwd}
                 relativePath={relativePath}
-                threadRef={threadRef}
+                composerDraftTarget={composerDraftTarget}
                 contents={file.data.contents}
-                readOnly={isHostFile || !canWriteFiles}
+                resolvedTheme={resolvedTheme}
+                revealRequestId={revealRequestId}
+                wordWrap={wordWrap}
+                onPostRender={onFilePostRender}
                 onPendingChange={onPendingChange}
               />
-            ) : tableDelimiter && renderTable ? (
-              <DelimitedTablePreview
-                key={relativePath}
-                name={relativePath}
-                text={file.data.contents}
-                delimiter={tableDelimiter}
-              />
-            ) : file.data.truncated || isHostFile || !canWriteFiles ? (
-              <SourceFilePreview
-                name={relativePath}
-                text={file.data.contents}
-                cacheKey={projectFileCacheKey(cwd, relativePath, file.data.contents)}
-                onPostRender={onFilePostRender}
-              />
-            ) : (
-              <DiffWorkerPoolProvider>
-                <EditableFileSurface
-                  key={`${relativePath}:${resolvedTheme}`}
-                  environmentId={environmentId}
-                  cwd={cwd}
-                  relativePath={relativePath}
-                  composerDraftTarget={composerDraftTarget}
-                  contents={file.data.contents}
-                  resolvedTheme={resolvedTheme}
-                  revealRequestId={revealRequestId}
-                  wordWrap={wordWrap}
-                  onPostRender={onFilePostRender}
-                  onPendingChange={onPendingChange}
-                />
-              </DiffWorkerPoolProvider>
-            )
-          ) : null}
-        </div>
-        {showExplorer ? (
-          <aside
-            className={cn(
-              "flex min-h-0 shrink-0 bg-background",
-              previewPath ? "relative max-w-[75%] border-l border-border/60" : "min-w-0 flex-1",
-            )}
-            style={previewPath ? { width: explorerWidth.width } : undefined}
-          >
-            {previewPath ? <RightPanelResizeHandle handlers={explorerWidth.handlers} /> : null}
-            <FileBrowserPanel
-              key={`${environmentId}:${treeRoot}`}
-              environmentId={environmentId}
-              cwd={treeRoot}
-              projectName={projectName}
-              selectedPath={
-                relativePath === null ? null : treePathOfChatPath(relativePath, treeRoot, cwd)
-              }
-              selectedPathRevealId={revealRequestId}
-              onOpenFile={onOpenFile}
-              workspaceMutationId={workspaceMutationId}
-              {...(previewPath && !isMedia && !isPdf
-                ? { onRefreshSelectedFile: file.refresh }
-                : {})}
-              {...(upFolder === null
-                ? {}
-                : {
-                    onUp: () => {
-                      setBrowseRoot(upFolder);
-                      setBrowsedAbove(true);
-                    },
-                  })}
-              {...(browseRoot === null
-                ? {}
-                : { above: { chatFolder: cwd, onBack: () => setBrowseRoot(null) } })}
-            />
-          </aside>
+            </DiffWorkerPoolProvider>
+          )
         ) : null}
       </div>
+      {showExplorer ? (
+        <aside
+          className={cn(
+            "flex min-h-0 min-w-0 bg-background",
+            treeBeside && "relative border-r border-border/60",
+          )}
+          style={{ gridArea: "tree" }}
+        >
+          {treeBeside ? (
+            <RightPanelResizeHandle
+              handlers={explorerWidth.handlers}
+              className="-right-1 left-auto"
+            />
+          ) : null}
+          <FileBrowserPanel
+            key={`${environmentId}:${treeRoot}`}
+            environmentId={environmentId}
+            cwd={treeRoot}
+            projectName={projectName}
+            selectedPath={
+              relativePath === null ? null : treePathOfChatPath(relativePath, treeRoot, cwd)
+            }
+            selectedPathRevealId={revealRequestId}
+            onOpenFile={onOpenFile}
+            workspaceMutationId={workspaceMutationId}
+            {...(previewPath && !isMedia && !isPdf ? { onRefreshSelectedFile: file.refresh } : {})}
+            {...(upFolder === null
+              ? {}
+              : {
+                  onUp: () => {
+                    setBrowseRoot(upFolder);
+                    setBrowsedAbove(true);
+                  },
+                })}
+            {...(browseRoot === null
+              ? {}
+              : { above: { chatFolder: cwd, onBack: () => setBrowseRoot(null) } })}
+          />
+        </aside>
+      ) : null}
     </div>
   );
 }

@@ -148,21 +148,21 @@ Colours are the computed values, Field then Night; `@n%` is alpha. Padding is to
 | tab row | `.hy-tabs` | 1072, 0, 440, 52 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 8 0 8 |
 | tab | `.hy-tab` | 1080, 13, 30, 26 | Regrade 12/12 520 | #525a7c / #a9aebf | — | 999px | 0 |
 | tab, selected | `.hy-tab[aria-selected="true"]` | 1173, 13, 30, 26 | Regrade 12/12 520 | #262b5b / #f5ebe4 | #d6deee / #1b1a1a | 999px | 0 |
-| Git head | `[data-tab="Git"] .hy-vh` | 1072, 52, 440, 34 | Regrade 11.5/11.5 400 | #525a7c / #a9aebf | — | 0 | 0 8 0 10 |
-| Graph | Diff | `[data-tab="Git"] .seg` | 1082, 56, 125.1, 26 | Regrade 11.5/11.5 400 | #525a7c / #a9aebf | #cdd7ed / #242323 | 999px | 3 3 3 3 |
-| diff summary | `.hy-dsum` | 1072, 86, 440, 26 | Regrade 12/12 520 | #414970 / #c1c6d5 | — | 0 | 0 14 0 14 |
-| added count | `.hy-dsum .hy-pn` | 1128.5, 93.3, 20.7, 11.5 | Plex 11.5/11.5 520 | #2b5a17 / #b1d391 | — | 0 | 0 |
-| removed count | `.hy-dsum .hy-mn` | 1159.2, 93.3, 20.7, 11.5 | Plex 11.5/11.5 520 | #b91c1c / #f87171 | — | 0 | 0 |
-| changed file | `.hy-df` | 1078, 112, 428, 24 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | — | 8px | 0 10 0 8 |
-| diff | `.hy-diff` | 1082, 214, 420, 112 | Plex 11/16 400 | #262b5b / #ebdcd5 | #d6deee / #1b1a1a | 6px | 0 |
-| diff line | `.hy-dl` | 1082, 214, 420, 16 | Plex 11/16 400 | #262b5b / #ebdcd5 | — | 0 | 0 |
-| diff line number | `.hy-ln` | 1082, 214, 30, 16 | Plex 11/16 400 | #525a7c / #a9aebf | #cdd7ed / #242323 | 0 | 0 6 0 0 |
-| removed line | `.hy-dl.hy-rem` | 1082, 246, 420, 16 | Plex 11/16 400 | #262b5b / #ebdcd5 | #fef2f2 / #ef4444 @10% | 0 | 0 |
-| removed sign | `.hy-dl.hy-rem > .hy-sg` | 1112, 246, 16, 16 | Plex 11/16 400 | #b91c1c / #f87171 | — | 0 | 0 |
-| removed word | `.hy-wr` | 1180.8, 247, 59.4, 14 | Plex 11/16 400 | #262b5b / #ebdcd5 | #ef4444 @18% / #ef4444 @26% | 4px | 0 |
-| added line | `.hy-dl.hy-add` | 1082, 262, 420, 16 | Plex 11/16 400 | #262b5b / #f5ebe4 | #dbefd1 / #1b2d17 | 0 | 0 |
-| added sign | `.hy-dl.hy-add > .hy-sg` | 1112, 262, 16, 16 | Plex 11/16 400 | #2b5a17 / #b1d391 | — | 0 | 0 |
-| added word | `.hy-wa` | 1141.2, 263, 112.2, 14 | Plex 11/16 400 | #262b5b / #f5ebe4 | #c8f2ae / #254519 | 4px | 0 |
+| Git head | `[data-tab="Git"] .hy-vh` | 1072, 498.5, 440, 34 | Regrade 11.5/11.5 400 | #525a7c / #a9aebf | — | 0 | 0 8 0 10 |
+| Graph | Diff | `[data-tab="Git"] .seg` | 1082, 502.5, 125.1, 26 | Regrade 11.5/11.5 400 | #525a7c / #a9aebf | #cdd7ed / #242323 | 999px | 3 3 3 3 |
+| diff summary | `.hy-dsum` | 1072, 532.5, 440, 26 | Regrade 12/12 520 | #414970 / #c1c6d5 | — | 0 | 0 14 0 14 |
+| added count | `.hy-dsum .hy-pn` | 1128.5, 539.8, 20.7, 11.5 | Plex 11.5/11.5 520 | #2b5a17 / #b1d391 | — | 0 | 0 |
+| removed count | `.hy-dsum .hy-mn` | 1159.2, 539.8, 20.7, 11.5 | Plex 11.5/11.5 520 | #b91c1c / #f87171 | — | 0 | 0 |
+| changed file | `.hy-df` | 1078, 558.5, 428, 24 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | — | 8px | 0 10 0 8 |
+| diff | `.hy-diff` | 1082, 660.5, 420, 112 | Plex 11/16 400 | #262b5b / #ebdcd5 | #d6deee / #1b1a1a | 6px | 0 |
+| diff line | `.hy-dl` | 1384, 128, 116, 18 | Plex 11.5/18 400 | #262b5b / #ebdcd5 | — | 0 | 0 |
+| diff line number | `.hy-ln` | 1384, 128, 34, 18 | Plex 11.5/18 400 | #525a7c / #a9aebf | — | 0 | 0 6 0 0 |
+| removed line | `.hy-dl.hy-rem` | 1082, 692.5, 420, 16 | Plex 11/16 400 | #262b5b / #ebdcd5 | #fef2f2 / #ef4444 @10% | 0 | 0 |
+| removed sign | `.hy-dl.hy-rem > .hy-sg` | 1112, 692.5, 16, 16 | Plex 11/16 400 | #b91c1c / #f87171 | — | 0 | 0 |
+| removed word | `.hy-wr` | 1180.8, 693.5, 59.4, 14 | Plex 11/16 400 | #262b5b / #ebdcd5 | #ef4444 @18% / #ef4444 @26% | 4px | 0 |
+| added line | `.hy-dl.hy-add` | 1082, 708.5, 420, 16 | Plex 11/16 400 | #262b5b / #f5ebe4 | #dbefd1 / #1b2d17 | 0 | 0 |
+| added sign | `.hy-dl.hy-add > .hy-sg` | 1112, 708.5, 16, 16 | Plex 11/16 400 | #2b5a17 / #b1d391 | — | 0 | 0 |
+| added word | `.hy-wa` | 1141.2, 709.5, 112.2, 14 | Plex 11/16 400 | #262b5b / #f5ebe4 | #c8f2ae / #254519 | 4px | 0 |
 
 ## Right panel: Outputs
 
@@ -188,11 +188,11 @@ Colours are the computed values, Field then Night; `@n%` is alpha. Padding is to
 
 | part | selector | box | font | colour Field / Night | background Field / Night | radius | padding |
 |---|---|---|---|---|---|---|---|
-| breadcrumb | `.dp-crumb` | 14, 97.3, 156.9, 11.5 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | — | 0 | 0 |
-| tree row | `.dp-f` | 6, 122, 428, 26 | Regrade 14/20.3 400 | #333964 / #c1c6d5 | — | 6px | 0 8 0 8 |
-| tree row, picked | `.dp-f[data-on]` | 6, 434, 428, 26 | Regrade 14/20.3 400 | #333964 / #c1c6d5 | #dae1f0 / #232222 | 6px | 0 8 0 24 |
-| git mark | `.dp-gs[data-g="M"]` | 362, 130, 14, 10 | Plex 10/10 500 | #2b5a17 / #7daf4e | — | 0 | 0 |
-| ignored row name | `.dp-dim .dp-nm` | 50, 311.3, 306, 11.5 | Plex 11.5/11.5 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| breadcrumb | `.dp-crumb` | 314, 97.3, 87.9, 11.5 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | — | 0 | 0 |
+| tree row | `.dp-f` | 6, 88, 288, 26 | Regrade 14/20.3 400 | #333964 / #c1c6d5 | — | 6px | 0 8 0 8 |
+| tree row, picked | `.dp-f[data-on]` | 6, 400, 288, 26 | Regrade 14/20.3 400 | #333964 / #c1c6d5 | #dae1f0 / #232222 | 6px | 0 8 0 24 |
+| git mark | `.dp-gs[data-g="M"]` | 222, 96, 14, 10 | Plex 10/10 500 | #2b5a17 / #7daf4e | — | 0 | 0 |
+| ignored row name | `.dp-dim .dp-nm` | 50, 277.3, 166, 11.5 | Plex 11.5/11.5 400 | #525a7c / #a9aebf | — | 0 | 0 |
 
 ## Right panel: Browser
 

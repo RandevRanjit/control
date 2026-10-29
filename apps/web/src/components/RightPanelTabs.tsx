@@ -36,6 +36,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 
 import { isElectron } from "~/env";
 import type { DesktopPreviewOverlay } from "~/previewStateStore";
@@ -81,7 +82,7 @@ import { previewBridge } from "./preview/previewBridge";
 import { PierreEntryIcon } from "./chat/PierreEntryIcon";
 import { Seg } from "./Seg";
 import { resolvePullRequestState } from "./pullRequest/pullRequestPresentation";
-import { RightPanelToolsSlot } from "./rightPanelToolsSlot";
+import { RightPanelChipsSlot, RightPanelToolsSlot } from "./rightPanelToolsSlot";
 import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
 
 interface RightPanelTabsProps {
@@ -511,12 +512,19 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
   const chipListRef = useRef<HTMLDivElement>(null);
   const [renamingDevice, setRenamingDevice] = useState<string | null>(null);
   const [toolsSlot, setToolsSlot] = useState<HTMLElement | null>(null);
+  const [chipsSlot, setChipsSlot] = useState<HTMLElement | null>(null);
 
   const tab = props.tabs?.selected ?? null;
+  // Folder's tabs sit over the file, beside the tree, in the row its file view gives them; the
+  // tree is always at the left, so it has no tab of its own (owner, 29 Oct; design §5.4).
+  const chipsInFileView = tab === "folder";
   const tabSurfaces =
     tab === null
       ? props.surfaces
-      : props.surfaces.filter((surface) => panelTabOf(surface.kind) === tab);
+      : props.surfaces.filter(
+          (surface) =>
+            panelTabOf(surface.kind) === tab && !(chipsInFileView && surface.kind === "files"),
+        );
   // What a tab's + opens. Folder, Git's diff and Outputs are one view each, opened by the tab
   // itself; the terminal's own toolbar adds shells.
   const addActions =
@@ -549,12 +557,16 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
     props.pullRequestsAvailable || gitPullRequest !== undefined
       ? ["Graph", "Diff", "PR"]
       : ["Graph", "Diff"];
-  // A tab shows its own row of chips once it holds more than one surface, or has something to add.
-  // Folder keeps its row with Files alone, so the first opened file doesn't push the tree down;
+  // A tab shows its own row of chips once it holds more than one surface, or has something to add;
   // Terminal with one shell, so the row always says which shell is on show (design §5.6).
+  const chipsSlotValue = useMemo(
+    () => ({ attach: setChipsSlot, count: chipsInFileView ? tabSurfaces.length : 0 }),
+    [chipsInFileView, tabSurfaces.length],
+  );
   const showChips =
     tab !== "git" &&
-    (tab === null || tab === "folder" || tab === "terminal" || tabSurfaces.length > 1 || canAdd);
+    !chipsInFileView &&
+    (tab === null || tab === "terminal" || tabSurfaces.length > 1 || canAdd);
 
   // The new-tab shortcut opens what the tab on show opens: a shell in Terminal, a page elsewhere.
   const onNewTabKeyDown = useEffectEvent((event: KeyboardEvent) => {
@@ -715,7 +727,7 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
 
     viewport.addEventListener("wheel", handleWheel, { passive: false });
     return () => viewport.removeEventListener("wheel", handleWheel);
-  }, [showChips]);
+  }, [showChips, chipsSlot]);
 
   const terminalNumber = (surface: RightPanelSurface) =>
     tabSurfaces
@@ -762,36 +774,29 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
                 !active && "hover:text-foreground",
               )}
             >
-              {surface.kind === "files" ? (
-                // Folder's tree is pinned first (rightPanelStore.withFolderTree): it has no close.
-                <span className="flex size-4 shrink-0 items-center justify-center">
-                  <Files className="size-3 shrink-0" />
-                </span>
-              ) : (
-                <PanelTabCloseButton
-                  label={`Close ${title}`}
-                  onClick={() => props.onCloseSurface(surface)}
-                >
-                  {surface.kind === "terminal" ? (
-                    <i>{terminalNumber(surface)}</i>
-                  ) : (
-                    <SurfaceIcon
-                      surface={surface}
-                      sessions={props.previewSessions}
-                      desktopByTabId={props.desktopByTabId}
-                      theme={resolvedTheme}
-                      environmentId={props.environmentId}
-                      pullRequestStatusSeeds={props.pullRequestStatusSeeds}
-                    />
-                  )}
-                  {pending ? (
-                    <span
-                      className="absolute -right-0.5 -bottom-0.5 size-1.5 rounded-full bg-current"
-                      aria-hidden
-                    />
-                  ) : null}
-                </PanelTabCloseButton>
-              )}
+              <PanelTabCloseButton
+                label={`Close ${title}`}
+                onClick={() => props.onCloseSurface(surface)}
+              >
+                {surface.kind === "terminal" ? (
+                  <i>{terminalNumber(surface)}</i>
+                ) : (
+                  <SurfaceIcon
+                    surface={surface}
+                    sessions={props.previewSessions}
+                    desktopByTabId={props.desktopByTabId}
+                    theme={resolvedTheme}
+                    environmentId={props.environmentId}
+                    pullRequestStatusSeeds={props.pullRequestStatusSeeds}
+                  />
+                )}
+                {pending ? (
+                  <span
+                    className="absolute -right-0.5 -bottom-0.5 size-1.5 rounded-full bg-current"
+                    aria-hidden
+                  />
+                ) : null}
+              </PanelTabCloseButton>
               {audio === "none" || !audioRuntimeTabId ? null : (
                 <Tooltip>
                   <TooltipTrigger
@@ -1029,6 +1034,7 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
           />
         ) : null}
       </div>
+      {chipsInFileView && chipsSlot ? createPortal(chips, chipsSlot) : null}
       {props.tabs && showChips ? (
         <div className="hy-vh flex shrink-0 px-2" data-right-panel-subtabs>
           {chips}
@@ -1066,7 +1072,9 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
       {/* isolate: a surface's own layers (the browser's control bar is z-20) stay under the
           tab row's popover. */}
       <div className="isolate flex min-h-0 flex-1 flex-col" data-right-panel-surface-content>
-        <RightPanelToolsSlot value={toolsSlot}>{props.children}</RightPanelToolsSlot>
+        <RightPanelToolsSlot value={toolsSlot}>
+          <RightPanelChipsSlot value={chipsSlotValue}>{props.children}</RightPanelChipsSlot>
+        </RightPanelToolsSlot>
       </div>
     </PreviewPanelShell>
   );

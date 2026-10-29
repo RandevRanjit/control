@@ -7,10 +7,10 @@ The right panel sits beside a thread. Open it with the panel toggle in the threa
   screenshots it sent, and the documents, pictures and builds it wrote into the folder. Code it
   changed is in Git, not here. The newest turn starts open; click an older turn to open it. Pick an
   output to see it underneath, with Markdown shown rendered.
-- **Folder**: the thread's folder, with each file you open as a tab after **Files**, the tree.
-  Files with uncommitted changes carry Git's letter (M, A, D, R), and their folders a dot.
-  Click **Files** to go back to the tree; the files stay open. When the panel is wide, the tree can
-  also sit beside a file.
+- **Folder**: the thread's folder as a tree at the left. A file you click opens at its right, as a
+  tab over the file. Files with uncommitted changes carry Git's letter (M, A, D, R), and their
+  folders a dot. The button at the start of the tabs hides the tree and shows it again; in a narrow
+  panel it shows the tree on its own, and a click on a file brings the file back.
 - **Browser**: pages the agent or you opened, and devices. Use **+** for another page or a device.
 - **Git**: **Graph** shows the branch's commits beside its upstream and default branch; click a
   commit for its message and files, and a file to open it in Folder. **Diff** opens on what the

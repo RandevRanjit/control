@@ -2245,18 +2245,18 @@ export const resolveGitHubPublishConfig = Effect.fn("resolveGitHubPublishConfig"
 });
 
 export function resolveDesktopUpdateChannel(version: string): "latest" | "nightly" {
-  return /-nightly\.\d{8}\.\d+$/.test(version) ? "nightly" : "latest";
+  return /-nightly\.(?:\d{8}\.)?\d+$/.test(version) ? "nightly" : "latest";
 }
 
 // Pull request builds (`-pr.<n>.`) and the maintainers' preview train
-// (`-preview.<date>.<run>`) are downloaded by hand and never through an
+// (`-preview.<run>`) are downloaded by hand and never through an
 // updater. Building them without a publish config means electron-builder
 // emits no `latest*.yml`/`nightly*.yml` manifests or blockmaps for them and
 // the app ships without `app-update.yml`, so neither a stable nor a nightly
 // install can be pointed at one of these releases, and the build itself
 // reports that no update feed is configured instead of polling.
 export function isDesktopPreviewVersion(version: string): boolean {
-  return /-pr\./.test(version) || /-preview\.\d{8}\.\d+$/.test(version);
+  return /-pr\./.test(version) || /-preview\.(?:\d{8}\.)?\d+$/.test(version);
 }
 
 export function resolveDesktopWebAssetBrand(version: string): WebAssetBrand {

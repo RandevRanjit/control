@@ -181,18 +181,19 @@ const parseNightlyTag = (
   // Accept both the current `v<semver>` format and the legacy `nightly-v<semver>`
   // format so release note diffs keep working across the tag-format transition.
   const match = new RegExp(
-    `^(?:nightly-)?v(\\d+)\\.(\\d+)\\.(\\d+)-${channel}\\.(\\d{8})\\.(\\d+)$`,
+    // Tags before 0.1.2 carry the date; later ones are the run alone.
+    `^(?:nightly-)?v(\\d+)\\.(\\d+)\\.(\\d+)-${channel}\\.(?:(\\d{8})\\.)?(\\d+)$`,
   ).exec(tag);
   if (!match) return undefined;
 
   const [, major, minor, patch, date, runNumber] = match;
-  if (!major || !minor || !patch || !date || !runNumber) return undefined;
+  if (!major || !minor || !patch || !runNumber) return undefined;
 
   return {
     major: Number(major),
     minor: Number(minor),
     patch: Number(patch),
-    date: Number(date),
+    date: Number(date ?? 0),
     runNumber: Number(runNumber),
   };
 };

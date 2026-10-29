@@ -1,4 +1,7 @@
 import { ComputerUseAppIcon } from "~/components/Icons";
+import { AudioPreviewUnmountContext } from "../files/AudioPreview";
+import { InlineAudioPreview } from "../files/InlineAudioPreview";
+import { filePreviewKind } from "@control/shared/filePreview";
 import { useChatCanvas } from "./ChatCanvasContext";
 import { WorkLogBlock, WorkLogDetails, WorkLogList, WorkLogRow } from "./WorkLog";
 import { PullRequestGlyph } from "../pullRequest/pullRequestIcons";
@@ -82,6 +85,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   type ReactNode,
+  type SyntheticEvent,
 } from "react";
 import {
   LegendList,
@@ -619,10 +623,15 @@ export const MessagesTimeline = memo(function MessagesTimeline({
   // The list stays mounted across thread switches. Its first end pins on the
   // new thread must snap, not glide, even if that thread is mid-turn.
   const [settlingListIdentity, setSettlingListIdentity] = useState<string | null>(null);
+  // Rows whose audio is playing stay mounted while scrolled out of view.
+  const [playingAudioRows, setPlayingAudioRows] = useState<ReadonlyMap<HTMLAudioElement, string>>(
+    () => new Map(),
+  );
   let paintedExpandedWorkGroupIds = expandedWorkGroupIds;
   let paintedExpandedAttemptIds = expandedAttemptIds;
   if (listIdentityRef.current !== listIdentityKey) {
     listIdentityRef.current = listIdentityKey;
+    setPlayingAudioRows(new Map());
     setPositionedThreadKey(null);
     setSettlingListIdentity(listIdentityKey);
     paintedExpandedWorkGroupIds = rememberedPosition?.disclosures?.workGroups ?? new Set();
@@ -952,13 +961,16 @@ export const MessagesTimeline = memo(function MessagesTimeline({
     const keys = [
       ...(citationAlwaysRender?.keys ?? []),
       ...(fullscreenAppRowId === null ? [] : [fullscreenAppRowId]),
+      ...new Set(
+        [...playingAudioRows].filter(([audio]) => audio.isConnected).map(([, rowId]) => rowId),
+      ),
     ];
     if (indices.length === 0 && keys.length === 0) return undefined;
     return {
       ...(indices.length === 0 ? {} : { indices }),
       ...(keys.length === 0 ? {} : { keys }),
     };
-  }, [citationAlwaysRender, restoringAlwaysRender, fullscreenAppRowId]);
+  }, [citationAlwaysRender, restoringAlwaysRender, fullscreenAppRowId, playingAudioRows]);
   const [minimapHitStripWidth, setMinimapHitStripWidth] = useState(0);
   const [minimapCurrentIndex, setMinimapCurrentIndex] = useState<number | null>(null);
   const handleAnchorReady = useCallback(
@@ -1347,18 +1359,46 @@ export const MessagesTimeline = memo(function MessagesTimeline({
     [listRef, registerTimeline],
   );
 
-  // Stable renderItem — no closure deps. Row components read shared state
-  // from TimelineRowCtx, which propagates through LegendList's memo.
+  const onAudioPlaybackChange = useCallback((rowId: string, event: SyntheticEvent) => {
+    const audio = event.target;
+    if (!(audio instanceof HTMLAudioElement)) return;
+    setPlayingAudioRows((current) => {
+      const playing = !audio.paused && !audio.ended;
+      if (playing === current.has(audio)) return current;
+      const next = new Map(current);
+      if (playing) next.set(audio, rowId);
+      else next.delete(audio);
+      return next;
+    });
+  }, []);
+  const onAudioUnmount = useCallback((audio: HTMLAudioElement) => {
+    setPlayingAudioRows((current) => {
+      if (!current.has(audio)) return current;
+      const next = new Map(current);
+      next.delete(audio);
+      return next;
+    });
+  }, []);
+
+  // Stable renderItem — its callbacks never change. Row components read shared
+  // state from TimelineRowCtx, which propagates through LegendList's memo.
   const renderItem = useCallback(
     ({ item }: { item: MessagesTimelineRow }) => (
-      <div className="messages-timeline-row-frame">
+      <div
+        className="messages-timeline-row-frame"
+        onPlayCapture={(event) => onAudioPlaybackChange(item.id, event)}
+        onPauseCapture={(event) => onAudioPlaybackChange(item.id, event)}
+        onEndedCapture={(event) => onAudioPlaybackChange(item.id, event)}
+      >
         {/* Unclipped, so the prompt's band runs to the pane's edge; the list clips it. */}
         <div className="chat-content-lane" data-timeline-root="true">
-          <TimelineRowContent row={item} />
+          <AudioPreviewUnmountContext value={onAudioUnmount}>
+            <TimelineRowContent row={item} />
+          </AudioPreviewUnmountContext>
         </div>
       </div>
     ),
-    [],
+    [onAudioPlaybackChange, onAudioUnmount],
   );
 
   if (
@@ -1410,7 +1450,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
             // Design v1 (§4.2): turns stack to the bottom of the canvas, above the composer.
             alignItemsAtEnd
             // Legend needs a data refresh to mount new pins without a scroll event.
-            dataVersion={readyCitationRequest?.key ?? listIdentityKey}
+            dataVersion={`${readyCitationRequest?.key ?? listIdentityKey}:${alwaysRender?.keys?.join(",") ?? ""}`}
             {...(alwaysRender ? { alwaysRender } : {})}
             onLoad={onCitationListLoad}
             {...(anchoredEndSpace ? { anchoredEndSpace } : {})}
@@ -2088,7 +2128,14 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
     [row.message.attachments],
   );
   const userVideos = userFiles.filter(isVideoAttachment);
-  const otherUserFiles = userFiles.filter((file) => !isVideoAttachment(file));
+  const userAudio = useMemo(
+    () =>
+      userFiles.filter((file) => file.downloadable !== false && filePreviewKind(file) === "audio"),
+    [userFiles],
+  );
+  const otherUserFiles = userFiles.filter(
+    (file) => !isVideoAttachment(file) && !userAudio.includes(file),
+  );
   const unknownAttachments = (row.message.attachments ?? []).filter(
     (attachment) => !isImageAttachment(attachment) && !isFileAttachment(attachment),
   );
@@ -2168,6 +2215,9 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
   const renderContextReference = useCallback(
     (reference: ChatMarkdownContextReference) => {
       const record = asKnownContextRecord(resolvedContext.recordsById.get(reference.contextId));
+      // Audio plays from its own chip above the prose, so its inline reference is dropped.
+      if (record?.kind === "file" && userAudio.some((file) => file.id === record.attachmentId))
+        return null;
       // Structured annotations point at the image record, which in turn points at the persisted
       // attachment. Filename and order are compatibility fallbacks for legacy messages only.
       const annotationImage =
@@ -2206,6 +2256,7 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
     },
     [
       resolvedContext.recordsById,
+      userAudio,
       userImages,
       userFiles,
       previewImages,
@@ -2313,6 +2364,25 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
               ))}
             </div>
           )}
+          {userAudio.length > 0 ? (
+            <div className="mb-2 flex max-w-full flex-col gap-1">
+              {userAudio.map((file) => (
+                <InlineAudioPreview
+                  key={file.id}
+                  name={file.name}
+                  environmentId={ctx.activeThreadEnvironmentId}
+                  resource={{
+                    _tag: "attachment",
+                    attachmentId: file.id,
+                    fileName: file.name,
+                    mimeType: file.mimeType,
+                    disposition: "inline",
+                  }}
+                  onOpen={() => ctx.onFileOpen(file)}
+                />
+              ))}
+            </div>
+          ) : null}
           {unchippedFiles.length > 0 || unknownAttachments.length > 0 ? (
             <div className="mb-2 flex flex-col gap-1">
               {unchippedFiles.map((file) => {

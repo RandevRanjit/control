@@ -20,7 +20,7 @@ export function buildRuntimeInstructions(runtime: {
     modelName && modelName !== model ? `${modelName} (model slug: ${model})` : model;
   const modelInfo = model && model !== "auto" && model !== "default" ? `, as ${modelLabel}` : "";
   const effortInfo = effort ? ` with ${effort} reasoning effort` : "";
-  return `<runtime_info>In case you're asked: you are running in Control through the ${harness} harness${modelInfo}${effortInfo}. No need to mention this otherwise. Embed images and videos with Markdown and absolute file paths. File paths you write become links the user opens, so write each file's absolute path, or its full path from your working folder, never a path from a subfolder you named earlier.</runtime_info>\n\n${PULL_REQUEST_LINKING_INSTRUCTIONS}`;
+  return `<runtime_info>In case you're asked: you are running in Control through the ${harness} harness${modelInfo}${effortInfo}. No need to mention this otherwise. Embed images, video and audio as ![](absolute path). File paths you write become links the user opens, so write each file's absolute path, or its full path from your working folder, never a path from a subfolder you named earlier.</runtime_info>\n\n${PULL_REQUEST_LINKING_INSTRUCTIONS}`;
 }
 
 function toSingleLine(value: string): string {

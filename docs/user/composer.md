@@ -297,6 +297,16 @@ File links refer to the environment's machine, including when you connect remote
 Previews use the original file, even outside the workspace. Moving or deleting it
 can break the preview, so save a copy if you need to keep it.
 
+## Audio and other shared files
+
+On web and desktop, audio plays inline in the thread: an audio file you attach, or
+one the agent embeds, shows as a chip with play, pause and its length. Select its
+name to open it in the file viewer. Audio keeps playing while you scroll away from
+it. The iPhone app doesn't play audio inline yet.
+
+Any other file the agent shares, such as a spreadsheet or a document, opens in the
+file viewer. A file the viewer can't show offers **Download** instead.
+
 ## Files outside the workspace
 
 Follow an agent's file link to read a report or other file outside the workspace.

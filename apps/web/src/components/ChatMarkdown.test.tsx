@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { EnvironmentId, type AuthEnvironmentScope } from "@control/contracts";
+import { EnvironmentId, ThreadId, type AuthEnvironmentScope } from "@control/contracts";
 import { act, type ComponentProps, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -14,7 +14,10 @@ import { GitHubIcon } from "./Icons";
 import { Button } from "./ui/button";
 import { setMarkdownTaskChecked } from "./files/filePreviewMode";
 
-vi.mock("@effect/atom-react", () => ({ useAtomValue: () => null }));
+vi.mock("@effect/atom-react", () => ({
+  useAtomValue: () => null,
+  useAtomRefresh: () => () => {},
+}));
 vi.mock("../hooks/useTheme", () => ({ useTheme: () => ({ resolvedTheme: "dark" }) }));
 const settingsOverrides = vi.hoisted(() => ({ mathRenderingEnabled: false }));
 vi.mock("../hooks/useSettings", async (importOriginal) => {
@@ -57,7 +60,12 @@ vi.mock("../state/session", async (importOriginal) => {
     usePreparedConnection: () => ({ _tag: "Loading" }),
   };
 });
+vi.mock("../assets/assetUrls", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../assets/assetUrls")>()),
+  useAssetUrlState: () => ({ _tag: "Loading" }),
+}));
 vi.mock("../state/entities", () => ({
+  readEnvironmentSupportsServerBrowser: () => false,
   readThreadShell: () => null,
   useProjects: () => [],
   useServerConfigs: () => new Map(),
@@ -856,6 +864,55 @@ describe("ChatMarkdown Windows file links", () => {
     expect(html).not.toContain("javascript:");
     expect(html).not.toContain("d:alert");
     expect(html).not.toContain("chat-markdown-file-link");
+  });
+});
+
+describe("ChatMarkdown shared audio and files", () => {
+  const environmentId = EnvironmentId.make("environment-audio");
+  const threadRef = { environmentId, threadId: ThreadId.make("thread-audio") };
+
+  it("plays an embedded audio file inline instead of showing it as an image", () => {
+    const html = renderToStaticMarkup(
+      <ChatMarkdown
+        cwd="/tmp/project"
+        environmentId={environmentId}
+        threadRef={threadRef}
+        text="Listen: ![take](/tmp/project/out/tone.wav)"
+      />,
+    );
+    expect(html).toContain('aria-label="Loading tone.wav"');
+    expect(html).toContain('aria-label="Preview tone.wav"');
+    expect(html).not.toContain("<img");
+  });
+
+  it("plays a direct audio URL inline", () => {
+    const html = renderToStaticMarkup(
+      <ChatMarkdown cwd="/tmp/project" text="![take](https://cdn.example.com/tone.mp3)" />,
+    );
+    expect(html).toContain('aria-label="Loading tone.mp3"');
+    expect(html).not.toContain("<img");
+  });
+
+  it("shows unavailable audio when a workspace embed has no thread", () => {
+    const html = renderToStaticMarkup(
+      <ChatMarkdown cwd="/tmp/project" text="![recording](clip.wav)" />,
+    );
+    expect(html).toContain("Audio unavailable");
+    expect(html).not.toContain("<audio");
+  });
+
+  it("opens any other embedded file as a file link rather than a broken image", () => {
+    const html = renderToStaticMarkup(
+      <ChatMarkdown
+        cwd="/tmp/project"
+        environmentId={environmentId}
+        threadRef={threadRef}
+        text="![report](/tmp/project/out/report.docx)"
+      />,
+    );
+    expect(html).toContain("chat-markdown-file-link");
+    expect(html).not.toContain("<img");
+    expect(html).not.toContain("Image unavailable");
   });
 });
 

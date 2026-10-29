@@ -404,6 +404,10 @@ it.effect("checks each preview_act action against that action's own input", () =
       // press needs a key, and a click needs exactly one target, as preview_press and preview_click did.
       const missingKey = yield* act({ action: "press" });
       expect(missingKey.isError).toBe(true);
+      // The message is fixed: it names the action, never the decoder's text.
+      expect(JSON.stringify(missingKey.content)).toContain(
+        "The press action got input it does not take, or lacks a field it needs.",
+      );
       const twoTargets = yield* act({ action: "click", locator: "text=Send", x: 1, y: 2 });
       expect(twoTargets.isError).toBe(true);
       expect(inputs).toEqual([]);

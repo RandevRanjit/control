@@ -1,5 +1,5 @@
 const PULL_REQUEST_LINKING_INSTRUCTIONS = `<pull_request_linking>
-Link each PR you create or work on: one link_pull_request per PR, full URL, every stack layer, as soon as you create it or start on it. Host CLIs and APIs do not link for you. Linking twice is safe. Skip PRs named only as background. If linking fails, say so. Asked to monitor, watch or babysit a PR, call watch_pull_request and end your turn: Control wakes you, so do not poll or run your own watcher. Before you hand the work back, call unwatch_pull_request.
+When the control MCP server has link_pull_request, link each PR you create or work on: one link_pull_request per PR, full URL, every stack layer, as soon as you create it or start on it. Host CLIs and APIs do not link for you. Linking twice is safe. Skip PRs named only as background. If linking fails, say so. Asked to monitor, watch or babysit a PR and watch_pull_request is available, call it and end your turn: Control wakes you, so do not poll or run your own watcher. Before you hand the work back, call unwatch_pull_request. Without these tools, say the PR is not linked or watched rather than polling it.
 </pull_request_linking>`;
 
 /**

@@ -3,6 +3,8 @@ import {
   ProjectId,
   ThreadId,
   type OrchestrationSearchThreadsResult,
+  type OrchestrationV2SearchThreadsInput,
+  type OrchestrationV2ThreadShell,
 } from "@control/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
@@ -56,7 +58,7 @@ it("encodes scoped thread keys without delimiter collisions", () => {
 it("accepts search keys at the maximum decoded query length", () => {
   const queries: string[] = [];
   const searchAtom = createThreadSearchResultsAtomFamily<Error>({
-    getSearchAtom: (_environmentId, query) => {
+    getSearchAtom: (_environmentId, { query }) => {
       queries.push(query);
       return Atom.make(AsyncResult.success({ matches: [] }));
     },
@@ -66,8 +68,8 @@ it("accepts search keys at the maximum decoded query length", () => {
   const query = "a".repeat(200);
 
   try {
-    registry.get(searchAtom(makeThreadSearchKey([envA], query)));
-    registry.get(searchAtom(makeThreadSearchKey([envA], ` ${query} `)));
+    registry.get(searchAtom.results(makeThreadSearchKey([envA], query)));
+    registry.get(searchAtom.results(makeThreadSearchKey([envA], ` ${query} `)));
 
     expect(queries).toEqual([query, query]);
   } finally {
@@ -83,15 +85,15 @@ it("ignores invalid search keys", () => {
       return Atom.make(AsyncResult.success({ matches: [] }));
     },
     labelPrefix: "test:thread-search",
-  });
+  }).results;
   const registry = AtomRegistry.make();
 
   try {
     const state = registry.get(searchAtom(makeThreadSearchKey([envA], "a".repeat(201))));
     const malformedState = registry.get(searchAtom("not json{{"));
 
-    expect(state).toEqual({ matches: [], isLoading: false });
-    expect(malformedState).toEqual({ matches: [], isLoading: false });
+    expect(state).toEqual({ matches: [], isLoading: false, rows: [] });
+    expect(malformedState).toEqual({ matches: [], isLoading: false, rows: [] });
     expect(searchCount).toBe(0);
   } finally {
     registry.dispose();
@@ -120,15 +122,59 @@ it("merges successful environments and silently ignores failures", () => {
             ),
           ),
     labelPrefix: "test:thread-search",
-  });
+  }).results;
   const registry = AtomRegistry.make();
 
   const state = registry.get(searchAtom(makeThreadSearchKey([envB, envA], "needle")));
   expect(state).toEqual({
     matches: [{ ...result.matches[0], environmentId: envA }],
     isLoading: false,
+    rows: [],
   });
   expect(threadSearchMatchKey(state.matches[0]!)).toBe('["env-a","thread-a"]');
+
+  registry.dispose();
+});
+
+it("asks environments that omit older settled threads for their rows, with the caller's scope", () => {
+  const inputs: Array<readonly [EnvironmentId, OrchestrationV2SearchThreadsInput]> = [];
+  const row = { id: ThreadId.make("thread-old") } as OrchestrationV2ThreadShell;
+  const search = createThreadSearchResultsAtomFamily<Error>({
+    getSearchAtom: (environmentId, input) => {
+      inputs.push([environmentId, input]);
+      return Atom.make(AsyncResult.success({ matches: [], snapshotSequence: 9, threads: [row] }));
+    },
+    olderSettledBefore: (environmentId) =>
+      Atom.make(environmentId === envA ? "2026-10-01T00:00:00.000Z" : null),
+    labelPrefix: "test:thread-search",
+  });
+  const registry = AtomRegistry.make();
+  const scope = {
+    projectIds: [ProjectId.make("project-a")],
+    environmentLabels: { [envA]: "Laptop" },
+  };
+
+  // Too short to match messages: only the environment with older rows is asked, for titles.
+  const key = makeThreadSearchKey([envA, envB], "ui", scope);
+  expect(registry.get(search.results(key)).rows).toEqual([
+    { environmentId: envA, read: { snapshotSequence: 9, threads: [row] } },
+  ]);
+  expect(registry.get(search.rows(key, envA))).toEqual([{ snapshotSequence: 9, threads: [row] }]);
+  expect(inputs).toEqual([
+    [
+      envA,
+      {
+        query: "ui",
+        olderSettledBefore: "2026-10-01T00:00:00.000Z",
+        projectIds: scope.projectIds,
+        environmentLabel: "Laptop",
+        titlesOnly: true,
+      },
+    ],
+  ]);
+  inputs.length = 0;
+  registry.get(search.results(makeThreadSearchKey([envB], "needle")));
+  expect(inputs).toEqual([[envB, { query: "needle" }]]);
 
   registry.dispose();
 });

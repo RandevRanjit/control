@@ -46,6 +46,7 @@ import { ProjectActionsSettings } from "./ProjectActionsSettings";
 import { ProjectDefaultsSettings } from "./ProjectDefaultsSettings";
 import { projectGroupTitleNeedsUpdate } from "./ProjectSettingsPanel.logic";
 import { useSettingsProjectGroups } from "./useSettingsProjectGroups";
+import { readUnloadedThreadCount } from "../../state/olderSettledShelf";
 
 const ProjectIconPickerDialog = lazy(() =>
   import("./ProjectIconPickerDialog").then((module) => ({
@@ -339,6 +340,8 @@ function ProjectDetail({
       const projectThreads = threads.filter((thread) =>
         memberKeys.has(`${thread.environmentId}:${thread.projectId}`),
       );
+      // Older settled threads the shell left out are deleted too.
+      const threadCount = projectThreads.length + readUnloadedThreadCount(members, threads);
       const isWholeGroup = members.length === group.memberProjects.length;
       const targetKind = hasOtherMembers || !isWholeGroup ? "checkout" : "project";
       const singleMember = members.length === 1 ? members[0]! : null;
@@ -346,8 +349,8 @@ function ProjectDetail({
       const confirmed = await settlePromise(() =>
         api.dialogs.confirm(
           [
-            projectThreads.length > 0
-              ? `Remove ${targetKind} "${targetLabel}" and delete its ${projectThreads.length} thread${projectThreads.length === 1 ? "" : "s"}?`
+            threadCount > 0
+              ? `Remove ${targetKind} "${targetLabel}" and delete its ${threadCount} thread${threadCount === 1 ? "" : "s"}?`
               : `Remove ${targetKind} "${targetLabel}"?`,
             ...(singleMember
               ? [
@@ -357,7 +360,7 @@ function ProjectDetail({
                     : []),
                 ]
               : [`This removes ${members.length} grouped project entries.`]),
-            ...(projectThreads.length > 0
+            ...(threadCount > 0
               ? [
                   "This permanently clears conversation history for those threads and any archived threads.",
                 ]

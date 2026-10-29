@@ -39,6 +39,7 @@ import { nativeHeaderScrollEdgeEffects } from "../../native/scrollEdgeEffects";
 import { useNativeColumnLayoutMetrics } from "../../native/native-layout-metrics";
 import { NATIVE_LIQUID_GLASS_SUPPORTED } from "../../native/native-glass";
 import { useThreadSearch } from "../../state/queries";
+import { useOlderSettledShelf, useOlderSettledShelfGrowth } from "../../state/olderSettledShelf";
 import { useThreadJumpShortcuts } from "../keyboard/threadKeyboardShortcuts";
 import { usePendingThreadOrder } from "../../state/thread-order";
 import { threadListEnvironmentsAtom } from "../../state/server";
@@ -504,6 +505,30 @@ export function HomeScreen(props: HomeScreenProps) {
   } = listEnvironments;
   const resolveProviderInstance = useThreadRowProviderInstanceResolver(providersByEnvironmentId);
   const pendingOrder = usePendingThreadOrder(nowMinute, snoozeWakeTick);
+  // Older settled threads load in pages; the shelf lists them only as far as they are loaded.
+  // A search lists every match it holds, so then the shelf neither pages nor holds rows back.
+  const searchingThreads = props.searchQuery.trim().length > 0;
+  const olderSettledShelf = useOlderSettledShelf({
+    scopes: (props.selectedEnvironmentId === null
+      ? [...settlementEnvironmentIds]
+      : [props.selectedEnvironmentId]
+    ).map((environmentId) => ({
+      environmentId,
+      projectIds: null,
+    })),
+    expanded: settledShelfExpanded,
+    visibleCount: searchingThreads ? 0 : settledVisibleCount,
+  });
+  const unloadedSettledCount = searchingThreads
+    ? 0
+    : olderSettledShelf.unloadedCount(
+        props.threads.filter(
+          (thread) =>
+            thread.archivedAt === null &&
+            (props.selectedEnvironmentId === null ||
+              thread.environmentId === props.selectedEnvironmentId),
+        ),
+      );
   // Up/down menu availability for every card, computed once per section per
   // rebuild (see computeThreadMoveAvailability): per-thread planner calls made
   // list construction quadratic, and this list rebuilds on every minute tick.
@@ -564,8 +589,14 @@ export function HomeScreen(props: HomeScreenProps) {
       snoozedShelfExpanded,
       settledShelfExpanded,
       selectedThreadKey,
+      // The shelf's rows follow its atom value, so `environments` keys this memo.
+      ...(searchingThreads ? {} : { isListedSettled: olderSettledShelf.isListed }),
+      unloadedSettledCount,
     });
   }, [
+    searchingThreads,
+    olderSettledShelf.environments,
+    unloadedSettledCount,
     workingShelfEnabled,
     workingShelfExpanded,
     pendingOrder,
@@ -584,6 +615,7 @@ export function HomeScreen(props: HomeScreenProps) {
     matchedThreadKeys,
     v2ProjectTitleByProjectKey,
   ]);
+  useOlderSettledShelfGrowth(olderSettledShelf, threadListV2Layout.listedSettledThreads);
   // Re-partition the moment the earliest snooze expires (clamped to the
   // signed-32-bit setTimeout range; far-future wakes re-arm at the clamp).
   const nextSnoozeWakeAt = threadListV2Layout.nextSnoozeWakeAt;
@@ -861,7 +893,9 @@ export function HomeScreen(props: HomeScreenProps) {
   // full-page "No threads yet". Settled threads are unarchived live shells,
   // so the archived-at check already covers the settled shelf.
   const hasAnyThreads =
-    props.threads.some((thread) => thread.archivedAt === null) || props.pendingTasks.length > 0;
+    props.threads.some((thread) => thread.archivedAt === null) ||
+    props.pendingTasks.length > 0 ||
+    threadListV2Layout.settledCount > 0;
   const selectedEnvironmentLabel =
     props.selectedEnvironmentId === null
       ? null
@@ -1000,7 +1034,15 @@ export function HomeScreen(props: HomeScreenProps) {
               settledShelfExpanded && threadListV2Layout.hiddenSettledCount > 0 ? (
                 <ThreadListV2ShowMoreRow
                   hiddenCount={threadListV2Layout.hiddenSettledCount}
-                  onPress={showMoreSettled}
+                  {...(olderSettledShelf.loading
+                    ? { state: "loading" as const }
+                    : olderSettledShelf.failed
+                      ? { state: "failed" as const }
+                      : {})}
+                  onPress={() => {
+                    olderSettledShelf.retry();
+                    showMoreSettled();
+                  }}
                 />
               ) : null
             }

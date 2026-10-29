@@ -490,6 +490,17 @@ function notifyThemeSaveFailure(): void {
   );
 }
 
+/** The environment name the palette shows and matches for a thread or project. */
+function paletteEnvironmentLabel(
+  environment: ReturnType<typeof useEnvironments>["environments"][number],
+) {
+  const isPrimary = environment.entry.target._tag === "PrimaryConnectionTarget";
+  if (isPrimary) return "Local";
+  return isDesktopLocalConnectionTarget(environment.entry.target)
+    ? `${environment.label} (Local)`
+    : environment.label;
+}
+
 function projectFavicon(project: Project) {
   return <ProjectFavicon project={project} className="size-4" />;
 }
@@ -865,7 +876,22 @@ function OpenCommandPaletteDialog(props: {
     [environments],
   );
   const threadSearchQuery = currentView === null && !isActionsOnly ? deferredQuery : "";
-  const threadSearch = useThreadSearch(environmentIds, threadSearchQuery);
+  // The palette matches environment names when there are several; older rows must match the same.
+  const environmentLabels =
+    environments.length > 1
+      ? Object.fromEntries(
+          environments.flatMap((environment) =>
+            environmentIds.includes(environment.environmentId)
+              ? [[environment.environmentId, paletteEnvironmentLabel(environment)]]
+              : [],
+          ),
+        )
+      : undefined;
+  const threadSearch = useThreadSearch(
+    environmentIds,
+    threadSearchQuery,
+    environmentLabels === undefined ? {} : { environmentLabels },
+  );
   const visitThread = useAtomCommand(threadEnvironment.visit, { reportFailure: false });
   // Ranking is relative to when the palette opened, so rows do not reorder as time passes.
   const [searchNow] = useState(() => Date.now());
@@ -918,11 +944,7 @@ function OpenCommandPaletteDialog(props: {
             environment.environmentId,
             {
               kind: isLocal ? "local" : "remote",
-              label: isPrimary
-                ? "Local"
-                : isLocal
-                  ? `${environment.label} (Local)`
-                  : environment.label,
+              label: paletteEnvironmentLabel(environment),
               machine: resolveEnvironmentMachineKind(environment.serverConfig),
             },
           ] as const;

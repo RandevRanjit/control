@@ -504,6 +504,9 @@ const refreshOnSignalWhileRead =
     );
   };
 
+export const selectEnvironmentQueryData = <A, E>(result: AsyncResult.AsyncResult<A, E>): A | null =>
+  Option.getOrNull(AsyncResult.value(result));
+
 export function createEnvironmentQueryAtomFamily<R, ER, Input, A, E>(
   runtime: Atom.AtomRuntime<EnvironmentRegistry.EnvironmentRegistry | R, ER>,
   options: EnvironmentQueryAtomOptions<

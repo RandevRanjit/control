@@ -263,7 +263,7 @@ import {
   type EnvironmentQueryTarget,
 } from "~/state/pullRequests";
 import { useEnvironmentQuery } from "~/state/query";
-import { useDebouncedValue } from "~/state/queries";
+import { useDebouncedValue, useThreadSearch } from "~/state/queries";
 import { ProviderModelPicker } from "./ProviderModelPicker";
 import { resolveModelPickerSelectedModel } from "./ModelPickerContent";
 import {
@@ -2471,6 +2471,8 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
   const isPathTrigger = composerTriggerKind === "path";
   // Thread shells only feed `@` thread matches, so skip shell updates otherwise.
   const environmentThreadShells = useThreadShells(isPathTrigger);
+  // Mounts older settled threads matching the mention, which shells may leave out.
+  useThreadSearch(isPathTrigger ? [environmentId] : [], pathTriggerQuery, { titlesOnly: true });
   const workspaceEntries = useComposerPathSearch({
     environmentId,
     cwd: isPathTrigger ? gitCwd : null,

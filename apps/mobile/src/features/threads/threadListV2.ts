@@ -282,6 +282,8 @@ export interface ThreadListV2Layout {
   readonly items: ThreadListV2Item[];
   /** Settled threads beyond the render limit (behind "Show more"). */
   readonly hiddenSettledCount: number;
+  /** The settled rows the shelf may list, before its visible limit. */
+  readonly listedSettledThreads: ReadonlyArray<EnvironmentThreadShell>;
   /** Working threads folded away by the Working section beta. */
   readonly workingCount: number;
   /** Index in `items` where the Working shelf header belongs. */
@@ -679,6 +681,10 @@ export function buildThreadListV2Items(input: {
       outbox. Such a thread has work the user is waiting on, so it stays in
       the active block even when the server has settled it. */
   readonly queuedThreadKeys?: ReadonlySet<string>;
+  /** Whether the shelf may list a settled row yet; older settled rows load in pages. */
+  readonly isListedSettled?: (thread: EnvironmentThreadShell) => boolean;
+  /** Settled threads in scope that are not local (older settled threads not loaded). */
+  readonly unloadedSettledCount?: number;
 }): ThreadListV2Layout {
   const now = input.now;
   const pending =
@@ -778,15 +784,21 @@ export function buildThreadListV2Items(input: {
           (thread) => `${thread.environmentId}:${thread.id}` === selectedThreadKey,
         );
   const orderedSettled = sortSettledThreadsReusingLast(settled);
+  const listedSettled =
+    input.isListedSettled === undefined
+      ? orderedSettled
+      : orderedSettled.filter(input.isListedSettled);
+  const settledTotal = orderedSettled.length + (input.unloadedSettledCount ?? 0);
   const settledLimit = input.settledLimit ?? Number.POSITIVE_INFINITY;
   const limitedSettled =
-    orderedSettled.length > settledLimit ? orderedSettled.slice(0, settledLimit) : orderedSettled;
+    listedSettled.length > settledLimit ? listedSettled.slice(0, settledLimit) : listedSettled;
   const selectedSettled =
-    selectedThreadKey === null
+    selectedThreadKey === null ||
+    limitedSettled.some((thread) => `${thread.environmentId}:${thread.id}` === selectedThreadKey)
       ? undefined
-      : orderedSettled
-          .slice(limitedSettled.length)
-          .find((thread) => `${thread.environmentId}:${thread.id}` === selectedThreadKey);
+      : orderedSettled.find(
+          (thread) => `${thread.environmentId}:${thread.id}` === selectedThreadKey,
+        );
   const pagedSettled =
     selectedSettled === undefined ? limitedSettled : [...limitedSettled, selectedSettled];
   const visibleSettled =
@@ -839,7 +851,7 @@ export function buildThreadListV2Items(input: {
       isLast: false,
     });
   }
-  const settledShelfHeaderIndex = orderedSettled.length > 0 ? items.length : null;
+  const settledShelfHeaderIndex = settledTotal > 0 ? items.length : null;
   for (const thread of visibleSettled) {
     items.push({
       thread,
@@ -855,12 +867,13 @@ export function buildThreadListV2Items(input: {
   }
   return {
     items,
-    hiddenSettledCount: orderedSettled.length - pagedSettled.length,
+    hiddenSettledCount: Math.max(0, settledTotal - pagedSettled.length),
+    listedSettledThreads: listedSettled,
     workingCount: orderedWorking.length,
     workingShelfHeaderIndex,
     snoozedCount: orderedSnoozed.length,
     snoozedShelfHeaderIndex,
-    settledCount: orderedSettled.length,
+    settledCount: settledTotal,
     settledShelfHeaderIndex,
     nextSnoozeWakeAt,
   };

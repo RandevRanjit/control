@@ -8,6 +8,7 @@ import {
   type OrchestrationV2ThreadShell,
 } from "@control/contracts";
 import { describe, expect, it } from "@effect/vitest";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
@@ -230,6 +231,121 @@ describe("createThreadFamilyAtoms", () => {
         yield* settle;
         expect(threadFamilyRead(registry.get(family))).toBe("settled");
         expect(mergedIds()).toEqual(["parent", "idle-child"]);
+      }),
+    ),
+  );
+
+  it.effect("says a thread the shell left out is loading until its family read decides", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        // The server answers once the gate opens: the older thread, nothing, or an error.
+        const gate = yield* Deferred.make<void>();
+        const answers: Record<
+          string,
+          Effect.Effect<OrchestrationV2ThreadFamily, OrchestrationV2GetShellSnapshotError>
+        > = {
+          old: Effect.succeed({ snapshotSequence: 3, threads: [row("old", "Older settled")] }),
+          deleted: Effect.succeed({ snapshotSequence: 3, threads: [] }),
+          unreachable: Effect.fail(new OrchestrationV2GetShellSnapshotError({ message: "down" })),
+        };
+        const client = {
+          [ORCHESTRATION_V2_WS_METHODS.getThreadFamily]: (input: { threadId: string }) =>
+            Deferred.await(gate).pipe(Effect.andThen(answers[input.threadId]!)),
+        } as unknown as WsRpcProtocolClient;
+        const session = {
+          client,
+          initialConfig: Effect.succeed({ shellThreadFamilies: true } as never),
+          ready: Effect.void,
+          probe: Effect.void,
+          closed: Effect.never,
+        } as unknown as RpcSession.RpcSession;
+        const supervisor = EnvironmentSupervisor.EnvironmentSupervisor.of({
+          target: TARGET,
+          state: yield* SubscriptionRef.make<SupervisorConnectionState>({
+            ...AVAILABLE_CONNECTION_STATE,
+            desired: true,
+            network: "online",
+            phase: "connected",
+            attempt: 1,
+            generation: 1,
+          }),
+          session: yield* SubscriptionRef.make(Option.some(session)),
+          prepared: yield* SubscriptionRef.make(Option.none<PreparedConnection>()),
+          connect: Effect.void,
+          disconnect: Effect.void,
+          retryNow: Effect.void,
+        } satisfies EnvironmentSupervisor.EnvironmentSupervisor["Service"]);
+        const run: EnvironmentRegistry.EnvironmentRegistry["Service"]["run"] = (
+          _environmentId,
+          effect,
+        ) => Effect.provideService(effect, EnvironmentSupervisor.EnvironmentSupervisor, supervisor);
+        const followStream: EnvironmentRegistry.EnvironmentRegistry["Service"]["followStream"] = (
+          _environmentId,
+          stream,
+        ) => Stream.provideService(stream, EnvironmentSupervisor.EnvironmentSupervisor, supervisor);
+        const runtime = Atom.runtime(
+          Layer.succeed(
+            EnvironmentRegistry.EnvironmentRegistry,
+            EnvironmentRegistry.EnvironmentRegistry.of({
+              run,
+              followStream,
+            } as unknown as EnvironmentRegistry.EnvironmentRegistry["Service"]),
+          ),
+        );
+        const shellAt = (generation: number): EnvironmentShellState => ({
+          ...EMPTY_SHELL_STATE,
+          status: "live",
+          snapshot: Option.some({
+            schemaVersion: 1,
+            snapshotSequence: 3,
+            projects: [],
+            threads: [row("recent")],
+            archivedThreads: [],
+          } as unknown as OrchestrationV2ShellSnapshot),
+          generation,
+        });
+        const shellState = Atom.make<AsyncResult.AsyncResult<EnvironmentShellState>>(
+          AsyncResult.success(shellAt(0)),
+        );
+        const families = createThreadFamilyAtoms(runtime, () => shellState);
+        const registry = yield* Effect.acquireRelease(Effect.sync(AtomRegistry.make), (registry) =>
+          Effect.sync(() => registry.dispose()),
+        );
+        const referenced = (id: string) =>
+          families.referencedThreadAtom(TARGET.environmentId, ThreadId.make(id));
+        const settle = (id: string) =>
+          AtomRegistry.getResult(
+            registry,
+            families.familyAtom(TARGET.environmentId, ThreadId.make(id)),
+            { suspendOnWaiting: true },
+          ).pipe(
+            Effect.ignore,
+            Effect.tap(() => Effect.yieldNow),
+          );
+        for (const id of ["recent", "old", "deleted", "unreachable"])
+          registry.mount(referenced(id));
+
+        expect(registry.get(referenced("recent"))).toEqual({
+          status: "ready",
+          thread: row("recent"),
+        });
+        // Before this session's first authoritative snapshot nothing is read, and nothing is gone.
+        expect(registry.get(referenced("old")).status).toBe("loading");
+
+        registry.set(shellState, AsyncResult.success(shellAt(1)));
+        expect(registry.get(referenced("old")).status).toBe("loading");
+        yield* Deferred.succeed(gate, undefined);
+        yield* settle("old");
+        expect(registry.get(referenced("old"))).toEqual({
+          status: "ready",
+          thread: row("old", "Older settled"),
+        });
+
+        yield* settle("deleted");
+        expect(registry.get(referenced("deleted")).status).toBe("missing");
+
+        yield* settle("unreachable");
+        expect(registry.get(referenced("unreachable")).status).toBe("failed");
       }),
     ),
   );

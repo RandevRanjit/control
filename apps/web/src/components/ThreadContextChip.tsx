@@ -2,9 +2,16 @@ import type { ThreadContextRecord } from "@control/contracts";
 import { Link } from "@tanstack/react-router";
 import { MessagesSquareIcon } from "lucide-react";
 
-import { useThreadShell } from "~/state/entities";
+import { useReferencedThread } from "~/state/threads";
 import { ContextChip, ContextChipLabel } from "./ContextChip";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "./ui/tooltip";
+
+const THREAD_CHIP_TOOLTIP = {
+  ready: "Open thread",
+  loading: "Loading thread",
+  failed: "Could not load thread",
+  missing: "Thread no longer available",
+} as const;
 
 /**
  * Inline chip for an attached thread, in the composer and in sent messages. Prefers the
@@ -15,8 +22,10 @@ export function ThreadContextChip(props: {
   copyMarkdown?: string;
 }) {
   const { environmentId, threadId } = props.record;
-  const shell = useThreadShell({ environmentId, threadId });
-  const title = shell?.title?.trim() || props.record.title;
+  // The shell leaves older settled threads out, so a missing row loads before it can be gone.
+  const referenced = useReferencedThread(environmentId, threadId);
+  const title =
+    (referenced.status === "ready" ? referenced.thread.title.trim() : "") || props.record.title;
   return (
     <Tooltip>
       <TooltipTrigger
@@ -33,7 +42,7 @@ export function ThreadContextChip(props: {
           </ContextChip>
         }
       />
-      <TooltipPopup side="top">{shell ? "Open thread" : "Thread no longer available"}</TooltipPopup>
+      <TooltipPopup side="top">{THREAD_CHIP_TOOLTIP[referenced.status]}</TooltipPopup>
     </Tooltip>
   );
 }

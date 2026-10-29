@@ -8800,11 +8800,15 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
   ) =>
     Effect.gen(function* () {
       // A native subagent Stop that found no process still running it: only that
-      // subagent ends, and its result says why nothing was stopped.
+      // subagent, its node and its turn item end, and its result says why nothing
+      // was stopped. The turn item is what keeps the thread's background work pending.
       const subagentId = command.subagentId;
       if (subagentId !== undefined) {
-        const { subagents } = yield* projectionStore
-          .getThreadRecords(command.threadId, ["subagents"])
+        const { subagents, nodes, turnItems } = yield* projectionStore
+          .getThreadRecords(command.threadId, ["subagents", "nodes", "turnItems"], {
+            turnItemTypes: ["subagent"],
+            turnItemStatuses: ["pending", "running", "waiting"],
+          })
           .pipe(
             Effect.mapError(
               (cause) => new OrchestratorProjectionError({ threadId: command.threadId, cause }),
@@ -8814,27 +8818,39 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
         if (subagent === undefined || !["pending", "running", "waiting"].includes(subagent.status))
           return;
         const now = yield* DateTime.now;
-        yield* emit(
-          events,
-          command,
-        )({
-          type: "subagent.updated",
+        const result =
+          subagent.result ??
+          "Stopped. Its Claude process was no longer running, so it had already ended.";
+        const base = {
           threadId: command.threadId,
           ...(subagent.runId === null ? {} : { runId: subagent.runId }),
           nodeId: subagent.id,
           driver: subagent.driver,
           providerInstanceId: subagent.providerInstanceId,
           occurredAt: now,
-          payload: {
-            ...subagent,
-            status: "interrupted",
-            result:
-              subagent.result ??
-              "Stopped. Its Claude process was no longer running, so it had already ended.",
-            completedAt: now,
-            updatedAt: now,
-          },
+        };
+        const emitEvent = emit(events, command);
+        yield* emitEvent({
+          ...base,
+          type: "subagent.updated",
+          payload: { ...subagent, status: "interrupted", result, completedAt: now, updatedAt: now },
         });
+        const node = nodes.find((candidate) => candidate.id === subagent.id);
+        if (node !== undefined && ["pending", "running", "waiting"].includes(node.status)) {
+          yield* emitEvent({
+            ...base,
+            type: "node.updated",
+            payload: { ...node, status: "interrupted", completedAt: now },
+          });
+        }
+        for (const item of turnItems) {
+          if (item.type !== "subagent" || item.subagentId !== subagent.id) continue;
+          yield* emitEvent({
+            ...base,
+            type: "turn-item.updated",
+            payload: { ...item, status: "interrupted", result, completedAt: now, updatedAt: now },
+          });
+        }
         return;
       }
       const [projection, stopped] = yield* Effect.all([

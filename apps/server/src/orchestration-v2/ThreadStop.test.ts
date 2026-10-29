@@ -1,6 +1,8 @@
 import { assert, it } from "@effect/vitest";
+import { projectThreadAwarenessV2 } from "@control/shared/agentAwareness";
 import {
   CommandId,
+  EnvironmentId,
   EventId,
   MessageId,
   NodeId,
@@ -714,5 +716,179 @@ it.effect(
       assert.equal(settled?.status, "interrupted");
       assert.match(settled?.result ?? "", /no longer running/);
       assert.deepEqual(yield* threadState(threadId), stateBefore);
+    }).pipe(Effect.provide(layerTest)),
+);
+
+it.effect(
+  "a native subagent Stop that finds no process ends that subagent's work, so the finished thread alerts",
+  () =>
+    Effect.gen(function* () {
+      const orchestrator = yield* Orchestrator.OrchestratorV2;
+      const projections = yield* ProjectionStore.ProjectionStoreV2;
+      const threadId = ThreadId.make("thread:orphaned-native-child");
+      yield* orchestrator.dispatch({
+        type: "thread.create",
+        commandId: CommandId.make(`create:${threadId}`),
+        threadId,
+        projectId: ProjectId.make("project:thread-stop"),
+        title: threadId,
+        modelSelection,
+        runtimeMode: "full-access",
+        interactionMode: "default",
+        branch: null,
+        worktreePath: null,
+        createdBy: "user",
+        creationSource: "web",
+      });
+      yield* send(threadId, "owner", "start_immediately");
+      const now = yield* DateTime.now;
+      const run = (yield* orchestrator.getThreadProjection(threadId)).runs[0]!;
+      yield* projections.apply({
+        id: EventId.make("event:orphaned-native-child:completed"),
+        type: "run.updated",
+        threadId,
+        runId: run.id,
+        occurredAt: now,
+        payload: { ...run, status: "completed", startedAt: now, completedAt: now },
+      });
+      // Two Claude subagents the finished run left in the background.
+      const startSubagent = (name: string) =>
+        Effect.gen(function* () {
+          const id = NodeId.make(`node:orphaned-native-child:${name}`);
+          const nativeTaskRef = {
+            driver: CLAUDE_PROVIDER,
+            nativeId: name,
+            strength: "strong" as const,
+          };
+          const childThreadId = ThreadId.make(`thread:orphaned-native-child:${name}`);
+          yield* projections.apply({
+            id: EventId.make(`event:orphaned-native-child:${name}:node`),
+            type: "node.updated",
+            threadId,
+            runId: run.id,
+            nodeId: id,
+            occurredAt: now,
+            payload: {
+              id,
+              threadId,
+              runId: run.id,
+              rootNodeId: run.rootNodeId!,
+              parentNodeId: run.rootNodeId!,
+              kind: "subagent",
+              status: "running",
+              countsForRun: false,
+              providerThreadId: null,
+              providerTurnId: null,
+              nativeItemRef: nativeTaskRef,
+              runtimeRequestId: null,
+              checkpointScopeId: null,
+              startedAt: now,
+              completedAt: null,
+            },
+          });
+          yield* projections.apply({
+            id: EventId.make(`event:orphaned-native-child:${name}:subagent`),
+            type: "subagent.updated",
+            threadId,
+            runId: run.id,
+            nodeId: id,
+            occurredAt: now,
+            payload: {
+              id,
+              threadId,
+              runId: run.id,
+              parentNodeId: run.rootNodeId!,
+              origin: "provider_native",
+              createdBy: "agent",
+              driver: CLAUDE_PROVIDER,
+              providerInstanceId: ProviderInstanceId.make("claudeAgent"),
+              providerThreadId: null,
+              childThreadId,
+              nativeTaskRef,
+              title: name,
+              model: null,
+              prompt: name,
+              status: "running",
+              result: null,
+              startedAt: now,
+              completedAt: null,
+              updatedAt: now,
+            },
+          });
+          yield* projections.apply({
+            id: EventId.make(`event:orphaned-native-child:${name}:item`),
+            type: "turn-item.updated",
+            threadId,
+            runId: run.id,
+            nodeId: id,
+            occurredAt: now,
+            payload: {
+              id: TurnItemId.make(`turn-item:orphaned-native-child:${name}`),
+              threadId,
+              runId: run.id,
+              nodeId: id,
+              providerThreadId: null,
+              providerTurnId: null,
+              nativeItemRef: nativeTaskRef,
+              parentItemId: null,
+              ordinal: 10,
+              status: "running",
+              title: name,
+              startedAt: now,
+              completedAt: null,
+              updatedAt: now,
+              type: "subagent",
+              subagentId: id,
+              origin: "provider_native",
+              driver: CLAUDE_PROVIDER,
+              providerInstanceId: ProviderInstanceId.make("claudeAgent"),
+              childThreadId,
+              prompt: name,
+              result: null,
+            },
+          });
+          return id;
+        });
+      const orphaned = yield* startSubagent("orphaned");
+      const sibling = yield* startSubagent("sibling");
+      const providerThreadId = run.providerThreadId!;
+      const settle = (subagentId: NodeId) =>
+        orchestrator.dispatch({
+          type: "thread.background-work.settle",
+          commandId: CommandId.make(`settle:${subagentId}`),
+          threadId,
+          providerThreadId,
+          providerTurnId: ProviderTurnId.make("turn:orphaned-native-child"),
+          subagentId,
+        });
+      const alert = Effect.gen(function* () {
+        const shell = (yield* projections.getThreadShell(threadId))!;
+        return {
+          pending: (shell.pendingBackgroundTasks ?? []).map((task) => task.taskId),
+          phase: projectThreadAwarenessV2({
+            environmentId: EnvironmentId.make("environment:thread-stop"),
+            project: { title: "Project" },
+            thread: shell,
+          })?.phase,
+        };
+      });
+      const statuses = Effect.gen(function* () {
+        const projection = yield* orchestrator.getThreadProjection(threadId);
+        return [orphaned, sibling].map((id) => [
+          projection.nodes.find((node) => node.id === id)?.status,
+          projection.turnItems.find((item) => item.nodeId === id)?.status,
+        ]);
+      });
+      assert.deepEqual(yield* alert, { pending: ["orphaned", "sibling"], phase: "running" });
+
+      yield* settle(orphaned);
+      assert.deepEqual(yield* statuses, [
+        ["interrupted", "interrupted"],
+        ["running", "running"],
+      ]);
+      assert.deepEqual(yield* alert, { pending: ["sibling"], phase: "running" });
+
+      yield* settle(sibling);
+      assert.deepEqual(yield* alert, { pending: [], phase: "completed" });
     }).pipe(Effect.provide(layerTest)),
 );

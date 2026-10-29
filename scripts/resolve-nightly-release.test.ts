@@ -39,14 +39,14 @@ it.effect("reports the invalid desktop package version", () =>
   }),
 );
 
-it("derives nightly metadata including the short commit sha in the release name", () => {
+it("names a nightly release by its run and day, not its full version", () => {
   assert.deepStrictEqual(
     resolveNightlyReleaseMetadata("9.9.10", "20260413", 321, "abcdef1234567890"),
     {
       baseVersion: "9.9.10",
       version: "9.9.10-nightly.20260413.321",
       tag: "v9.9.10-nightly.20260413.321",
-      name: "CONTROL Nightly 9.9.10-nightly.20260413.321 (abcdef123456)",
+      name: "Nightly 321 · 13 Apr",
       shortSha: "abcdef123456",
     },
   );
@@ -59,7 +59,7 @@ it("derives preview metadata under its own prerelease identifier", () => {
       baseVersion: "9.9.10",
       version: "9.9.10-preview.20260413.321",
       tag: "v9.9.10-preview.20260413.321",
-      name: "CONTROL Preview (maintainer test build, do not install) 9.9.10-preview.20260413.321 (abcdef123456)",
+      name: "Preview 321 · 13 Apr (maintainer test build, do not install)",
       shortSha: "abcdef123456",
     },
   );

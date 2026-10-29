@@ -256,8 +256,8 @@ try {
   );
   assertContains(
     nightlyReleaseMetadata,
-    "name=CONTROL Nightly 9.9.10-nightly.20260413.321 (abcdef123456)",
-    "Expected nightly metadata to include the short commit SHA in the release name.",
+    "name=Nightly 321 · 13 Apr",
+    "Expected nightly metadata to name the release by its run and day.",
   );
 
   const { arm64Path, x64Path } = writeMacManifestFixtures(tempRoot);

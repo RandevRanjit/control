@@ -100,13 +100,15 @@ export const resolveNightlyTargetVersion = (version: string) => {
 export const PrereleaseChannel = Schema.Literals(["nightly", "preview"]);
 export type PrereleaseChannel = typeof PrereleaseChannel.Type;
 
-// The preview label is deliberately loud: the releases page is the one place
+// The preview name is deliberately loud: the releases page is the one place
 // a preview build can be found, and its name is the first thing a visitor
 // reads before the warning in the body.
-const CHANNEL_RELEASE_LABELS: Record<PrereleaseChannel, string> = {
-  nightly: "Nightly",
-  preview: "Preview (maintainer test build, do not install)",
+const CHANNEL_RELEASE_NAMES: Record<PrereleaseChannel, (build: string) => string> = {
+  nightly: (build) => `Nightly ${build}`,
+  preview: (build) => `Preview ${build} (maintainer test build, do not install)`,
 };
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export const resolveNightlyReleaseMetadata = (
   baseVersion: string,
@@ -117,11 +119,13 @@ export const resolveNightlyReleaseMetadata = (
 ) => {
   const shortSha = sha.slice(0, 12);
   const version = `${baseVersion}-${channel}.${date}.${runNumber}`;
+  // The page already shows the tag and commit, so the name says only which build and when.
+  const day = `${Number(date.slice(6, 8))} ${MONTHS[Number(date.slice(4, 6)) - 1]}`;
   return {
     baseVersion,
     version,
     tag: `v${version}`,
-    name: `CONTROL ${CHANNEL_RELEASE_LABELS[channel]} ${version} (${shortSha})`,
+    name: CHANNEL_RELEASE_NAMES[channel](`${runNumber} · ${day}`),
     shortSha,
   };
 };

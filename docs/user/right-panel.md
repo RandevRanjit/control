@@ -8,6 +8,7 @@ The right panel sits beside a thread. Open it with the panel toggle in the threa
   changed is in Git, not here. The newest turn starts open; click an older turn to open it. Pick an
   output to see it underneath, with Markdown shown rendered.
 - **Folder**: the thread's folder, with each file you open as a tab after **Files**, the tree.
+  Files with uncommitted changes carry Git's letter (M, A, D, R), and their folders a dot.
   Click **Files** to go back to the tree; the files stay open. When the panel is wide, the tree can
   also sit beside a file.
 - **Browser**: pages the agent or you opened, and devices. Use **+** for another page or a device.

@@ -335,9 +335,12 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 - **Tabs** (owner, 29 Oct). Each opened file is a tab in the row under the panel's tabs, after **Files**, the tree,
   which is pinned first and has no close. Files goes back to the tree with the files still open; closing the others
   leaves it. Below 720 px the file has the panel to itself; wider, the tree can sit beside it.
-- **Head.** The breadcrumb `orbit-website › site-v2` in Plex, then `4 changed`.
+- **Head.** The breadcrumb `orbit-website › site-v2` in Plex, then `4 changed`. The breadcrumb names folders only;
+  the open file's name is its tab's (29 Oct). The tab row shows with Files alone, so opening a file moves nothing.
 - **Tree.** Rows are 26 high and step in 16 px per level, with chevrons on folders and file icons on files.
-  - Git's mark sits next to the age at the right: **M** in the write green, **A** in the read blue.
+  - Git's mark sits next to the age at the right: **M** in the write green, **A** in the read blue. A folder holding
+    changes takes a dot (built 29 Oct; the age isn't built). The marks come from the working tree's status, mapped
+    from the repository's paths onto the folder's.
   - Ignored folders (`dist`) are dimmed, with `ignored` in place of an age.
 - **Quick Look.** The picked file shows on `--deep`, radius 10, in Plex 11.5 / 18, with line numbers. Markdown shows
   rendered, with a switch to its source. Keywords take

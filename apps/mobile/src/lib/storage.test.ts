@@ -279,6 +279,16 @@ describe("mobile connection storage", () => {
     });
   });
 
+  it("persists the Render math preference on this phone", async () => {
+    await expect(savePreferencesPatch({ mathRenderingEnabled: true })).resolves.toEqual({
+      mathRenderingEnabled: true,
+    });
+    await expect(loadPreferences()).resolves.toEqual({ mathRenderingEnabled: true });
+
+    mocks.setPreferencesJson(JSON.stringify({ mathRenderingEnabled: "yes" }), 10);
+    await expect(loadPreferences()).resolves.toEqual({});
+  });
+
   it("drops legacy and invalid thread list shelf expansion preferences", async () => {
     mocks.setPreferencesJson(
       JSON.stringify({

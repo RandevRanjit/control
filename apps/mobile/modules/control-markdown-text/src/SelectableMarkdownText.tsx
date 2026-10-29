@@ -6,13 +6,17 @@ import {
   nativeMarkdownChunkSpacing,
   nativeMarkdownDocumentChunks,
   nativeMarkdownDocumentRuns,
+  nativeMarkdownMathSource,
   nativeMarkdownWithAuthoredWindowsPaths,
+  nativeMarkdownWithDisplayMath,
   nativeMarkdownWithPreservedSoftBreaks,
+  type NativeMarkdownFormula,
 } from "./nativeMarkdownText";
 import { MarkdownImageRendererContext, NativeMarkdownBlock } from "./NativeMarkdownBlock";
 import {
   MarkdownContextClipboardContext,
   MarkdownFileContextMenuContext,
+  MarkdownMathContext,
   NativeMarkdownSelectableText,
   type MarkdownFileContextMenuHandlers,
 } from "./NativeMarkdownSelectableText";
@@ -22,6 +26,7 @@ import type {
 } from "./SelectableMarkdownText.types";
 
 const EMPTY_SKILLS: ReadonlyArray<SelectableMarkdownSkill> = [];
+const NO_FORMULAS: ReadonlyArray<NativeMarkdownFormula> = [];
 
 export type {
   MarkdownCodeHighlighter,
@@ -44,6 +49,7 @@ export function SelectableMarkdownText({
   textStyle,
   highlightCode,
   preserveSoftBreaks = false,
+  renderMath = false,
   onLinkPress,
   fileContextMenu,
   onFileContextMenuAction,
@@ -51,15 +57,21 @@ export function SelectableMarkdownText({
   marginTop = 0,
   marginBottom = 0,
 }: SelectableMarkdownTextProps) {
-  const chunks = useMemo(() => {
-    const parsedDocument = nativeMarkdownWithAuthoredWindowsPaths(
-      parseMarkdownWithOptions(markdown, { gfm: true, html: true, math: false }),
-      markdown,
+  const { chunks, formulas } = useMemo(() => {
+    const math = renderMath ? nativeMarkdownMathSource(markdown) : null;
+    const source = math?.markdown ?? markdown;
+    const formulas = math?.formulas.length ? math.formulas : NO_FORMULAS;
+    const authoredDocument = nativeMarkdownWithAuthoredWindowsPaths(
+      parseMarkdownWithOptions(source, { gfm: true, html: true, math: false }),
+      source,
     );
+    const parsedDocument = formulas.length
+      ? nativeMarkdownWithDisplayMath(authoredDocument, formulas)
+      : authoredDocument;
     const document = preserveSoftBreaks
       ? nativeMarkdownWithPreservedSoftBreaks(parsedDocument)
       : parsedDocument;
-    return nativeMarkdownDocumentChunks(document).map((chunk) =>
+    const chunks = nativeMarkdownDocumentChunks(document).map((chunk) =>
       chunk.kind === "selectable"
         ? {
             ...chunk,
@@ -67,7 +79,8 @@ export function SelectableMarkdownText({
           }
         : chunk,
     );
-  }, [markdown, preserveSoftBreaks, skills]);
+    return { chunks, formulas };
+  }, [markdown, preserveSoftBreaks, renderMath, skills]);
 
   const fileContextMenuHandlers = useMemo<MarkdownFileContextMenuHandlers | null>(
     () =>
@@ -79,43 +92,45 @@ export function SelectableMarkdownText({
 
   return (
     <MarkdownContextClipboardContext.Provider value={contextClipboardFragment ?? ""}>
-      <MarkdownImageRendererContext.Provider value={renderImage ?? null}>
-        <MarkdownFileContextMenuContext.Provider value={fileContextMenuHandlers}>
-          {/* A percentage width here creates a cyclic intrinsic measurement inside
+      <MarkdownMathContext.Provider value={formulas}>
+        <MarkdownImageRendererContext.Provider value={renderImage ?? null}>
+          <MarkdownFileContextMenuContext.Provider value={fileContextMenuHandlers}>
+            {/* A percentage width here creates a cyclic intrinsic measurement inside
           shrink-to-fit containers such as user-message bubbles. Yoga then gives
           the native text node an unbounded second pass and the parent only clips
           the resulting single-line width instead of reflowing it. */}
-          <View style={{ flexShrink: 1, minWidth: 0, marginTop, marginBottom }}>
-            {chunks.map((chunk, index) => {
-              const content =
-                chunk.kind === "rich" ? (
-                  <NativeMarkdownBlock
-                    node={chunk.node}
-                    skills={skills}
-                    textStyle={textStyle}
-                    highlightCode={highlightCode}
-                    onLinkPress={onLinkPress}
-                  />
-                ) : (
-                  <NativeMarkdownSelectableText
-                    runs={chunk.runs}
-                    textStyle={textStyle}
-                    onLinkPress={onLinkPress}
-                  />
-                );
+            <View style={{ flexShrink: 1, minWidth: 0, marginTop, marginBottom }}>
+              {chunks.map((chunk, index) => {
+                const content =
+                  chunk.kind === "rich" ? (
+                    <NativeMarkdownBlock
+                      node={chunk.node}
+                      skills={skills}
+                      textStyle={textStyle}
+                      highlightCode={highlightCode}
+                      onLinkPress={onLinkPress}
+                    />
+                  ) : (
+                    <NativeMarkdownSelectableText
+                      runs={chunk.runs}
+                      textStyle={textStyle}
+                      onLinkPress={onLinkPress}
+                    />
+                  );
 
-              return (
-                <View
-                  key={chunk.key}
-                  style={{ paddingTop: nativeMarkdownChunkSpacing(chunks[index - 1], chunk) }}
-                >
-                  {content}
-                </View>
-              );
-            })}
-          </View>
-        </MarkdownFileContextMenuContext.Provider>
-      </MarkdownImageRendererContext.Provider>
+                return (
+                  <View
+                    key={chunk.key}
+                    style={{ paddingTop: nativeMarkdownChunkSpacing(chunks[index - 1], chunk) }}
+                  >
+                    {content}
+                  </View>
+                );
+              })}
+            </View>
+          </MarkdownFileContextMenuContext.Provider>
+        </MarkdownImageRendererContext.Provider>
+      </MarkdownMathContext.Provider>
     </MarkdownContextClipboardContext.Provider>
   );
 }

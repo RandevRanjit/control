@@ -246,6 +246,7 @@ export function FileMarkdownPreview(props: {
     [markdownDirectory, props.environmentId, props.threadId, props.captured],
   );
   const styles = useMarkdownPreviewStyles(renderImage);
+  const { mathRenderingEnabled } = useAppearancePreferences();
   const onLinkPress = useCallback((href: string) => {
     void tryOpenExternalUrl(href, "markdown-link");
   }, []);
@@ -269,6 +270,7 @@ export function FileMarkdownPreview(props: {
             markdown={props.markdown}
             onLinkPress={onLinkPress}
             renderImage={renderImage}
+            renderMath={mathRenderingEnabled}
             textStyle={styles.nativeTextStyle}
           />
         ) : (

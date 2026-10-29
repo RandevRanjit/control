@@ -6,6 +6,7 @@ import {
   Linking,
   Platform,
   StyleSheet,
+  Text,
   type TextInstance,
   type TextStyle,
   useColorScheme,
@@ -16,8 +17,9 @@ import { MarkdownTextPrimitive } from "./MarkdownTextPrimitive";
 import { markdownFileIconSource, markdownIconAssetUri } from "./markdownFileIcons";
 import { markdownLinkIconSource } from "./markdownLinkIcons";
 import { resolveMarkdownFileIcon, resolveMarkdownLinkIcon } from "./markdownLinks";
-import type { NativeMarkdownTextRun } from "./nativeMarkdownText";
-import { nativeMarkdownContextCopyRanges } from "./nativeMarkdownText";
+import { InlineMath } from "./MarkdownMath";
+import type { NativeMarkdownFormula, NativeMarkdownTextRun } from "./nativeMarkdownText";
+import { nativeMarkdownContextCopyRanges, nativeMarkdownMathSegments } from "./nativeMarkdownText";
 import type {
   MarkdownFileContextMenu,
   NativeMarkdownTextStyle,
@@ -192,11 +194,80 @@ function runStyle(run: NativeMarkdownTextRun, textStyle: NativeMarkdownTextStyle
   };
 }
 
-export function NativeMarkdownSelectableText(props: {
+/** Formulas whose placeholders the runs below carry; set by SelectableMarkdownText. */
+export const MarkdownMathContext = createContext<ReadonlyArray<NativeMarkdownFormula>>([]);
+
+interface SelectableTextProps {
   readonly runs: ReadonlyArray<NativeMarkdownTextRun>;
   readonly textStyle: NativeMarkdownTextStyle;
   readonly onLinkPress?: (href: string) => void;
-}) {
+}
+
+/**
+ * Runs holding formulas render as React Native text, the one text view that can hold
+ * the formulas' SVG views inline. Chips and link icons show as plain text there.
+ */
+function MathSelectableText(
+  props: SelectableTextProps & { readonly formulas: ReadonlyArray<NativeMarkdownFormula> },
+) {
+  const children = [];
+  // Runs are keyed by text offset; they only change with the text itself.
+  let offset = 0;
+  for (const run of props.runs) {
+    const style = runStyle(run, props.textStyle);
+    const href = run.href;
+    const onPress = href
+      ? () => {
+          if (props.onLinkPress) props.onLinkPress(href);
+          else void Linking.openURL(href);
+        }
+      : undefined;
+    children.push(
+      <Text key={offset} style={style} onPress={onPress}>
+        {nativeMarkdownMathSegments(run.text, props.formulas).map((segment) =>
+          typeof segment === "string" ? (
+            segment
+          ) : (
+            <InlineMath
+              key={props.formulas.indexOf(segment)}
+              formula={segment}
+              fontSize={style.fontSize ?? props.textStyle.fontSize}
+              color={style.color ?? props.textStyle.color}
+            />
+          ),
+        )}
+      </Text>,
+    );
+    offset += run.text.length;
+  }
+  return (
+    <Text
+      selectable
+      selectionColor={props.textStyle.selectionColor}
+      style={{
+        flexShrink: 1,
+        minWidth: 0,
+        color: props.textStyle.color,
+        fontFamily: props.textStyle.fontFamily,
+        fontSize: props.textStyle.fontSize,
+        lineHeight: props.textStyle.lineHeight,
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+
+export function NativeMarkdownSelectableText(props: SelectableTextProps) {
+  const formulas = useContext(MarkdownMathContext);
+  return formulas.length > 0 && props.runs.some((run) => run.text.includes("\uE000")) ? (
+    <MathSelectableText {...props} formulas={formulas} />
+  ) : (
+    <NativeRunsText {...props} />
+  );
+}
+
+function NativeRunsText(props: SelectableTextProps) {
   const colorScheme = useColorScheme();
   const menu = useContext(MarkdownFileContextMenuContext);
   const contextClipboardFragment = useContext(MarkdownContextClipboardContext);

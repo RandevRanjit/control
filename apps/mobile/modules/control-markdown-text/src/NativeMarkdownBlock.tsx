@@ -3,6 +3,7 @@ import { Image, Platform, ScrollView, Text, useColorScheme, View } from "react-n
 import type { MarkdownNode } from "react-native-nitro-markdown/headless";
 
 import { CopyTextButton } from "./CopyTextButton";
+import { DisplayMath } from "./MarkdownMath";
 import { MarkdownTextPrimitive } from "./MarkdownTextPrimitive";
 import {
   nativeMarkdownDocumentRuns,
@@ -608,18 +609,13 @@ export function NativeMarkdownBlock(props: {
           onLinkPress={props.onLinkPress}
         />
       );
-    case "html_block":
     case "math_block":
+      return <DisplayMath tex={nodeText(props.node)} textStyle={props.textStyle} />;
+    case "html_block":
       return (
         <View
           style={{
             marginVertical: props.compact ? 2 : 0,
-            paddingHorizontal: props.node.type === "math_block" ? 10 : 0,
-            paddingVertical: props.node.type === "math_block" ? 8 : 0,
-            backgroundColor:
-              props.node.type === "math_block"
-                ? props.textStyle.codeBackgroundColor
-                : "transparent",
           }}
         >
           <SelectableNode

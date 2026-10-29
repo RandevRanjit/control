@@ -83,6 +83,8 @@ export interface SelectableMarkdownTextProps {
   readonly highlightCode: MarkdownCodeHighlighter;
   readonly skills?: ReadonlyArray<SelectableMarkdownSkill>;
   readonly preserveSoftBreaks?: boolean;
+  /** Typesets TeX formulas, the phone's Render math preference. */
+  readonly renderMath?: boolean;
   readonly onLinkPress?: (href: string) => void;
   readonly fileContextMenu?: (href: string) => MarkdownFileContextMenu | undefined;
   readonly onFileContextMenuAction?: (href: string, actionId: string) => void;

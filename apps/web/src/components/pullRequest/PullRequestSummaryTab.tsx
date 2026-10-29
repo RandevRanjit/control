@@ -875,7 +875,11 @@ export function PullRequestSummaryTab({
             <Menu>
               <MenuTrigger
                 render={<Button size="xs" variant="ghost-muted" />}
-                aria-label="Filter comments"
+                aria-label={
+                  filteredOutCount > 0
+                    ? `Filter comments, ${filteredOutCount} hidden`
+                    : "Filter comments"
+                }
               >
                 <ListFilterIcon aria-hidden className="size-3" />
                 {filteredOutCount > 0 ? `${filteredOutCount} hidden` : "Filter"}

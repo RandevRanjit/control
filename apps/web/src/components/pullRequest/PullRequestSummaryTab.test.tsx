@@ -221,8 +221,9 @@ it("hides bot and resolved comments until the filter shows them, and remembers t
     renderer = create(render(value));
   });
   expect(texts()).toEqual(["Human comment"]);
+  // The trigger's accessible name carries the hidden count its visible label shows.
   expect(
-    renderer.root.findByProps({ "aria-label": "Filter comments" }).children.join(""),
+    renderer.root.findByProps({ "aria-label": "Filter comments, 13 hidden" }).children.join(""),
   ).toContain("13 hidden");
 
   act(() => filterItem("Bot comments").props.onCheckedChange(true));

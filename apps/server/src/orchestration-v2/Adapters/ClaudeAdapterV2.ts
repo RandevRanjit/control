@@ -46,7 +46,6 @@ import type {
 } from "@anthropic-ai/claude-agent-sdk/sdk-tools";
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- the SDK takes a Node ChildProcess for the CLI.
 import * as NodeChildProcess from "node:child_process";
-// @effect-diagnostics-next-line nodeBuiltinImport:off -- Claude Code compares the repository root with the OS home directory.
 import * as NodeOS from "node:os";
 import { parseCliArgs } from "@control/shared/cliArgs";
 import { HostProcessEnvironment, HostProcessPlatform } from "@control/shared/hostProcess";

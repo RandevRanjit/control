@@ -290,7 +290,9 @@ export function useComposerCommandMenu({
   const hadWorkspaceSnapshotRef = useRef(false);
   useEffect(() => {
     if (hadWorkspaceSnapshotRef.current && !hasWorkspaceSnapshot) {
+      // A snapshot this cwd had is gone, so earlier failed scans no longer count.
       workspaceRefreshKeyRef.current = null;
+      failedRefreshesRef.current = null;
       setWorkspaceRefreshRetry(null);
     }
     hadWorkspaceSnapshotRef.current = hasWorkspaceSnapshot;

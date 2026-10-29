@@ -824,6 +824,40 @@ it.layer(layerTest)("ThreadSearch while the index backfills", (it) => {
     }),
   );
 
+  it.effect("finds a two-character Chinese word behind 2,000 newer messages", () =>
+    Effect.gen(function* () {
+      const projections = yield* ProjectionStore.ProjectionStoreV2;
+      const search = yield* ThreadSearch.ThreadSearch;
+      const sql = yield* SqlClient.SqlClient;
+      const project = ProjectId.make("project:deploy");
+      const old = ThreadId.make("thread:deploy-old");
+      const busy = ThreadId.make("thread:deploy-busy");
+      yield* createProject(project);
+      yield* Effect.forEach(
+        [
+          thread(old, project),
+          message(old, "deploy-old", "user", "明天部署到生产环境"),
+          thread(busy, project),
+        ],
+        projections.apply,
+        { discard: true },
+      );
+      yield* sql`
+        WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 2001)
+        INSERT INTO orchestration_v2_projection_messages
+          (message_id, thread_id, role, streaming, created_at, updated_at, payload_json)
+        SELECT 'deploy-busy-' || i, ${busy}, 'assistant', 0, ${DateTime.formatIso(at(5))},
+          ${DateTime.formatIso(at(5))}, json_object('text', '今天检查日志')
+        FROM n
+      `;
+      const { matches } = yield* search.search({ query: "部署" });
+      assert.deepEqual(
+        matches.map((match) => match.threadId),
+        [old],
+      );
+    }),
+  );
+
   it.effect("finds accented words in either case, short or read without the index", () =>
     Effect.gen(function* () {
       const projections = yield* ProjectionStore.ProjectionStoreV2;

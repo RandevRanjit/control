@@ -340,6 +340,15 @@ describe("createThreadFamilyAtoms", () => {
           status: "ready",
           thread: row("old", "Older settled"),
         });
+        // A removal the shell saw after that read wins over the family's copy.
+        registry.set(
+          shellState,
+          AsyncResult.success({
+            ...shellAt(1),
+            removedAt: new Map([[ThreadId.make("old"), 4]]),
+          }),
+        );
+        expect(registry.get(referenced("old")).status).toBe("missing");
 
         yield* settle("deleted");
         expect(registry.get(referenced("deleted")).status).toBe("missing");

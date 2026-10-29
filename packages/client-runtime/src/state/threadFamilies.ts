@@ -259,10 +259,12 @@ export function createThreadFamilyAtoms<R, ER, E>(
       const result = get(familyAtom(key));
       const read = threadFamilyRead(result);
       if (read !== "settled") return { status: read === "failed" ? "failed" : "loading" };
-      const familyRow = selectEnvironmentQueryData(result)?.threads.find(
-        ({ id }) => id === threadId,
-      );
-      return familyRow === undefined
+      const family = selectEnvironmentQueryData(result);
+      const familyRow = family?.threads.find(({ id }) => id === threadId);
+      // As in the merged rows, a removal the shell saw after the read wins over its copy.
+      const removedAt =
+        shellStateValue(get(shellStateAtom(environmentId)))?.removedAt.get(threadId) ?? -1;
+      return family === null || familyRow === undefined || removedAt > family.snapshotSequence
         ? { status: "missing" }
         : { status: "ready", thread: familyRow };
     }).pipe(Atom.withLabel(`environment-referenced-thread:${key}`));

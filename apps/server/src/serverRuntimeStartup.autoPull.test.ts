@@ -23,6 +23,7 @@ import * as ProviderRuntimeRecovery from "./orchestration-v2/ProviderRuntimeReco
 import * as ProviderSessionManager from "./orchestration-v2/ProviderSessionManager.ts";
 import * as ThreadLaunch from "./orchestration-v2/ThreadLaunchService.ts";
 import * as ThreadManagement from "./orchestration-v2/ThreadManagementService.ts";
+import * as ThreadSearch from "./orchestration-v2/ThreadSearch.ts";
 import * as ExternalLauncher from "./process/externalLauncher.ts";
 import * as ProjectService from "./project/ProjectService.ts";
 import { ServerActivation } from "./serverActivation.ts";
@@ -114,6 +115,7 @@ it.effect("parks automatic pull until activation without delaying command readin
           reconcile: () => Effect.succeed(recovery),
         }),
         Layer.mock(Orchestrator.OrchestratorV2)({ recoverDelegatedTasks: Effect.void }),
+        Layer.mock(ThreadSearch.ThreadSearch)({ backfillIndex: Effect.void }),
         Layer.mock(ProviderSessionManager.ProviderSessionManagerV2)({ shutdown: Effect.void }),
         Layer.mock(EffectWorker.OrchestrationEffectWorkerV2)({ runOnce: Effect.never }),
         Layer.mock(ServerLifecycleEvents.ServerLifecycleEvents)({

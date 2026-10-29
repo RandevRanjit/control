@@ -48,7 +48,9 @@ describe("useThreadSearch", () => {
     };
 
     render("");
-    const typing = ["li", "lin", "link "].map(render);
+    // Two letters never search: the server needs a word of three.
+    expect(render("li").isPending).toBe(false);
+    const typing = ["lin", "link", "link "].map(render);
     expect(typing.map((result) => result.query)).toEqual(["", "", ""]);
     expect(new Set(typing.map((result) => result.matches)).size).toBe(1);
     expect(typing.every((result) => result.isPending)).toBe(true);

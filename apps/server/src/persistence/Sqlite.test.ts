@@ -89,7 +89,9 @@ it.effect("collects planner statistics for an existing database on open", () => 
       const rows = yield* sql<{ readonly stat: string }>`
         SELECT stat FROM sqlite_stat1 WHERE idx = 'stats_probe_thread_idx'
       `;
-      assert.deepEqual([...rows], [{ stat: "1000 100" }]);
+      // Rows per key is sampled: optimize shrinks analysis_limit once the schema has over 100 b-trees.
+      assert.equal(rows.length, 1);
+      assert.match(rows[0]!.stat, /^1000 \d+$/);
     }).pipe(Effect.provide(persistence()));
   }).pipe(
     Effect.ensuring(Effect.sync(() => NodeFS.rmSync(tempDir, { recursive: true, force: true }))),

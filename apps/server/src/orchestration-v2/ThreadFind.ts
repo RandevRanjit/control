@@ -168,6 +168,19 @@ export function findProjectedThreadItems(
   return resultForSelection(selectMatch(docs, input), docs, snapshotSequence);
 }
 
+/** The memory projection's `findPositions`. */
+export function findProjectedPositions(
+  items: readonly OrchestrationV2ProjectedTurnItem[],
+  query: string,
+  cwd?: string,
+) {
+  return new Set(
+    searchableRows(items).flatMap((row) =>
+      countSegments(parseText(textKey(row.item, cwd, [], false)), query) > 0 ? [row.position] : [],
+    ),
+  );
+}
+
 function resultForSelection(
   selected: ReturnType<typeof selectMatch>,
   documents: readonly FindDocument[],
@@ -333,10 +346,9 @@ export const makeThreadFind = Effect.fn("makeThreadFind")(function* (
       });
       const cached = scans.get(cacheKey);
       if (cached && cached.sequence === (yield* readRevision(cached.sourceThreadIds))) {
-        const selected = selectMatch(cached.documents, input);
         scans.delete(cacheKey);
         scans.set(cacheKey, cached);
-        return { result: resultForSelection(selected, cached.documents, cached.sequence) };
+        return { cached };
       }
       const index = yield* readIndex(threadId);
       const sourceThreadIds = [...new Set([threadId, ...index.map((row) => row.sourceThreadId)])];
@@ -366,59 +378,70 @@ export const makeThreadFind = Effect.fn("makeThreadFind")(function* (
         ),
       ),
   );
+  // Cached counts, or the rows to count and a step that counts them all.
+  const scan = Effect.fn("ThreadFind.scan")(function* (input: OrchestrationV2SearchThreadInput) {
+    // Release SQLite before decoding and parsing. Both frames describe one snapshot.
+    const data = yield* snapshot(input);
+    if ("cached" in data)
+      return { sequence: data.cached.sequence, documents: data.cached.documents };
+    const { payloads, cwd, sequence, cacheKey, sourceThreadIds } = data;
+    const decode = (row: FindPayload) =>
+      decodeItem(row.payload).pipe(
+        Effect.map((item) => ({ ...row, item })),
+        Effect.mapError(
+          (cause) => new ProjectionStoreReadError({ threadId: input.threadId, cause }),
+        ),
+      );
+    // Answers rendered inside question cards must not appear as separate matches.
+    const foldedAnswers = new Set<string>();
+    for (const payload of payloads) {
+      if (payload.type !== "user_input_request") continue;
+      const { item } = yield* decode(payload);
+      if (item.type === "user_input_request" && item.questionAnswer)
+        foldedAnswers.add(`async-answer:${item.questionAnswer.requestId}`);
+    }
+    const rows = payloads.filter(
+      (row) =>
+        row.type !== "user_input_request" &&
+        !(row.type === "user_message" && foldedAnswers.has(row.entryId)),
+    );
+    const documents = new Map<number, FindDocument>();
+    const count = Effect.fnUntraced(function* (row: FindPayload) {
+      const cached = documents.get(row.position);
+      if (cached) return cached;
+      const decoded = yield* decode(row);
+      const key = textKey(decoded.item, cwd, input.skills ?? [], input.math === true);
+      const segments = yield* Cache.get(
+        key.text.length <= 32_768 ? textCache : largeTextCache,
+        key,
+      );
+      const document = documentFor(decoded, countSegments(segments, input.query));
+      documents.set(row.position, document);
+      yield* Effect.yieldNow;
+      return document;
+    });
+    const finish = Effect.gen(function* () {
+      for (const row of rows) yield* count(row);
+      const ordered = rows.map((row) => documents.get(row.position)!);
+      scans.delete(cacheKey);
+      scans.set(cacheKey, { sequence, documents: ordered, sourceThreadIds });
+      if (scans.size > 8) {
+        const oldest = scans.keys().next().value;
+        if (oldest !== undefined) scans.delete(oldest);
+      }
+      return ordered;
+    });
+    return { sequence, rows, count, finish };
+  });
   const searchThreadStream = (input: OrchestrationV2SearchThreadInput) =>
     Stream.unwrap(
       Effect.gen(function* () {
-        // Release SQLite before decoding and parsing. Both frames describe one snapshot.
-        const data = yield* snapshot(input);
-        if (data.result) return Stream.succeed(data.result);
-        const { payloads, cwd, sequence, cacheKey, sourceThreadIds } = data;
-        const decode = (row: FindPayload) =>
-          decodeItem(row.payload).pipe(
-            Effect.map((item) => ({ ...row, item })),
-            Effect.mapError(
-              (cause) => new ProjectionStoreReadError({ threadId: input.threadId, cause }),
-            ),
-          );
-        // Answers rendered inside question cards must not appear as separate matches.
-        const foldedAnswers = new Set<string>();
-        for (const payload of payloads) {
-          if (payload.type !== "user_input_request") continue;
-          const { item } = yield* decode(payload);
-          if (item.type === "user_input_request" && item.questionAnswer)
-            foldedAnswers.add(`async-answer:${item.questionAnswer.requestId}`);
-        }
-        const rows = payloads.filter(
-          (row) =>
-            row.type !== "user_input_request" &&
-            !(row.type === "user_message" && foldedAnswers.has(row.entryId)),
-        );
-        const documents = new Map<number, FindDocument>();
-        const count = Effect.fnUntraced(function* (row: FindPayload) {
-          const cached = documents.get(row.position);
-          if (cached) return cached;
-          const decoded = yield* decode(row);
-          const key = textKey(decoded.item, cwd, input.skills ?? [], input.math === true);
-          const segments = yield* Cache.get(
-            key.text.length <= 32_768 ? textCache : largeTextCache,
-            key,
-          );
-          const document = documentFor(decoded, countSegments(segments, input.query));
-          documents.set(row.position, document);
-          yield* Effect.yieldNow;
-          return document;
-        });
-        const finish = Effect.gen(function* () {
-          for (const row of rows) yield* count(row);
-          const ordered = rows.map((row) => documents.get(row.position)!);
-          scans.delete(cacheKey);
-          scans.set(cacheKey, { sequence, documents: ordered, sourceThreadIds });
-          if (scans.size > 8) {
-            const oldest = scans.keys().next().value;
-            if (oldest !== undefined) scans.delete(oldest);
-          }
-          return resultForSelection(selectMatch(ordered, input), ordered, sequence);
-        });
+        const scanned = yield* scan(input);
+        const resultFor = (documents: readonly FindDocument[]) =>
+          resultForSelection(selectMatch(documents, input), documents, scanned.sequence);
+        if ("documents" in scanned) return Stream.succeed(resultFor(scanned.documents));
+        const { sequence, rows, count } = scanned;
+        const finish = Effect.map(scanned.finish, resultFor);
         // Relative navigation needs the final counts. Initial searches can reveal an
         // identity immediately, scanning at/below the reading anchor before wrapping.
         if (input.index !== undefined || (input.offset ?? 0) !== 0)
@@ -451,6 +474,19 @@ export const makeThreadFind = Effect.fn("makeThreadFind")(function* (
       }),
     );
   return {
+    /** Timeline positions of the rows containing the query, for filtered timeline pages. */
+    findPositions: (threadId: ThreadId, query: string) =>
+      scan({ threadId, query }).pipe(
+        Effect.flatMap((scanned) =>
+          "documents" in scanned ? Effect.succeed(scanned.documents) : scanned.finish,
+        ),
+        Effect.map(
+          (documents) =>
+            new Set(
+              documents.flatMap((document) => (document.count > 0 ? [document.position] : [])),
+            ),
+        ),
+      ),
     searchThreadStream,
     searchThread: (input: OrchestrationV2SearchThreadInput) =>
       searchThreadStream(input).pipe(

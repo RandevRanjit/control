@@ -6806,6 +6806,12 @@ export const layerMemory: Layer.Layer<ProjectionStoreV2> = Layer.effect(
         ),
       getTimelinePage: (threadId, options) =>
         service.getThreadProjection(threadId).pipe(
+          // A query runs thread find, which refuses a deleted thread as the SQL store does.
+          Effect.flatMap((projection) =>
+            options.query !== undefined && projection.thread.deletedAt !== null
+              ? Effect.fail(new ProjectionStoreThreadNotFoundError({ threadId }))
+              : Effect.succeed(projection),
+          ),
           Effect.map((projection) => {
             const found =
               options.query === undefined

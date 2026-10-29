@@ -886,4 +886,18 @@ describe("V2 thread find", () => {
   it.effect("memory timeline pages keep only the rows find matches", () =>
     queriedPages.pipe(Effect.provide(ProjectionStore.layerMemory)),
   );
+
+  it.effect("memory timeline pages with a query reject a deleted thread, as SQL does", () =>
+    Effect.gen(function* () {
+      const projection = yield* ProjectionStore.ProjectionStoreV2;
+      yield* projection.apply(thread(threadId, projectId));
+      const deleted = thread(threadId, projectId, { deletedAt: at(3) });
+      if (deleted.type !== "thread.created") return;
+      yield* projection.apply({ ...deleted, id: EventId.make("deleted"), type: "thread.deleted" });
+      const error = yield* Effect.flip(
+        projection.getTimelinePage(threadId, { query: "needle", limit: 10 }),
+      );
+      assert.equal(error._tag, "ProjectionStoreThreadNotFoundError");
+    }).pipe(Effect.provide(ProjectionStore.layerMemory)),
+  );
 });

@@ -28,6 +28,15 @@ const tagOf = (branch: JsonObject, key: string): Json => {
     : undefined;
 };
 
+// The JSON type shared by every tag value; none when they mix types.
+const tagType = (values: ReadonlyArray<Json>) => {
+  const types = new Set(values.map((value) => typeof value));
+  const [only] = types;
+  return types.size === 1 && (only === "string" || only === "number" || only === "boolean")
+    ? { type: only }
+    : {};
+};
+
 /** One object for a tagged union of objects: each property once, the tag listing every value. */
 const mergeTaggedObjects = (branches: ReadonlyArray<Json>): JsonObject | undefined => {
   if (branches.length < 2) return undefined;
@@ -43,8 +52,9 @@ const mergeTaggedObjects = (branches: ReadonlyArray<Json>): JsonObject | undefin
     return values.every((value) => value !== undefined) && new Set(values).size === values.length;
   });
   if (tag === undefined) return undefined;
+  const values = objects.map((object) => tagOf(object, tag));
   const properties: JsonObject = {
-    [tag]: { type: "string", enum: objects.map((object) => tagOf(object, tag)) },
+    [tag]: { ...tagType(values), enum: values },
   };
   for (const object of objects) {
     for (const [name, property] of Object.entries(object.properties)) {
@@ -86,20 +96,37 @@ const compact = (schema: Json, optional: boolean): Json => {
         : compact(value, false);
   }
   if (Array.isArray(result.anyOf)) {
-    const branches = result.anyOf
-      .flatMap((branch) => (isBareAnyOf(branch) ? branch.anyOf : [branch]))
-      .filter((branch) => !(optional && isNullSchema(branch)) && !isJsonStringSchema(branch));
+    const flat = [
+      ...new Map(
+        result.anyOf
+          // An optional property's own null stands for "omitted"; a NullOr inside it keeps its null.
+          .filter((branch) => !(optional && isNullSchema(branch)))
+          .flatMap((branch) => (isBareAnyOf(branch) ? branch.anyOf : [branch]))
+          .map((branch) => [JSON.stringify(branch), branch]),
+      ).values(),
+    ];
+    const hasObject = flat.some((branch) => Predicate.isObject(branch) && branch.type === "object");
+    const kept = hasObject ? flat.filter((branch) => !isJsonStringSchema(branch)) : flat;
+    const nulls = kept.filter(isNullSchema);
+    const others = kept.filter((branch) => !isNullSchema(branch));
+    const merged = others.length === 1 ? others[0] : mergeTaggedObjects(others);
+    const branches = Predicate.isObject(merged) ? [merged, ...nulls] : kept;
     const { anyOf: _anyOf, ...rest } = result;
-    const only = branches.length === 1 ? branches[0] : mergeTaggedObjects(branches);
-    result = Predicate.isObject(only) ? { ...only, ...rest } : { ...rest, anyOf: branches };
+    const [only] = branches;
+    result =
+      branches.length === 1 && Predicate.isObject(only)
+        ? { ...only, ...rest }
+        : { ...rest, anyOf: branches };
   }
   return result;
 };
 
 /**
  * The input schema Control advertises for a tool. Drops JSON noise that every thread pays for:
- * `additionalProperties: true`, safe-integer bounds, nested `anyOf`, JSON-string fallbacks, and
- * the `null` branch of optional properties. A tagged union of objects becomes one object.
+ * `additionalProperties: true`, safe-integer bounds, nested `anyOf` and JSON-string fallbacks
+ * beside an object shape, and the null an optional property gets for "omitted". A tagged union
+ * of objects becomes one object. A `NullOr` keeps its null: Control's handlers read null and
+ * omitted differently (`beforeRunId: null` moves a queued run to the end).
  * Decoding still uses the full schema, so each tag's own required fields still apply.
  */
 export const advertisedJsonSchema = (tool: Tool.Any) =>

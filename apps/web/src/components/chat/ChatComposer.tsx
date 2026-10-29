@@ -2264,7 +2264,9 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
       gitCwd,
     );
     if (hadWorkspaceSnapshotRef.current && !hasWorkspaceSnapshot) {
+      // A snapshot this cwd had is gone, so earlier failed scans no longer count.
       workspaceRefreshKeyRef.current = null;
+      failedRefreshesRef.current = null;
       setWorkspaceRefreshRetry(null);
     }
     hadWorkspaceSnapshotRef.current = hasWorkspaceSnapshot;

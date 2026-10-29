@@ -349,6 +349,34 @@ describe("workspace command discovery retry", () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
+  it("gives a cwd fresh scan attempts after a snapshot it had is invalidated", async () => {
+    const complete = {
+      ...provider,
+      workspaceSnapshots: provider.workspaceSnapshots.map((snapshot) => ({
+        ...snapshot,
+        slashCommandsPending: false,
+      })),
+    };
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a" }));
+    });
+    for (let step = 0; step < 3; step += 1) {
+      await act(() => vi.advanceTimersByTimeAsync(10_000));
+    }
+    expect(refreshProviders).toHaveBeenCalledTimes(3);
+    // Another composer's scan supplies the snapshot, then a reconfigure invalidates it.
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a", status: complete }));
+    });
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a" }));
+    });
+    expect(refreshProviders).toHaveBeenCalledTimes(4);
+    // That scan fails too, and still gets its cooldown retry.
+    await act(() => vi.advanceTimersByTimeAsync(10_000));
+    expect(refreshProviders).toHaveBeenCalledTimes(5);
+  });
+
   it("cancels a scheduled retry when the composer unmounts", async () => {
     await act(async () => {
       root.render(createElement(Probe, { cwd: "/project-a" }));

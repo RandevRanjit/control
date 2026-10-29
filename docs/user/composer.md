@@ -305,7 +305,7 @@ name to open it in the file viewer. Audio keeps playing while you scroll away fr
 it. The iPhone app doesn't play audio inline yet.
 
 Any other file the agent shares, such as a spreadsheet or a document, opens in the
-file viewer. A file the viewer can't show offers **Download** instead.
+file viewer. A file the viewer can't show offers **Save file** instead.
 
 ## Files outside the workspace
 

@@ -39,8 +39,9 @@ Dollar amounts such as `$5 and $10` stay text; write `\$` to keep any other doll
 Wide formulas scroll horizontally while the surrounding text wraps. Copying a formula or
 exporting a table preserves the TeX.
 
-The composer keeps TeX source editable, including when rich text is enabled. The Render math
-preference is saved separately on each device.
+With Render math on, the composer keeps TeX source editable, including when rich text is
+enabled, and a `$skill` or `@file` inside a formula stays text. The Render math preference is
+saved separately on each device.
 
 ## Motion
 

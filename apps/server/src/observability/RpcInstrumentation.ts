@@ -156,6 +156,7 @@ const RPC_AGGREGATES = {
   [WS_METHODS.gitPreparePullRequestThread]: "git",
   [WS_METHODS.vcsListRefs]: "vcs",
   [WS_METHODS.vcsListCommits]: "vcs",
+  [WS_METHODS.vcsUncommittedChanges]: "vcs",
   [WS_METHODS.vcsReadCommitFiles]: "vcs",
   [WS_METHODS.vcsCreateWorktree]: "vcs",
   [WS_METHODS.vcsRemoveWorktree]: "vcs",

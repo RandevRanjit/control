@@ -32,7 +32,7 @@ import { environmentServerConfigsAtom } from "../state/server";
 import { isScratchProject } from "@control/client-runtime/state/projects";
 import { orchestrationEnvironment } from "../state/orchestration";
 import { threadEnvironment } from "../state/threads";
-import { readLocalVcsStatus, vcsEnvironment } from "../state/vcs";
+import { vcsEnvironment } from "../state/vcs";
 import { useNewThreadHandler } from "./useHandleNewThread";
 import { refreshArchivedThreadsForEnvironment } from "../lib/archivedThreadsState";
 import { releaseComposerDraftUploads } from "../lib/composerDraftUploads";
@@ -318,6 +318,10 @@ export function useThreadActions() {
     reportFailure: false,
     refresh: true,
   });
+  const loadUncommittedChanges = useAtomQueryRunner(vcsEnvironment.uncommittedChanges, {
+    reportFailure: false,
+    refresh: true,
+  });
   const refreshVcsStatus = useAtomCommand(vcsEnvironment.refreshStatus, {
     reportFailure: false,
   });
@@ -526,13 +530,21 @@ export function useThreadActions() {
       const automaticWorktreeCleanup = environmentSettings
         ? resolveWorktreeCleanup(environmentSettings, thread.projectId).worktreeOnDelete
         : false;
-      // The server refuses to remove a worktree with uncommitted changes. Say so up
-      // front when its status shows them; a failed read leaves that to the server.
-      const worktreeStatus =
+      // The server refuses to remove a worktree with uncommitted changes. Ask it by
+      // the same rule and say so up front; a failed read (or an older server)
+      // leaves that to the removal.
+      const changes =
         canDeleteWorktree && orphanedWorktreePath !== null
-          ? await readLocalVcsStatus(threadRef.environmentId, orphanedWorktreePath)
+          ? await loadUncommittedChanges({
+              environmentId: threadRef.environmentId,
+              input: { cwd: orphanedWorktreePath },
+            })
           : null;
-      if (localApi && worktreeStatus?.hasWorkingTreeChanges === true) {
+      if (
+        localApi &&
+        changes?._tag === "Success" &&
+        (changes.value.files > 0 || changes.value.truncated)
+      ) {
         const confirmationResult = await settlePromise(() =>
           localApi.dialogs.confirm(
             [
@@ -700,6 +712,7 @@ export function useThreadActions() {
       deleteThreadMutation,
       getCurrentRouteThreadRef,
       loadSessionState,
+      loadUncommittedChanges,
       refreshVcsStatus,
       removeWorktree,
       router,

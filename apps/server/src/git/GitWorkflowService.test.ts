@@ -394,7 +394,7 @@ it.layer(GitVcsDriverTestkit.layerTest)("GitWorkflowService.removeWorktreeIfClea
       const fs = yield* FileSystem.FileSystem;
       // Older clients still ask for a forced removal; the server decides.
       const remove = workflow.removeWorktreeIfClean({ cwd, path, force: true });
-      return { fs, path, remove };
+      return { cwd, fs, path, remove, workflow };
     });
   const fixture = setup();
 
@@ -430,6 +430,20 @@ it.layer(GitVcsDriverTestkit.layerTest)("GitWorkflowService.removeWorktreeIfClea
 
       expect(yield* remove).toEqual({});
       expect(yield* fs.exists(path)).toBe(false);
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect("counts untracked files that a user's status settings hide", () =>
+    Effect.gen(function* () {
+      const { cwd, path, workflow } = yield* fixture;
+      yield* GitVcsDriverTestkit.git(cwd, ["config", "status.showUntrackedFiles", "no"]);
+      yield* GitVcsDriverTestkit.writeTextFile(path, "notes.txt", "draft\n");
+
+      expect(yield* GitVcsDriverTestkit.git(path, ["status", "--porcelain"])).toBe("");
+      expect(yield* workflow.uncommittedChanges({ cwd: path })).toEqual({
+        files: 1,
+        truncated: false,
+      });
     }).pipe(Effect.scoped),
   );
 

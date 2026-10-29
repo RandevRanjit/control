@@ -36,7 +36,8 @@ Markdown previews. On the iPhone the switch is under **Settings → Appearance �
 `$…$`, `$$…$$`, `\(…\)`, and `\[…\]`, outside of code.
 Fenced `math` blocks also render. Formulas work in tables, including absolute-value bars.
 Dollar amounts such as `$5 and $10` stay text; write `\$` to keep any other dollar sign literal.
-Wide formulas scroll horizontally while the surrounding text wraps. On web and desktop, copying a
+Wide formulas scroll horizontally while the surrounding text wraps; on the iPhone, only display
+formulas do. On web and desktop, copying a
 formula or exporting a table preserves the TeX; on the iPhone, a paragraph holding a formula
 copies as plain text without it.
 

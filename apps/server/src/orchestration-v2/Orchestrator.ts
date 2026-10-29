@@ -8800,7 +8800,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
   ) =>
     Effect.gen(function* () {
       // A native subagent Stop that found no process still running it: only that
-      // subagent, its node and its turn item end, and its result says why nothing
+      // subagent, its node, its turn item and its child thread end, and its result says why nothing
       // was stopped. The turn item is what keeps the thread's background work pending.
       const subagentId = command.subagentId;
       if (subagentId !== undefined) {
@@ -8850,6 +8850,33 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
             type: "turn-item.updated",
             payload: { ...item, status: "interrupted", result, completedAt: now, updatedAt: now },
           });
+        }
+        // Its child thread shows the subagent's status through its runless root turn.
+        if (subagent.childThreadId !== null) {
+          const child = yield* projectionStore
+            .getThreadRecords(subagent.childThreadId, ["nodes"])
+            .pipe(
+              Effect.mapError(
+                (cause) => new OrchestratorProjectionError({ threadId: command.threadId, cause }),
+              ),
+            );
+          for (const childNode of child.nodes) {
+            if (
+              childNode.kind !== "root_turn" ||
+              childNode.runId !== null ||
+              !["pending", "running", "waiting"].includes(childNode.status)
+            )
+              continue;
+            yield* emitEvent({
+              threadId: childNode.threadId,
+              nodeId: childNode.id,
+              driver: subagent.driver,
+              providerInstanceId: subagent.providerInstanceId,
+              occurredAt: now,
+              type: "node.updated",
+              payload: { ...childNode, status: "interrupted", completedAt: now },
+            });
+          }
         }
         return;
       }

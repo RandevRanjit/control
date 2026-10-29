@@ -334,8 +334,9 @@ const dloads = () => `<div class="d-loads">${LOADS.map(([g, l, n]) => `<span cla
 /* the context: what this chat holds, what is free, and where it compacts (the worktree is on the sidebar card). Window 1M */
 const WINDOW = 1000000, COMPACT = 500000, USED = 320315;
 const kfmt = n => Math.round(n / 1000) + 'k';
-const dctx = () => `<div class="d-ctxw"><div class="d-cbar"><i class="d-cs" data-k="chat" style="width:${(USED / WINDOW * 100).toFixed(2)}%" title="chat ${USED.toLocaleString('en-GB')} tokens"></i><span class="d-cmark" style="left:${COMPACT / WINDOW * 100}%"></span></div>`
-  + `<div class="d-legend"><span class="d-lg"><i data-k="chat"></i>Chat <b>${kfmt(USED)}</b></span><span class="d-lg"><i data-k="free"></i>Free <b>${kfmt(WINDOW - USED)}</b></span><span class="d-lg d-lgc"><i></i>Compacts at <b>${kfmt(COMPACT)}</b></span></div></div>`;
+/* one row (owner, 29 Oct): the bar with its auto-compact mark, then used / compacts at; the hover names the window too */
+const dctx = () => `<div class="d-ctxw" title="${kfmt(USED)} used · compacts at ${kfmt(COMPACT)} · 1m window"><div class="d-cbar"><i class="d-cs" data-k="chat" style="width:${(USED / WINDOW * 100).toFixed(2)}%"></i><span class="d-cmark" style="left:${COMPACT / WINDOW * 100}%"></span></div>`
+  + `<span class="d-ctxn"><b>${kfmt(USED)}</b> / ${kfmt(COMPACT)}</span></div>`;
 /* while a turn runs, Send queues the draft (T3's ListPlus, as the app draws it); the owner's call, 10 Oct */
 const QUEUE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 5C11.6667 5 7.3333 5 3 5M11 12C8.3333 12 5.6667 12 3 12M16 19C11.6667 19 7.3333 19 3 19M18 9C18 11 18 13 18 15M21 12C19 12 17 12 15 12"/></svg>';
 function dmain() {
@@ -344,7 +345,7 @@ function dmain() {
     .replace('<span class="t3-send" title="Interrupt"><i></i></span>', `<span class="t3-send" title="Queue message">${QUEUE}</span>`)
     .replace(/<div class="t3-crumb">[\s\S]*?<\/div><div class="t3-tools">/, `${dloads()}<div class="t3-tools"><span class="t3-ib d-cmdk" title="Command palette (⌘K)">${T('cmd')}</span>`)
     .replace(/<div class="t3-col">[\s\S]*?(<div class="t3-working">)/, `<div class="t3-col d-col">${dconvo()}$1`)
-    .replace(/<div class="t3-strip">[\s\S]*?<\/div><\/div><\/div>$/, `<div class="t3-strip d-strip"><span>${G('folder')}Local</span><span><b>${G('wt')}Worktree</b></span>${dctx()}</div></div></div>`);
+    .replace(/<div class="t3-strip">[\s\S]*?<\/div><\/div><\/div>$/, `<div class="t3-strip d-strip"><span><b>${G('wt')}Worktree</b></span>${dctx()}</div></div></div>`);
 }
 
 

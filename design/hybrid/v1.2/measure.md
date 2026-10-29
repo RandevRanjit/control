@@ -75,67 +75,66 @@ Colours are the computed values, Field then Night; `@n%` is alpha. Padding is to
 
 | part | selector | box | font | colour Field / Night | background Field / Night | radius | padding |
 |---|---|---|---|---|---|---|---|
-| canvas | `.t3-canvas` | 256, 52, 816, 737 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 24 8 24 |
-| column | `.d-col` | 296, 168, 736, 613 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 |
-| turn | `.d-turn` | 296, 168, 736, 207 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 6 0 16 34 |
-| turn line (dashed) | `.d-line` | 304, 222.5, 3, 79.5 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 |
-| prompt | `.d-q` | 330, 174, 702, 52 | Regrade 14.5/22 520 | #262b5b / #f5ebe4 | — | 0 | 0 |
-| prompt arrow → | `.d-q > .d-pin` | 304, 184.5, 18, 18 | — | #262b5b / #f5ebe4 | — | 0 | 0 |
-| prompt band | `.d-qt` | 296, 174, 736, 52 | Regrade 14.5/22 520 | #262b5b / #f5ebe4 | #cdd7ed / #242323 | 0 | 8.5 10 8.5 34 |
-| tool stack | `.d-grp` | 352, 236, 680, 76 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 |
-| stack head | `.d-gh` | 352, 236, 680, 26 | Regrade 12.5/12.5 520 | #333964 / #c1c6d5 | — | 0 | 0 6 0 0 |
+| canvas | `.t3-canvas` | 256, 52, 816, 763 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 24 8 24 |
+| column | `.d-col` | 296, 194, 736, 613 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 |
+| turn | `.d-turn` | 296, 194, 736, 207 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 6 0 16 34 |
+| turn line (dashed) | `.d-line` | 304, 248.5, 3, 79.5 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 |
+| prompt | `.d-q` | 330, 200, 702, 52 | Regrade 14.5/22 520 | #262b5b / #f5ebe4 | — | 0 | 0 |
+| prompt arrow → | `.d-q > .d-pin` | 304, 210.5, 18, 18 | — | #262b5b / #f5ebe4 | — | 0 | 0 |
+| prompt band | `.d-qt` | 296, 200, 736, 52 | Regrade 14.5/22 520 | #262b5b / #f5ebe4 | #cdd7ed / #242323 | 0 | 8.5 10 8.5 34 |
+| tool stack | `.d-grp` | 352, 262, 680, 76 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 |
+| stack head | `.d-gh` | 352, 262, 680, 26 | Regrade 12.5/12.5 520 | #333964 / #c1c6d5 | — | 0 | 0 6 0 0 |
 | stack head pearl | `.d-gh .pearl` | -24, -24, 0, 0 | Regrade 12.5/12.5 520 | #333964 / #c1c6d5 | #5da12a / #7cc74b | 50% | 0 |
-| stack head label | `.d-gh > span:nth-of-type(2)` | 352, 244, 10, 10 | Regrade 12.5/12.5 520 | #333964 / #c1c6d5 | — | 0 | 0 |
-| stack call count | `.d-n` | 461.2, 243.8, 44.1, 10.5 | Plex 10.5/10.5 400 | #525a7c / #a9aebf | — | 0 | 0 |
-| stack "+n above" | `.d-more` | 516.8, 447.8, 64.4, 16.5 | Plex 10.5/10.5 400 | #525a7c / #a9aebf | #dae1f0 / #232222 | 999px | 3 7 3 7 |
-| stack chevron | `.d-cv` | 1014, 243, 12, 12 | — | #525a7c / #a9aebf | — | 0 | 0 |
-| rows | `.d-rows` | 352, 264, 680, 48 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 0 0 38 |
+| stack head label | `.d-gh > span:nth-of-type(2)` | 352, 270, 10, 10 | Regrade 12.5/12.5 520 | #333964 / #c1c6d5 | — | 0 | 0 |
+| stack call count | `.d-n` | 461.2, 269.8, 44.1, 10.5 | Plex 10.5/10.5 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| stack "+n above" | `.d-more` | 516.8, 473.8, 64.4, 16.5 | Plex 10.5/10.5 400 | #525a7c / #a9aebf | #dae1f0 / #232222 | 999px | 3 7 3 7 |
+| stack chevron | `.d-cv` | 1014, 269, 12, 12 | — | #525a7c / #a9aebf | — | 0 | 0 |
+| rows | `.d-rows` | 352, 290, 680, 48 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 0 0 38 |
 | rail | `.d-rail` | -24, -24, 0, 0 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 1px | 0 |
-| row | `.d-row` | 390, 264, 642, 24 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | — | 0 | 0 |
-| row bead | `.d-row > .pearl` | 371.5, 272.5, 7, 7 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | #262b5b / #f5ebe4 | 50% | 0 |
+| row | `.d-row` | 390, 290, 642, 24 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | — | 0 | 0 |
+| row bead | `.d-row > .pearl` | 371.5, 298.5, 7, 7 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | #262b5b / #f5ebe4 | 50% | 0 |
 | READ | `.d-row[data-k="read"] .d-k` | -24, -24, 0, 0 | Plex 10/10 500 ls 0.6px | #334889 / #7792ef | — | 0 | 0 |
 | WRITE | `.d-row[data-k="write"]:not(.d-old) .d-k` | -24, -24, 0, 0 | Plex 10/10 500 ls 0.6px | #2b5a17 / #7daf4e | — | 0 | 0 |
 | ERROR | `.d-row[data-k="error"] .d-k` | -24, -24, 0, 0 | Plex 10/10 500 ls 0.6px | #b54b6a / #ed7d99 | — | 0 | 0 |
 | BASH | `.d-row[data-k="run"] .d-k` | -24, -24, 0, 0 | Plex 10/10 500 ls 0.6px | #c6911d / #fccf47 | — | 0 | 0 |
 | BROWSER | `.d-row[data-k="web"] .d-k` | -24, -24, 0, 0 | Plex 10/10 500 ls 0.6px | #209993 / #66c4be | — | 0 | 0 |
-| READ bead | `.d-row[data-k="read"] > .pearl` | 371.5, 272.5, 7, 7 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | #262b5b / #f5ebe4 | 50% | 0 |
-| ERROR bead | `.d-row[data-k="error"] > .pearl` | 371.5, 503.5, 7, 7 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | #b91c1c / #f87171 | 50% | 0 |
-| BASH bead | `.d-row[data-k="run"] > .pearl` | 371.5, 575.5, 7, 7 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | #262b5b / #f5ebe4 | 50% | 0 |
-| BROWSER bead | `.d-row[data-k="web"] > .pearl` | 371.5, 691.5, 7, 7 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | #262b5b / #f5ebe4 | 50% | 0 |
-| tool name (1.1) | `.d-row[data-k="read"] .d-kt` | 390, 267.9, 27.9, 16.3 | Regrade 12.5/16.25 400 | #333964 / #c1c6d5 | — | 0 | 0 |
-| stack head lamp (1.1) | `.d-gh > .lamp` | 352, 244, 10, 10 | Regrade 12.5/12.5 520 | #333964 / #c1c6d5 | — | 0 | 0 |
-| write +n (1.1) | `.d-pa` | 1005, 452, 13.3, 13 | Regrade 12/12 400 | #2b5a17 / #b1d391 | — | 0 | 0 |
-| write −n (1.1) | `.d-ma` | 1021.5, 452, 10.5, 13 | Regrade 12/12 400 | #b91c1c / #f87171 | — | 0 | 0 |
+| READ bead | `.d-row[data-k="read"] > .pearl` | 371.5, 298.5, 7, 7 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | #262b5b / #f5ebe4 | 50% | 0 |
+| ERROR bead | `.d-row[data-k="error"] > .pearl` | 371.5, 529.5, 7, 7 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | #b91c1c / #f87171 | 50% | 0 |
+| BASH bead | `.d-row[data-k="run"] > .pearl` | 371.5, 601.5, 7, 7 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | #262b5b / #f5ebe4 | 50% | 0 |
+| BROWSER bead | `.d-row[data-k="web"] > .pearl` | 371.5, 717.5, 7, 7 | Plex 11.5/11.5 400 | #333964 / #c1c6d5 | #262b5b / #f5ebe4 | 50% | 0 |
+| tool name (1.1) | `.d-row[data-k="read"] .d-kt` | 390, 293.9, 27.9, 16.3 | Regrade 12.5/16.25 400 | #333964 / #c1c6d5 | — | 0 | 0 |
+| stack head lamp (1.1) | `.d-gh > .lamp` | 352, 270, 10, 10 | Regrade 12.5/12.5 520 | #333964 / #c1c6d5 | — | 0 | 0 |
+| write +n (1.1) | `.d-pa` | 1005, 478, 13.3, 13 | Regrade 12/12 400 | #2b5a17 / #b1d391 | — | 0 | 0 |
+| write −n (1.1) | `.d-ma` | 1021.5, 478, 10.5, 13 | Regrade 12/12 400 | #b91c1c / #f87171 | — | 0 | 0 |
 | Loose ends (1.1) | `.d-loose` | 1474, 13, 30, 26 | Regrade 14/20.3 400 | #525a7c / #a9aebf | — | 999px | 0 |
-| row path | `.d-pt` | 423.9, 270.3, 560.9, 11.5 | Plex 11.5/11.5 400 | #262b5b / #f5ebe4 | — | 0 | 0 |
-| row meta | `.d-m` | 990.8, 270, 41.2, 12 | Regrade 12/12 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| row path | `.d-pt` | 423.9, 296.3, 560.9, 11.5 | Plex 11.5/11.5 400 | #262b5b / #f5ebe4 | — | 0 | 0 |
+| row meta | `.d-m` | 990.8, 296, 41.2, 12 | Regrade 12/12 400 | #525a7c / #a9aebf | — | 0 | 0 |
 | faded row (5th back) | `.d-row.d-edge .d-k` | -24, -24, 0, 0 | Plex 10/10 500 ls 0.6px | #2b5a17 / #7daf4e | — | 0 | 0 |
-| reply | `.d-say` | 330, 320, 620, 22 | Regrade 14/22 400 | #262b5b / #f5ebe4 | — | 0 | 0 |
-| reply arrow ↳ | `.d-say > .d-pin` | 304, 321, 18, 18 | — | #262b5b / #f5ebe4 | — | 0 | 0 |
-| reply code | `.d-say code` | 432, 599, 100, 20 | Plex 12.5/12.5 400 | #262b5b / #f5ebe4 | #dae1f0 / #232222 | 4px | 2 5 2 5 |
-| turn totals | `.d-tot` | 330, 348, 702, 11 | Plex 10.5/11 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| reply | `.d-say` | 330, 346, 620, 22 | Regrade 14/22 400 | #262b5b / #f5ebe4 | — | 0 | 0 |
+| reply arrow ↳ | `.d-say > .d-pin` | 304, 347, 18, 18 | — | #262b5b / #f5ebe4 | — | 0 | 0 |
+| reply code | `.d-say code` | 432, 625, 100, 20 | Plex 12.5/12.5 400 | #262b5b / #f5ebe4 | #dae1f0 / #232222 | 4px | 2 5 2 5 |
+| turn totals | `.d-tot` | 330, 374, 702, 11 | Plex 10.5/11 400 | #525a7c / #a9aebf | — | 0 | 0 |
 
 ## Centre: composer and strip
 
 | part | selector | box | font | colour Field / Night | background Field / Night | radius | padding |
 |---|---|---|---|---|---|---|---|
-| working line | `.t3-working` | 296, 751, 736, 30 | Regrade 12.5/12.5 400 | #525a7c / #a9aebf | — | 0 | 0 |
-| working bar | `.t3-working .sbar` | 296, 763, 96, 6 | Regrade 12.5/12.5 400 | #525a7c / #a9aebf | #cdd7ed / #242323 | 999px | 0 |
-| composer wrap | `.t3-cwrap` | 256, 789, 816, 156 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 24 14 24 |
-| composer | `.t3-comp` | 296, 789, 736, 88 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | #e3e9f4 / #383737 | 14px | 0 |
-| draft | `.t3-ed` | 296, 789, 736, 44 | Plex 12.5/18 400 | #262b5b / #f5ebe4 | — | 0 | 16 16 10 16 |
-| controls row | `.t3-cf` | 296, 833, 736, 44 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 12 12 12 |
-| control (model) | `.t3-ctl` | 308, 837, 145.6, 24 | Regrade 12/12 500 | #333964 / #c1c6d5 | — | 10px | 0 10 0 10 |
-| send / interrupt | `.t3-send` | 988, 833, 32, 32 | Regrade 14/20.3 400 | #d6deee / #2f2e2e | #262b5b / #f5ebe4 | 50% | 0 |
-| strip | `.d-strip` | 318, 861, 692, 70 | Regrade 12/12 400 | #525a7c / #a9aebf | #dae1f0 / #232222 | 0px 0px 18px 18px | 24 14 9 14 |
-| strip item (Local) | `.d-strip > span` | 332, 885, 43.8, 14 | Regrade 12/12 400 | #525a7c / #a9aebf | — | 0 | 0 |
-| context block | `.d-ctxw` | 469.6, 885, 526.4, 37 | Regrade 12/12 400 | #525a7c / #a9aebf | — | 0 | 0 |
-| context bar | `.d-cbar` | 469.6, 889, 526.4, 6 | Regrade 12/12 400 | #525a7c / #a9aebf | #cdd7ed / #242323 | 999px | 0 |
-| context: chat | `.d-cs` | 469.6, 889, 168.6, 6 | Regrade 12/12 400 | #525a7c / #a9aebf | #414970 / #c1c6d5 | 999px | 0 |
-| context: compact mark | `.d-cmark` | 732.8, 885, 1, 14 | Regrade 12/12 400 | #525a7c / #a9aebf | — | 0 | 0 |
-| legend | `.d-legend` | 469.6, 910, 526.4, 12 | Regrade 12/12 400 | #333964 / #c1c6d5 | — | 0 | 0 |
-| legend item | `.d-lg` | 469.6, 910, 71.6, 12 | Regrade 12/12 400 | #333964 / #c1c6d5 | — | 0 | 0 |
-| legend number | `.d-lg b` | 513.2, 910, 28, 12 | Regrade 12/12 520 | #262b5b / #f5ebe4 | — | 0 | 0 |
+| working line | `.t3-working` | 296, 777, 736, 30 | Regrade 12.5/12.5 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| working bar | `.t3-working .sbar` | 296, 789, 96, 6 | Regrade 12.5/12.5 400 | #525a7c / #a9aebf | #cdd7ed / #242323 | 999px | 0 |
+| composer wrap | `.t3-cwrap` | 256, 815, 816, 130 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 24 14 24 |
+| composer | `.t3-comp` | 296, 815, 736, 88 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | #e3e9f4 / #383737 | 14px | 0 |
+| draft | `.t3-ed` | 296, 815, 736, 44 | Plex 12.5/18 400 | #262b5b / #f5ebe4 | — | 0 | 16 16 10 16 |
+| controls row | `.t3-cf` | 296, 859, 736, 44 | Regrade 14/20.3 400 | #262b5b / #ebdcd5 | — | 0 | 0 12 12 12 |
+| control (model) | `.t3-ctl` | 308, 863, 145.6, 24 | Regrade 12/12 500 | #333964 / #c1c6d5 | — | 10px | 0 10 0 10 |
+| send / interrupt | `.t3-send` | 988, 859, 32, 32 | Regrade 14/20.3 400 | #d6deee / #2f2e2e | #262b5b / #f5ebe4 | 50% | 0 |
+| strip | `.d-strip` | 318, 887, 692, 44 | Regrade 12/12 400 | #525a7c / #a9aebf | #dae1f0 / #232222 | 0px 0px 18px 18px | 22 14 8 14 |
+| strip item (workspace) | `.d-strip > span` | 332, 909, 69.8, 14 | Regrade 12/12 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| context block | `.d-ctxw` | 413.8, 910.5, 582.2, 11 | Regrade 12/12 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| context bar | `.d-cbar` | 413.8, 913, 497.6, 6 | Regrade 12/12 400 | #525a7c / #a9aebf | #cdd7ed / #242323 | 999px | 0 |
+| context: chat | `.d-cs` | 413.8, 913, 159.4, 6 | Regrade 12/12 400 | #525a7c / #a9aebf | #414970 / #c1c6d5 | 999px | 0 |
+| context: compact mark | `.d-cmark` | 662.6, 909, 1, 14 | Regrade 12/12 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| used / compacts at | `.d-ctxn` | 923.4, 910.5, 72.6, 11 | Plex 11/11 400 | #525a7c / #a9aebf | — | 0 | 0 |
+| used | `.d-ctxn b` | 923.4, 910.5, 26.4, 11 | Plex 11/11 520 | #262b5b / #f5ebe4 | — | 0 | 0 |
 
 ## Right panel: tabs and Git
 

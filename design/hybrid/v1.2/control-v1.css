@@ -798,39 +798,26 @@ html[data-motion="full"] .sbar:not(.still)::before { animation: sb-flow var(--rp
 
 .t3-d .d-ld:hover { background: var(--hy-card); }
 
-/* D's strip: the context breakdown */
-.t3-d .t3-strip.d-strip { align-items: flex-start; gap: 12px; padding-top: 24px; padding-bottom: 9px; }
-
+/* D's strip, one row (owner, 29 Oct): the workspace, the context bar, then used / compacts at */
 .t3-d .d-strip > span { height: 14px; }
 
-.t3-d .d-strip > .d-ctxw { flex: 1; min-width: 0; margin: 0; display: grid; gap: 15px; }
+.t3-d .d-strip > .d-ctxw { flex: 1; min-width: 0; margin: 0; display: flex; align-items: center; gap: 12px; }
 
-.d-cbar { position: relative; display: flex; height: 6px; margin-top: 4px; border-radius: var(--r-pill); background: var(--sunken); box-shadow: var(--well); }
+.d-cbar { position: relative; flex: 1; display: flex; height: 6px; border-radius: var(--r-pill); background: var(--sunken); box-shadow: var(--well); }
+
+.d-ctxn { flex: none; font: 400 11px/1 var(--f-mono); color: var(--text-caption); font-variant-numeric: tabular-nums; }
+
+.d-ctxn b { font-weight: var(--w-med); color: var(--text-strong); }
 
 .d-cs { display: block; height: 100%; }
 
 .d-cs:first-child { border-radius: var(--r-pill) 0 0 var(--r-pill); }
 
-.d-cs[data-k="chat"],
-.d-lg i[data-k="chat"] { background: var(--ink-3); }
+.d-cs[data-k="chat"] { background: var(--ink-3); }
 
 .d-cs[data-k="chat"] { border-radius: var(--r-pill); }
 
-.d-lg i[data-k="free"] { background: none; box-shadow: inset 0 0 0 1.25px var(--text-caption); }
-
 .d-cmark { position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 1.5px dashed var(--danger); }
-
-.d-lgc i { width: 0; height: 10px; border-radius: 0; border-left: 1.5px dashed var(--danger); }
-
-.t3-d .d-legend .d-lgc b { color: var(--danger); }
-
-.d-legend { display: flex; justify-content: space-between; gap: 3px 14px; font: 400 12px/1 var(--f-chrome); color: var(--text-secondary); }
-
-.d-lg { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-
-.d-lg i { width: 7px; height: 7px; border-radius: 50%; }
-
-.t3-d .d-legend .d-lg b { font: var(--w-med) 12px/1 var(--f-chrome); font-variant-numeric: tabular-nums; color: var(--text-strong); }
 
 /* D's right panel: flat, edge to edge, parted from the centre by one thin line as in S1 */
 .t3-d .t3d-panel { padding: 0; background: var(--t3-bg); box-shadow: -1px 0 0 var(--seam); }

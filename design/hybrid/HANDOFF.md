@@ -266,22 +266,18 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
     While a turn runs, Send with a draft **queues** it (T3's list-plus glyph, 16, in `--field`); Stop shows only with
     no draft (owner, 10 Oct).
   - Nothing is ever sent for the owner (H1).
-- **Strip under the composer.** It tucks under the card: radius 0 0 18 18, on the card tone, padded 24 14 9 14. Left to
-  right:
-  - `Local` with the folder glyph;
+- **Strip under the composer**, one row (owner, 29 Oct). It tucks under the card: radius 0 0 18 18, on the card tone,
+  padded 22 14 8 14. Left to right:
+  - another machine's name with the folder glyph, only when the chat runs on one. On this machine there is no
+    `Local`: the workspace already says it;
   - the workspace with the **worktree icon** (Plex, strong): `Worktree` once a chat runs in one, `New worktree`
-    while a draft would make one (owner, 10 Oct);
-  - **the context**: a 6 px bar on the sunken track.
-- **The context bar.**
-  - **Chat** is the used part, filled in `--ink-3`.
-  - **Free** is the rest of the track.
-  - The **auto-compact mark** is a 1.5 px dashed line in `--danger`, 4 px over and under the bar, at the threshold.
-- **The legend** sits 15 px under the bar, spread **evenly** (`space-between`) across the bar's width: `Chat 320k`,
-  `Free 680k`, `Compacts at 500k`. The owner set its face, size and spacing on S6 on 10 Oct.
-  - Labels are Regrade 12, the size of `Local`, capitalised.
-  - Numbers are Regrade 12 / 520 with tabular figures: one face for the whole line.
-  - Each item has a swatch: a 7 px dot for Chat, a 1.25 px ring for Free, the 10 px dashed mark for Compacts at.
-- There are exactly three items, *"chat, free and compact"*. A finer breakdown (system, tools, MCP…) was rejected as
+    while a draft would make one, `Local checkout` otherwise (owner, 10 Oct);
+  - **the context bar**, filling the row: a 6 px bar on the sunken track. The used part is filled in `--ink-3`; the
+    **auto-compact mark** is a 1.5 px dashed line in `--danger`, 4 px over and under the bar, at the threshold;
+  - **used / compacts at**, `320k / 500k`, Plex 11 tabular, the used figure in strong ink and the rest caption
+    (`used / window` for a chat that never compacts). Its hover names all three: `320k used · compacts at 500k · 1m
+    window`.
+- The three figures are still *"chat, free and compact"*; a finer breakdown (system, tools, MCP…) was rejected as
   *"way too granular"*.
 
 ---
@@ -428,7 +424,7 @@ the safe ramp, so the needs-you bar is the only red on screen (Bloom colour §4.
 |---|---|---|---|
 | **Neue Regrade** (variable, 300–800) | `NeueRegrade-Variable.ttf` | free for commercial use (Bloom HANDOFF) | All chrome: labels, buttons, state words, the prompt, the composer draft and the reply. Weights 400 / 520 / 640 (`--w-reg`, `--w-med`, `--w-strong` under `html[data-type="regrade"]`). |
 | **IBM Plex Mono** 400 / 500 / 600 | `IBMPlexMono-*.otf` | OFL | Anything you could paste into a shell: chat, branch and worktree names; paths, commands and inline code; the diff and the changed-file list; tool names and targets; tokens, sizes, model names; the terminal. |
-| **Departure Mono** 400 | `DepartureMono-Regular.woff2` | OFL (`DepartureMono-LICENSE.txt`) | **Only** the head's load counts (`Hooks 6`) and the context legend's numbers (`Chat 320k`), each at the same px as its label (11). |
+| **Departure Mono** 400 | `DepartureMono-Regular.woff2` | OFL (`DepartureMono-LICENSE.txt`) | **Only** the head's load counts (`Hooks 6`), at the same px as its label (11). |
 
 - Code moved from Departure back to Plex in pass 6: *"just have whatever font is used to say the worktree on the
   sidebar… for code"*. Keep Departure off code.
@@ -633,7 +629,7 @@ Four changes. Everything else in §1–§14 holds. Files: `design/hybrid/v1.1/`.
    left the right panel's tab row on 22 Oct (owner), so it shows with the panel shut. It opens the Loose ends popover
    (§17).
 4. **The strip under the composer** is unchanged from 1.0, legend and all. A version without the legend was tried on
-   9 Oct and brought back.
+   9 Oct and brought back; on 29 Oct the owner picked one row with `used / compacts at` in place of it (§4.6).
 
 In `v1.1/index.html` the window's root carries `data-tv="simple"`. The page selects its trace variant with that attribute,
 and `control-v1.css` keys 1.1's rules on it. Keep the attribute, or drop the `[data-tv="simple"]` part from those
@@ -935,8 +931,9 @@ a port, so an MLX server can be added later without a redesign.
 
   A click on the name opens Settings › Local models. Sleep while waking stops the load.
 - **Settings › Local models (M2).**
-  - **The memory bar** has Apps, Models, Free and the dashed **Kept back** mark, with the context bar's legend style
-    (§4.6). **Swap** ends the legend as text, with no swatch.
+  - **The memory bar** has Apps, Models, Free and the dashed **Kept back** mark, with a legend under it: each item a
+    swatch (a dot, a ring for Free, the dashed mark for Kept back), its label in Regrade 12 and its figure in Regrade
+    12 / 520 tabular. **Swap** ends the legend as text, with no swatch.
   - **A row** holds the lamp, the name, the file, the state with its memory and when it sleeps, the PID and port while
     awake, and Wake or Sleep.
   - **Selecting a row** opens its fields:

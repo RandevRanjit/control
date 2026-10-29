@@ -18,21 +18,20 @@ const snapshot = (overrides: Partial<ContextWindowSnapshot>) =>
   }) as ContextWindowSnapshot;
 
 describe("ContextBar", () => {
-  it("shows chat, free and the auto-compact mark", () => {
+  it("is one row: the bar with its auto-compact mark, then used / compacts at", () => {
     const markup = renderToStaticMarkup(<ContextBar usage={snapshot({})} />);
     expect(markup).toContain('style="width:32%"');
     expect(markup).toContain('class="d-cmark" style="left:50%"');
-    expect(markup).toContain("Chat <b>320k</b>");
-    expect(markup).toContain("Free <b>680k</b>");
-    expect(markup).toContain("Compacts at <b>500k</b>");
+    expect(markup).toContain("<b>320k</b> / 500k");
+    expect(markup).not.toContain("Free");
   });
 
-  it("drops the mark when the chat never compacts, and the bar with no window", () => {
+  it("drops the mark when the chat never compacts, then reads used / window", () => {
     const manual = renderToStaticMarkup(
       <ContextBar usage={snapshot({ compactsAutomatically: false })} />,
     );
     expect(manual).not.toContain("d-cmark");
-    expect(manual).not.toContain("Compacts at");
+    expect(manual).toContain("<b>320k</b> / 1m");
     expect(renderToStaticMarkup(<ContextBar usage={snapshot({ maxTokens: null })} />)).toBe("");
   });
 });

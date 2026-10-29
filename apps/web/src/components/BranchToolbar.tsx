@@ -543,9 +543,9 @@ export const BranchToolbar = memo(function BranchToolbar({
     );
   }
 
-  // Design v1's strip (§4.6): where the chat runs and its workspace, then the
-  // context. The branch is on the sidebar card; thread details keep every run
-  // control (environment, previous worktree, branch).
+  // Design v1's strip (§4.6), one row: another machine's name when the chat runs on one, the
+  // workspace, then the context. "Local" goes; "Local checkout" says it (owner, 29 Oct). The
+  // branch is on the sidebar card; thread details keep every run control.
   const workspaceLabel = forceNewWorktree
     ? resolveEnvModeLabel("worktree")
     : envModeLocked
@@ -559,12 +559,12 @@ export const BranchToolbar = memo(function BranchToolbar({
   );
   return (
     <div className="t3-strip d-strip mx-auto" data-composer-context-strip>
-      <span>
-        <FolderIcon className="gi" />
-        {activeEnvironmentOption && !activeEnvironmentOption.isPrimary
-          ? activeEnvironmentOption.label
-          : "Local"}
-      </span>
+      {activeEnvironmentOption && !activeEnvironmentOption.isPrimary ? (
+        <span>
+          <FolderIcon className="gi" />
+          {activeEnvironmentOption.label}
+        </span>
+      ) : null}
       <span>
         {envModeLocked || forceNewWorktree ? (
           workspace

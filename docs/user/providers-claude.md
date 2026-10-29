@@ -46,8 +46,8 @@ CONTROL uses the Claude configuration on the connected server.
 Set **Auto-compact after** in the Claude provider settings to an integer between
 `100000` and `1000000`. For example, `300000` asks Claude to summarize at about
 300,000 tokens. This changes when compaction happens, not the model's context
-window. Leave it empty for Claude Code's default. The context bar's **Compacts at** mark
-follows it, and also a `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` set in your Claude settings or
+window. Leave it empty for Claude Code's default. The context bar's dashed compact mark, and
+the figure after it (`134k / 490k`, used / compacts at), follow it, and also a `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` set in your Claude settings or
 environment, which makes Claude compact at that percentage of the window when it is lower.
 
 You can also send `/compact` in an existing conversation. Web and desktop offer

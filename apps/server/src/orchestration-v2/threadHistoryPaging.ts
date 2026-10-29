@@ -269,17 +269,44 @@ export function selectHistoryPageFromCursor(input: {
   readonly cursor: string;
   readonly snapshotSequence: number;
   readonly policy?: ThreadHistoryPagePolicy | undefined;
+  readonly throughEntryId?: string | undefined;
 }): SelectTimelinePageResult {
   const decoded = decodeThreadHistoryCursor(input.cursor);
   const anchorIndex = findCursorIndex(input.items, decoded);
+  let policy = input.policy ?? {
+    ...THREAD_HISTORY_PAGE_POLICY,
+    maxUserTurns: OLDER_THREAD_USER_TURN_LIMIT,
+  };
+  if (input.throughEntryId !== undefined) {
+    const targetIndex = input.items.findIndex(
+      ({ item }) =>
+        (item.type === "user_message" || item.type === "assistant_message"
+          ? item.messageId
+          : item.id) === input.throughEntryId,
+    );
+    if (targetIndex >= 0 && targetIndex < anchorIndex) {
+      // A find jump can combine two pages, but never grow into an unbounded read.
+      const turns = input.items
+        .slice(targetIndex, anchorIndex)
+        .filter((row) => isThreadHistoryUserTurn(row.item)).length;
+      policy = {
+        ...policy,
+        maxUserTurns: Math.min(
+          OLDER_THREAD_USER_TURN_LIMIT * 2,
+          Math.max(
+            OLDER_THREAD_USER_TURN_LIMIT,
+            turns + (isThreadHistoryUserTurn(input.items[targetIndex]!.item) ? 0 : 1),
+          ),
+        ),
+        maxItems: policy.maxItems * 2,
+      };
+    }
+  }
   return selectOlderTimelinePage({
     items: input.items,
     exclusiveEndIndex: anchorIndex,
     snapshotSequence: input.snapshotSequence,
-    policy: input.policy ?? {
-      ...THREAD_HISTORY_PAGE_POLICY,
-      maxUserTurns: OLDER_THREAD_USER_TURN_LIMIT,
-    },
+    policy,
   });
 }
 

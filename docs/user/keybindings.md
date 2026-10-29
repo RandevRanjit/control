@@ -104,10 +104,10 @@ Join modifiers and a key with `+`, such as `mod+shift+d` or `ctrl+l`.
 ## When conditions
 
 Available context keys are `terminalFocus`, `terminalOpen`, `previewFocus`,
-`previewOpen`, `modelPickerOpen`, `usagePageOpen`, `composerFocus`, `composerDraft`,
+`previewOpen`, `diffFocus`, `modelPickerOpen`, `usagePageOpen`, `composerFocus`, `composerDraft`,
 `turnRunning`, `editableFocus`, `isWeb`, and `isDesktop`.
 `editableFocus` is true while a text field, the composer, or another editor has
-the keyboard. `isWeb` is true in a browser tab. `isDesktop` is true in the
+the keyboard. `diffFocus` is true while a diff has the keyboard. `isWeb` is true in a browser tab. `isDesktop` is true in the
 desktop app. Unknown keys evaluate to `false`.
 
 `mod+1` through `mod+9` jump to the first nine threads, and to models while the
@@ -121,6 +121,18 @@ Combine keys with `!` for not, `&&` for and, `||` for or, and parentheses:
 ```json
 { "key": "mod+j", "command": "terminal.toggle", "when": "terminalOpen && !terminalFocus" }
 ```
+
+## Find in a thread
+
+Press `mod+f` in a thread, or pick **Find in current thread** from the command
+palette, to search its messages and plans, including older messages that haven't
+loaded yet. Tool calls and work logs aren't searched. Enter and `Shift+Enter`
+move between matches; a match in an older message loads it, and a match in a
+collapsed message, a closed section or a superseded attempt opens it. Escape
+closes find. Find counts only text the thread shows: with maths rendering on,
+typeset maths is skipped. Terminals, previews and diffs keep `mod+f` for
+themselves. The command is `chat.find`. A server too old for thread find leaves
+`mod+f` to the browser, and **Retry** runs a failed search again.
 
 ## Precedence
 

@@ -1,5 +1,5 @@
+import { formatProviderSkillDisplayName } from "@control/shared/inlineSkills";
 import {
-  formatProviderSkillDisplayName,
   resolveProviderSkillSourceKind,
   type ProviderSkillSourceKind,
 } from "@control/client-runtime/providerSkills";

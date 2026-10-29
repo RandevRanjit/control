@@ -1,6 +1,5 @@
-import { workspaceRelativeFilePath } from "@control/client-runtime/markdown-links";
 import type { ProjectReadFileError } from "@control/contracts";
-import { isAbsolutePath } from "~/terminal-links";
+import { isAbsolutePath, workspaceRelativeFilePath } from "@control/shared/path";
 
 /** Resolve workspace links before choosing between the explorer and a file preview. */
 export function resolveFilePreviewPath(path: string | null, cwd: string): string | null {

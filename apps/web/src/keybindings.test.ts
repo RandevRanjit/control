@@ -143,6 +143,14 @@ const DEFAULT_BINDINGS = compile([
     command: "themeEditor.toggle",
   },
   {
+    shortcut: modShortcut("f"),
+    command: "chat.find",
+    whenAst: whenAnd(
+      whenNot(whenIdentifier("terminalFocus")),
+      whenNot(whenIdentifier("previewFocus")),
+    ),
+  },
+  {
     shortcut: modShortcut("m", { shiftKey: true }),
     command: "modelPicker.toggle",
     whenAst: whenNot(whenIdentifier("terminalFocus")),
@@ -257,6 +265,26 @@ describe("settle thread shortcut", () => {
       resolveShortcutCommand(event({ key: "s", ctrlKey: true, shiftKey: true }), DEFAULT_BINDINGS, {
         platform: "Win32",
         context: { terminalFocus: true },
+      }),
+    );
+  });
+});
+
+describe("find in thread shortcut", () => {
+  it("opens thread find from the chat", () => {
+    assert.equal(
+      resolveShortcutCommand(event({ key: "f", metaKey: true }), DEFAULT_RESOLVED_KEYBINDINGS, {
+        platform: "MacIntel",
+      }),
+      "chat.find",
+    );
+  });
+
+  it("leaves mod+f to a focused diff's own find", () => {
+    assert.isNull(
+      resolveShortcutCommand(event({ key: "f", metaKey: true }), DEFAULT_RESOLVED_KEYBINDINGS, {
+        platform: "MacIntel",
+        context: { diffFocus: true },
       }),
     );
   });

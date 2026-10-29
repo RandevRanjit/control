@@ -26,6 +26,16 @@ describe("workspace card", () => {
     expect(resolve(1384, 900)).toMatchObject({ x: 1092 });
     expect(resolve(1383, 900)).toBeNull();
   });
+  it("starts below the open find bar, keeping the bottom inset", () => {
+    expect(
+      resolveThreadDetailsCardLayout({
+        container: { width: 1600, height: 900 },
+        lane,
+        frame: null,
+        topInset: 48,
+      }),
+    ).toEqual({ x: 1308, y: 60, width: 280, height: 828 });
+  });
   it("keeps the card at the top right while the preview is freely dragged vertically", () => {
     for (const y of [12, 170, 250, 400, 648]) {
       expect(resolve(1600, 900, y)).toEqual({ x: 1308, y: 12, width: 280, height: 876 });

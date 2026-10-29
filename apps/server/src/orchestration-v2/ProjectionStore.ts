@@ -6,6 +6,12 @@ import {
 } from "@control/shared/orchestrationV2ThreadError";
 import { threadPullRequestsOf } from "@control/shared/threadPullRequests";
 import * as NodeSqliteClient from "@control/shared/nodeSqliteClient";
+import * as Stream from "effect/Stream";
+import { makeThreadFind, findProjectedThreadItems } from "./ThreadFind.ts";
+import type {
+  OrchestrationV2SearchThreadInput,
+  OrchestrationV2SearchThreadResult,
+} from "@control/contracts";
 import type {
   OrchestrationV2AppThread,
   OrchestrationV2CheckpointScope,
@@ -329,6 +335,12 @@ export interface ShellSnapshotOptions {
 }
 
 export interface ProjectionStoreV2Shape {
+  readonly searchThreadStream: (
+    input: OrchestrationV2SearchThreadInput,
+  ) => Stream.Stream<OrchestrationV2SearchThreadResult, ProjectionStoreV2Error>;
+  readonly searchThread: (
+    input: OrchestrationV2SearchThreadInput,
+  ) => Effect.Effect<OrchestrationV2SearchThreadResult, ProjectionStoreV2Error>;
   readonly getThreadAttachmentIds: (
     threadId: ThreadId,
   ) => Effect.Effect<ReadonlyArray<string>, ProjectionStoreV2Error>;
@@ -5025,6 +5037,10 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
         ),
       );
 
+    const { searchThread, searchThreadStream } = yield* makeThreadFind((threadId) =>
+      readTimelineIndex(threadId, new Set()).pipe(Effect.map((index) => index.visible)),
+    );
+
     const getTimelinePage: ProjectionStoreV2Shape["getTimelinePage"] = (threadId, options) =>
       sql
         .withTransaction(
@@ -5988,6 +6004,8 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
       getThreadSnapshot: readOnReader(getThreadSnapshot),
       getThreadSnapshotWindow: readOnReader(getThreadSnapshotWindow),
       getTimelinePage: readOnReader(getTimelinePage),
+      searchThread,
+      searchThreadStream,
       getThreadAttachmentIds: readOnReader(getThreadAttachmentIds),
     } satisfies ProjectionStoreV2Shape;
   }),
@@ -6591,6 +6609,23 @@ export const layerMemory: Layer.Layer<ProjectionStoreV2> = Layer.effect(
                 projection,
               })),
             ),
+          ),
+        ),
+      searchThreadStream: (input) => Stream.fromEffect(service.searchThread(input)),
+      searchThread: (input) =>
+        service.getThreadSnapshot(input.threadId).pipe(
+          Effect.flatMap(({ projection, snapshotSequence }) =>
+            projection.thread.deletedAt !== null
+              ? Effect.fail(new ProjectionStoreThreadNotFoundError({ threadId: input.threadId }))
+              : Effect.succeed(
+                  // This store has no project records, so only worktree paths resolve labels.
+                  findProjectedThreadItems(
+                    projection.visibleTurnItems,
+                    input,
+                    snapshotSequence,
+                    projection.thread.worktreePath ?? undefined,
+                  ),
+                ),
           ),
         ),
       getTimelinePage: (threadId, options) =>

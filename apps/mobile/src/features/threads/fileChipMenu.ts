@@ -1,4 +1,4 @@
-import { fileBasename } from "@control/client-runtime/markdown-links";
+import { fileBasename } from "@control/shared/path";
 import type { ThreadId } from "@control/contracts";
 import { resolveMarkdownLinkPresentation } from "@control/mobile-markdown-text/links";
 import type { MarkdownFileContextMenu } from "@control/mobile-markdown-text/types";

@@ -1,12 +1,11 @@
-import { isWindowsAbsolutePath } from "@control/shared/path";
+import { isWindowsAbsolutePath, stripSlashPrefixedWindowsDrive } from "@control/shared/path";
 
 import {
   normalizeMarkdownLinkDestination,
-  parseFileUrlHref,
   safeDecodeURIComponent,
   splitMarkdownLinkSearchAndHash,
-  stripSlashPrefixedWindowsDrive,
-} from "./markdownLinks.ts";
+} from "@control/shared/markdownLinks";
+import { parseFileUrlHref } from "@control/shared/fileLinks";
 
 const DIRECT_IMAGE_SOURCE_PATTERN = /^(?:https?:|data:|blob:|\/\/)/i;
 const URI_SCHEME_PATTERN = /^[A-Za-z][A-Za-z0-9+.-]*:/;

@@ -10,11 +10,9 @@ import {
   markdownImageSourceFragment,
   type MarkdownImageSource,
 } from "./markdownImages.ts";
-import {
-  fileBasename,
-  splitFilePathPosition,
-  splitMarkdownLinkSearchAndHash,
-} from "./markdownLinks.ts";
+import { fileBasename } from "@control/shared/path";
+import { splitFilePathPosition } from "@control/shared/fileLinks";
+import { splitMarkdownLinkSearchAndHash } from "@control/shared/markdownLinks";
 import {
   mediaFileReference,
   mediaReferenceFileName,

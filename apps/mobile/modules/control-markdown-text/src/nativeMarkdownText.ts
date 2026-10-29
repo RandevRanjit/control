@@ -1,5 +1,5 @@
 import type { MarkdownNode } from "react-native-nitro-markdown/headless";
-import { isMarkdownFileLinkLabel } from "@control/client-runtime/markdown-links";
+import { isMarkdownFileLinkLabel } from "@control/shared/markdownLinks";
 import { collectComposerInlineTokens } from "@control/shared/composerInlineTokens";
 import { imageMimeType } from "@control/shared/image";
 import { markdownMathRanges } from "@control/shared/markdownMath";

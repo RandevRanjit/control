@@ -7,9 +7,9 @@ import remarkGfm from "remark-gfm";
 import type { Plugin } from "unified";
 import { describe, expect, it } from "vite-plus/test";
 
-import { remarkGithubAlerts } from "./markdown-github-alerts";
+import { remarkGithubAlerts } from "@control/shared/markdownGithubAlerts";
 import { createIncrementalMarkdownPlugin } from "./markdown-incremental";
-import { remarkNormalizeListItemIndentation } from "./markdown-list-indentation";
+import { remarkNormalizeListItemIndentation } from "@control/shared/markdownListIndentation";
 
 function render(source: string, incremental?: Plugin<[], Root>, parsedSources?: string[]) {
   let tree: Root | undefined;

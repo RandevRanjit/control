@@ -185,7 +185,7 @@ export const OrchestratorMcpDelegateTaskInput = Schema.Struct({
   isolation: Schema.optional(
     Schema.Literals(["shared", "worktree"]).annotate({
       description:
-        "Defaults to shared (your checkout). worktree: a new checkout from your last commit; uncommitted edits stay behind.",
+        "Defaults to worktree: a new checkout from your last commit; uncommitted edits stay behind. shared: your checkout, for a child that must see uncommitted work.",
     }),
   ),
   mode: Schema.optional(

@@ -1090,6 +1090,7 @@ describe("OrchestratorMcpService provider resolution", () => {
             task: "Summarize the diff.",
             target: { providerInstanceId: antigravityInstanceId, model: "ant-model" },
             mode: "async",
+            isolation: "shared",
             clientRequestId: "delegate-antigravity-1",
           });
           assert.equal(result.status, "running");
@@ -1185,6 +1186,7 @@ describe("OrchestratorMcpService provider resolution", () => {
           task: "Summarize the diff.",
           target: { driverKind: ProviderDriverKind.make("antigravity") },
           mode: "async",
+          isolation: "shared",
           clientRequestId: "delegate-antigravity-driver-1",
         });
         assert.equal(result.status, "running");
@@ -1234,6 +1236,7 @@ describe("OrchestratorMcpService provider resolution", () => {
             task: "Summarize the diff.",
             target: { providerInstanceId: forkOnlyInstanceId },
             mode: "async",
+            isolation: "shared",
             clientRequestId: "delegate-fork-1",
           })
           .pipe(Effect.flip);
@@ -1245,6 +1248,7 @@ describe("OrchestratorMcpService provider resolution", () => {
             task: "Summarize the diff.",
             target: { driverKind: ProviderDriverKind.make("forkOnly") },
             mode: "async",
+            isolation: "shared",
             clientRequestId: "delegate-fork-2",
           })
           .pipe(Effect.flip);
@@ -1341,6 +1345,7 @@ describe("OrchestratorMcpService provider resolution", () => {
             task: "Review the diff.",
             target: { providerInstanceId: claudeInstanceId, model: "claude-opus-5-5" },
             mode: "async",
+            isolation: "shared",
             clientRequestId,
           });
 
@@ -1508,6 +1513,7 @@ describe("OrchestratorMcpService provider resolution", () => {
                   task: "Summarize the diff.",
                   target,
                   mode: "async",
+                  isolation: "shared",
                   clientRequestId: `delegate-select-${testCase.name}`,
                 })
                 .pipe(Effect.flip);
@@ -1537,6 +1543,7 @@ describe("OrchestratorMcpService provider resolution", () => {
               task: "Summarize the diff.",
               target,
               mode: "async",
+              isolation: "shared",
               clientRequestId: `delegate-select-${testCase.name}`,
             });
             assert.equal(result.status, "running", testCase.name);

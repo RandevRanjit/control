@@ -255,10 +255,10 @@ and its other subagents keep running. If no Claude process is still running that
 subagent, for example after CONTROL restarted, Stop marks it interrupted and its
 result says it had already ended.
 
-An agent can give a delegated task its own worktree instead of sharing the
-thread's checkout. The worktree starts from the thread's latest commit, so
-uncommitted edits aren't in it, and the project's setup runs before the task
-starts. When the task ends, CONTROL leaves the worktree and its branch in place
+A task an agent delegates gets its own worktree unless the agent asks to share
+the thread's checkout, or the thread's folder has no commit to start from. The
+worktree starts from the thread's latest commit, so uncommitted edits aren't in
+it, and the project's setup runs before the task starts. When the task ends, CONTROL leaves the worktree and its branch in place
 for you to review or merge, so nothing the task didn't commit is lost. Stopping
 the task before its agent starts removes the new worktree, since nothing has
 worked in it yet. A setup script that runs in the background can still be

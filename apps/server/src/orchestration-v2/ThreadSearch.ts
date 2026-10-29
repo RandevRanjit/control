@@ -114,11 +114,14 @@ function buildMessageSearch(
   const indexed = hasIndex && long.every((token) => Array.from(token).length >= 3);
   return {
     match: indexed ? long.map((token) => `"${token.replaceAll('"', '""')}"`).join(" ") : null,
-    // SQLite's lower() folds ASCII only, so "À" would miss "à"; the message
-    // matcher checks tokens with cased letters beyond ASCII after the query.
+    // SQLite's lower() folds ASCII only, so "À" would miss "à", and "İ" would
+    // miss the "i" and combining dot it lowercases to; the message matcher
+    // checks tokens with cased letters or marks beyond ASCII after the query.
     // Caseless scripts such as Chinese stay here, ahead of the hit limit.
     substrings: (indexed ? short : [...long, ...short]).filter((token) =>
-      Array.from(token).every((char) => char < "\x80" || char.toUpperCase() === char),
+      Array.from(token).every(
+        (char) => char < "\x80" || (char.toUpperCase() === char && !/\p{M}/u.test(char)),
+      ),
     ),
   };
 }

@@ -301,11 +301,12 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 - **Graph** (built 29 Oct). The branch's commits newest first, each 28 high: its lane and node at the left (lanes
   take the tool inks in turn; HEAD's node is filled), the subject in Regrade 12.5, its refs as pills (local filled,
   remote outlined), and the date in Plex. The upstream and the remote's default branch draw beside HEAD in their own
-  lanes. A click opens the commit under its row: author, date and short sha, the message body, then its files as
-  rows with Git's letter and `+n −n`; a file opens in Folder. **Show older** loads 60 more, up to 200.
+  lanes. A click opens the commit under its row, lined up under its subject: author, date (`25 Oct, 17:20`) and
+  short sha, the message body, then its files as rows with Git's letter and `+n −n`; a file opens in Folder. **Show older** loads 60 more, up to 200.
 - **Summary, 26.** `4 files +38 −12`. Plus is in the green mark, minus in the red mark (Plex 11.5 / 520).
 - **Changed files.** 24 high, radius 8. A status letter (M, A, D, R) after the chevron, in place of T3's icons,
-  the path in Plex 11.5, and `+n −n` at the right, added before removed everywhere.
+  the path in Plex 11.5, and `+n −n` at the right, added before removed everywhere. Copy path shows on the row's
+  hover only.
 - **Diff.** Plex 11 / 16 on `--deep`, radius 6. Line numbers sit on `--sunken`.
   - Added lines take Bloom's green wash, with words on `--green-word`.
   - **Removed lines take T3's own red, as S1 draws it**:
@@ -326,7 +327,8 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 - **Preview.** The picked output renders underneath, on `--deep`, radius 10. A Markdown report is shown rendered:
   - the heading in Regrade 16 / 640, text in Regrade 13, code in Plex on the card tone;
   - tables with a seam line between rows.
-- **Foot, 40.** The picked output's name and how it is shown, then **Open** and **Reveal**.
+- **Foot, 40.** The picked output's name and how it is shown, then **Open** and **Reveal**. The app puts the name
+  in the preview's head, beside open-in-editor and the source switch (29 Oct).
 
 ### 5.4 Folder (F31)
 
@@ -352,6 +354,7 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
   - A **pick bar** shows under it: `button.cta`, `212 × 40`, and **Add**. Add puts the element and its screenshot into
     the composer as a draft, never sent (H1).
 - **Foot.** A lamp for the dev server's state, `bun dev · tab 2`, then the port.
+- **Control.** `You have control` and **Release** (or **Take**) show only while a page is loaded (29 Oct).
 
 ### 5.6 Terminal
 
@@ -1142,6 +1145,7 @@ CONTROL's marks its own (§20.3): *"there is no reason to change the control loc
 | Attach | `Paperclip` | composer |
 | Effort | `Brain` | composer effort picker |
 | Outputs, Folder, Browser, Git, Terminal | `FileOutput`, `Files`, `Globe`, `FileDiff`, `SquareTerminal` | panel tabs |
+| Git's graph | `GitGraph` | palette's Show Git graph (owner, 29 Oct) |
 | Screenshot, file, diff, build output | `Camera`, `File`, `FileDiff`, `FileOutput` | Outputs rows |
 | Reload, pick an element | `RefreshCw`, `MousePointerClick` | browser toolbar (with `Camera`) |
 | Hooks, Skills, MCP, Plugins, Agents | `Webhook`, `Sparkles`, `Plug`, `Blocks`, `Bot` | head pills (§4.1) |

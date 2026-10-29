@@ -52,8 +52,8 @@ environment, which makes Claude compact at that percentage of the window when it
 
 You can also send `/compact` in an existing conversation. Web and desktop offer
 **Compact context** from the context meter. When you return to a large thread
-after more than an hour, a **Compact** chip with the thread's token count shows
-next to the send button. While it is on, Enter summarizes the history first, then
+after more than an hour, a **Compact** chip shows next to the send button (the
+strip under the composer says how big the thread is). While it is on, Enter summarizes the history first, then
 sends your message. Click the chip to switch it to **Full** and keep the full
 history for that message. See [commands and skills](./composer.md#commands-and-skills) for using
 composer commands.

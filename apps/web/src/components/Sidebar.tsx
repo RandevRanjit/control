@@ -141,6 +141,7 @@ import {
 } from "../threadSelectionStore";
 import { useAcknowledgeThreadWoke, useThreadActions } from "../hooks/useThreadActions";
 import { useHandleNewThread } from "../hooks/useHandleNewThread";
+import { useStableUntilKeyChanges } from "../hooks/useStableUntilKeyChanges";
 import { useTerminalFocus } from "../hooks/useTerminalFocus";
 import { isCommandPaletteOpen, openCommandPalette } from "../commandPaletteBus";
 import { startNewThreadFromContext } from "../lib/chatThreadActions";
@@ -3944,12 +3945,7 @@ export default function Sidebar() {
   const sidebarListItemsKey = sidebarListItemsFresh
     .map((item) => (item.kind === "thread" ? item.section + ":" + item.key : item.marker))
     .join("\n");
-  const [sidebarListItems, setSidebarListItems] = useState(sidebarListItemsFresh);
-  const [sidebarListItemsKeyState, setSidebarListItemsKeyState] = useState(sidebarListItemsKey);
-  if (sidebarListItemsKeyState !== sidebarListItemsKey) {
-    setSidebarListItemsKeyState(sidebarListItemsKey);
-    setSidebarListItems(sidebarListItemsFresh);
-  }
+  const sidebarListItems = useStableUntilKeyChanges(sidebarListItemsFresh, sidebarListItemsKey);
   useEffect(() => {
     if (
       dragState !== null &&

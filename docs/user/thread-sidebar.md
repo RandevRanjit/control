@@ -12,6 +12,8 @@ an existing worktree, use **New thread in this worktree** from the branch toolba
 
 When you change a new thread's project, CONTROL stays in the current environment
 if that project exists there. Otherwise it selects an environment that has it.
+The project menu in a new thread's heading has a search field: type part of a
+project's name to narrow the list, then press Enter to pick the first match.
 
 ### Start without a project
 

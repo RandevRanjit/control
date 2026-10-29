@@ -239,7 +239,9 @@ export const messageHitsQuery = (
     -- The index's own rowid, so FTS5 returns hits newest first and stops at
     -- the limit; ordering by the messages table's rowid sorts every hit.
     ORDER BY "messageRowid" DESC
-    LIMIT ${MESSAGE_HIT_LIMIT}
+    -- A scan may carry no SQL filter for a word, so the matcher sees its
+    -- whole window rather than the newest hits.
+    LIMIT ${match === null ? MESSAGE_SCAN_LIMIT : MESSAGE_HIT_LIMIT}
   `;
 
 const TitleCandidateRow = Schema.Struct({

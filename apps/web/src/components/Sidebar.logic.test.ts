@@ -389,7 +389,8 @@ describe("resolveSidebarStageBadgeLabel", () => {
   it("returns the fallback label for malformed nightly prerelease versions", () => {
     expect(
       resolveSidebarStageBadgeLabel({
-        primaryServerVersion: "0.0.28-nightly.20260616",
+        // A run number alone is a valid nightly from 0.1.3, so malformed means no run.
+        primaryServerVersion: "0.0.28-nightly",
         fallbackStageLabel: "Alpha",
       }),
     ).toBe("Alpha");

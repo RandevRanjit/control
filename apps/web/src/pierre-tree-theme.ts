@@ -9,6 +9,12 @@ export const PIERRE_TREE_UNSAFE_CSS = `
     --trees-border-color-override: color-mix(in srgb, currentColor 14%, transparent);
     --trees-font-family-override: var(--font-sans);
     --trees-font-size-override: 0.75rem;
+    /* Git's letters take Diff's inks (design §5.4): M and R in the write green, A in the read blue. */
+    --trees-git-modified-color-override: var(--tv-write);
+    --trees-git-renamed-color-override: var(--tv-write);
+    --trees-git-added-color-override: var(--tv-read);
+    /* Ignored rows dim to the caption ink, still readable on Field's pale ground. */
+    --trees-git-ignored-color-override: var(--text-caption);
   }
   button[data-type='item'] { border-radius: 5px; }
   svg[data-icon-name='control-tree-icon-loading'] { opacity: 0.6; }

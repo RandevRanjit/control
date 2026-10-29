@@ -548,7 +548,9 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
       ? ["Graph", "Diff", "PR"]
       : ["Graph", "Diff"];
   // A tab shows its own row of chips once it holds more than one surface, or has something to add.
-  const showChips = tab !== "git" && (tab === null || tabSurfaces.length > 1 || canAdd);
+  // Folder keeps its row with Files alone, so the first opened file doesn't push the tree down.
+  const showChips =
+    tab !== "git" && (tab === null || tab === "folder" || tabSurfaces.length > 1 || canAdd);
 
   // The new-tab shortcut opens what the tab on show opens: a shell in Terminal, a page elsewhere.
   const onNewTabKeyDown = useEffectEvent((event: KeyboardEvent) => {

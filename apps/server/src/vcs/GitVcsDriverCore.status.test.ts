@@ -870,6 +870,40 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
   });
 
   describe("repository status", () => {
+    it.effect("marks each working-tree file with Git's letter", () =>
+      Effect.gen(function* () {
+        const cwd = yield* makeTmpDir();
+        yield* initRepoWithCommit(cwd);
+        const driver = yield* GitVcsDriver.GitVcsDriver;
+        yield* writeTextFile(cwd, "gone.txt", "bye\n");
+        yield* git(cwd, ["add", "gone.txt"]);
+        yield* git(cwd, ["commit", "-m", "add gone"]);
+        yield* writeTextFile(cwd, "README.md", "# test\nedited\n");
+        yield* writeTextFile(cwd, "staged.txt", "new\n");
+        yield* git(cwd, ["add", "staged.txt"]);
+        yield* writeTextFile(cwd, "notes/untracked.md", "new\n");
+        yield* git(cwd, ["rm", "-q", "gone.txt"]);
+
+        const status = yield* driver.statusDetailsLocal(cwd);
+        assert.equal(status.workingTree.prefix, "");
+        assert.equal(
+          (yield* driver.statusDetailsLocal((yield* Path.Path).join(cwd, "notes"))).workingTree
+            .prefix,
+          "notes/",
+        );
+        assert.deepStrictEqual(
+          status.workingTree.files.map((file) => [file.path, file.status]),
+          [
+            ["gone.txt", "D"],
+            // Git reports a wholly untracked folder once, as the folder.
+            ["notes/", "A"],
+            ["README.md", "M"],
+            ["staged.txt", "A"],
+          ],
+        );
+      }),
+    );
+
     it.effect("reads Changes totals with untracked files when requested", () =>
       Effect.gen(function* () {
         const cwd = yield* makeTmpDir();
@@ -940,6 +974,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           path: "HEAD",
           insertions: 1,
           deletions: 0,
+          status: "M",
         });
       }),
     );
@@ -1009,8 +1044,8 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           assert.equal(local.hasUpstream, hasUpstream);
           assert.isTrue(local.hasWorkingTreeChanges);
           assert.deepEqual(local.workingTree.files, [
-            { path: "feature.txt", insertions: 1, deletions: 0 },
-            { path: "untracked.txt", insertions: 0, deletions: 0 },
+            { path: "feature.txt", insertions: 1, deletions: 0, status: "M" },
+            { path: "untracked.txt", insertions: 0, deletions: 0, status: "A" },
           ]);
 
           commands.length = 0;

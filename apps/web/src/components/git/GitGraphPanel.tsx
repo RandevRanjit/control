@@ -3,6 +3,7 @@ import type { EnvironmentId, VcsCommit } from "@control/contracts";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { DiffStatLabel } from "~/components/chat/DiffStatLabel";
 import { RefreshIcon } from "~/components/ui/refresh-icon";
 import { useWorkspaceMutationRefresh } from "~/hooks/useWorkspaceMutationRefresh";
 import { useEnvironmentQuery } from "~/state/query";
@@ -87,6 +88,8 @@ function CommitFiles(props: {
   continues: boolean;
   /** The graph's width, so the commit's details line up under its subject. */
   graphWidth: number;
+  /** The row cut the subject short, so the details say it whole. */
+  subjectCut: boolean;
   environmentId: EnvironmentId;
   cwd: string;
   commit: VcsCommit;
@@ -106,6 +109,7 @@ function CommitFiles(props: {
       data-continues={props.continues ? "" : undefined}
       style={{ paddingLeft: props.graphWidth - 5 }}
     >
+      {props.subjectCut ? <p className="s-gg-subj">{props.commit.subject}</p> : null}
       <p className="s-gg-by">
         {props.commit.authorName} · {COMMIT_TIME.format(new Date(props.commit.authoredAt))} ·{" "}
         {props.commit.sha.slice(0, 7)}
@@ -124,14 +128,15 @@ function CommitFiles(props: {
           </span>
           <span className="dp-nm">{file.path}</span>
           <span className="dp-mt">
-            {file.additions === null
-              ? "binary"
-              : [
-                  file.additions > 0 ? `+${file.additions}` : null,
-                  file.deletions && file.deletions > 0 ? `−${file.deletions}` : null,
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
+            {file.additions === null || file.deletions === null ? (
+              "binary"
+            ) : (
+              <DiffStatLabel
+                additions={file.additions}
+                deletions={file.deletions}
+                layout="inline"
+              />
+            )}
           </span>
         </button>
       ))}
@@ -181,6 +186,7 @@ export function GitGraphPanel(props: {
   const rows = useMemo(() => layoutCommitGraph(commits), [commits]);
   const width = Math.min(6, Math.max(1, ...rows.map((row) => row.lanesIn.length + 1))) * LANE;
   const [openSha, setOpenSha] = useState<string | null>(null);
+  const [openSubjectCut, setOpenSubjectCut] = useState(false);
   const nowMs = Date.now();
   const branch = commits[0]?.refs.find((ref) => ref !== "HEAD" && !ref.includes("/"));
 
@@ -218,7 +224,13 @@ export function GitGraphPanel(props: {
                   className="s-gg-row"
                   aria-expanded={open}
                   data-on={open ? "" : undefined}
-                  onClick={() => setOpenSha(open ? null : commit.sha)}
+                  onClick={(event) => {
+                    const subject = event.currentTarget.querySelector(".s-gg-sub");
+                    setOpenSubjectCut(
+                      subject !== null && subject.scrollWidth > subject.clientWidth,
+                    );
+                    setOpenSha(open ? null : commit.sha);
+                  }}
                 >
                   <GraphCell row={rows[index]!} width={width} head={commit.refs.includes("HEAD")} />
                   <span className="s-gg-sub">{commit.subject}</span>
@@ -234,6 +246,7 @@ export function GitGraphPanel(props: {
                   <CommitFiles
                     continues={commit.parents.length > 0}
                     graphWidth={width}
+                    subjectCut={openSubjectCut}
                     environmentId={props.environmentId}
                     cwd={props.cwd}
                     commit={commit}

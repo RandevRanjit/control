@@ -40,11 +40,13 @@ export const DiffStatLabel = memo(function DiffStatLabel(props: {
           className,
         )}
       >
+        {/* A side with nothing stays empty, as Diff's file headers leave it out; the aligned
+            grid keeps its cell so columns still line up. */}
         <span aria-hidden="true" className="font-mono text-diff-addition">
-          +{formatCompactDiffCount(additions)}
+          {additions > 0 || deletions === 0 ? `+${formatCompactDiffCount(additions)}` : null}
         </span>
         <span aria-hidden="true" className="font-mono text-diff-deletion">
-          -{formatCompactDiffCount(deletions)}
+          {deletions > 0 || additions === 0 ? `-${formatCompactDiffCount(deletions)}` : null}
         </span>
       </span>
       {showParentheses && <span className="text-muted-foreground/70">)</span>}

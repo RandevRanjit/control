@@ -254,6 +254,16 @@ function parsePorcelainPath(line: string): string | null {
   return filePath.length > 0 ? filePath : null;
 }
 
+/** Git's letter for a `--porcelain=2` line: new (staged or untracked), deleted, renamed, else modified. */
+function parsePorcelainLetter(line: string): "A" | "M" | "D" | "R" {
+  if (line.startsWith("? ")) return "A";
+  if (line.startsWith("2 ")) return "R";
+  const xy = line.startsWith("1 ") ? line.slice(2, 4) : "";
+  if (xy.includes("A")) return "A";
+  if (xy.includes("D")) return "D";
+  return "M";
+}
+
 function filterBranchesForListQuery(
   refs: ReadonlyArray<VcsRef>,
   query?: string,
@@ -1949,6 +1959,17 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
       Effect.catchTags({ GitCommandError: () => Effect.succeed(null) }),
     );
     const statusCacheKey = repositoryPaths?.gitCommonDir;
+    // Where cwd sits in the repository (`apps/web/`): Git's paths are the repository's, a folder
+    // view's are cwd's. Real paths on both sides, so a symlinked cwd still lines up.
+    const worktreeRoot = repositoryPaths?.worktreeRoot ?? null;
+    const prefix =
+      worktreeRoot === null
+        ? ""
+        : yield* Effect.all([fileSystem.realPath(worktreeRoot), fileSystem.realPath(cwd)]).pipe(
+            Effect.map(([root, real]) => path.relative(root, real).split(path.sep).join("/")),
+            Effect.map((relative) => (relative === "" ? "" : `${relative}/`)),
+            Effect.orElseSucceed(() => ""),
+          );
     const [numstatStdout, defaultBranch, hasPrimaryRemote] = yield* Effect.all(
       [
         // Plumbing, because porcelain `git diff` rewrites the index even with
@@ -2026,6 +2047,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
     let aheadOfDefaultCount = 0;
     let hasWorkingTreeChanges = false;
     const changedFilesWithoutNumstat = new Set<string>();
+    const letterByPath = new Map<string, "A" | "M" | "D" | "R">();
 
     for (const line of statusStdout.split(/\r?\n/g)) {
       if (line.startsWith("# branch.head ")) {
@@ -2048,7 +2070,10 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
       if (line.trim().length > 0 && !line.startsWith("#")) {
         hasWorkingTreeChanges = true;
         const pathValue = parsePorcelainPath(line);
-        if (pathValue) changedFilesWithoutNumstat.add(pathValue);
+        if (pathValue) {
+          changedFilesWithoutNumstat.add(pathValue);
+          letterByPath.set(pathValue, parsePorcelainLetter(line));
+        }
       }
     }
 
@@ -2085,13 +2110,23 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
       .map(([filePath, stat]) => {
         insertions += stat.insertions;
         deletions += stat.deletions;
-        return { path: filePath, insertions: stat.insertions, deletions: stat.deletions };
+        return {
+          path: filePath,
+          insertions: stat.insertions,
+          deletions: stat.deletions,
+          status: letterByPath.get(filePath) ?? "M",
+        };
       })
       .toSorted((a, b) => a.path.localeCompare(b.path));
 
     for (const filePath of changedFilesWithoutNumstat) {
       if (fileStatMap.has(filePath)) continue;
-      files.push({ path: filePath, insertions: 0, deletions: 0 });
+      files.push({
+        path: filePath,
+        insertions: 0,
+        deletions: 0,
+        status: letterByPath.get(filePath) ?? "M",
+      });
     }
     files.sort((a, b) => a.path.localeCompare(b.path));
 
@@ -2112,6 +2147,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
         files,
         insertions,
         deletions,
+        prefix,
       },
       ...(branchChanges ? { branchChanges } : {}),
       hasUpstream: upstreamRef !== null,

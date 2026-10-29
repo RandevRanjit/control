@@ -359,4 +359,9 @@ describe("Folder's tabs", () => {
     await act(() => treeChip.click());
     expect(onActivate).toHaveBeenCalledWith(tree);
   });
+
+  it("show the row with the tree alone, so the first file doesn't move it", async () => {
+    await renderPanel({ surfaces: [tree], activeSurfaceId: tree.id }, "folder");
+    expect(chipTitles()).toEqual(["Files"]);
+  });
 });

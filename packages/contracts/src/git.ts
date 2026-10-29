@@ -286,10 +286,17 @@ const VcsStatusLocalShape = {
         path: GitFilePath,
         insertions: NonNegativeInt,
         deletions: NonNegativeInt,
+        /** Git's letter: Added (staged or untracked), Modified, Deleted or Renamed. Absent on older servers. */
+        status: Schema.optional(Schema.Literals(["A", "M", "D", "R"])),
       }),
     ),
     insertions: NonNegativeInt,
     deletions: NonNegativeInt,
+    /**
+     * Where the asked-for folder sits in the repository (`apps/web/`, or empty at its root): the
+     * file paths are the repository's, so a folder view strips this. Absent on older servers.
+     */
+    prefix: Schema.optional(Schema.String),
   }),
   /**
    * Totals for the diff panel's Changes view: merge-base with the base branch to the

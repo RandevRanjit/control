@@ -133,9 +133,7 @@ export function ProjectDefaultsSettings({ category }: { category: ProjectSetting
       id="default-model"
       title="Model"
       description={
-        isProjectScope
-          ? "Model for new threads in this project."
-          : "Default model for new threads. Projects can override it."
+        isProjectScope ? "Model for new threads in this project." : "Default model for new threads."
       }
       status={
         unavailable || mixedModel || modelSource === "project"
@@ -203,9 +201,7 @@ export function ProjectDefaultsSettings({ category }: { category: ProjectSetting
       id={searchableSetting("new-threads").id}
       title="Workspace"
       description={
-        isProjectScope
-          ? "Where new threads in this project start."
-          : "Where new threads start. Projects and their control.json can override it."
+        isProjectScope ? "Where new threads in this project start." : "Where new threads start."
       }
       resetAction={
         !isProjectScope && settings.defaultThreadEnvMode !== null ? (
@@ -276,7 +272,7 @@ export function ProjectDefaultsSettings({ category }: { category: ProjectSetting
             description={
               isProjectScope
                 ? "Permissions for new threads in this project."
-                : "Default permissions for new threads. Projects can override them."
+                : "Default permissions for new threads."
             }
             resetAction={
               settings.defaultRuntimeMode !== DEFAULT_SERVER_SETTINGS.defaultRuntimeMode ? (
@@ -338,7 +334,7 @@ export function ProjectDefaultsSettings({ category }: { category: ProjectSetting
             description={
               isProjectScope
                 ? "How new worktrees in this project populate git submodules."
-                : "How new worktrees populate git submodules. Projects and their control.json can override it."
+                : "How new worktrees populate git submodules."
             }
             resetAction={
               !isProjectScope && settings.worktreeSubmodules !== null ? (
@@ -388,7 +384,7 @@ export function ProjectDefaultsSettings({ category }: { category: ProjectSetting
             description={
               isProjectScope
                 ? "Keeps this project's default branch current when the checkout has no local changes or commits."
-                : "Keeps the default branch current when the checkout has no local changes or commits. Projects can override it."
+                : "Keeps the default branch current when the checkout has no local changes or commits."
             }
             resetAction={
               settings.defaultAutoPull ? (
@@ -494,7 +490,7 @@ export function ProjectDefaultsSettings({ category }: { category: ProjectSetting
             description={
               isProjectScope
                 ? "Allow agents in this project to use the shared browser. Applies when the agent session next starts."
-                : "Allow agents to use the shared browser. Projects can override it."
+                : "Allow agents to use the shared browser."
             }
             resetAction={
               settings.enableAgentBrowserAccess !==

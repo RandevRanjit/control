@@ -374,7 +374,8 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
                 "flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 text-xs tabular-nums outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-64 [&_svg]:pointer-events-none [&_svg]:size-3.5",
                 keepFullHistory
                   ? "border-border text-muted-foreground hover:text-foreground"
-                  : "border-warning/40 text-warning hover:bg-warning/8",
+                  : // The design's amber ink, which stays readable on Field's pale ground.
+                    "border-(--tv-run)/50 text-(--tv-run) hover:bg-(--tv-run)/8",
               )}
               {...pointerFocusProps}
               aria-pressed={!keepFullHistory}

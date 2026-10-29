@@ -42,21 +42,12 @@ function pathLabel(path: string, projectName: string): string {
   return path.slice(path.lastIndexOf("/") + 1) || projectName;
 }
 
-function BreadcrumbLabel(props: {
-  readonly current?: boolean;
-  readonly label: string;
-  readonly pathLabel: string;
-}) {
+function BreadcrumbLabel(props: { readonly label: string; readonly pathLabel: string }) {
   return (
     <Tooltip>
       <TooltipTrigger
         render={
-          <span
-            className={cn(
-              "block max-w-40 truncate rounded-sm px-0.5",
-              props.current ? "font-medium text-foreground" : "text-muted-foreground",
-            )}
-          />
+          <span className="block max-w-40 truncate rounded-sm px-0.5 text-muted-foreground" />
         }
       >
         {props.label}
@@ -267,8 +258,12 @@ function DirectoryBreadcrumb(props: FileBreadcrumbsProps & { readonly crumb: Fil
 
 export function FileBreadcrumbs(props: FileBreadcrumbsProps) {
   const hostPath = isAbsolutePath(props.relativePath);
+  // The file's own name is its tab's; the trail names the folders it sits in (design §5.4).
   const breadcrumbs = useMemo(
-    () => fileBreadcrumbs(props.projectName, props.relativePath),
+    () =>
+      fileBreadcrumbs(props.projectName, props.relativePath).filter(
+        (crumb) => crumb.kind !== "file",
+      ),
     [props.projectName, props.relativePath],
   );
 
@@ -276,16 +271,12 @@ export function FileBreadcrumbs(props: FileBreadcrumbsProps) {
     <div
       key={crumb.path || "project"}
       className="flex min-w-0 shrink-0 items-center"
-      data-current-file-crumb={crumb.kind === "file"}
+      data-last-crumb={index === breadcrumbs.length - 1}
     >
       {index > 0 ? (
         <ChevronRightIcon className="mx-1 size-3.5 shrink-0 text-muted-foreground/60" />
       ) : null}
-      {crumb.kind === "file" ? (
-        <span aria-current="page">
-          <BreadcrumbLabel current label={crumb.label} pathLabel={crumb.path} />
-        </span>
-      ) : hostPath ? (
+      {hostPath ? (
         <BreadcrumbLabel label={crumb.label} pathLabel={crumb.path} />
       ) : (
         <DirectoryBreadcrumb {...props} crumb={crumb} />

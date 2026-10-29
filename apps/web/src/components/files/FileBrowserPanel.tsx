@@ -25,12 +25,15 @@ import { PIERRE_ICONS } from "~/pierre-icons";
 import { PIERRE_TREE_UNSAFE_CSS, pierreTreeStyle } from "~/pierre-tree-theme";
 
 import { chatPathOfTreeEntry } from "./filePath";
+import { fileTreeGitStatus } from "./fileTreeGitStatus";
 import { createFileTreeDragMentionController } from "./fileTreeDragMention";
 import { areAllDirectoriesExpanded, setAllDirectoriesExpanded } from "./fileTreeExpansion";
 import { buildFileTreePathUpdates } from "./fileTreePathReconciliation";
 import { loadFileAncestors } from "./loadFileAncestors";
 import { useDirectoryEntries } from "./useDirectoryEntries";
 import { useProjectPathSearch } from "~/state/queries";
+import { useEnvironmentQuery } from "~/state/query";
+import { vcsEnvironment } from "~/state/vcs";
 import { FILE_SURFACE_SUBHEADER_CLASS } from "./fileSurfaceChrome";
 
 interface FileBrowserPanelProps {
@@ -363,16 +366,22 @@ export default function FileBrowserPanel({
     loadExpanded();
     return model.subscribe(loadExpanded);
   }, [directoryPaths, load, model]);
+  // Shares the thread's status subscription when the tree shows the thread's folder.
+  const gitStatus = useEnvironmentQuery(
+    vcsEnvironment.status({ environmentId, input: { cwd } }),
+  ).data;
+  const workingTree = gitStatus?.isRepo ? gitStatus.workingTree : null;
   useEffect(() => {
-    model.setGitStatus(
-      entries
+    model.setGitStatus([
+      ...entries
         .filter((entry) => entry.ignored)
         .map((entry) => ({
           path: treePath(entry),
-          status: "ignored",
+          status: "ignored" as const,
         })),
-    );
-  }, [entries, model]);
+      ...(workingTree ? fileTreeGitStatus(workingTree) : []),
+    ]);
+  }, [entries, model, workingTree]);
   useEffect(() => {
     if (!selectedPath) return;
     const controller = new AbortController();

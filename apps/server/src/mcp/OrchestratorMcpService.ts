@@ -1947,19 +1947,28 @@ const make = Effect.gen(function* () {
           operation: "delegate-task",
         });
         let workspaceStrategy: OrchestrationV2ThreadLaunchWorkspaceStrategy | undefined;
-        if (input.isolation === "worktree") {
+        // A child gets its own worktree unless it asks to share. Without an
+        // explicit ask, a parent with no commit to start from shares instead.
+        if (input.isolation !== "shared") {
           const project = yield* requireProject(parent.thread.projectId);
           const base = yield* gitDriver
             .resolveCommit({
               cwd: parent.thread.worktreePath ?? project.workspaceRoot,
               revision: "HEAD",
             })
-            .pipe(
-              Effect.mapError(() =>
-                failure("invalid_request", "Unable to resolve the parent checkout commit."),
-              ),
+            .pipe(Effect.option);
+          if (Option.isSome(base)) {
+            workspaceStrategy = {
+              type: "worktree",
+              baseRef: base.value.commitSha,
+              startFromOrigin: false,
+            };
+          } else if (input.isolation === "worktree") {
+            return yield* failure(
+              "invalid_request",
+              "Unable to resolve the parent checkout commit.",
             );
-          workspaceStrategy = { type: "worktree", baseRef: base.commitSha, startFromOrigin: false };
+          }
         }
         const result = yield* threadManagement
           .dispatch({

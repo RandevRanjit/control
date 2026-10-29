@@ -2495,11 +2495,19 @@ it.effect.each(
       { failSetup: false, failResolve: true },
       { failSetup: false, failResolve: false, cancelSetup: true },
       { failSetup: false, failResolve: false, cancelSetup: true, cancelAsync: true },
-    ].map((failures) => ({ driver, cancelSetup: false, cancelAsync: false, ...failures })),
+      { failSetup: false, failResolve: false, omitIsolation: true },
+      { failSetup: false, failResolve: true, omitIsolation: true },
+    ].map((failures) => ({
+      driver,
+      cancelSetup: false,
+      cancelAsync: false,
+      omitIsolation: false,
+      ...failures,
+    })),
   ),
 )(
-  "prepares $driver delegated worktrees before execution, setup failure=$failSetup, commit failure=$failResolve, cancellation=$cancelSetup, async=$cancelAsync",
-  ({ driver, failSetup, failResolve, cancelSetup, cancelAsync }) =>
+  "prepares $driver delegated worktrees before execution, setup failure=$failSetup, commit failure=$failResolve, cancellation=$cancelSetup, async=$cancelAsync, isolation omitted=$omitIsolation",
+  ({ driver, failSetup, failResolve, cancelSetup, cancelAsync, omitIsolation }) =>
     Effect.gen(function* () {
       const setupEntered = yield* Deferred.make<void>();
       const allowSetup = yield* Deferred.make<void>();
@@ -2627,9 +2635,18 @@ it.effect.each(
         const input = {
           task: "Implement the child task",
           target: { providerInstanceId: childInstanceId, model: "child-model" },
-          isolation: "worktree" as const,
+          ...(omitIsolation ? {} : { isolation: "worktree" as const }),
           clientRequestId: "isolated-child",
         };
+        if (failResolve && omitIsolation) {
+          // A parent with no commit to start from shares its checkout instead.
+          const shared = yield* service.delegateTask(scope, input);
+          const child = yield* threads.getThreadProjection(shared.childThreadId);
+          assert.equal(child.thread.lineage.parentThreadId, parentThreadId);
+          assert.equal(resolveCommit.mock.calls.length, 1);
+          assert.equal(harness.createWorktree.mock.calls.length, 0);
+          return;
+        }
         if (failResolve) {
           const error = yield* service.delegateTask(scope, input).pipe(Effect.flip);
           assert.equal(error.code, "invalid_request");

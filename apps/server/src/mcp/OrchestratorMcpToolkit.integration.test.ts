@@ -1694,6 +1694,7 @@ describe("orchestrator MCP toolkit", () => {
             expect(reused.message).toContain("already used");
 
             const delegatedCall = yield* invoke("delegate_task", {
+              isolation: "shared",
               task: delegatedPrompt,
               target: {
                 providerInstanceId: claudeInstanceId,
@@ -1952,6 +1953,7 @@ describe("orchestrator MCP toolkit", () => {
             yield* expectOffersToStay(0);
 
             const repeatedDelegatedCall = yield* invoke("delegate_task", {
+              isolation: "shared",
               task: delegatedPrompt,
               target: {
                 providerInstanceId: claudeInstanceId,
@@ -1973,6 +1975,7 @@ describe("orchestrator MCP toolkit", () => {
             // Options outside the model's advertised descriptors are rejected
             // before any child thread is created.
             const rejectedOptionsCall = yield* invoke("delegate_task", {
+              isolation: "shared",
               task: cancellationPrompt,
               target: {
                 providerInstanceId: codexInstanceId,
@@ -1991,6 +1994,7 @@ describe("orchestrator MCP toolkit", () => {
             // Duplicate option ids fail fast: downstream consumers disagree on
             // whether the first or last value of a duplicated id wins.
             const duplicateOptionsCall = yield* invoke("delegate_task", {
+              isolation: "shared",
               task: cancellationPrompt,
               target: {
                 providerInstanceId: codexInstanceId,
@@ -2010,6 +2014,7 @@ describe("orchestrator MCP toolkit", () => {
             });
 
             const cancellableCall = yield* invoke("delegate_task", {
+              isolation: "shared",
               task: cancellationPrompt,
               target: {
                 providerInstanceId: codexInstanceId,
@@ -2758,6 +2763,7 @@ describe("orchestrator MCP toolkit", () => {
             // owns delivery, so delegate_task upgrades the task to "always".
             // Its terminal then wakes the parent even mid-turn.
             const upgradedCall = yield* invoke("delegate_task", {
+              isolation: "shared",
               task: cancellationPrompt,
               target: {
                 providerInstanceId: codexInstanceId,

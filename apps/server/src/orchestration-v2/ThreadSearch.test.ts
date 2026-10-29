@@ -885,6 +885,18 @@ it.layer(layerTest)("ThreadSearch while the index backfills", (it) => {
       assert.deepEqual(yield* threadIds("brûlée"), [threadId]);
       // "İ" lowercases to "i" and a combining dot, which itself has no case.
       assert.deepEqual(yield* threadIds("İstanbul"), [threadId]);
+      // With no SQL filter for that word, newer messages must not crowd it out.
+      const busy = ThreadId.make("thread:accents-busy");
+      yield* projections.apply(thread(busy, project));
+      yield* sql`
+        WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 2001)
+        INSERT INTO orchestration_v2_projection_messages
+          (message_id, thread_id, role, streaming, created_at, updated_at, payload_json)
+        SELECT 'accents-busy-' || i, ${busy}, 'assistant', 0, ${DateTime.formatIso(at(5))},
+          ${DateTime.formatIso(at(5))}, json_object('text', 'flights to Ankara')
+        FROM n
+      `;
+      assert.deepEqual(yield* threadIds("İstanbul"), [threadId]);
       yield* search.backfillIndex;
     }),
   );

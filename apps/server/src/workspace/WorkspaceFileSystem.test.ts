@@ -337,5 +337,117 @@ it.layer(layerTest, { excludeTestServices: true })("WorkspaceFileSystemLive", (i
         expect(escapedStat).toBeNull();
       }),
     );
+
+    it.effect.skipIf(!symlinksSupported)(
+      "rejects writes through symlinks that resolve outside the workspace root",
+      () =>
+        Effect.gen(function* () {
+          const workspaceFileSystem = yield* WorkspaceFileSystem.WorkspaceFileSystem;
+          const fileSystem = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const cwd = yield* makeTempDir;
+          const outsideDir = yield* makeTempDir;
+          yield* writeTextFile(outsideDir, "existing.md", "outside\n");
+          yield* fileSystem.symlink(outsideDir, path.join(cwd, "linked-dir"));
+          yield* fileSystem.symlink(
+            path.join(outsideDir, "existing.md"),
+            path.join(cwd, "linked-file.md"),
+          );
+          yield* fileSystem.symlink(
+            path.join(outsideDir, "missing.md"),
+            path.join(cwd, "dangling.md"),
+          );
+
+          for (const relativePath of [
+            "linked-dir/new.md",
+            "linked-dir/nested/new.md",
+            "linked-file.md",
+          ]) {
+            const error = yield* workspaceFileSystem
+              .writeFile({ cwd, relativePath, contents: "# nope\n" })
+              .pipe(Effect.flip);
+            expect(error).toBeInstanceOf(WorkspaceFileSystem.WorkspaceFilePathEscapeError);
+          }
+          const danglingError = yield* workspaceFileSystem
+            .writeFile({ cwd, relativePath: "dangling.md", contents: "# nope\n" })
+            .pipe(Effect.flip);
+          expect(danglingError).toBeInstanceOf(
+            WorkspaceFileSystem.WorkspaceFileSystemOperationError,
+          );
+          expect(danglingError).toMatchObject({ operation: "realpath-target" });
+
+          expect((yield* fileSystem.readDirectory(outsideDir)).toSorted()).toEqual(["existing.md"]);
+          expect(yield* fileSystem.readFileString(path.join(outsideDir, "existing.md"))).toBe(
+            "outside\n",
+          );
+        }),
+    );
+
+    it.effect.skipIf(!symlinksSupported)(
+      "writes through symlinks that stay inside the workspace root",
+      () =>
+        Effect.gen(function* () {
+          const workspaceFileSystem = yield* WorkspaceFileSystem.WorkspaceFileSystem;
+          const fileSystem = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const parentDir = yield* makeTempDir;
+          const cwd = path.join(parentDir, "workspace");
+          const cwdAlias = path.join(parentDir, "workspace-alias");
+          yield* writeTextFile(cwd, "docs/README.md", "old\n");
+          yield* fileSystem.symlink(path.join(cwd, "docs"), path.join(cwd, "docs-alias"));
+          yield* fileSystem.symlink("docs/README.md", path.join(cwd, "README.md"));
+          yield* fileSystem.symlink(cwd, cwdAlias);
+
+          yield* workspaceFileSystem.writeFile({
+            cwd,
+            relativePath: "docs-alias/plans/plan.md",
+            contents: "# Plan\n",
+          });
+          yield* workspaceFileSystem.writeFile({
+            cwd,
+            relativePath: "README.md",
+            contents: "new\n",
+          });
+          yield* workspaceFileSystem.writeFile({
+            cwd: cwdAlias,
+            relativePath: "notes.md",
+            contents: "notes\n",
+          });
+          // `..` after a link in cwd is resolved by name, as for the relative path.
+          yield* fileSystem.symlink(path.join(cwd, "docs/plans"), path.join(cwd, "plans-alias"));
+          yield* workspaceFileSystem.writeFile({
+            cwd: `${path.join(cwd, "plans-alias")}${path.sep}..`,
+            relativePath: "dotdot.md",
+            contents: "dotdot\n",
+          });
+
+          expect(yield* fileSystem.readFileString(path.join(cwd, "docs/plans/plan.md"))).toBe(
+            "# Plan\n",
+          );
+          expect(yield* fileSystem.readFileString(path.join(cwd, "docs/README.md"))).toBe("new\n");
+          expect(yield* fileSystem.readLink(path.join(cwd, "README.md"))).toBe("docs/README.md");
+          expect(yield* fileSystem.readFileString(path.join(cwd, "notes.md"))).toBe("notes\n");
+          expect(yield* fileSystem.readFileString(path.join(cwd, "dotdot.md"))).toBe("dotdot\n");
+        }),
+    );
+
+    // On Windows `\` is a separator, so the name cannot exist there.
+    it.effect.skipIf(HostProcessPlatform.defaultValue() === "win32")(
+      "keeps a backslash in a file name as part of the name",
+      () =>
+        Effect.gen(function* () {
+          const workspaceFileSystem = yield* WorkspaceFileSystem.WorkspaceFileSystem;
+          const fileSystem = yield* FileSystem.FileSystem;
+          const cwd = yield* makeTempDir;
+          yield* writeTextFile(cwd, "a\\b.md", "old\n");
+
+          yield* workspaceFileSystem.writeFile({ cwd, relativePath: "a\\b.md", contents: "new\n" });
+
+          expect(
+            (yield* workspaceFileSystem.readFile({ cwd, relativePath: "a\\b.md" })).contents,
+          ).toBe("new\n");
+          expect(yield* fileSystem.readDirectory(cwd)).toEqual(["a\\b.md"]);
+        }),
+    );
   });
 });

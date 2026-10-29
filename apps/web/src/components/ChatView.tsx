@@ -417,7 +417,7 @@ import {
   serverEnvironment,
 } from "../state/server";
 import { terminalEnvironment } from "../state/terminal";
-import { threadEnvironment } from "../state/threads";
+import { threadEnvironment, useThreadFamily } from "../state/threads";
 import { workspacePreparationRetryRunIds } from "@control/client-runtime/state/turn-item-presentation";
 import { resolveProviderSkillsForCwd } from "@control/client-runtime/providerSkills";
 import { vcsEnvironment } from "../state/vcs";
@@ -1716,6 +1716,12 @@ export default function ChatView(props: ChatViewProps) {
   });
   const serverThreadProjection = useQuietThreadProjection(routeThreadDetailRef);
   const serverProjection = serverThreadProjection?.projection ?? null;
+  // Subagent rows, an open child's own row and its ancestors come from the family when the shell
+  // leaves idle children out. Every source agrees on the root, so the key never flips.
+  useThreadFamily(
+    routeKind === "server" ? environmentId : null,
+    serverThread?.lineage.rootThreadId ?? serverProjection?.thread.lineage.rootThreadId ?? null,
+  );
   const reportedModelSelection = serverProjection
     ? deriveReportedModelSelection(serverProjection)
     : null;

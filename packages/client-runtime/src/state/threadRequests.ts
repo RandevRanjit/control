@@ -28,6 +28,44 @@ export async function declinePendingApprovals(
   return true;
 }
 
+/** A request that appeared after the user pressed send, which the redirect must not bury. */
+export type RedirectBlock = "approval-arrived" | "user-input-arrived";
+
+/**
+ * Declines the approvals shown when the user pressed send so the message can redirect the agent.
+ * A question, or an approval the user never saw, arriving before or during the decline stops the
+ * send: the draft stays and the new request stays pending for the owner to see. Checked before
+ * declining (an upload can sit between send and here) and again after, from `readPending`'s
+ * current state.
+ */
+export async function declineForRedirect(input: {
+  readonly shownApprovalIds: ReadonlyArray<RuntimeRequestId>;
+  readonly readPending: () => {
+    readonly approvals: ReadonlyArray<ThreadPendingApproval>;
+    readonly userInputCount: number;
+  };
+  readonly respond: ApprovalResponder;
+}): Promise<{ readonly declined: boolean; readonly blocked: RedirectBlock | null }> {
+  const blocker = (): RedirectBlock | null => {
+    const pending = input.readPending();
+    if (pending.userInputCount > 0) return "user-input-arrived";
+    return pending.approvals.some(
+      (approval) => !input.shownApprovalIds.includes(approval.requestId),
+    )
+      ? "approval-arrived"
+      : null;
+  };
+  const before = blocker();
+  if (before !== null) return { declined: false, blocked: before };
+  const declined = await declinePendingApprovals(
+    input
+      .readPending()
+      .approvals.filter((approval) => input.shownApprovalIds.includes(approval.requestId)),
+    input.respond,
+  ).catch(() => false);
+  return { declined, blocked: declined ? blocker() : null };
+}
+
 export interface ThreadPendingApproval {
   readonly requestId: RuntimeRequestId;
   readonly requestKind: ProviderRequestKind;

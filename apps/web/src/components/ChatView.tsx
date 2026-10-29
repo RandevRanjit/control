@@ -108,7 +108,7 @@ import { threadSupportsProviderHandoff } from "@control/client-runtime/state/thr
 import { shouldShowLoadEarlierControl } from "@control/client-runtime/state/threads";
 import { resolveThreadLastVisitedAt } from "./Sidebar.logic";
 import {
-  declinePendingApprovals,
+  declineForRedirect,
   derivePendingThreadRequests,
 } from "@control/client-runtime/state/thread-requests";
 import {
@@ -3415,11 +3415,13 @@ export default function ChatView(props: ChatViewProps) {
     : false;
   // A send awaits uploads before it declines, so it reads the approvals pending by then.
   const pendingApprovalsRef = useRef(pendingApprovals);
+  const pendingUserInputsRef = useRef(pendingUserInputs);
   const respondingRequestIdsRef = useRef(respondingRequestIds);
   useLayoutEffect(() => {
     pendingApprovalsRef.current = pendingApprovals;
+    pendingUserInputsRef.current = pendingUserInputs;
     respondingRequestIdsRef.current = respondingRequestIds;
-  }, [pendingApprovals, respondingRequestIds]);
+  }, [pendingApprovals, pendingUserInputs, respondingRequestIds]);
   const activeProposedPlan = useMemo(() => {
     if (!latestRunSettled) {
       return null;
@@ -9354,13 +9356,11 @@ export default function ChatView(props: ChatViewProps) {
     // here, after everything above has accepted the send, so local commands and rejected
     // drafts leave them alone. After navigating away during an upload, the shown approvals
     // are another thread's, so this send leaves them alone too.
-    const approvalsToDecline =
+    const shownApprovalIds =
       currentRouteThreadKeyRef.current === routeThreadKey
-        ? pendingApprovalsRef.current.filter((approval) =>
-            sendCtx?.shownPendingApprovalIds.includes(approval.requestId),
-          )
+        ? (sendCtx?.shownPendingApprovalIds ?? [])
         : [];
-    if (approvalsToDecline.length > 0) {
+    if (shownApprovalIds.length > 0) {
       // A draft edited since send, or a paste still landing in it, is no longer the message
       // the user sent.
       const attachmentIdsAtSend = composerAttachmentsSnapshot.map((attachment) => attachment.id);
@@ -9390,37 +9390,39 @@ export default function ChatView(props: ChatViewProps) {
         .getState()
         .getComposerDraft(composerDraftTarget);
       const changedBeforeDecline = draftChangedSinceSend();
-      const pendingIdsBeforeDecline = pendingApprovalsRef.current.map(
-        (approval) => approval.requestId,
+      const approvalResponding = shownApprovalIds.some((id) =>
+        respondingRequestIdsRef.current.includes(id),
       );
-      const approvalResponding = approvalsToDecline.some((approval) =>
-        respondingRequestIdsRef.current.includes(approval.requestId),
-      );
-      const declined =
-        !changedBeforeDecline &&
-        !approvalResponding &&
-        (await declinePendingApprovals(approvalsToDecline, onRespondToApproval).catch(() => false));
+      // A question or an approval the user never saw, arriving while uploads ran or during the
+      // decline, would sit behind the redirect; keep the draft so the owner sees it first.
+      const redirect =
+        changedBeforeDecline || approvalResponding
+          ? { declined: false, blocked: null }
+          : await declineForRedirect({
+              shownApprovalIds,
+              readPending: () => ({
+                approvals: pendingApprovalsRef.current,
+                userInputCount: pendingUserInputsRef.current.length,
+              }),
+              respond: onRespondToApproval,
+            });
+      const declined = redirect.declined;
       const draftChanged =
         changedBeforeDecline ||
         draftChangedSinceSend() ||
         useComposerDraftStore.getState().getComposerDraft(composerDraftTarget) !==
           draftBeforeDecline;
-      // An approval that arrived during the decline would block the redirect; keep the draft so
-      // the next send declines it too.
-      const approvalArrived = pendingApprovalsRef.current.some(
-        (approval) => !pendingIdsBeforeDecline.includes(approval.requestId),
-      );
       if (
         !declined ||
         draftChanged ||
-        approvalArrived ||
+        redirect.blocked !== null ||
         currentRouteThreadKeyRef.current !== routeThreadKey
       ) {
         sendInFlightRef.current = false;
         setDockedDraftHeroThreadKey((currentThreadKey) =>
           currentThreadKey === activeThreadKey ? null : currentThreadKey,
         );
-        if (draftChanged || approvalResponding || (declined && approvalArrived)) {
+        if (draftChanged || approvalResponding || redirect.blocked !== null) {
           toastManager.add({
             type: "info",
             title: draftChanged
@@ -9429,7 +9431,9 @@ export default function ChatView(props: ChatViewProps) {
                 : "Your message changed, so it wasn't sent."
               : approvalResponding
                 ? "An approval is already being answered, so your message wasn't sent."
-                : "Another approval arrived, so your message wasn't sent.",
+                : redirect.blocked === "user-input-arrived"
+                  ? "The agent asked a question, so your message wasn't sent."
+                  : "Another approval arrived, so your message wasn't sent.",
             description: "Send again when it's ready.",
           });
         }

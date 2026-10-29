@@ -12,6 +12,7 @@ import { v2Now, v2Projection } from "./orchestrationV2TestFixtures.ts";
 import {
   createQuestionHistoryProjector,
   derivePendingThreadRequests,
+  declineForRedirect,
   declinePendingApprovals,
   type ApprovalResponder,
   type ThreadPendingApproval,
@@ -72,6 +73,83 @@ describe("declining approvals before sending", () => {
       ),
     ).toBe(true);
     expect(respond).not.toHaveBeenCalled();
+  });
+});
+
+describe("a redirect against what was pending at send", () => {
+  const shown: ThreadPendingApproval = {
+    requestId: RuntimeRequestId.make("shown-approval"),
+    requestKind: "command",
+    createdAt: "2026-10-19T00:00:00Z",
+    responseCapability: "live",
+  };
+  const arrived: ThreadPendingApproval = {
+    ...shown,
+    requestId: RuntimeRequestId.make("arrived-approval"),
+  };
+  /** The thread's pending requests as the client sees them, which the test moves on. */
+  const makeThread = (approvals: ReadonlyArray<ThreadPendingApproval>) => {
+    const state = { approvals, userInputCount: 0 };
+    return { state, readPending: () => state };
+  };
+
+  it("declines what was shown and goes ahead when nothing new arrived", async () => {
+    const thread = makeThread([shown]);
+    const respond = vi.fn<ApprovalResponder>(async () => AsyncResult.success(undefined));
+    expect(
+      await declineForRedirect({
+        shownApprovalIds: [shown.requestId],
+        readPending: thread.readPending,
+        respond,
+      }),
+    ).toEqual({ declined: true, blocked: null });
+    expect(respond.mock.calls).toEqual([[shown.requestId, "decline"]]);
+  });
+
+  it("declines nothing when an approval arrived after send, e.g. during an upload", async () => {
+    const thread = makeThread([shown, arrived]);
+    const respond = vi.fn<ApprovalResponder>(async () => AsyncResult.success(undefined));
+    expect(
+      await declineForRedirect({
+        shownApprovalIds: [shown.requestId],
+        readPending: thread.readPending,
+        respond,
+      }),
+    ).toEqual({ declined: false, blocked: "approval-arrived" });
+    expect(respond).not.toHaveBeenCalled();
+  });
+
+  it("declines nothing when a question arrived after send", async () => {
+    const thread = makeThread([shown]);
+    thread.state.userInputCount = 1;
+    const respond = vi.fn<ApprovalResponder>(async () => AsyncResult.success(undefined));
+    expect(
+      await declineForRedirect({
+        shownApprovalIds: [shown.requestId],
+        readPending: thread.readPending,
+        respond,
+      }),
+    ).toEqual({ declined: false, blocked: "user-input-arrived" });
+    expect(respond).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["an approval", "approval-arrived"],
+    ["a question", "user-input-arrived"],
+  ] as const)("stops the send when %s arrives during the decline", async (kind, blocked) => {
+    const thread = makeThread([shown]);
+    const respond = vi.fn<ApprovalResponder>(async () => {
+      if (blocked === "approval-arrived") thread.state.approvals = [shown, arrived];
+      else thread.state.userInputCount = 1;
+      return AsyncResult.success(undefined);
+    });
+    expect(
+      await declineForRedirect({
+        shownApprovalIds: [shown.requestId],
+        readPending: thread.readPending,
+        respond,
+      }),
+    ).toEqual({ declined: true, blocked });
   });
 });
 

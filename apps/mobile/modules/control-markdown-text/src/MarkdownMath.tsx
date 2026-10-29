@@ -1,26 +1,27 @@
 import { ScrollView, Text, View, type ColorValue } from "react-native";
 import { SvgXml } from "react-native-svg";
 
-import type { NativeMarkdownFormula } from "./nativeMarkdownText";
+import { MATH_FONT_SCALE, type NativeMarkdownFormula } from "./nativeMarkdownText";
 import type { NativeMarkdownTextStyle } from "./SelectableMarkdownText.types";
-
-// TeX fonts run small beside the text face; web sets KaTeX at the same 1.21em.
-const MATH_FONT_SCALE = 1.21;
 
 let typesetFormula: typeof import("./markdownMathSvg").markdownMathSvg | undefined;
 
 /** MathJax loads with the first formula, so threads without math never pay for it. */
-function markdownMathSvg(tex: string, display: boolean) {
+export function markdownMathSvg(tex: string, display: boolean) {
   typesetFormula ??= (require("./markdownMathSvg") as typeof import("./markdownMathSvg"))
     .markdownMathSvg;
   return typesetFormula(tex, display);
 }
 
-/** A formula inside a line of React Native text, sitting on its baseline like web. */
+/**
+ * A formula inside a line of React Native text, sitting on its baseline like web.
+ * `raise` is how far the text sits above where the line sets inline views.
+ */
 export function InlineMath(props: {
   readonly formula: NativeMarkdownFormula;
   readonly fontSize: number;
   readonly color: ColorValue;
+  readonly raise: number;
 }) {
   const tex = props.formula.tex.trim();
   const svg = markdownMathSvg(tex, props.formula.display);
@@ -33,7 +34,7 @@ export function InlineMath(props: {
       style={{
         width: svg.width * size,
         height: svg.height * size,
-        transform: [{ translateY: svg.depth * size }],
+        transform: [{ translateY: svg.depth * size - props.raise }],
       }}
     >
       <SvgXml xml={svg.xml} width="100%" height="100%" color={props.color} />

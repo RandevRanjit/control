@@ -17,9 +17,13 @@ import { MarkdownTextPrimitive } from "./MarkdownTextPrimitive";
 import { markdownFileIconSource, markdownIconAssetUri } from "./markdownFileIcons";
 import { markdownLinkIconSource } from "./markdownLinkIcons";
 import { resolveMarkdownFileIcon, resolveMarkdownLinkIcon } from "./markdownLinks";
-import { InlineMath } from "./MarkdownMath";
+import { InlineMath, markdownMathSvg } from "./MarkdownMath";
 import type { NativeMarkdownFormula, NativeMarkdownTextRun } from "./nativeMarkdownText";
-import { nativeMarkdownContextCopyRanges, nativeMarkdownMathSegments } from "./nativeMarkdownText";
+import {
+  inlineMathLayout,
+  nativeMarkdownContextCopyRanges,
+  nativeMarkdownMathSegments,
+} from "./nativeMarkdownText";
 import type {
   MarkdownFileContextMenu,
   NativeMarkdownTextStyle,
@@ -210,11 +214,28 @@ interface SelectableTextProps {
 function MathSelectableText(
   props: SelectableTextProps & { readonly formulas: ReadonlyArray<NativeMarkdownFormula> },
 ) {
+  const runStyles = props.runs.map((run) => runStyle(run, props.textStyle));
+  const runSegments = props.runs.map((run) => nativeMarkdownMathSegments(run.text, props.formulas));
+  // React Native sets the whole text on its tallest line height and font.
+  const layout =
+    Platform.OS === "ios"
+      ? inlineMathLayout(
+          runSegments
+            .flat()
+            .flatMap((segment) =>
+              typeof segment === "string"
+                ? []
+                : (markdownMathSvg(segment.tex.trim(), segment.display) ?? []),
+            ),
+          Math.max(props.textStyle.fontSize, ...runStyles.map((style) => style.fontSize ?? 0)),
+          Math.max(props.textStyle.lineHeight, ...runStyles.map((style) => style.lineHeight ?? 0)),
+        )
+      : { raise: 0, paddingTop: 0, paddingBottom: 0 };
   const children = [];
   // Runs are keyed by text offset; they only change with the text itself.
   let offset = 0;
-  for (const run of props.runs) {
-    const style = runStyle(run, props.textStyle);
+  for (const [index, run] of props.runs.entries()) {
+    const style = runStyles[index]!;
     const href = run.href;
     const onPress = href
       ? () => {
@@ -224,7 +245,7 @@ function MathSelectableText(
       : undefined;
     children.push(
       <Text key={offset} style={style} onPress={onPress}>
-        {nativeMarkdownMathSegments(run.text, props.formulas).map((segment) =>
+        {runSegments[index]!.map((segment) =>
           typeof segment === "string" ? (
             segment
           ) : (
@@ -233,6 +254,7 @@ function MathSelectableText(
               formula={segment}
               fontSize={style.fontSize ?? props.textStyle.fontSize}
               color={style.color ?? props.textStyle.color}
+              raise={layout.raise}
             />
           ),
         )}
@@ -251,6 +273,8 @@ function MathSelectableText(
         fontFamily: props.textStyle.fontFamily,
         fontSize: props.textStyle.fontSize,
         lineHeight: props.textStyle.lineHeight,
+        paddingTop: layout.paddingTop,
+        paddingBottom: layout.paddingBottom,
       }}
     >
       {children}

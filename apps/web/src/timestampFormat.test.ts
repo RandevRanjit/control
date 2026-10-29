@@ -178,30 +178,31 @@ describe("formatDayAwareTimestamp", () => {
     );
   });
 
-  it("prefixes older same-year messages with the numeric date", () => {
+  it("prefixes older same-year messages with the day and month's short name", () => {
     const messageAt = iso(2026, 7, 12, 12, 34);
     const datePart = new Intl.DateTimeFormat(undefined, {
-      month: "numeric",
+      month: "short",
       day: "numeric",
     }).format(new Date(messageAt));
     expect(formatDayAwareTimestamp(messageAt, "12-hour", now)).toBe(
-      `${datePart} ${time(messageAt)}`,
+      `${datePart}, ${time(messageAt)}`,
     );
   });
 
   it("includes the year once the calendar year differs", () => {
     const messageAt = iso(2025, 11, 31, 18, 0);
     const datePart = new Intl.DateTimeFormat(undefined, {
-      month: "numeric",
+      month: "short",
       day: "numeric",
       year: "numeric",
     }).format(new Date(messageAt));
     expect(formatDayAwareTimestamp(messageAt, "12-hour", now)).toBe(
-      `${datePart} ${time(messageAt)}`,
+      `${datePart}, ${time(messageAt)}`,
     );
   });
 
-  it("uses the host locale for both the numeric date and wall-clock time", async () => {
+  // Git › Graph writes `25 Oct, 17:20`; a turn's time reads the same way on an en-GB host.
+  it("uses the host locale for both the date and wall-clock time", async () => {
     vi.stubGlobal("window", {
       desktopBridge: { getSystemLocale: () => "en-GB" },
     });
@@ -210,7 +211,7 @@ describe("formatDayAwareTimestamp", () => {
     const { formatDayAwareTimestamp: formatWithHostLocale } = await import("./timestampFormat");
     const messageAt = iso(2026, 7, 12, 15, 44);
 
-    expect(formatWithHostLocale(messageAt, "locale", now)).toBe("12/08 15:44");
+    expect(formatWithHostLocale(messageAt, "locale", now)).toBe("12 Aug, 15:44");
 
     vi.unstubAllGlobals();
   });

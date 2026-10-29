@@ -156,20 +156,21 @@ export function formatShortTimestamp(isoDate: string, timestampFormat: Timestamp
   return getTimestampFormatter(timestampFormat, false).format(date);
 }
 
-const numericDateFormatter = new Intl.DateTimeFormat(timestampLocale, {
-  month: "numeric",
+// The month by its short name, as Git › Graph writes it (`25 Oct, 17:20`), in the host's order.
+const shortDateFormatter = new Intl.DateTimeFormat(timestampLocale, {
+  month: "short",
   day: "numeric",
 });
-const numericDateWithYearFormatter = new Intl.DateTimeFormat(timestampLocale, {
-  month: "numeric",
+const shortDateWithYearFormatter = new Intl.DateTimeFormat(timestampLocale, {
+  month: "short",
   day: "numeric",
   year: "numeric",
 });
 
 /**
  * Chat timestamp that adds the date once the message is no longer from today:
- * today `12:34 PM`, yesterday `yesterday at 12:34 PM`, older `8/13 12:34 PM`
- * (locale digit order), with the year included once the calendar year differs.
+ * today `12:34 PM`, yesterday `yesterday at 12:34 PM`, older `Aug 13, 12:34 PM`
+ * (`13 Aug, 12:34` on an en-GB host), with the year included once the calendar year differs.
  * Boundaries are local calendar days, not 24-hour windows.
  */
 export function formatDayAwareTimestamp(
@@ -190,14 +191,14 @@ export function formatDayAwareTimestamp(
   if (dayDiff <= 0) return time;
   if (dayDiff === 1) return `yesterday at ${time}`;
   const dateFormatter =
-    date.getFullYear() === now.getFullYear() ? numericDateFormatter : numericDateWithYearFormatter;
-  return `${dateFormatter.format(date)} ${time}`;
+    date.getFullYear() === now.getFullYear() ? shortDateFormatter : shortDateWithYearFormatter;
+  return `${dateFormatter.format(date)}, ${time}`;
 }
 
 /**
  * The forward-looking counterpart of {@link formatDayAwareTimestamp} for an
  * instant that has not happened yet (a usage-limit reset): today `12:34 PM`,
- * tomorrow `tomorrow at 12:34 PM`, later `8/13 12:34 PM`.
+ * tomorrow `tomorrow at 12:34 PM`, later `Aug 13, 12:34 PM`.
  */
 export function formatUpcomingTimestamp(
   isoDate: string,
@@ -217,8 +218,8 @@ export function formatUpcomingTimestamp(
   if (dayDiff === 0) return time;
   if (dayDiff === 1) return `tomorrow at ${time}`;
   const dateFormatter =
-    date.getFullYear() === now.getFullYear() ? numericDateFormatter : numericDateWithYearFormatter;
-  return `${dateFormatter.format(date)} ${time}`;
+    date.getFullYear() === now.getFullYear() ? shortDateFormatter : shortDateWithYearFormatter;
+  return `${dateFormatter.format(date)}, ${time}`;
 }
 
 /**

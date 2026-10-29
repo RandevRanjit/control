@@ -1,5 +1,6 @@
 import {
   isProviderWorkspaceSnapshotCurrent,
+  type ServerConfig,
   type ServerProvider,
   type ServerProviderSkill,
   type ServerProviderSlashCommand,
@@ -118,6 +119,28 @@ export function hasCompleteProviderWorkspaceSnapshot(
 ): boolean {
   const snapshot = provider && resolveProviderWorkspaceSnapshot(provider, cwd);
   return Boolean(snapshot && !snapshot.slashCommandsPending);
+}
+
+/**
+ * Whether a composer's workspace scan answered with a complete snapshot. From a server that
+ * sends snapshots on demand, only the client's merged config counts: the client discards an
+ * answer a reconfigure overtook, and the composer must scan again. Older servers broadcast
+ * snapshots, so their reply stands.
+ */
+export function hasRefreshedProviderWorkspaceSnapshot(
+  config: ServerConfig | null,
+  reply: ReadonlyArray<ServerProvider>,
+  instanceId: ServerProvider["instanceId"],
+  cwd: string,
+): boolean {
+  const providers =
+    config?.environment.capabilities.providerWorkspaceSnapshotsOnDemand === true
+      ? config.providers
+      : reply;
+  return hasCompleteProviderWorkspaceSnapshot(
+    providers.find((provider) => provider.instanceId === instanceId),
+    cwd,
+  );
 }
 
 /** A complete snapshot young enough that opening a composer need not rescan. */

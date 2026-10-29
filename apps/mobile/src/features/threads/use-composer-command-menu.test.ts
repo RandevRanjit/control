@@ -9,6 +9,8 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
 const refreshProviders = vi.hoisted(() => vi.fn());
+// The merged config the composer reads once a scan answers; null is a server without on-demand snapshots.
+const mergedConfig = vi.hoisted(() => ({ value: null as unknown }));
 vi.mock("react-native", () => ({ Alert: { alert: vi.fn() } }));
 
 vi.mock("../../state/queries", () => ({
@@ -21,9 +23,15 @@ vi.mock("../../state/use-composer-drafts", () => ({
   setComposerDraftContext: vi.fn(),
 }));
 vi.mock("../../lib/uuid", () => ({ uuidv4: () => "context-id" }));
-vi.mock("../../state/server", () => ({
-  serverEnvironment: { refreshProviders: Symbol("refreshProviders") },
-}));
+vi.mock("../../state/server", async () => {
+  const { Atom } = await import("effect/reactivity");
+  return {
+    serverEnvironment: {
+      refreshProviders: Symbol("refreshProviders"),
+      configValueAtom: () => Atom.make(() => mergedConfig.value),
+    },
+  };
+});
 vi.mock("../../state/use-atom-command", () => ({
   useAtomCommand: () => refreshProviders,
 }));
@@ -156,6 +164,7 @@ describe("workspace command discovery retry", () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
+    mergedConfig.value = null;
     refreshProviders.mockReset();
     refreshProviders.mockResolvedValue({ _tag: "Success", value: { providers: [provider] } });
     const document = { nodeType: 9, addEventListener() {}, removeEventListener() {} };
@@ -308,6 +317,25 @@ describe("workspace command discovery retry", () => {
       input: { instanceId, cwd: "/project-b" },
     });
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("rescans when the client discarded a complete answer", async () => {
+    const recovered = {
+      ...provider,
+      workspaceSnapshots: [{ ...provider.workspaceSnapshots[0], slashCommandsPending: false }],
+    };
+    refreshProviders.mockResolvedValue({ _tag: "Success", value: { providers: [recovered] } });
+    // A reconfigure overtook the scan, so its answer never reached the merged config.
+    mergedConfig.value = {
+      environment: { capabilities: { providerWorkspaceSnapshotsOnDemand: true } },
+      providers: [provider],
+    };
+    await act(async () => {
+      root.render(createElement(Probe, { cwd: "/project-a" }));
+    });
+    expect(refreshProviders).toHaveBeenCalledTimes(1);
+    await act(() => vi.advanceTimersByTimeAsync(10_000));
+    expect(refreshProviders).toHaveBeenCalledTimes(2);
   });
 
   it("stops rescanning a cwd that never answers, such as a deleted worktree", async () => {

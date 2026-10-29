@@ -42,10 +42,12 @@ import {
   isProviderSkillUserInvocable,
   hasCompleteProviderWorkspaceSnapshot,
   hasCurrentProviderWorkspaceSnapshot,
+  hasRefreshedProviderWorkspaceSnapshot,
   resolveProviderSkillsForCwd,
   resolveProviderSlashCommandsForCwd,
 } from "@control/client-runtime/providerSkills";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { RegistryContext } from "@effect/atom-react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import type { ComposerEditorSelection } from "../../components/ComposerEditor";
 import { serverEnvironment } from "../../state/server";
@@ -248,6 +250,7 @@ export function useComposerCommandMenu({
   const refreshProviders = useAtomCommand(serverEnvironment.refreshProviders, {
     reportFailure: false,
   });
+  const registry = useContext(RegistryContext);
   const selectedProviderInstanceId = selectedProviderStatus?.instanceId;
   const hasWorkspaceSnapshot = hasCompleteProviderWorkspaceSnapshot(
     selectedProviderStatus,
@@ -329,10 +332,10 @@ export function useComposerCommandMenu({
     }).then((result) => {
       const refreshed =
         result._tag === "Success" &&
-        hasCompleteProviderWorkspaceSnapshot(
-          result.value.providers.find(
-            (provider) => provider.instanceId === selectedProviderInstanceId,
-          ),
+        hasRefreshedProviderWorkspaceSnapshot(
+          registry.get(serverEnvironment.configValueAtom(environmentId)),
+          result.value.providers,
+          selectedProviderInstanceId,
           projectCwd,
         );
       if (!refreshed) retryLater();
@@ -343,6 +346,7 @@ export function useComposerCommandMenu({
     environmentId,
     projectCwd,
     refreshProviders,
+    registry,
     selectedProviderInstanceId,
     selectedProviderStatus,
     workspaceRefreshRetry,

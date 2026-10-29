@@ -3,12 +3,17 @@
 The right panel sits beside a thread. Open it with the panel toggle in the thread's head or
 `mod+alt+b`. It has five tabs:
 
-- **Outputs**: everything the agent made in this thread, newest turn first: pages it published,
-  files and screenshots it sent, and the files each turn changed. Pick a page or file to see it
-  underneath; pick a changed file to open its change in Git.
-- **Folder**: the thread's folder and the files you open from it.
+- **Outputs**: what the agent made in this thread, newest turn first: pages it published, files and
+  screenshots it sent, and the documents, pictures and builds it wrote into the folder. Code it
+  changed is in Git, not here. The newest turn starts open; click an older turn to open it. Pick an
+  output to see it underneath, with Markdown shown rendered.
+- **Folder**: the thread's folder, with each file you open as a tab after **Files**, the tree.
+  Click **Files** to go back to the tree; the files stay open. When the panel is wide, the tree can
+  also sit beside a file.
 - **Browser**: pages the agent or you opened, and devices. Use **+** for another page or a device.
-- **Git**: what changed, by turn or against a branch.
+- **Git**: **Graph** shows the branch's commits beside its upstream and default branch; click a
+  commit for its message and files, and a file to open it in Folder. **Diff** shows what changed,
+  by turn or against a branch, each file marked M, A, D or R. **PR** holds the pull requests.
 - **Terminal**: the thread's own shells.
 
 With nothing open, the panel shows Git. A tab remembers what it last showed. When a tab holds more

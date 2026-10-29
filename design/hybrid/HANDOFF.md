@@ -295,9 +295,15 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 
 ### 5.2 Git (Diff mode shown)
 
-- **Head, 34.** `Graph | Diff` as a segmented control (Graph is F33, later), then `this turn · vs HEAD` at the right.
+- **Head, 34.** `Graph | Diff | PR` as a segmented control, then `this turn · vs HEAD` at the right.
+- **Graph** (built 29 Oct). The branch's commits newest first, each 28 high: its lane and node at the left (lanes
+  take the tool inks in turn; HEAD's node is filled), the subject in Regrade 12.5, its refs as pills (local filled,
+  remote outlined), and the date in Plex. The upstream and the remote's default branch draw beside HEAD in their own
+  lanes. A click opens the commit under its row: author, date and short sha, the message body, then its files as
+  rows with Git's letter and `+n −n`; a file opens in Folder. **Show older** loads 60 more, up to 200.
 - **Summary, 26.** `4 files +38 −12`. Plus is in the green mark, minus in the red mark (Plex 11.5 / 520).
-- **Changed files.** 24 high, radius 8. A status letter (M, A), the path in Plex 11.5, and `+n −n` at the right.
+- **Changed files.** 24 high, radius 8. A status letter (M, A, D, R) after the chevron, in place of T3's icons,
+  the path in Plex 11.5, and `+n −n` at the right, added before removed everywhere.
 - **Diff.** Plex 11 / 16 on `--deep`, radius 6. Line numbers sit on `--sunken`.
   - Added lines take Bloom's green wash, with words on `--green-word`.
   - **Removed lines take T3's own red, as S1 draws it**:
@@ -308,9 +314,13 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 ### 5.3 Outputs (F28, F30)
 
 - **Head.** `Outputs`, `this chat, newest first`, and the count at the right.
-- **List.** Grouped under turn headings (`T14 · now`, `T12 · 23:20`). Each row is 28 high: a 14 px kind icon (shot,
-  file, diff, out; §20.2), the name in Plex 11.5 and the meta at the right (`PNG · 212 × 40`, `DMG · 11.7 MB`). The picked row
-  takes the card tone.
+- **What counts** (owner, 29 Oct). Things a person reads, not code: screenshots, files and pages the agent sent, and
+  the documents, pictures, media and builds a turn wrote into the folder (Markdown, PDF, images, CSV, DMG…). Code a
+  turn changed is Git's.
+- **List.** Grouped under turn headings (`T14 · now`, `T12 · 23:20`) with a chevron. Only the newest turn starts
+  open; a closed turn shows its count. Each row is 28 high: a 14 px kind icon (shot, file, out; §20.2), the name in
+  Plex 11.5 and the meta at the right (`PNG · 212 × 40`, `DMG · 11.7 MB`, `+4 −10`). The picked row takes the card
+  tone.
 - **Preview.** The picked output renders underneath, on `--deep`, radius 10. A Markdown report is shown rendered:
   - the heading in Regrade 16 / 640, text in Regrade 13, code in Plex on the card tone;
   - tables with a seam line between rows.
@@ -318,6 +328,9 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 
 ### 5.4 Folder (F31)
 
+- **Tabs** (owner, 29 Oct). Each opened file is a tab in the row under the panel's tabs, after **Files**, the tree,
+  which is pinned first and has no close. Files goes back to the tree with the files still open; closing the others
+  leaves it. Below 720 px the file has the panel to itself; wider, the tree can sit beside it.
 - **Head.** The breadcrumb `orbit-website › site-v2` in Plex, then `4 changed`.
 - **Tree.** Rows are 26 high and step in 16 px per level, with chevrons on folders and file icons on files.
   - Git's mark sits next to the age at the right: **M** in the write green, **A** in the read blue.

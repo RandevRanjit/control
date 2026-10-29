@@ -5662,8 +5662,9 @@ export function makeClaudeAdapterV2(
                         yield* Ref.get(pendingBackgroundTasksByNativeThread),
                         nativeThreadId,
                       );
+                // A stopped turn that wrote to the transcript moved past the pinned head.
                 const clearConversationHead =
-                  input.status === "completed" &&
+                  (input.status === "completed" || input.context.nativeMessageCursor !== null) &&
                   input.context.input.providerThread.nativeConversationHeadRef !== null;
                 // While a goal is set, Claude ends a turn on its own only after the
                 // goal's Stop hook passes. It defers that check while background

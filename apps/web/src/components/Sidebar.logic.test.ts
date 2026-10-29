@@ -58,6 +58,7 @@ import {
   type SidebarListMarker,
   type SidebarSection,
   resolveSidebarDropVerb,
+  settledShelfReadsOlderPages,
 } from "./Sidebar.logic";
 import { threadSearchMatchKey } from "@control/client-runtime/state/thread-search";
 import { sortSettledThreads } from "@control/client-runtime/state/thread-sort";
@@ -2337,5 +2338,13 @@ describe("Working shelf (beta)", () => {
         unsnooze: false,
       });
     });
+  });
+});
+
+describe("settledShelfReadsOlderPages", () => {
+  it("reads older settled pages only while the Settled fold is open and no full lock holds", () => {
+    expect(settledShelfReadsOlderPages({ settledFoldOpen: true, fullLock: false })).toBe(true);
+    expect(settledShelfReadsOlderPages({ settledFoldOpen: false, fullLock: false })).toBe(false);
+    expect(settledShelfReadsOlderPages({ settledFoldOpen: true, fullLock: true })).toBe(false);
   });
 });

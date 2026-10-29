@@ -202,6 +202,15 @@ export function wantedOlderSettledPages(input: {
   return next ?? input.requested;
 }
 
+/** The shelf's Show more press: a failed page is read again, otherwise the shelf shows more rows. */
+export function pressOlderSettledMore(
+  shelf: { readonly failed: boolean; readonly retry: () => void },
+  showMore: () => void,
+) {
+  if (shelf.failed) shelf.retry();
+  else showMore();
+}
+
 /**
  * Shells that omit older settled threads (`omitOlderSettled`) name the cut and count what they left
  * out. These atoms keep those counts current and read older threads in pages for the Settled shelf.

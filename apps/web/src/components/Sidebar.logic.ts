@@ -136,6 +136,17 @@ export const animateSidebarLayoutChanges: AnimateLayoutChanges = (args) =>
 // supported because snoozing requires a wake time. The Working shelf (beta)
 // follows live status, so it is neither a drag source nor a destination.
 
+/**
+ * Whether the Settled shelf reads older pages. A full lock lists only the threads that need you,
+ * so an open fold would page through all settled history looking for rows it never shows.
+ */
+export function settledShelfReadsOlderPages(input: {
+  readonly settledFoldOpen: boolean;
+  readonly fullLock: boolean;
+}): boolean {
+  return input.settledFoldOpen && !input.fullLock;
+}
+
 export type SidebarSection = "pinned" | "active" | "working" | "snoozed" | "settled";
 
 /** Resolve the shelf a visible thread belongs to. Snooze is temporary and

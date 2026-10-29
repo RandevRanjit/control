@@ -262,6 +262,19 @@ describe("settle thread shortcut", () => {
   });
 });
 
+describe("panel tab shortcuts", () => {
+  it("resolves ⌥⌘O and ⌥⌘F from the Mac's own keys to Outputs and Folder", () => {
+    const resolve = (key: string, code: string) =>
+      resolveShortcutCommand(
+        event({ key, code, metaKey: true, altKey: true }),
+        DEFAULT_RESOLVED_KEYBINDINGS,
+        { platform: "MacIntel", context: { terminalFocus: false } },
+      );
+    assert.equal(resolve("ø", "KeyO"), "rightPanel.outputs");
+    assert.equal(resolve("ƒ", "KeyF"), "rightPanel.folder");
+  });
+});
+
 describe("thread undo shortcut", () => {
   it("resolves mod+z with nothing editable focused", () => {
     assert.equal(

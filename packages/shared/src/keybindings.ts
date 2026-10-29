@@ -126,6 +126,9 @@ export const DEFAULT_KEYBINDINGS: ReadonlyArray<KeybindingRule> = [
   { key: "mod+]", command: "navigation.forward", when: "!terminalFocus" },
   { key: "mod+j", command: "terminal.toggle" },
   { key: "mod+alt+b", command: "rightPanel.toggle" },
+  // Outputs and Folder beside the panel's own ⌥⌘B; Git, Browser and Terminal have ⌘D, ⇧⌘J, ⌘J.
+  { key: "mod+alt+o", command: "rightPanel.outputs", when: "!terminalFocus" },
+  { key: "mod+alt+f", command: "rightPanel.folder", when: "!terminalFocus" },
   { key: "mod+t", command: "rightPanel.new", when: "rightPanelOpen && !terminalFocus" },
   { key: "mod+d", command: "terminal.split", when: "terminalFocus" },
   { key: "mod+shift+d", command: "terminal.splitVertical", when: "terminalFocus" },

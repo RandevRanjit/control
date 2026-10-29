@@ -139,6 +139,16 @@ function ChatRouteGlobalShortcuts() {
         return;
       }
 
+      if (command === "rightPanel.outputs" || command === "rightPanel.folder") {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!routeThreadRef) return;
+        useRightPanelStore
+          .getState()
+          .toggleTab(routeThreadRef, command === "rightPanel.outputs" ? "outputs" : "folder");
+        return;
+      }
+
       if (command === "preview.toggle") {
         event.preventDefault();
         event.stopPropagation();

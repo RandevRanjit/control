@@ -32,6 +32,22 @@ beforeEach(() => {
 });
 
 describe("rightPanelStore", () => {
+  it("toggles a tab by its shortcut: shows it as left, then hides the panel", () => {
+    const store = () => useRightPanelStore.getState();
+    store().toggleTab(refA, "folder");
+    expect(selectActiveRightPanel(store().byThreadKey, refA)).toBe("files");
+
+    store().openFile(refA, "src/app.ts");
+    store().toggleTab(refA, "outputs");
+    expect(selectActiveRightPanel(store().byThreadKey, refA)).toBe("outputs");
+
+    // Folder comes back on the file it was showing, not the tree.
+    store().toggleTab(refA, "folder");
+    expect(selectActiveRightPanel(store().byThreadKey, refA)).toBe("file");
+    store().toggleTab(refA, "folder");
+    expect(selectActiveRightPanel(store().byThreadKey, refA)).toBeNull();
+  });
+
   it("records single and bulk tab closes, newest first", () => {
     const store = useRightPanelStore.getState();
     const pr = pullRequestSurface({

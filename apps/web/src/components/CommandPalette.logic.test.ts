@@ -821,6 +821,27 @@ it.each(["#10839", "10839", "acme/control#10839", "https://github.com/acme/contr
 );
 
 describe("filterCommandPaletteGroups", () => {
+  it("finds an action by its own title, not only its search terms", () => {
+    const showOutputs = {
+      kind: "action",
+      value: "action:panel-outputs",
+      title: "Show outputs",
+      searchTerms: ["panel", "outputs"],
+      icon: null,
+      run: async () => undefined,
+    } satisfies CommandPaletteActionItem;
+    const found = (query: string) =>
+      filterCommandPaletteGroups({
+        activeGroups: [{ value: "actions", label: "Actions", items: [showOutputs] }],
+        query,
+        isInSubmenu: false,
+        projectSearchItems: [],
+        threadSearchItems: [],
+      }).flatMap((group) => group.items.map((entry) => entry.value));
+    expect(found("show")).toEqual(["action:panel-outputs"]);
+    expect(found("show out")).toEqual(["action:panel-outputs"]);
+  });
+
   it("sorts secondary settings results after other matches", () => {
     const item = (value: string, title: string, secondary?: boolean) =>
       ({

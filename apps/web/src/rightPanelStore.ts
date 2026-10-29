@@ -185,6 +185,7 @@ interface RightPanelStoreState {
   activateSurface: (ref: ScopedThreadRef, surfaceId: string) => void;
   /** Shows the tab's last surface, or its newest; false when the tab holds none. */
   activateTab: (ref: ScopedThreadRef, tab: PanelTab) => boolean;
+  toggleTab: (ref: ScopedThreadRef, tab: "outputs" | "folder") => void;
   closeSurface: (ref: ScopedThreadRef, surfaceId: string) => void;
   closeOtherSurfaces: (ref: ScopedThreadRef, surfaceId: string) => void;
   closeSurfacesToRight: (ref: ScopedThreadRef, surfaceId: string) => void;
@@ -913,6 +914,15 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
         const target = surfaces.find((surface) => surface.id === remembered) ?? surfaces.at(-1)!;
         get().activateSurface(ref, target.id);
         return true;
+      },
+      // A tab's shortcut: shows the tab as it was left, or hides the panel when it's on show.
+      toggleTab: (ref, tab) => {
+        const active = selectActiveRightPanel(get().byThreadKey, ref);
+        if (active !== null && panelTabOf(active) === tab) {
+          get().close(ref);
+          return;
+        }
+        if (!get().activateTab(ref, tab)) get().open(ref, tab === "outputs" ? "outputs" : "files");
       },
       closeSurface: (ref, surfaceId) =>
         set((state) =>

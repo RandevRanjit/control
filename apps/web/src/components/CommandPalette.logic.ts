@@ -422,12 +422,19 @@ function rankSearchFieldMatch(
   return 0;
 }
 
+/** What finds an item: its chosen terms, then its own title ("show out" → Show outputs). */
+function itemSearchTerms(item: CommandPaletteActionItem | CommandPaletteSubmenuItem) {
+  return [...item.searchTerms, typeof item.title === "string" ? item.title : ""].filter(
+    (term) => term.length > 0,
+  );
+}
+
 function rankCommandPaletteItemMatch(
   item: CommandPaletteActionItem | CommandPaletteSubmenuItem,
   normalizedQuery: string,
   queryTokens: ReadonlyArray<string>,
 ): number {
-  const terms = item.searchTerms.filter((term) => term.length > 0);
+  const terms = itemSearchTerms(item);
   if (terms.length === 0) {
     return 0;
   }
@@ -500,7 +507,7 @@ export function filterCommandPaletteGroups(input: {
 
   return searchableGroups.flatMap((group) => {
     const items = Arr.filterMap(group.items, (item, index) => {
-      const haystack = normalizeSearchText(item.searchTerms.join(" "));
+      const haystack = normalizeSearchText(itemSearchTerms(item).join(" "));
       if (!queryTokens.every((token) => matchesWordStart(haystack, token))) {
         return Result.failVoid;
       }

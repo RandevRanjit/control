@@ -36,6 +36,7 @@ import {
   type EnvironmentId,
   type EnvironmentMachineKind,
   type FilesystemBrowseResult,
+  type KeybindingCommand,
   type ProjectId,
   type SourceControlDiscoveryResult,
   type SourceControlProviderKind,
@@ -2001,20 +2002,40 @@ function OpenCommandPaletteDialog(props: {
         Exclude<RightPanelKind, "file" | "terminal" | "pull-request">,
         string,
         ReactNode,
+        KeybindingCommand,
       ]
     > = [
-      ["outputs", "outputs", "Show outputs", <FileOutputIcon className={ITEM_ICON_CLASS} />],
-      ["folder", "files", "Show folder", <FilesIcon className={ITEM_ICON_CLASS} />],
-      ["browser", "preview", "Show browser", <GlobeIcon className={ITEM_ICON_CLASS} />],
-      ["git", "diff", "Show Git", <FileDiffIcon className={ITEM_ICON_CLASS} />],
+      [
+        "outputs",
+        "outputs",
+        "Show outputs",
+        <FileOutputIcon className={ITEM_ICON_CLASS} />,
+        "rightPanel.outputs",
+      ],
+      [
+        "folder",
+        "files",
+        "Show folder",
+        <FilesIcon className={ITEM_ICON_CLASS} />,
+        "rightPanel.folder",
+      ],
+      [
+        "browser",
+        "preview",
+        "Show browser",
+        <GlobeIcon className={ITEM_ICON_CLASS} />,
+        "preview.toggle",
+      ],
+      ["git", "diff", "Show Git", <FileDiffIcon className={ITEM_ICON_CLASS} />, "diff.toggle"],
     ];
-    for (const [tab, kind, title, icon] of panelTabs) {
+    for (const [tab, kind, title, icon, shortcutCommand] of panelTabs) {
       actionItems.push({
         kind: "action",
         value: `action:panel-${tab}`,
         searchTerms: ["panel", tab, kind],
         title,
         icon,
+        shortcutCommand,
         run: async () => {
           const store = useRightPanelStore.getState();
           if (!store.activateTab(threadRef, tab)) store.open(threadRef, kind);

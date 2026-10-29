@@ -352,30 +352,51 @@ it.layer(NodeServices.layer)("GitWorkflowService", (it) => {
 });
 
 it.layer(GitVcsDriverTestkit.layerTest)("GitWorkflowService.removeWorktreeIfClean", (it) => {
-  const fixture = Effect.gen(function* () {
-    const cwd = yield* GitVcsDriverTestkit.makeTmpDir();
-    const { initialBranch } = yield* GitVcsDriverTestkit.initRepoWithCommit(cwd);
-    yield* GitVcsDriverTestkit.writeTextFile(cwd, ".gitignore", ".env\n");
-    yield* GitVcsDriverTestkit.git(cwd, ["add", ".gitignore"]);
-    yield* GitVcsDriverTestkit.git(cwd, ["commit", "-m", "ignore .env"]);
-    const path = `${yield* GitVcsDriverTestkit.makeTmpDir("git-worktrees-")}/thread`;
-    yield* GitVcsDriverTestkit.git(cwd, ["worktree", "add", "-b", "feature", path, initialBranch]);
-    const workflow = yield* GitWorkflowService.make.pipe(
-      Effect.provideService(
-        VcsDriverRegistry.VcsDriverRegistry,
-        VcsDriverRegistry.VcsDriverRegistry.of({
-          get: () => Effect.die("unused"),
-          detect: () => Effect.die("unused"),
-          resolve: () => Effect.succeed({ kind: "git" } as VcsDriverRegistry.VcsDriverHandle),
+  const setup = (options: { readonly editBeforeRemoval?: boolean } = {}) =>
+    Effect.gen(function* () {
+      const cwd = yield* GitVcsDriverTestkit.makeTmpDir();
+      const { initialBranch } = yield* GitVcsDriverTestkit.initRepoWithCommit(cwd);
+      yield* GitVcsDriverTestkit.writeTextFile(cwd, ".gitignore", ".env\nnode_modules/\n");
+      yield* GitVcsDriverTestkit.git(cwd, ["add", ".gitignore"]);
+      yield* GitVcsDriverTestkit.git(cwd, ["commit", "-m", "ignore .env"]);
+      const path = `${yield* GitVcsDriverTestkit.makeTmpDir("git-worktrees-")}/thread`;
+      yield* GitVcsDriverTestkit.git(cwd, [
+        "worktree",
+        "add",
+        "-b",
+        "feature",
+        path,
+        initialBranch,
+      ]);
+      const driver = yield* GitVcsDriver.GitVcsDriver;
+      const workflow = yield* GitWorkflowService.make.pipe(
+        // An edit that lands after the cleanliness check, just before removal.
+        Effect.provideService(GitVcsDriver.GitVcsDriver, {
+          ...driver,
+          removeWorktree: (input) =>
+            (options.editBeforeRemoval
+              ? GitVcsDriverTestkit.writeTextFile(path, "README.md", "late edit\n").pipe(
+                  Effect.orDie,
+                )
+              : Effect.void
+            ).pipe(Effect.andThen(driver.removeWorktree(input))),
         }),
-      ),
-      Effect.provideService(GitManager.GitManager, {} as GitManager.GitManager["Service"]),
-    );
-    const fs = yield* FileSystem.FileSystem;
-    // Older clients still ask for a forced removal; the server decides.
-    const remove = workflow.removeWorktreeIfClean({ cwd, path, force: true });
-    return { fs, path, remove };
-  });
+        Effect.provideService(
+          VcsDriverRegistry.VcsDriverRegistry,
+          VcsDriverRegistry.VcsDriverRegistry.of({
+            get: () => Effect.die("unused"),
+            detect: () => Effect.die("unused"),
+            resolve: () => Effect.succeed({ kind: "git" } as VcsDriverRegistry.VcsDriverHandle),
+          }),
+        ),
+        Effect.provideService(GitManager.GitManager, {} as GitManager.GitManager["Service"]),
+      );
+      const fs = yield* FileSystem.FileSystem;
+      // Older clients still ask for a forced removal; the server decides.
+      const remove = workflow.removeWorktreeIfClean({ cwd, path, force: true });
+      return { fs, path, remove };
+    });
+  const fixture = setup();
 
   it.effect.each([
     { change: "a modified file", file: "README.md" },
@@ -405,9 +426,31 @@ it.layer(GitVcsDriverTestkit.layerTest)("GitWorkflowService.removeWorktreeIfClea
     Effect.gen(function* () {
       const { fs, path, remove } = yield* fixture;
       yield* GitVcsDriverTestkit.writeTextFile(path, ".env", "TOKEN=1\n");
+      yield* GitVcsDriverTestkit.writeTextFile(path, "node_modules/pkg/index.js", "x\n");
 
       expect(yield* remove).toEqual({});
       expect(yield* fs.exists(path)).toBe(false);
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect("keeps an edit made after the check, whatever the caller's force", () =>
+    Effect.gen(function* () {
+      const { fs, path, remove } = yield* setup({ editBeforeRemoval: true });
+
+      expect(yield* remove).toEqual({ kept: true });
+      expect(yield* fs.readFileString(`${path}/README.md`)).toBe("late edit\n");
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect("keeps a worktree whose changes overflow the status output", () =>
+    Effect.gen(function* () {
+      const { fs, path, remove } = yield* fixture;
+      // About 100 KiB of porcelain output, past the 64 KiB inspection limit.
+      for (let i = 0; i < 1000; i++)
+        yield* fs.writeFileString(`${path}/${String(i).padStart(96, "0")}.txt`, "");
+
+      expect(yield* remove).toEqual({ kept: true });
+      expect(yield* fs.exists(path)).toBe(true);
     }).pipe(Effect.scoped),
   );
 });

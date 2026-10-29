@@ -3948,6 +3948,8 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
         options?.trackedOnly ? "--untracked-files=no" : "--untracked-files=all",
       ],
       maxOutputBytes: 64 * 1024,
+      // Past the limit, report `truncated` rather than fail.
+      appendTruncationMarker: true,
     });
     const records = status.stdout.split("\0").filter(Boolean);
     let files = 0;

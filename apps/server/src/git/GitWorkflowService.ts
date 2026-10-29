@@ -455,16 +455,25 @@ export const make = Effect.gen(function* () {
         Effect.andThen(git.removeWorktree(input)),
       ),
     // A thread's delete reaches this through vcs.removeWorktree. A worktree that
-    // is already gone has nothing to lose, so removal only prunes it.
+    // is already gone has nothing to lose, so removal only prunes it. The caller's
+    // `force` is dropped: unforced, Git refuses an edit that lands after the check
+    // (ignored files still go), and a recheck reports that as kept.
     removeWorktreeIfClean: (input) =>
       Effect.gen(function* () {
         yield* ensureGitCommand("GitWorkflowService.removeWorktreeIfClean", input.cwd);
-        if (yield* fileSystem.exists(input.path).pipe(Effect.orElseSucceed(() => true))) {
-          const changes = yield* git.uncommittedChanges(input.path);
-          if (changes.files > 0) return { kept: true };
-        }
-        yield* git.removeWorktree(input);
-        return {};
+        const exists = yield* fileSystem.exists(input.path).pipe(Effect.orElseSucceed(() => true));
+        const dirty = git
+          .uncommittedChanges(input.path)
+          .pipe(Effect.map((changes) => changes.files > 0 || changes.truncated));
+        if (exists && (yield* dirty)) return { kept: true };
+        return yield* git.removeWorktree({ cwd: input.cwd, path: input.path }).pipe(
+          Effect.as({}),
+          Effect.catch((error) =>
+            Effect.flatMap(dirty.pipe(Effect.orElseSucceed(() => false)), (kept) =>
+              kept ? Effect.succeed({ kept: true }) : Effect.fail(error),
+            ),
+          ),
+        );
       }),
     pruneWorktrees: (input) =>
       ensureGitCommand("GitWorkflowService.pruneWorktrees", input.cwd).pipe(

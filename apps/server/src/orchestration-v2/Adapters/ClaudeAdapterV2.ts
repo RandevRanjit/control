@@ -9318,8 +9318,13 @@ export function makeClaudeAdapterV2(
             const existing = yield* Ref.get(queryContext);
             const nativeThreadId = input.providerThread.nativeThreadRef?.nativeId;
             const subagent = (yield* Ref.get(sessionSubagentsByTaskId)).get(input.nativeTaskId);
-            if (subagent === undefined || subagent.task.status !== "running") return;
+            // Already ended here; its end reached the thread with it.
+            if (subagent !== undefined && subagent.task.status !== "running") return;
+            // Nothing this session runs can stop it: its process is gone (or never
+            // was this session's), so the orchestrator settles it as stopped. The
+            // detail's wording is what the effect worker reads as final.
             if (
+              subagent === undefined ||
               existing === null ||
               existing.nativeThreadId !== nativeThreadId ||
               subagent.task.threadId !== input.providerThread.appThreadId ||
@@ -9328,7 +9333,7 @@ export function makeClaudeAdapterV2(
             ) {
               return yield* new ProviderAdapter.ProviderAdapterProtocolError({
                 driver: CLAUDE_PROVIDER,
-                detail: "Claude subagent has no live owning query with task stopping support.",
+                detail: `Claude subagent ${input.nativeTaskId} has no live Claude process; treating as already stopped.`,
               });
             }
             yield* existing.query.stopTask(input.nativeTaskId).pipe(

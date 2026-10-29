@@ -8799,6 +8799,44 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
     effects: Ref.Ref<Array<PendingOrchestrationEffectV2>>,
   ) =>
     Effect.gen(function* () {
+      // A native subagent Stop that found no process still running it: only that
+      // subagent ends, and its result says why nothing was stopped.
+      const subagentId = command.subagentId;
+      if (subagentId !== undefined) {
+        const { subagents } = yield* projectionStore
+          .getThreadRecords(command.threadId, ["subagents"])
+          .pipe(
+            Effect.mapError(
+              (cause) => new OrchestratorProjectionError({ threadId: command.threadId, cause }),
+            ),
+          );
+        const subagent = subagents.find((candidate) => candidate.id === subagentId);
+        if (subagent === undefined || !["pending", "running", "waiting"].includes(subagent.status))
+          return;
+        const now = yield* DateTime.now;
+        yield* emit(
+          events,
+          command,
+        )({
+          type: "subagent.updated",
+          threadId: command.threadId,
+          ...(subagent.runId === null ? {} : { runId: subagent.runId }),
+          nodeId: subagent.id,
+          driver: subagent.driver,
+          providerInstanceId: subagent.providerInstanceId,
+          occurredAt: now,
+          payload: {
+            ...subagent,
+            status: "interrupted",
+            result:
+              subagent.result ??
+              "Stopped. Its Claude process was no longer running, so it had already ended.",
+            completedAt: now,
+            updatedAt: now,
+          },
+        });
+        return;
+      }
       const [projection, stopped] = yield* Effect.all([
         projectionStore.getThreadRecords(
           command.threadId,

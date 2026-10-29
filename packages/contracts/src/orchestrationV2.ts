@@ -3310,6 +3310,8 @@ const OrchestrationV2InternalCommand = Schema.Union([
     threadId: ThreadId,
     providerThreadId: ProviderThreadId,
     providerTurnId: ProviderTurnId,
+    /** Settles only this native subagent, whose Stop found no process still running it. */
+    subagentId: Schema.optional(NodeId),
   }),
   /**
    * Stop for one thread, whatever it is doing: interrupts its running turn, holds its queue,

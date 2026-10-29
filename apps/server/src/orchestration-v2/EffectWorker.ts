@@ -175,12 +175,32 @@ export const layerExecutor: Layer.Layer<
               })
               .pipe(
                 Effect.catch((cause) =>
-                  isNonRetryableProviderTurnControlFailure(
-                    effect.request.type,
-                    Cause.pretty(Cause.fail(cause)),
-                  )
-                    ? Effect.void
-                    : Effect.fail(cause),
+                  Effect.gen(function* () {
+                    if (
+                      !isNonRetryableProviderTurnControlFailure(
+                        effect.request.type,
+                        Cause.pretty(Cause.fail(cause)),
+                      )
+                    ) {
+                      return yield* cause;
+                    }
+                    if (
+                      effect.request.type !== "provider-turn.interrupt" ||
+                      effect.request.subagent === undefined
+                    ) {
+                      return;
+                    }
+                    // No process runs that subagent any more, so no stop report
+                    // will come: settle it here, or it shows as running forever.
+                    yield* threads.dispatch({
+                      type: "thread.background-work.settle",
+                      commandId: CommandId.make(`${effect.id}:subagent-settled`),
+                      threadId: effect.threadId,
+                      providerThreadId: effect.request.providerThreadId,
+                      providerTurnId: effect.request.providerTurnId,
+                      subagentId: effect.request.subagent.id,
+                    });
+                  }),
                 ),
                 // The provider has stopped what it still ran and reported it.
                 // Whatever the thread still shows on that provider thread is

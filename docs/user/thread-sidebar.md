@@ -228,15 +228,18 @@ retry and the normal snooze choices.
 On web and desktop, use **Agents** to follow work delegated to subagents.
 Stop on a thread also stops the subagents it delegated to. Stop on one of
 Claude's own subagents in **Agents** stops only that subagent; the thread's turn
-and its other subagents keep running.
+and its other subagents keep running. If no Claude process is still running that
+subagent, for example after CONTROL restarted, Stop marks it interrupted and its
+result says it had already ended.
 
 An agent can give a delegated task its own worktree instead of sharing the
 thread's checkout. The worktree starts from the thread's latest commit, so
 uncommitted edits aren't in it, and the project's setup runs before the task
 starts. When the task ends, CONTROL leaves the worktree and its branch in place
 for you to review or merge, so nothing the task didn't commit is lost. Stopping
-the task before setup finishes removes the new worktree, since nothing has
-worked in it yet.
+the task before its agent starts removes the new worktree, since nothing has
+worked in it yet. A setup script that runs in the background can still be
+running when the agent starts; a stop after that point keeps the worktree.
 
 Subagent threads started by the agent can't take messages; message the parent
 thread instead. When such a subagent needs an approval or an answer, the parent

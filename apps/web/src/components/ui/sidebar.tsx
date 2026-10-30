@@ -242,6 +242,9 @@ function Sidebar({
   resizable?: boolean | SidebarResizableOptions;
 }) {
   const { autoHide, isMobile, state, openMobile, setOpenMobile } = useSidebar();
+  // The layout reads an auto-hidden sidebar as collapsed; the sidebar itself is expanded while
+  // it shows, so its rail resizes it.
+  const sidebarState = autoHide ? (autoHide.revealed ? "expanded" : "collapsed") : state;
   const resolvedResizable = React.useMemo<SidebarResolvedResizableOptions | null>(() => {
     if (isMobile || collapsible === "none" || !resizable) {
       return null;
@@ -321,10 +324,10 @@ function Sidebar({
     <SidebarInstanceContext value={instanceContextValue}>
       <div
         className="group peer hidden text-sidebar-foreground md:block"
-        data-collapsible={state === "collapsed" ? collapsible : ""}
+        data-collapsible={sidebarState === "collapsed" ? collapsible : ""}
         data-side={side}
         data-slot="sidebar"
-        data-state={state}
+        data-state={sidebarState}
         data-variant={variant}
       >
         {/* This is what handles the sidebar gap on desktop */}
@@ -337,6 +340,8 @@ function Sidebar({
             variant === "floating" || variant === "inset"
               ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
               : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
+            // A floating sidebar never takes the content's width.
+            autoHide && "w-0",
           )}
           data-slot="sidebar-gap"
         />
@@ -352,23 +357,26 @@ function Sidebar({
         <div
           className={cn(
             "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) md:flex",
-            "[[data-panel-animations=true]_&]:transition-[left,right,width] [[data-panel-animations=true]_&]:[transition-duration:var(--panel-animation-duration)] [[data-panel-animations=true]_&]:ease-out",
             autoHide
               ? cn(
-                  // Over the content, above the thread's own chrome; a shadow sets it off.
-                  "z-40",
-                  autoHide.revealed && "shadow-lg",
-                  side === "left"
-                    ? autoHide.revealed
-                      ? "left-0"
-                      : "left-[calc(var(--sidebar-width)*-1)]"
-                    : autoHide.revealed
-                      ? "right-0"
-                      : "right-[calc(var(--sidebar-width)*-1)]",
+                  // Over the content, above the thread's own chrome and its z-40 layers (the
+                  // message minimap); a shadow sets it off. It slides on the compositor, so it
+                  // moves whatever the panel animation setting, unless motion is reduced.
+                  "z-50 motion-safe:transition-[translate,box-shadow] motion-safe:duration-(--d-quick)",
+                  side === "left" ? "left-0" : "right-0",
+                  autoHide.revealed
+                    ? "shadow-lg ease-(--e-out)"
+                    : cn(
+                        "ease-(--e-in)",
+                        side === "left" ? "-translate-x-full" : "translate-x-full",
+                      ),
                 )
-              : side === "left"
-                ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-                : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+              : cn(
+                  "[[data-panel-animations=true]_&]:transition-[left,right,width] [[data-panel-animations=true]_&]:[transition-duration:var(--panel-animation-duration)] [[data-panel-animations=true]_&]:ease-out",
+                  side === "left"
+                    ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
+                    : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+                ),
             // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
@@ -439,7 +447,8 @@ function SidebarRail({
   onPointerUp,
   ...props
 }: React.ComponentProps<"button">) {
-  const { open, toggleSidebar } = useSidebar();
+  const { autoHide, toggleSidebar } = useSidebar();
+  const open = useSidebarVisibility();
   const sidebarInstance = React.use(SidebarInstanceContext);
   const railRef = React.useRef<HTMLButtonElement | null>(null);
   const suppressClickRef = React.useRef(false);
@@ -465,9 +474,9 @@ function SidebarRail({
     );
     // Drag frames write width to the gap and container only. Changing the
     // inherited --sidebar-width on the wrapper restyles the whole app, so it is
-    // written once when the drag commits.
+    // written once when the drag commits. A floating sidebar's gap stays shut.
     const widthTargets = [
-      sidebarRoot.querySelector<HTMLElement>("[data-slot='sidebar-gap']"),
+      autoHide ? null : sidebarRoot.querySelector<HTMLElement>("[data-slot='sidebar-gap']"),
       sidebarContainer,
     ].filter((element): element is HTMLElement => element !== null);
     const setTargetWidth = (value: number) => {

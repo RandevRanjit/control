@@ -20,6 +20,7 @@ import { useResizeDrag } from "~/hooks/useResizeDrag";
 import { useIsMobile } from "~/hooks/useMediaQuery";
 import { getLocalStorageItem, setLocalStorageItem } from "~/hooks/useLocalStorage";
 import { resolveSidebarState, type ResponsiveSidebarState } from "./sidebarState";
+import { createSidebarAutoHide, type SidebarAutoHide } from "./sidebarAutoHide";
 import * as Schema from "effect/Schema";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
@@ -29,7 +30,14 @@ const SIDEBAR_WIDTH_MOBILE = "calc(100vw - var(--spacing(3)))";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_RESIZE_DEFAULT_MIN_WIDTH = 16 * 16;
 
+/** An auto-hidden sidebar floats over the content and slides in from the edge (the Dock). */
+type SidebarAutoHideContext = {
+  revealed: boolean;
+  controller: SidebarAutoHide;
+};
+
 type SidebarContextProps = {
+  autoHide: SidebarAutoHideContext | null;
   state: ResponsiveSidebarState;
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -87,14 +95,16 @@ function useSidebar() {
 }
 
 function useSidebarVisibility() {
-  const { isMobile, open, openMobile } = useSidebar();
-  return isMobile ? openMobile : open;
+  const { autoHide, isMobile, open, openMobile } = useSidebar();
+  if (isMobile) return openMobile;
+  return autoHide ? autoHide.revealed : open;
 }
 
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
   onOpenChange: setOpenProp,
+  autoHide = false,
   className,
   style,
   children,
@@ -103,8 +113,27 @@ function SidebarProvider({
   defaultOpen?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** Float the desktop sidebar over the content, shown from the edge and hidden when left. */
+  autoHide?: boolean;
 }) {
   const isMobile = useIsMobile();
+  const autoHideActive = autoHide && !isMobile;
+  const [revealed, setRevealed] = React.useState(false);
+  const [autoHideController] = React.useState(() =>
+    createSidebarAutoHide({
+      onRevealedChange: setRevealed,
+      // An open menu, or a field or keyboard focus inside, keeps the sidebar out.
+      isHeld: () =>
+        document.querySelector(
+          "[data-slot='sidebar-container'][data-auto-hide] :is([data-popup-open], :focus-visible)",
+        ) !== null,
+    }),
+  );
+  React.useEffect(() => {
+    // Turning auto-hide off (or onto a phone-sized window) forgets the reveal.
+    if (!autoHideActive) autoHideController.setRevealed(false);
+  }, [autoHideActive, autoHideController]);
+  React.useEffect(() => () => autoHideController.dispose(), [autoHideController]);
   const [openMobile, setOpenMobile] = React.useState(false);
 
   // This is the internal state of the sidebar.
@@ -133,24 +162,42 @@ function SidebarProvider({
 
   // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
-    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
-  }, [isMobile, setOpen]);
+    if (isMobile) return setOpenMobile((open) => !open);
+    if (autoHideActive) return autoHideController.toggle();
+    return setOpen((open) => !open);
+  }, [autoHideActive, autoHideController, isMobile, setOpen]);
+
+  // An auto-hidden sidebar never takes the content's width, so the layout reads it as
+  // collapsed while it shows; open and close move only the floating panel.
+  const layoutOpen = autoHideActive ? false : open;
+  const setOpenForMode = autoHideActive ? autoHideController.setRevealed : setOpen;
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
-  const state = resolveSidebarState({ isMobile, open, openMobile });
+  const state = resolveSidebarState({ isMobile, open: layoutOpen, openMobile });
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
+      autoHide: autoHideActive ? { revealed, controller: autoHideController } : null,
       isMobile,
-      open,
+      open: layoutOpen,
       openMobile,
-      setOpen,
+      setOpen: setOpenForMode,
       setOpenMobile,
       state,
       toggleSidebar,
     }),
-    [state, open, setOpen, isMobile, openMobile, toggleSidebar],
+    [
+      autoHideActive,
+      autoHideController,
+      revealed,
+      state,
+      layoutOpen,
+      setOpenForMode,
+      isMobile,
+      openMobile,
+      toggleSidebar,
+    ],
   );
 
   return (
@@ -194,7 +241,7 @@ function Sidebar({
   collapsible?: "offcanvas" | "icon" | "none";
   resizable?: boolean | SidebarResizableOptions;
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+  const { autoHide, isMobile, state, openMobile, setOpenMobile } = useSidebar();
   const resolvedResizable = React.useMemo<SidebarResolvedResizableOptions | null>(() => {
     if (isMobile || collapsible === "none" || !resizable) {
       return null;
@@ -293,13 +340,35 @@ function Sidebar({
           )}
           data-slot="sidebar-gap"
         />
+        {autoHide && !autoHide.revealed ? (
+          // The edge the pointer pushes against to bring the sidebar out.
+          <div
+            aria-hidden="true"
+            className={cn("fixed inset-y-0 z-40 w-1", side === "left" ? "left-0" : "right-0")}
+            data-slot="sidebar-edge"
+            onPointerEnter={autoHide.controller.edgeEntered}
+          />
+        ) : null}
         <div
           className={cn(
             "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) md:flex",
             "[[data-panel-animations=true]_&]:transition-[left,right,width] [[data-panel-animations=true]_&]:[transition-duration:var(--panel-animation-duration)] [[data-panel-animations=true]_&]:ease-out",
-            side === "left"
-              ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-              : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+            autoHide
+              ? cn(
+                  // Over the content, above the thread's own chrome; a shadow sets it off.
+                  "z-40",
+                  autoHide.revealed && "shadow-lg",
+                  side === "left"
+                    ? autoHide.revealed
+                      ? "left-0"
+                      : "left-[calc(var(--sidebar-width)*-1)]"
+                    : autoHide.revealed
+                      ? "right-0"
+                      : "right-[calc(var(--sidebar-width)*-1)]",
+                )
+              : side === "left"
+                ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
+                : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
             // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
@@ -307,6 +376,13 @@ function Sidebar({
             className,
           )}
           data-slot="sidebar-container"
+          {...(autoHide
+            ? {
+                "data-auto-hide": autoHide.revealed ? "revealed" : "hidden",
+                onPointerEnter: autoHide.controller.pointerEntered,
+                onPointerLeave: autoHide.controller.pointerLeft,
+              }
+            : {})}
           {...props}
         >
           <div

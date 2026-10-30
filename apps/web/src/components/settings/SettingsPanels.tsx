@@ -524,6 +524,9 @@ export function useSettingsRestore(onRestored?: () => void) {
       ...(settings.mathRenderingEnabled !== DEFAULT_UNIFIED_SETTINGS.mathRenderingEnabled
         ? ["Render math"]
         : []),
+      ...(settings.sidebarAutoHide !== DEFAULT_UNIFIED_SETTINGS.sidebarAutoHide
+        ? ["Hide sidebar automatically"]
+        : []),
       ...(settings.panelAnimationDurationMs !== DEFAULT_UNIFIED_SETTINGS.panelAnimationDurationMs
         ? ["Panel animations"]
         : []),
@@ -659,6 +662,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       settings.diffColorScheme,
       settings.chatWidth,
       settings.mathRenderingEnabled,
+      settings.sidebarAutoHide,
       settings.enableAgentBrowserAccess,
       settings.confirmQuit,
       settings.confirmThreadArchive,
@@ -781,6 +785,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       diffColorScheme: DEFAULT_UNIFIED_SETTINGS.diffColorScheme,
       chatWidth: DEFAULT_UNIFIED_SETTINGS.chatWidth,
       mathRenderingEnabled: DEFAULT_UNIFIED_SETTINGS.mathRenderingEnabled,
+      sidebarAutoHide: DEFAULT_UNIFIED_SETTINGS.sidebarAutoHide,
       timestampFormat: DEFAULT_UNIFIED_SETTINGS.timestampFormat,
       notificationMode: DEFAULT_UNIFIED_SETTINGS.notificationMode,
       inAppNotificationsEnabled: DEFAULT_UNIFIED_SETTINGS.inAppNotificationsEnabled,
@@ -1444,6 +1449,27 @@ export function AppearanceSettingsPanel() {
                 updateSettings({ mathRenderingEnabled: Boolean(checked) })
               }
               aria-label="Render math"
+            />
+          }
+        />
+        <SettingsRow
+          {...searchableSetting("sidebar-auto-hide")}
+          description="Keep the left sidebar out of the way, like the Dock. Move the pointer to the window's left edge to show it; it hides two seconds after the pointer leaves."
+          resetAction={
+            settings.sidebarAutoHide !== DEFAULT_UNIFIED_SETTINGS.sidebarAutoHide ? (
+              <SettingResetButton
+                label="sidebar auto-hide"
+                onClick={() =>
+                  updateSettings({ sidebarAutoHide: DEFAULT_UNIFIED_SETTINGS.sidebarAutoHide })
+                }
+              />
+            ) : null
+          }
+          control={
+            <Switch
+              checked={settings.sidebarAutoHide}
+              onCheckedChange={(checked) => updateSettings({ sidebarAutoHide: Boolean(checked) })}
+              aria-label="Hide sidebar automatically"
             />
           }
         />

@@ -128,6 +128,14 @@ describe("ClientSettings rich text composer", () => {
     }
     expect(() => decodeClientSettingsPatch({ mathRenderingEnabled: "yes" })).toThrow();
   });
+
+  it("keeps the sidebar shown unless auto-hide is chosen, and carries the choice through patches", () => {
+    expect(decodeClientSettings({}).sidebarAutoHide).toBe(false);
+    expect(decodeClientSettingsPatch({ sidebarAutoHide: true })).toEqual({ sidebarAutoHide: true });
+    expect(encodeClientSettings(decodeClientSettings({ sidebarAutoHide: true }))).toMatchObject({
+      sidebarAutoHide: true,
+    });
+  });
   it("enables rich text for new and existing settings without a saved preference", () => {
     expect(decodeClientSettings({}).composerRichTextEnabled).toBe(true);
     expect(decodeClientSettings({ sendShortcut: "mod-enter" }).composerRichTextEnabled).toBe(true);

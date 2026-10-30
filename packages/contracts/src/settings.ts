@@ -528,6 +528,9 @@ export const ClientSettingsSchema = Schema.Struct({
   // TeX typesetting in rendered Markdown, on by default. Off keeps math parsing
   // and KaTeX out of the render path entirely.
   mathRenderingEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(true))),
+  // The left sidebar floats over the content like the macOS Dock: the pointer at the
+  // window's edge shows it, and it hides once the pointer has been away for 2 seconds.
+  sidebarAutoHide: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
 });
 export type ClientSettings = typeof ClientSettingsSchema.Type;
 
@@ -1594,5 +1597,6 @@ export const ClientSettingsPatch = Schema.Struct({
   snapShotAnimations: Schema.optionalKey(Schema.Boolean),
   wordWrap: Schema.optionalKey(Schema.Boolean),
   mathRenderingEnabled: Schema.optionalKey(Schema.Boolean),
+  sidebarAutoHide: Schema.optionalKey(Schema.Boolean),
 });
 export type ClientSettingsPatch = typeof ClientSettingsPatch.Type;

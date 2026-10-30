@@ -82,6 +82,7 @@ import {
   MonitorIcon,
   MoonIcon,
   PaletteIcon,
+  PanelLeftDashedIcon,
   RotateCcwIcon,
   SettingsIcon,
   SquarePenIcon,
@@ -112,7 +113,7 @@ import { useDesktopLocalBootstraps } from "../connection/useDesktopLocalBootstra
 import { useHandleNewThread } from "../hooks/useHandleNewThread";
 import { useOpenPanelPullRequestUrl } from "../hooks/useOpenPanelPullRequestUrl";
 import { writeTextToClipboard } from "../hooks/useCopyToClipboard";
-import { useClientSettings } from "../hooks/useSettings";
+import { useClientSettings, useUpdateClientSettings } from "../hooks/useSettings";
 import { useTheme } from "../hooks/useTheme";
 import { useCustomThemes } from "../hooks/useCustomThemes";
 import { useEnvironmentThemeDefinitions } from "../hooks/useEnvironmentTheme";
@@ -752,6 +753,7 @@ function OpenCommandPaletteDialog(props: {
   // the palette shows none until the user navigates, and the first ArrowDown lands on it.
   const highlightClearedRef = useRef(false);
   const clientSettings = useClientSettings();
+  const updateClientSettings = useUpdateClientSettings();
   const createProject = useAtomCommand(projectEnvironment.create, {
     reportFailure: false,
   });
@@ -2059,6 +2061,19 @@ function OpenCommandPaletteDialog(props: {
       groups: [{ value: "projects", label: "Projects", items: newThreadPickerItems }],
     });
   }
+
+  actionItems.push({
+    kind: "action",
+    value: "action:sidebar-auto-hide",
+    searchTerms: ["sidebar", "auto hide", "dock", "hide", "show", "edge"],
+    title: clientSettings.sidebarAutoHide
+      ? "Keep the sidebar shown"
+      : "Hide the sidebar automatically",
+    icon: <PanelLeftDashedIcon className={ITEM_ICON_CLASS} />,
+    run: async () => {
+      await updateClientSettings({ sidebarAutoHide: !clientSettings.sidebarAutoHide });
+    },
+  });
 
   // New group lives here and on a group's menu; the sidebar's top row keeps only the pen (owner, 29 Oct).
   if (projects.length > 0 && primaryEnvironmentId !== null) {

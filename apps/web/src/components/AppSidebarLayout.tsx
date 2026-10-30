@@ -29,7 +29,11 @@ import { selectThreadTerminalUiState, useTerminalUiStateStore } from "../termina
 import { buildThreadRouteParams, resolveThreadRouteRef } from "../threadRoutes";
 import { cn, isMacPlatform } from "../lib/utils";
 import { primaryServerKeybindingsAtom } from "../state/server";
-import { useEnvironmentIdentificationMode, useLegacySidebarEnabled } from "../hooks/useSettings";
+import {
+  useClientSettings,
+  useEnvironmentIdentificationMode,
+  useLegacySidebarEnabled,
+} from "../hooks/useSettings";
 import {
   PanelAnimationSuppressionProvider,
   usePanelAnimationSettings,
@@ -234,6 +238,7 @@ function ProjectProjectionRetention() {
 export function AppSidebarLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const legacySidebarEnabled = useLegacySidebarEnabled();
+  const sidebarAutoHide = useClientSettings((settings) => settings.sidebarAutoHide);
   const { active: panelAnimationsActive, durationMs: panelAnimationDurationMs } =
     usePanelAnimationSettings();
   // Settings routes show the settings nav in place of whichever thread
@@ -342,6 +347,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
         // index.css hides what a break-through leaves out (HANDOFF §16.4).
         data-lock={lockUntil === null ? undefined : "through"}
         data-panel-animations={routePanelAnimationsActive ? "true" : "false"}
+        autoHide={sidebarAutoHide}
         defaultOpen
         style={sidebarProviderStyle}
       >

@@ -45,6 +45,15 @@ in a new thread's model picker to add or remove them. A regular click returns to
 single model. Choose a base branch and send. Each selection starts a separate thread
 and worktree while you stay in the new thread composer. This requires a Git project.
 
+## Hide the sidebar automatically
+
+Turn on **Hide sidebar automatically** in **Settings → Appearance**, or run **Hide the
+sidebar automatically** from the command palette, to keep the sidebar out of the way as
+the macOS Dock does. Move the pointer to the window's left edge to bring it out over the
+thread; it slides away two seconds after the pointer leaves, and stays while one of its
+menus is open or you're typing in it. The sidebar shortcut shows and hides it too. On
+web and desktop only.
+
 ## Pin and reorder threads
 
 Pin a thread from its menu to keep it above your active work.

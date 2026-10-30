@@ -248,6 +248,12 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: ["latex tex katex equations formulas markdown"],
   },
   {
+    id: "sidebar-auto-hide",
+    title: "Hide sidebar automatically",
+    to: "/settings/appearance",
+    searchTerms: ["dock auto hide left edge pointer mouse reveal collapse"],
+  },
+  {
     id: "panel-animations",
     title: "Panel animations",
     to: "/settings/appearance",

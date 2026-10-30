@@ -77,8 +77,8 @@ breaks one of these isn't 1:1.
    stay its own: *"there is no reason to change the control lock logo"* (18 Oct). The branch icon
    sits before `main` and the worktree icon before a worktree, everywhere: on the card, in the strip and in the panel.
    The new-worktree icon under the composer *"matches the ones on the left"*.
-9. **Motion only where it means work.** The token count on a card is static. A context bar swapping with it every 2 s
-   was tried and dropped: *"let it be static"*. Lamps and bars keep Bloom's clock.
+9. **Motion only where it means work.** A context bar swapping with a card's token count every 2 s was tried and
+   dropped: *"let it be static"*. Lamps and bars keep Bloom's clock.
 10. **Hierarchy is drawn by indent.**
     - Groups › folders › chats each step in.
     - The tool trace sits one step further in than its stack's head bead, so its line starts under the label, not under
@@ -125,9 +125,11 @@ Top to bottom (box numbers are in `measure.md` §Sidebar):
      folder name in Plex 11.
    - **Chat card**: 224 wide, radius 10, padding 7 10 7 12, indented to x 24. One line, and a second only when there is
      something unusual to say, so most cards are 32 high and the rest 49 (owner, 29 Oct: *"those look the cleanest"*).
-     - **Line 1 (18).** The **lamp** (10 px), the chat name in Regrade 13 / 520 strong ink, the pin, the loose-ends mail
-       mark with its count, then the **tokens processed** in this chat at the right, Plex 10.5, caption ink (`64k`, no
-       "tokens" word). On hover the tokens give way to the card's actions (snooze, Settle).
+     A card takes height rather than cutting text (owner, 30 Oct): a long name wraps, and line 2's items wrap whole.
+     - **Line 1 (18).** The **lamp** (10 px), the chat name in Regrade 13 / 520 strong ink, the pin and the loose-ends
+       mail mark with its count; the lamp and marks sit on the name's first line. No token count (owner, 30 Oct: it
+       went against the sidebar's minimal feel). On hover the card's actions (snooze, Settle) float over the end of the
+       name's first line, which fades out under them, so the card never reflows.
      - **Line 2 (15)**, indented to the name, Plex 10.5 caption, only for what is unusual:
        - the **state words** when the chat isn't idle (`needs you`, `working`, `interrupted`);
        - the **branch icon** or **worktree icon** + its name when it isn't `main` or `master` (`site-v2`);
@@ -466,7 +468,7 @@ Bloom's clock is unchanged (`design/bloom/HANDOFF.md`, Motion):
   - a finished stack's rail breathing (3.5 s);
   - the usage line past 80 %;
   - the lock plate's logo (§16.3).
-- Nothing else moves. The token count is static; there is no shimmer on compaction (the lamp says it).
+- Nothing else moves. There is no shimmer on compaction (the lamp says it).
 
 ---
 

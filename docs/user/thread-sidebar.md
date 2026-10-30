@@ -75,8 +75,8 @@ scroll position instead of following the thread to its new place in the list.
 
 Pinning does not prevent automatic settlement. Settling a thread removes its pin.
 
-On web and desktop, a thread's card is one line: its status ring, title, pin, open loose ends
-and the tokens it has processed. A second line appears only for something unusual: a state
+On web and desktop, a thread's card starts with its status ring, title, pin and open loose ends;
+a long title wraps onto more lines rather than being cut off. A second line appears only for something unusual: a state
 other than idle, a branch other than `main` or `master`, or a model other than the one a new
 thread in that folder starts on. A loose thread also names its folder there. To make a group,
 use **New group** in the command palette, on a group's right-click menu, or under a thread's

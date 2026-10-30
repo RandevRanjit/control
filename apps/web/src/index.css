@@ -27,9 +27,51 @@
   height: 100%;
   color: var(--t3-fg);
 }
-/* Line 2's token count keeps to one line. */
-[data-app-sidebar] .d-tok {
-  white-space: nowrap;
+/* A card takes height rather than cutting text (owner, 30 Oct): the name wraps, and line 2's
+   items wrap whole onto further lines. Line 1's lamp and marks keep to the name's first line. */
+[data-app-sidebar] .t3-card.d-card .t3-l1 {
+  height: auto;
+  align-items: flex-start;
+}
+[data-app-sidebar] .t3-card.d-card .t3-l1 .lamp {
+  margin-block: 4px;
+}
+[data-app-sidebar] .t3-card.d-card .t3-l1 :is(.t3-pinm, .s-le-cm) {
+  height: 18px;
+  align-items: center;
+}
+[data-app-sidebar] .t3-card.d-card .t3-ttl {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+[data-app-sidebar] .t3-card.d-card .t3-l3 {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+[data-app-sidebar] .t3-card.d-card .t3-l3 > span,
+[data-app-sidebar] .t3-card.d-card .t3-l3 .d-sw0 {
+  overflow: visible;
+}
+[data-app-sidebar] .t3-card.d-card .t3-l3 > span > span:last-child {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+/* The card's actions float over the end of the name's first line while they show
+   (Sidebar.tsx), so the name never reflows on hover; it fades out under them. */
+[data-app-sidebar] .t3-card.d-card {
+  --t3-name-under-actions:
+    linear-gradient(to left, transparent 88px, #000 104px) 0 0 / 100% 18px no-repeat,
+    linear-gradient(#000, #000) 0 18px / 100% 100% no-repeat;
+}
+[data-app-sidebar]
+  .t3-card.d-card:has([data-card-actions] :is(:focus-visible, [data-popup-open]))
+  .t3-ttl {
+  mask: var(--t3-name-under-actions);
+}
+@media (any-hover: hover) {
+  [data-app-sidebar] .t3-card.d-card:has([data-card-actions]):hover .t3-ttl {
+    mask: var(--t3-name-under-actions);
+  }
 }
 /* The card's margin sits on its list row (Sidebar.tsx), where it collapses. */
 [data-app-sidebar] .t3-list > li > .t3-card {

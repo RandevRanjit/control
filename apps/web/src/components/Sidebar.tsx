@@ -123,7 +123,6 @@ import {
 } from "../keybindings";
 import { useShortcutModifierState } from "../shortcutModifierState";
 import { isTerminalFocused } from "../lib/terminalFocus";
-import { formatContextWindowTokens } from "../lib/contextWindow";
 import { isModelPickerOpen } from "../modelPickerVisibility";
 import { selectThreadTerminalUiState, useTerminalUiStateStore } from "../terminalUiStateStore";
 import { isMacPlatform } from "~/lib/utils";
@@ -2027,8 +2026,9 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
           }
         >
           {accessibleTitle}
-          {/* The card (§3, owner 29 Oct): the lamp, the chat, its pin, loose ends and tokens on one
-              line; a second line only for what's unusual (cardNotes), and a loose chat's folder. */}
+          {/* The card (§3, owner 30 Oct): the lamp, the chat's name, wrapping as far as it needs,
+              its pin and loose ends; a second line only for what's unusual (cardNotes), and a loose
+              chat's folder. */}
           <div className="t3-l1 s-le-root relative z-10">
             <Lamp st={cardState.lamp} />
             {title}
@@ -2038,30 +2038,14 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
               </span>
             ) : null}
             {draftIndicator}
-            {thread.pinnedAt != null ? (
-              <span className="t3-pinm">
-                <PinIcon className="t3g" />
-              </span>
-            ) : null}
-            {/* Loose ends (§17.3): the mark opens the chat with its popover up; the card's own click navigates. */}
-            {thread.openLooseEndCount ? (
-              <button
-                type="button"
-                className="s-le-cm"
-                aria-label={`${thread.openLooseEndCount} loose ${thread.openLooseEndCount === 1 ? "end" : "ends"} open`}
-                onClick={() => openLooseEnds(threadRef)}
-              >
-                <MailIcon className="gi" />
-                <b>{thread.openLooseEndCount}</b>
-              </button>
-            ) : null}
             {sortable?.isDragging ? (
               dragDestination
             ) : (
               <>
                 <span
                   className={cn(
-                    "group/sidebar-status-slot relative flex h-5 shrink-0 items-stretch justify-end",
+                    // Line 1's height (18), so the card is as tall as its name.
+                    "group/sidebar-status-slot relative flex h-[18px] shrink-0 items-stretch justify-end",
                     props.sweepAction !== null && "hidden",
                   )}
                 >
@@ -2087,11 +2071,6 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
                         </span>
                       </button>
                     ) : null}
-                    {thread.tokensProcessed === undefined ? null : (
-                      <span className="d-tok">
-                        {formatContextWindowTokens(thread.tokensProcessed)}
-                      </span>
-                    )}
                   </span>
                   {props.settlementSupported || showSnoozeButton || hasUnsentDraft ? (
                     <span
@@ -2101,9 +2080,11 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
                         // would keep the controls pinned over the status label
                         // once the pointer moves away (e.g. after a failed
                         // settle) instead of cross-fading back.
-                        "pointer-events-none absolute inset-y-0 right-0 flex items-stretch opacity-0 transition-opacity has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:static has-[:focus-visible]:opacity-100 group-any-hover/sidebar-row:pointer-events-auto group-any-hover/sidebar-row:static group-any-hover/sidebar-row:opacity-100",
-                        snoozeMenuOpen && "pointer-events-auto static opacity-100",
+                        "pointer-events-none absolute inset-y-0 right-0 flex items-stretch opacity-0 transition-opacity has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:opacity-100 group-any-hover/sidebar-row:pointer-events-auto group-any-hover/sidebar-row:opacity-100",
+                        snoozeMenuOpen && "pointer-events-auto opacity-100",
                       )}
+                      // They float over the end of the name, which fades under them (index.css).
+                      data-card-actions=""
                     >
                       {hasUnsentDraft ? (
                         <Tooltip>
@@ -2154,6 +2135,23 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
                 </span>
               </>
             )}
+            {thread.pinnedAt != null ? (
+              <span className="t3-pinm">
+                <PinIcon className="t3g" />
+              </span>
+            ) : null}
+            {/* Loose ends (§17.3): the mark opens the chat with its popover up; the card's own click navigates. */}
+            {thread.openLooseEndCount ? (
+              <button
+                type="button"
+                className="s-le-cm"
+                aria-label={`${thread.openLooseEndCount} loose ${thread.openLooseEndCount === 1 ? "end" : "ends"} open`}
+                onClick={() => openLooseEnds(threadRef)}
+              >
+                <MailIcon className="gi" />
+                <b>{thread.openLooseEndCount}</b>
+              </button>
+            ) : null}
             {/* A sweep hides the slot rather than unmounting it, so the
                 pressed action button stays connected and a cancelled sweep's
                 release click still fires and is consumed. */}

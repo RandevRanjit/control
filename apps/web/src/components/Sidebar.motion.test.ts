@@ -66,10 +66,10 @@ class TestRow {
 }
 
 function fixture(rows: TestRow[]) {
-  const media = { matches: false };
+  const root = { dataset: { motion: "full" } };
   const parent = {
     children: rows,
-    ownerDocument: { defaultView: { matchMedia: () => media } },
+    ownerDocument: { documentElement: root },
     getBoundingClientRect: () => ({ top: 0 }),
     append(node: TestRow) {
       parent.children.push(node);
@@ -91,13 +91,13 @@ function fixture(rows: TestRow[]) {
   }
   layout(rows);
   const motion = createSidebarListMotion(parent as unknown as HTMLUListElement);
-  return { motion, layout, media, parent };
+  return { motion, layout, root, parent };
 }
 
 function expectMove(row: TestRow, offset: number) {
   expect(row.animate).toHaveBeenLastCalledWith(
     [{ transform: `translateY(${offset}px)` }, { transform: "translateY(0px)" }],
-    { duration: 150, easing: "ease-out" },
+    { duration: 219, easing: "cubic-bezier(.61,1,.88,1)" },
   );
 }
 
@@ -174,9 +174,9 @@ describe("sidebar list motion", () => {
 
   it("does not glide on release when motion is reduced", () => {
     const [a, b] = [new TestRow("a"), new TestRow("b")];
-    const { motion, layout, media } = fixture([a, b]);
+    const { motion, layout, root } = fixture([a, b]);
     motion.update(true);
-    media.matches = true;
+    root.dataset.motion = "reduce";
     a.dragTranslate = 100;
     motion.release();
     layout([b, a]);
@@ -287,8 +287,8 @@ describe("sidebar list motion", () => {
         { opacity: 1, transform: "translateY(0px)" },
       ],
       {
-        duration: 150,
-        easing: "ease-out",
+        duration: 219,
+        easing: "cubic-bezier(.61,1,.88,1)",
       },
     );
     const clone = a.clones[0]!;
@@ -311,8 +311,8 @@ describe("sidebar list motion", () => {
         { opacity: 0, transform: "translateY(-83px)" },
       ],
       {
-        duration: 150,
-        easing: "ease-out",
+        duration: 219,
+        easing: "cubic-bezier(.61,1,.88,1)",
       },
     );
     expect(parent.children.includes(clone)).toBe(true);
@@ -344,14 +344,14 @@ describe("sidebar list motion", () => {
         { opacity: 0, transform: "translateY(72px)" },
         { opacity: 1, transform: "translateY(0px)" },
       ],
-      { duration: 150, easing: "ease-out" },
+      { duration: 219, easing: "cubic-bezier(.61,1,.88,1)" },
     );
     expect(z.animate).toHaveBeenLastCalledWith(
       [
         { opacity: 0, transform: "translateY(72px)" },
         { opacity: 1, transform: "translateY(0px)" },
       ],
-      { duration: 150, easing: "ease-out" },
+      { duration: 219, easing: "cubic-bezier(.61,1,.88,1)" },
     );
   });
 
@@ -371,7 +371,7 @@ describe("sidebar list motion", () => {
         { opacity: 0, transform: "translateY(-30px)" },
         { opacity: 1, transform: "translateY(0px)" },
       ],
-      { duration: 150, easing: "ease-out" },
+      { duration: 219, easing: "cubic-bezier(.61,1,.88,1)" },
     );
   });
 
@@ -417,7 +417,7 @@ describe("sidebar list motion", () => {
         { opacity: 0.25, transform: "translateY(0px)" },
         { opacity: 0, transform: "translateY(9px)" },
       ],
-      { duration: 150, easing: "ease-out" },
+      { duration: 219, easing: "cubic-bezier(.61,1,.88,1)" },
     );
     expectMove(header, -9);
     expectMove(x, -9);
@@ -447,8 +447,8 @@ describe("sidebar list motion", () => {
         { opacity: 1, transform: "translateY(0px)" },
       ],
       {
-        duration: 150,
-        easing: "ease-out",
+        duration: 219,
+        easing: "cubic-bezier(.61,1,.88,1)",
       },
     );
     motion.dispose();
@@ -473,8 +473,8 @@ describe("sidebar list motion", () => {
         { opacity: 0, transform: "translateY(40px)" },
       ],
       {
-        duration: 150,
-        easing: "ease-out",
+        duration: 219,
+        easing: "cubic-bezier(.61,1,.88,1)",
       },
     );
     motion.update(false);
@@ -529,13 +529,13 @@ describe("sidebar list motion", () => {
   it("respects reduced motion while keeping the next baseline fresh", () => {
     const a = new TestRow("a");
     const b = new TestRow("b");
-    const { motion, layout, media } = fixture([a, b]);
+    const { motion, layout, root } = fixture([a, b]);
     motion.update(true);
-    media.matches = true;
+    root.dataset.motion = "reduce";
     layout([b, a]);
     motion.update(true);
     expect(a.animate).not.toHaveBeenCalled();
-    media.matches = false;
+    root.dataset.motion = "full";
     layout([a, b]);
     motion.update(true);
     expectMove(a, 83);

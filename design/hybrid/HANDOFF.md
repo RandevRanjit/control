@@ -460,7 +460,8 @@ Bloom's clock is unchanged (`design/bloom/HANDOFF.md`, Motion):
 - **Every infinite animation is phase-locked to one 14 s epoch.** Set every loop's `startTime` to the epoch, so a lamp
   that mounts late lands in step (`sync()` in `design/hybrid/src/runtime.js`). In React, run one hook over
   `document.getAnimations()` on mount and on each frame where animations were added.
-- Reduce motion (`html[data-motion="reduce"]`) stills every loop to its still pose. The reference shots use it.
+- Reduce motion (`html[data-motion="reduce"]`, from the OS or Settings > Reduce motion) stills every loop to its
+  still pose and makes the transitions below instant. The reference shots use it.
 - What moves in version 1:
   - the lamps;
   - the bead bars;
@@ -468,7 +469,12 @@ Bloom's clock is unchanged (`design/bloom/HANDOFF.md`, Motion):
   - a finished stack's rail breathing (3.5 s);
   - the usage line past 80 %;
   - the lock plate's logo (§16.3).
-- Nothing else moves. There is no shimmer on compaction (the lamp says it).
+- Nothing else loops. There is no shimmer on compaction (the lamp says it).
+- Transitions are one-shots on the same clock (owner, 30 Oct): panels slide in 219 ms on `--e-out`; menus and
+  selects fade in 109 ms on `--e-out` and out on `--e-in`; sidebar rows glide 219 ms. A thread switch holds the
+  old frame until the new thread paints, then crosses only the main pane in 109 ms, the new thread rising 8 px
+  from where it sits in the list. Settings crosses the window in 219 ms, its pane sliding 24 px in from the right
+  and back out to it (`apps/web/src/panelAnimations.ts`; index.css, "Route transitions").
 
 ---
 

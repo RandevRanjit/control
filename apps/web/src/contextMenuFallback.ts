@@ -484,6 +484,19 @@ export function showContextMenuFallback<T extends string>(
       document.body.appendChild(menu);
       menuStack[level] = menu;
       submenuTriggerStack[level] = parentTrigger;
+      // In like menu.tsx's menus: Bloom's tap on --e-out, unless motion is reduced.
+      if (document.documentElement.dataset.motion === "full") {
+        menu.animate(
+          [
+            { opacity: 0, scale: "0.98" },
+            { opacity: 1, scale: "1" },
+          ],
+          {
+            duration: 109,
+            easing: "cubic-bezier(.61,1,.88,1)",
+          },
+        );
+      }
 
       requestAnimationFrame(() => {
         clampMenuPosition(menu, preferredLeft, preferredTop);

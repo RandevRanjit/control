@@ -52,7 +52,7 @@ const clientSettings: ClientSettings = {
   fontSmoothing: true,
   glassOpacity: 80,
   onboardingCompletedAt: null,
-  panelAnimationDurationMs: 0,
+  reduceMotion: false,
   planModeEnabled: false,
   proactivePanelsEnabled: true,
   showSkillsInSlashMenu: false,

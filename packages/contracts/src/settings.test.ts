@@ -610,19 +610,17 @@ describe("ClientSettings appearance contrast", () => {
   });
 });
 
-describe("ClientSettings panel animations", () => {
-  it("defaults to instant changes", () => {
-    expect(decodeClientSettings({}).panelAnimationDurationMs).toBe(0);
+describe("ClientSettings reduce motion", () => {
+  it("defaults to full motion", () => {
+    expect(decodeClientSettings({}).reduceMotion).toBe(false);
   });
 
-  it.each([0, 400])("accepts a panel animation duration: %s", (value) => {
-    expect(decodeClientSettingsPatch({ panelAnimationDurationMs: value })).toEqual({
-      panelAnimationDurationMs: value,
-    });
+  it("accepts the switch in a patch", () => {
+    expect(decodeClientSettingsPatch({ reduceMotion: true })).toEqual({ reduceMotion: true });
   });
 
-  it.each([-1, 401, 150.5])("rejects an invalid panel animation duration: %s", (value) => {
-    expect(() => decodeClientSettingsPatch({ panelAnimationDurationMs: value })).toThrow();
+  it("still reads settings saved with the old panel animation duration", () => {
+    expect(decodeClientSettings({ panelAnimationDurationMs: 200 }).reduceMotion).toBe(false);
   });
 });
 

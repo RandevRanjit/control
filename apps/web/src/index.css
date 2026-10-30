@@ -316,6 +316,10 @@ html[data-lock-plate] [data-slot="toast-viewport"] {
 
 @custom-variant dark (&:is(.dark, .dark *));
 @custom-variant light (&:not(.dark, .dark *));
+/* Motion follows html[data-motion] (Settings > Reduce motion or the OS; __root.tsx), not the
+   media query alone. */
+@custom-variant motion-safe (&:where(html[data-motion="full"] *));
+@custom-variant motion-reduce (&:where(html[data-motion="reduce"] *));
 /* Window Controls Overlay: active when Electron exposes native titlebar control geometry. */
 @custom-variant wco (&:is(.wco, .wco *));
 
@@ -397,6 +401,142 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(control-
   to {
     opacity: 0;
     transform: translateY(-6px);
+  }
+}
+
+/* Route transitions (panelAnimations.ts). A thread switch crosses only the main pane, in Bloom's
+   tap, the new thread rising 8 px from where it sits in the list; the sidebar and the rest of the
+   window swap at once. Settings crosses the whole window in Bloom's quick, its pane sliding in from
+   the right and back out to it. Every fade runs on --e-sine, so old and new opacities sum to one
+   under plus-lighter and nothing behind a translucent window shows through; slides ride
+   --e-out in and --e-in out. */
+html[data-route-transition] [data-slot="sidebar-inset"] {
+  view-transition-name: control-main-pane;
+}
+
+/* The pane moves as one picture: names inside it (the draft composer's, for the mobile
+   transition) would lift those parts out on their own. */
+html[data-route-transition] [data-slot="sidebar-inset"] * {
+  view-transition-name: none !important;
+}
+
+/* What floats over the pane (an auto-hidden sidebar; portals: menus, the palette, toasts) stays
+   above it, already in its new state. Portals and the toast viewport have empty boxes, so their
+   children are named. */
+html[data-route-transition]
+  :is(
+    body > :not(#root) > *,
+    [data-slot="toast-viewport"] > *,
+    [data-slot="sidebar-container"][data-auto-hide]
+  ) {
+  view-transition-name: match-element;
+  view-transition-class: control-overlay;
+}
+
+html[data-route-transition]::view-transition-group(*.control-overlay),
+html[data-route-transition]::view-transition-new(*.control-overlay),
+html[data-route-transition]:not([data-route-transition^="settings"])::view-transition-old(root),
+html[data-route-transition]:not([data-route-transition^="settings"])::view-transition-new(root) {
+  animation: none;
+}
+
+html[data-route-transition]::view-transition-old(*.control-overlay) {
+  display: none;
+}
+
+html[data-route-transition^="settings"]::view-transition-group(root) {
+  animation-duration: var(--d-quick);
+  animation-timing-function: var(--e-sine);
+}
+
+html[data-route-transition]::view-transition-group(control-main-pane) {
+  animation-duration: var(--d-tap);
+  animation-timing-function: var(--e-out);
+}
+
+html[data-route-transition^="settings"]::view-transition-group(control-main-pane) {
+  animation-duration: var(--d-quick);
+}
+
+html[data-route-transition]::view-transition-image-pair(control-main-pane) {
+  isolation: isolate;
+}
+
+html[data-route-transition]::view-transition-old(control-main-pane) {
+  animation: control-route-fade-out var(--d-tap) var(--e-sine) both;
+  mix-blend-mode: plus-lighter;
+}
+
+html[data-route-transition]::view-transition-new(control-main-pane) {
+  animation: control-route-fade-in var(--d-tap) var(--e-sine) both;
+  mix-blend-mode: plus-lighter;
+}
+
+html[data-route-transition="down"]::view-transition-new(control-main-pane) {
+  animation:
+    control-route-fade-in var(--d-tap) var(--e-sine) both,
+    control-route-from-below var(--d-tap) var(--e-out) both;
+}
+
+html[data-route-transition="up"]::view-transition-new(control-main-pane) {
+  animation:
+    control-route-fade-in var(--d-tap) var(--e-sine) both,
+    control-route-from-above var(--d-tap) var(--e-out) both;
+}
+
+html[data-route-transition="settings-in"]::view-transition-old(control-main-pane) {
+  animation-duration: var(--d-quick);
+}
+
+html[data-route-transition="settings-in"]::view-transition-new(control-main-pane) {
+  animation:
+    control-route-fade-in var(--d-quick) var(--e-sine) both,
+    control-route-from-right var(--d-quick) var(--e-out) both;
+}
+
+html[data-route-transition="settings-out"]::view-transition-old(control-main-pane) {
+  animation:
+    control-route-fade-out var(--d-quick) var(--e-sine) both,
+    control-route-to-right var(--d-quick) var(--e-in) both;
+}
+
+html[data-route-transition="settings-out"]::view-transition-new(control-main-pane) {
+  animation-duration: var(--d-quick);
+}
+
+@keyframes control-route-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes control-route-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes control-route-from-below {
+  from {
+    translate: 0 8px;
+  }
+}
+
+@keyframes control-route-from-above {
+  from {
+    translate: 0 -8px;
+  }
+}
+
+@keyframes control-route-from-right {
+  from {
+    translate: 24px 0;
+  }
+}
+
+@keyframes control-route-to-right {
+  to {
+    translate: 24px 0;
   }
 }
 

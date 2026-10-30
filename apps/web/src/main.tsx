@@ -5,6 +5,7 @@ import { createHashHistory, createBrowserHistory } from "@tanstack/react-router"
 import "./index.css";
 
 import { isElectron } from "./env";
+import { installRouteTransitions } from "./panelAnimations";
 import { getRouter } from "./router";
 import {
   syncDocumentElectronPlatformClasses,
@@ -17,6 +18,7 @@ import { clearChunkReloadGuard, reloadOnceForChunkLoadError } from "./lib/chunkR
 const history = isElectron ? createHashHistory() : createBrowserHistory();
 
 const router = getRouter(history);
+installRouteTransitions(router);
 
 if (isElectron) {
   syncDocumentElectronPlatformClasses(navigator.platform);

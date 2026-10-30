@@ -52,6 +52,7 @@ import { isElectron } from "../env";
 import { cn } from "../lib/utils";
 import { applyAppearanceFontVariables } from "~/appearanceFonts";
 import { applyAppearanceContrast } from "~/appearanceContrast";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 import { useClientSettings } from "../hooks/useSettings";
 import {
   deriveLogicalProjectKeyFromSettings,
@@ -289,6 +290,15 @@ function ContrastAppearanceSync() {
   useEffect(() => {
     applyAppearanceContrast(document.documentElement, appearanceContrast);
   }, [appearanceContrast]);
+
+  // The one motion gate: Bloom's loops, the motion-safe variant and panel transitions all
+  // read it (index.html sets the first value from the OS before React loads).
+  const reduceMotion = useClientSettings((settings) => settings.reduceMotion);
+  const systemReducesMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  useEffect(() => {
+    document.documentElement.dataset.motion =
+      reduceMotion || systemReducesMotion ? "reduce" : "full";
+  }, [reduceMotion, systemReducesMotion]);
 
   return null;
 }

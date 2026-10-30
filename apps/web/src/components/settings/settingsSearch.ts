@@ -254,9 +254,10 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: ["dock auto hide left edge pointer mouse reveal collapse"],
   },
   {
-    id: "panel-animations",
-    title: "Panel animations",
+    id: "reduce-motion",
+    title: "Reduce motion",
     to: "/settings/appearance",
+    searchTerms: ["panel animations transitions instant still"],
   },
   {
     id: "environment-identification",

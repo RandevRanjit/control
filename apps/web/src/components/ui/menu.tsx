@@ -55,6 +55,8 @@ function MenuPopup({
             "[-webkit-app-region:no-drag]",
             // Menus size to their content from one minimum, never past the viewport.
             "min-w-[min(10rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)]",
+            // Bloom's tap: in on --e-out, out on --e-in; instant when motion is reduced.
+            "data-starting-style:scale-98 data-starting-style:opacity-0 data-ending-style:opacity-0 data-ending-style:ease-(--e-in) motion-safe:transition-[scale,opacity] motion-safe:duration-(--d-tap) motion-safe:ease-(--e-out)",
             className,
           )}
           data-slot="menu-popup"

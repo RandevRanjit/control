@@ -1,4 +1,5 @@
-const motionTiming = { duration: 150, easing: "ease-out" };
+// Bloom's --d-quick on --e-out (tokens.css).
+const motionTiming = { duration: 219, easing: "cubic-bezier(.61,1,.88,1)" };
 // Rows normally ride their displaced neighbour's travel. Absent a moving
 // neighbour, a row still travels on its own, clamped so a tall card does not
 // slide its full height.
@@ -23,9 +24,8 @@ function progress(animation: Animation) {
 export function createSidebarListMotion(parent: HTMLUListElement) {
   let positions: Map<HTMLElement, RowPosition> | null = null;
   let disposed = false;
-  const reducedMotion = parent.ownerDocument.defaultView?.matchMedia(
-    "(prefers-reduced-motion: reduce)",
-  );
+  // Settings > Reduce motion or the OS (__root.tsx).
+  const reducedMotion = () => parent.ownerDocument.documentElement.dataset.motion === "reduce";
   const running = new Map<HTMLElement, { animation: Animation; offset: number }>();
   const entering = new Map<HTMLElement, { animation: Animation; travel: number }>();
   const exiting = new Map<HTMLElement, Animation>();
@@ -155,10 +155,7 @@ export function createSidebarListMotion(parent: HTMLUListElement) {
         }
       }
       const shouldAnimate =
-        animate &&
-        positions !== null &&
-        !reducedMotion?.matches &&
-        fadeCount <= MAX_FADED_ROWS_PER_UPDATE;
+        animate && positions !== null && !reducedMotion() && fadeCount <= MAX_FADED_ROWS_PER_UPDATE;
       const movedDelta = new Map<HTMLElement, number>();
       const nextOrder = [...next.keys()];
       const oldOrder = positions === null ? [] : [...positions.keys()];
@@ -234,7 +231,7 @@ export function createSidebarListMotion(parent: HTMLUListElement) {
         }
       }
       if (released !== null) {
-        if (!reducedMotion?.matches) {
+        if (!reducedMotion()) {
           for (const [node, position] of next) {
             const top = released.get(node);
             if (top !== undefined) move(node, top - position.top);

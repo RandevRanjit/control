@@ -18,6 +18,7 @@ import {
 import { Tooltip, TooltipPopup, TooltipTrigger } from "~/components/ui/tooltip";
 import { useResizeDrag } from "~/hooks/useResizeDrag";
 import { useIsMobile } from "~/hooks/useMediaQuery";
+import { usePaneEnter } from "~/panelAnimations";
 import { getLocalStorageItem, setLocalStorageItem } from "~/hooks/useLocalStorage";
 import { resolveSidebarState, type ResponsiveSidebarState } from "./sidebarState";
 import { createSidebarAutoHide, type SidebarAutoHide } from "./sidebarAutoHide";
@@ -360,12 +361,18 @@ function Sidebar({
             autoHide
               ? cn(
                   // Over the content, above the thread's own chrome and its z-40 layers (the
-                  // message minimap); a shadow sets it off. It slides on the compositor, so it
-                  // moves even while a route change holds panels still, unless motion is reduced.
+                  // message minimap); a rim and a deep shadow lift it off the content. It slides
+                  // on the compositor, so it moves even while a route change holds panels still,
+                  // unless motion is reduced.
                   "z-50 motion-safe:transition-[translate,box-shadow] motion-safe:duration-(--d-quick)",
                   side === "left" ? "left-0" : "right-0",
                   autoHide.revealed
-                    ? "shadow-lg ease-(--e-out)"
+                    ? cn(
+                        "ease-(--e-out)",
+                        side === "left"
+                          ? "shadow-[1px_0_0_var(--lip),24px_0_56px_-8px_var(--occl-deep),8px_0_20px_-4px_var(--occl-deep)]"
+                          : "shadow-[-1px_0_0_var(--lip),-24px_0_56px_-8px_var(--occl-deep),-8px_0_20px_-4px_var(--occl-deep)]",
+                      )
                     : cn(
                         "ease-(--e-in)",
                         side === "left" ? "-translate-x-full" : "translate-x-full",
@@ -647,8 +654,11 @@ function SidebarInput({ className, ...props }: Omit<InputProps, "unstyled" | "va
 }
 
 function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
+  const paneRef = React.useRef<HTMLElement>(null);
+  usePaneEnter(paneRef);
   return (
     <main
+      ref={paneRef}
       className={cn(
         "relative flex min-w-0 w-full flex-1 flex-col bg-background surface-grain",
         "md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ms-2 md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ms-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm/5",

@@ -506,7 +506,7 @@ html[data-motion="full"] .sbar[data-st="intr"]::before { animation: none; }
 
 .t3-top .lights i { background: var(--t3-light); }
 
-.t3-tg { margin-left: 22px; width: 28px; height: 28px; display: grid; place-items: center; color: var(--t3-mfg); }
+.t3-tg { margin-left: 20px; width: 32px; height: 32px; display: grid; place-items: center; color: var(--t3-mfg); border-radius: var(--t3-r); }
 
 .t3-wm { margin-left: 12px; display: inline-flex; align-items: baseline; gap: 5px; font: 700 14px/1 var(--t3-font); letter-spacing: -.01em; color: var(--t3-fg); }
 
@@ -577,6 +577,9 @@ html[data-motion="full"] .sbar[data-st="intr"]::before { animation: none; }
 .t3-d .t3-tools .d-cmdk { margin-right: 6px; }
 
 .t3-d .t3-tools .t3-ib:hover, .t3-d .t3-tools .t3-ib[data-hover] { background: var(--t3-accent); color: var(--t3-fg); }
+
+/* the sidebar's own buttons (toggle, gear, foot) fill the same way, so they read as buttons */
+.t3-d :is(.t3-top, .t3-util) :is(.t3-tg, .t3-ib):hover { background: var(--t3-accent); color: var(--t3-fg); }
 
 .t3-canvas { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding: 0 24px 8px;
   -webkit-mask: linear-gradient(to bottom, transparent 0, #000 72px); mask: linear-gradient(to bottom, transparent 0, #000 72px); }
@@ -825,7 +828,7 @@ html[data-motion="full"] .d-bead[data-run] { animation: d-blink var(--T-beat) li
 
 .t3-d .t3-top { padding-right: 12px; }
 
-.t3-d .d-set { width: 28px; height: 28px; }
+.t3-d .d-set { width: 32px; height: 32px; }
 
 .t3-d .t3-wm.d-wm { flex: 1; justify-content: center; margin-left: 0; }
 

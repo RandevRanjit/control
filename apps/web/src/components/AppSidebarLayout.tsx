@@ -38,6 +38,7 @@ import {
   PanelAnimationSuppressionProvider,
   usePanelAnimationSettings,
   usePanelNavigationSuppression,
+  SettingsPaneProvider,
 } from "../panelAnimations";
 import LegacyThreadSidebar from "./LegacySidebar";
 import { useThreadVisitedMigration } from "../hooks/useThreadVisitedMigration";
@@ -384,7 +385,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
           </aside>
           <SidebarRail onDoubleClick={resetSidebarWidth} />
         </Sidebar>
-        {children}
+        <SettingsPaneProvider value={isOnSettings}>{children}</SettingsPaneProvider>
         <SidebarControl />
         <NavigationHistoryShortcuts />
         <MainAppLocationTracker />

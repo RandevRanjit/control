@@ -1,15 +1,21 @@
-import { scopedThreadKey } from "@control/client-runtime/environment";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  type RefObject,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { useMediaQuery } from "./hooks/useMediaQuery";
 import { useClientSettings } from "./hooks/useSettings";
-import type { AppRouter } from "./router";
-import { resolveThreadRouteRef } from "./threadRoutes";
 
 /** Bloom's --d-quick (tokens.css), for the timers that wait out a panel's transition. */
 const PANEL_ANIMATION_DURATION_MS = 219;
 
 const PanelAnimationSuppressionContext = createContext(false);
+const SettingsPaneContext = createContext(false);
 
 export const PanelAnimationSuppressionProvider = PanelAnimationSuppressionContext.Provider;
 
@@ -83,19 +89,17 @@ export function usePanelPresence<T>(
   return { present: visible, value: open ? value : visible ? retainedValue : null };
 }
 
-// Thread switches and Settings move as view transitions (index.css, "Route transitions"). The
-// history blocker has the old frame captured before the route changes, lets it change, then holds
-// that frame until the new route has painted (or the cap passes), so a switch never shows half of
-// each thread.
-const ROUTE_PAINT_CAP_MS = 200;
-const THREAD_ROUTE_ID = "/_chat/$environmentId/$threadId";
-let threadPaint: { threadKey: string; resolve: () => void } | null = null;
+// Thread switches and Settings bring their new content in once it is on screen. Nothing is held or
+// captured first, so a click shows on the next frame and input is never blocked.
+const TAP_DURATION_MS = 109; // Bloom's --d-tap
+const ENTER_EASING = "cubic-bezier(.61,1,.88,1)"; // Bloom's --e-out
 
-/** ChatView calls this once it shows the route's own thread rather than one it holds. */
-export function markThreadPainted(threadKey: string): void {
-  if (threadPaint?.threadKey !== threadKey) return;
-  threadPaint.resolve();
-  threadPaint = null;
+function enter(element: Element | null, from: Keyframe, durationMs: number): void {
+  if (!element || document.documentElement.dataset.motion !== "full") return;
+  element.animate([from, { opacity: 1, translate: "0 0" }], {
+    duration: durationMs,
+    easing: ENTER_EASING,
+  });
 }
 
 function sidebarThreadIndex(threadKey: string): number {
@@ -104,70 +108,38 @@ function sidebarThreadIndex(threadKey: string): number {
   );
 }
 
-/** Called once at boot (main.tsx); returns the uninstaller. */
-export function installRouteTransitions(router: AppRouter): () => void {
-  let running = false;
-  // Resolves once the running transition has captured its old frame and let its route through;
-  // a navigation made meanwhile waits for it, so the two land in the order they were made.
-  let captured = Promise.resolve();
-  return router.history.block({
-    enableBeforeUnload: false,
-    blockerFn: ({ currentLocation, nextLocation }) => {
-      const root = document.documentElement;
-      if (running) return captured.then(() => false);
-      if (root.dataset.motion !== "full" || !document.startViewTransition) return false;
-      const from = router.getMatchedRoutes(currentLocation.pathname);
-      const to = router.getMatchedRoutes(nextLocation.pathname);
-      const fromThread =
-        from.foundRoute?.id === THREAD_ROUTE_ID ? resolveThreadRouteRef(from.routeParams) : null;
-      const toThread =
-        to.foundRoute?.id === THREAD_ROUTE_ID ? resolveThreadRouteRef(to.routeParams) : null;
-      const fromSettings = from.foundRoute?.id.startsWith("/settings") ?? false;
-      const toSettings = to.foundRoute?.id.startsWith("/settings") ?? false;
+/** ChatView's timeline: a newly shown thread rises 8 px from where it sits in the list. */
+export function useThreadEnter(ref: RefObject<HTMLElement | null>, threadKey: string): void {
+  const shownKey = useRef(threadKey);
+  useLayoutEffect(() => {
+    const fromKey = shownKey.current;
+    shownKey.current = threadKey;
+    if (fromKey === threadKey) return;
+    const fromIndex = sidebarThreadIndex(fromKey);
+    const toIndex = sidebarThreadIndex(threadKey);
+    const rise = fromIndex < 0 || toIndex < 0 ? 0 : toIndex > fromIndex ? 8 : -8;
+    enter(ref.current, { opacity: 0, translate: `0 ${rise}px` }, TAP_DURATION_MS);
+  }, [ref, threadKey]);
+}
 
-      let kind: "down" | "up" | "fade" | "settings-in" | "settings-out";
-      let painted: Promise<void>;
-      if (fromThread && toThread && currentLocation.pathname !== nextLocation.pathname) {
-        const toKey = scopedThreadKey(toThread);
-        const fromIndex = sidebarThreadIndex(scopedThreadKey(fromThread));
-        const toIndex = sidebarThreadIndex(toKey);
-        // The new thread comes from where it sits in the list.
-        kind = fromIndex < 0 || toIndex < 0 ? "fade" : toIndex > fromIndex ? "down" : "up";
-        painted = new Promise((resolve) => (threadPaint = { threadKey: toKey, resolve }));
-      } else if (fromSettings !== toSettings) {
-        kind = toSettings ? "settings-in" : "settings-out";
-        painted = new Promise((resolve) => {
-          const unsubscribe = router.subscribe("onRendered", () => {
-            unsubscribe();
-            resolve();
-          });
-        });
-      } else {
-        return false;
-      }
+/** Whether the routes beside the sidebar are Settings' (AppSidebarLayout provides it). */
+export const SettingsPaneProvider = SettingsPaneContext.Provider;
+let shownPaneIsSettings: boolean | null = null;
 
-      running = true;
-      root.dataset.routeTransition = kind;
-      let release = () => {};
-      captured = new Promise((resolve) => (release = resolve));
-      return new Promise<boolean>((allow) => {
-        const transition = document.startViewTransition(async () => {
-          allow(false);
-          release();
-          await Promise.race([
-            painted,
-            new Promise((resolve) => window.setTimeout(resolve, ROUTE_PAINT_CAP_MS)),
-          ]);
-        });
-        transition.ready.catch(() => undefined);
-        void transition.finished
-          .catch(() => undefined)
-          .then(() => {
-            running = false;
-            threadPaint = null;
-            delete root.dataset.routeTransition;
-          });
-      });
-    },
-  });
+/**
+ * SidebarInset, as it mounts: a pane that opening Settings brings in slides in from the right, and
+ * one that closing it brings back slides in from the left. The pane that leaves does not move.
+ */
+export function usePaneEnter(ref: RefObject<HTMLElement | null>): void {
+  const mountedAsSettings = useRef(useContext(SettingsPaneContext)).current;
+  useLayoutEffect(() => {
+    const shownSettings = shownPaneIsSettings;
+    shownPaneIsSettings = mountedAsSettings;
+    if (shownSettings === null || shownSettings === mountedAsSettings) return;
+    enter(
+      ref.current,
+      { opacity: 0, translate: mountedAsSettings ? "24px 0" : "-24px 0" },
+      PANEL_ANIMATION_DURATION_MS,
+    );
+  }, [mountedAsSettings, ref]);
 }

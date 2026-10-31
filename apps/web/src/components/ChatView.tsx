@@ -345,7 +345,7 @@ import {
   useEnvironmentSettings,
 } from "../hooks/useSettings";
 import { useNowMinute } from "../hooks/useNowMinute";
-import { markThreadPainted, usePanelAnimationSettings, usePanelPresence } from "../panelAnimations";
+import { usePanelAnimationSettings, usePanelPresence, useThreadEnter } from "../panelAnimations";
 import { useNewThreadHandler } from "../hooks/useHandleNewThread";
 import { useRemoveClonedProject } from "../hooks/useRemoveClonedProject";
 import { useOpenPanelPullRequestUrl } from "../hooks/useOpenPanelPullRequestUrl";
@@ -3913,10 +3913,8 @@ export default function ChatView(props: ChatViewProps) {
     displayedTimeline.displayThreadKey,
     activeThreadKey,
   );
-  // A thread switch holds its old frame until the new thread is the one on screen.
-  useEffect(() => {
-    if (!paintOnlyDisplayedTimeline) markThreadPainted(routeThreadKey);
-  }, [paintOnlyDisplayedTimeline, routeThreadKey]);
+  const messagesWrapperRef = useRef<HTMLDivElement>(null);
+  useThreadEnter(messagesWrapperRef, displayedTimelineKey);
   const displayedThreadRef = parseScopedThreadKey(displayedTimelineKey);
   const worktreeSetupOwnerKey = draftId ?? routeThreadKey;
   const worktreeSetupActive =
@@ -11528,7 +11526,10 @@ export default function ChatView(props: ChatViewProps) {
               />
             </div>
             {/* Messages Wrapper */}
-            <div className="relative flex min-h-0 flex-1 flex-col bg-background">
+            <div
+              ref={messagesWrapperRef}
+              className="relative flex min-h-0 flex-1 flex-col bg-background"
+            >
               {/* Messages — LegendList handles virtualization and scrolling internally */}
               <ThreadTimeline
                 threadDetailRef={routeThreadDetailRef}

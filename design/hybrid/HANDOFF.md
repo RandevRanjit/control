@@ -471,10 +471,11 @@ Bloom's clock is unchanged (`design/bloom/HANDOFF.md`, Motion):
   - the lock plate's logo (§16.3).
 - Nothing else loops. There is no shimmer on compaction (the lamp says it).
 - Transitions are one-shots on the same clock (owner, 30 Oct): panels slide in 219 ms on `--e-out`; menus and
-  selects fade in 109 ms on `--e-out` and out on `--e-in`; sidebar rows glide 219 ms. A thread switch holds the
-  old frame until the new thread paints, then crosses only the main pane in 109 ms, the new thread rising 8 px
-  from where it sits in the list. Settings crosses the window in 219 ms, its pane sliding 24 px in from the right
-  and back out to it (`apps/web/src/panelAnimations.ts`; index.css, "Route transitions").
+  selects fade in 109 ms on `--e-out` and out on `--e-in`; sidebar rows glide 219 ms. On a thread switch the
+  sidebar answers on the next frame; once the new thread is on screen its messages fade in over 109 ms, rising
+  8 px from where it sits in the list. Opening Settings slides its pane 24 px in from the right over 219 ms, and
+  closing it slides the pane coming back in from the left. Nothing is held or captured first, so no transition
+  delays a click (owner, 31 Oct; `apps/web/src/panelAnimations.ts`).
 
 ---
 

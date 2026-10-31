@@ -1993,13 +1993,15 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
   return (
     <li
       data-thread-item={threadKey}
+      data-in-group={props.inFolder || undefined}
       {...sortableRootProps}
       {...(fileDropHandlers ?? {})}
       className={cn(
         // The card's 2 px design margin sits on the row instead (content-visibility
         // contains the card's own), on top only: the flex list doesn't collapse
-        // margins, and every row above it already ends without one.
-        "mt-0.5 list-none [content-visibility:auto] [contain-intrinsic-size:auto_32px]",
+        // margins, and every row above it already ends without one. Padding, not
+        // margin, so a group's guide line (index.css) runs through the gap.
+        "pt-0.5 list-none [content-visibility:auto] [contain-intrinsic-size:auto_32px]",
         sortable?.isDragging && "relative z-20",
       )}
     >
@@ -2029,6 +2031,64 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
           {/* The card (§3, owner 30 Oct): the lamp, the chat's name, wrapping as far as it needs,
               its pin and loose ends; a second line only for what's unusual (cardNotes), and a loose
               chat's folder. */}
+          {/* Hover opens a shelf above the name for the card's actions, so the name moves down
+              rather than hiding under them (owner, 31 Oct; index.css, "card shelf"). */}
+          {/* A sweep hides the shelf rather than unmounting it, so the pressed action button stays
+              connected and a cancelled sweep's release click still fires and is consumed. */}
+          {!sortable?.isDragging &&
+          (props.settlementSupported || showSnoozeButton || hasUnsentDraft) ? (
+            <div
+              className={cn("d-card-shelf", props.sweepAction !== null && "hidden")}
+              data-open={snoozeMenuOpen || undefined}
+            >
+              <span data-card-actions="">
+                {hasUnsentDraft ? (
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <button
+                          type="button"
+                          aria-label="Discard draft"
+                          onClick={handleDiscardDraftClick}
+                          className="inline-flex cursor-pointer items-center rounded-md bg-transparent px-1.5 text-xs text-muted-foreground hover:text-foreground"
+                        />
+                      }
+                    >
+                      <XIcon className="size-3.5" />
+                    </TooltipTrigger>
+                    <TooltipPopup side="top">Discard draft</TooltipPopup>
+                  </Tooltip>
+                ) : null}
+                {showSnoozeButton ? (
+                  <SnoozeMenuButton
+                    open={snoozeMenuOpen}
+                    onOpenChange={setSnoozeMenuOpen}
+                    onSnooze={handleSnoozePreset}
+                    timestampFormat={props.timestampFormat}
+                  />
+                ) : null}
+                {props.settlementSupported ? (
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <button
+                          type="button"
+                          aria-label="Settle thread"
+                          onClick={handleSettleClick}
+                          onPointerDown={handleActionPointerDown}
+                          className="-mr-1 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-1.5 text-xs text-muted-foreground hover:text-foreground"
+                        />
+                      }
+                    >
+                      <CheckIcon className="size-3.5" />
+                      Settle
+                    </TooltipTrigger>
+                    <TooltipPopup>Settle thread</TooltipPopup>
+                  </Tooltip>
+                ) : null}
+              </span>
+            </div>
+          ) : null}
           <div className="t3-l1 s-le-root relative z-10">
             <Lamp st={cardState.lamp} />
             {title}
@@ -2072,66 +2132,6 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
                       </button>
                     ) : null}
                   </span>
-                  {props.settlementSupported || showSnoozeButton || hasUnsentDraft ? (
-                    <span
-                      className={cn(
-                        // focus-visible, not focus-within: a mouse click leaves
-                        // the Settle button focused, and a plain focus-within
-                        // would keep the controls pinned over the status label
-                        // once the pointer moves away (e.g. after a failed
-                        // settle) instead of cross-fading back.
-                        "pointer-events-none absolute inset-y-0 right-0 flex items-stretch opacity-0 transition-opacity has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:opacity-100 group-any-hover/sidebar-row:pointer-events-auto group-any-hover/sidebar-row:opacity-100",
-                        snoozeMenuOpen && "pointer-events-auto opacity-100",
-                      )}
-                      // They float over the end of the name, which fades under them (index.css).
-                      data-card-actions=""
-                    >
-                      {hasUnsentDraft ? (
-                        <Tooltip>
-                          <TooltipTrigger
-                            render={
-                              <button
-                                type="button"
-                                aria-label="Discard draft"
-                                onClick={handleDiscardDraftClick}
-                                className="inline-flex cursor-pointer items-center rounded-md bg-transparent px-1.5 text-xs text-muted-foreground hover:text-foreground"
-                              />
-                            }
-                          >
-                            <XIcon className="size-3.5" />
-                          </TooltipTrigger>
-                          <TooltipPopup side="top">Discard draft</TooltipPopup>
-                        </Tooltip>
-                      ) : null}
-                      {showSnoozeButton ? (
-                        <SnoozeMenuButton
-                          open={snoozeMenuOpen}
-                          onOpenChange={setSnoozeMenuOpen}
-                          onSnooze={handleSnoozePreset}
-                          timestampFormat={props.timestampFormat}
-                        />
-                      ) : null}
-                      {props.settlementSupported ? (
-                        <Tooltip>
-                          <TooltipTrigger
-                            render={
-                              <button
-                                type="button"
-                                aria-label="Settle thread"
-                                onClick={handleSettleClick}
-                                onPointerDown={handleActionPointerDown}
-                                className="-mr-1 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-1.5 text-xs text-muted-foreground hover:text-foreground"
-                              />
-                            }
-                          >
-                            <CheckIcon className="size-3.5" />
-                            Settle
-                          </TooltipTrigger>
-                          <TooltipPopup>Settle thread</TooltipPopup>
-                        </Tooltip>
-                      ) : null}
-                    </span>
-                  ) : null}
                 </span>
               </>
             )}
@@ -5564,12 +5564,18 @@ export default function Sidebar() {
                             ]);
                           }
                           for (const [projectKey, projectThreads] of byProject) {
+                            const folderProject = projectByKey.get(projectKey);
                             items.push(
                               <li
                                 key={`folder:${groupKey}:${projectKey}`}
                                 className="hy-ph list-none"
                               >
-                                <FolderIcon className="gi" />
+                                {/* The project's own icon gives the folder some life (owner, 31 Oct). */}
+                                {folderProject ? (
+                                  <ProjectFavicon project={folderProject} className="size-3.5" />
+                                ) : (
+                                  <FolderIcon className="gi" />
+                                )}
                                 <span>{projectDisplayNameByKey.get(projectKey) ?? ""}</span>
                                 <span className="n">{projectThreads.length}</span>
                               </li>,

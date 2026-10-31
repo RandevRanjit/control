@@ -375,7 +375,9 @@ export function resolveTimelineMinimapHasPersistentGutter(
   );
 }
 
-const TIMELINE_MINIMAP_HIT_STRIP_LEFT = 12;
+// The strip's inset from the chat's left edge (MessagesTimeline's left-5): far enough in that
+// reaching for it doesn't overshoot onto an auto-hidden sidebar's reveal edge.
+const TIMELINE_MINIMAP_HIT_STRIP_LEFT = 20;
 const TIMELINE_MINIMAP_HIT_STRIP_MAX_WIDTH = 40;
 const TIMELINE_MINIMAP_EXPANDED_HIT_STRIP_WIDTH = "22rem";
 

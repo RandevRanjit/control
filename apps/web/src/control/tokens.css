@@ -42,9 +42,9 @@
   --sb-needs: var(--arm) 0%, color-mix(in oklab, var(--arm) 97.6%, #861118) 5%, color-mix(in oklab, var(--arm) 90.5%, #861118) 10%, color-mix(in oklab, var(--arm) 79.4%, #861118) 15%, color-mix(in oklab, var(--arm) 65.5%, #861118) 20%, color-mix(in oklab, var(--arm) 50%, #861118) 25%, color-mix(in oklab, var(--arm) 34.5%, #861118) 30%, color-mix(in oklab, var(--arm) 20.6%, #861118) 35%, color-mix(in oklab, var(--arm) 9.5%, #861118) 40%, color-mix(in oklab, var(--arm) 2.4%, #861118) 45%, #861118 50%, color-mix(in oklab, var(--arm) 2.4%, #861118) 55%, color-mix(in oklab, var(--arm) 9.5%, #861118) 60%, color-mix(in oklab, var(--arm) 20.6%, #861118) 65%, color-mix(in oklab, var(--arm) 34.5%, #861118) 70%, color-mix(in oklab, var(--arm) 50%, #861118) 75%, color-mix(in oklab, var(--arm) 65.5%, #861118) 80%, color-mix(in oklab, var(--arm) 79.4%, #861118) 85%, color-mix(in oklab, var(--arm) 90.5%, #861118) 90%, color-mix(in oklab, var(--arm) 97.6%, #861118) 95%, var(--arm) 100%;
   --rim-mix: 0.30;
   --text-strong: var(--ink-1); --text-body: var(--ink-1); --text-secondary: var(--ink-2); --text-label: var(--ink-3); --text-caption: var(--ink-4); --text-disabled: var(--ghost);
-  /* lamps carry no hue: ink tones only (BRIEF-2 §4). State colour lives in the bar (--st-*, --sb-*) */
-  --lamp-needs: var(--ink-1); --lamp-failed: var(--ink-1); --lamp-done: var(--ink-1); --lamp-working: var(--ink-1); --lamp-bg: var(--ink-1);
-  --lamp-choose: var(--ink-3); --lamp-house: var(--ink-4); --lamp-outside: var(--ink-4); --lamp-idle: var(--ink-4);
+  /* lamps wear their state's colour, as the bar does (owner, 31 Oct: ink alone read as all white) */
+  --lamp-needs: var(--st-needs); --lamp-failed: var(--st-failed); --lamp-done: var(--st-done); --lamp-working: var(--st-working); --lamp-bg: var(--st-bg);
+  --lamp-choose: var(--st-choose); --lamp-house: var(--ink-4); --lamp-outside: var(--ink-4); --lamp-idle: var(--ink-4);
   --lamp-band: var(--field); --lamp-bridge: var(--seam);
   --st-needs: var(--arm); --st-failed: var(--amber-base); --st-done: var(--bar-green-b); --st-working: var(--bar-blue-b); --st-bg: var(--bar-blue-l);
   --st-choose: var(--bar-lilac-b); --st-house: var(--rs-a); --st-outside: var(--ink-4); --st-idle: var(--seam); --st-gone: var(--seam);
@@ -95,8 +95,8 @@
   --sb-needs: var(--arm) 0%, color-mix(in oklab, var(--arm) 97.6%, #c22823) 5%, color-mix(in oklab, var(--arm) 90.5%, #c22823) 10%, color-mix(in oklab, var(--arm) 79.4%, #c22823) 15%, color-mix(in oklab, var(--arm) 65.5%, #c22823) 20%, color-mix(in oklab, var(--arm) 50%, #c22823) 25%, color-mix(in oklab, var(--arm) 34.5%, #c22823) 30%, color-mix(in oklab, var(--arm) 20.6%, #c22823) 35%, color-mix(in oklab, var(--arm) 9.5%, #c22823) 40%, color-mix(in oklab, var(--arm) 2.4%, #c22823) 45%, #c22823 50%, color-mix(in oklab, var(--arm) 2.4%, #c22823) 55%, color-mix(in oklab, var(--arm) 9.5%, #c22823) 60%, color-mix(in oklab, var(--arm) 20.6%, #c22823) 65%, color-mix(in oklab, var(--arm) 34.5%, #c22823) 70%, color-mix(in oklab, var(--arm) 50%, #c22823) 75%, color-mix(in oklab, var(--arm) 65.5%, #c22823) 80%, color-mix(in oklab, var(--arm) 79.4%, #c22823) 85%, color-mix(in oklab, var(--arm) 90.5%, #c22823) 90%, color-mix(in oklab, var(--arm) 97.6%, #c22823) 95%, var(--arm) 100%;
   --rim-mix: 0.60;
   --text-strong: var(--ink-1); --text-body: var(--ink-2); --text-secondary: var(--ink-3); --text-label: var(--ink-3); --text-caption: var(--ink-4); --text-disabled: var(--ghost);
-  --lamp-needs: var(--ink-1); --lamp-failed: var(--ink-1); --lamp-done: var(--ink-1); --lamp-working: var(--ink-1); --lamp-bg: var(--ink-1);
-  --lamp-choose: var(--ink-3); --lamp-house: var(--ink-4); --lamp-outside: var(--ink-4); --lamp-idle: var(--ink-4);
+  --lamp-needs: var(--st-needs); --lamp-failed: var(--st-failed); --lamp-done: var(--st-done); --lamp-working: var(--st-working); --lamp-bg: var(--st-bg);
+  --lamp-choose: var(--st-choose); --lamp-house: var(--ink-4); --lamp-outside: var(--ink-4); --lamp-idle: var(--ink-4);
   --lamp-band: var(--field); --lamp-bridge: var(--seam);
   --st-needs: var(--arm); --st-failed: var(--amber-base); --st-done: var(--bar-green-b); --st-working: var(--bar-blue-b); --st-bg: var(--bar-blue-l);
   --st-choose: var(--bar-lilac-b); --st-house: var(--rs-a); --st-outside: var(--ink-4); --st-idle: var(--seam); --st-gone: var(--seam);

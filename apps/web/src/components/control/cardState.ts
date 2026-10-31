@@ -14,8 +14,9 @@ export interface CardStateView {
 }
 
 /**
- * What a card's second line names: only what is unusual (owner, 29 Oct). A state other than idle,
- * a branch other than main or master, a model other than the default; with none, the card is one line.
+ * What a card's second line names: only what is unusual (owner, 29 Oct). A state other than idle or
+ * working (the lamp says working, owner 31 Oct), a branch other than main or master, a model other
+ * than the default; with none, the card is one line.
  */
 export function cardNotes(input: {
   readonly state: CardStateView;
@@ -24,7 +25,7 @@ export function cardNotes(input: {
   readonly defaultModel: string;
 }) {
   return {
-    words: input.state.st === "idle" ? null : input.state.words,
+    words: input.state.st === "idle" || input.state.st === "working" ? null : input.state.words,
     branch:
       input.branch === null || input.branch === "main" || input.branch === "master"
         ? null

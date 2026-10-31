@@ -56,22 +56,71 @@
   white-space: normal;
   overflow-wrap: anywhere;
 }
-/* The card's actions float over the end of the name's first line while they show
-   (Sidebar.tsx), so the name never reflows on hover; it fades out under them. */
-[data-app-sidebar] .t3-card.d-card {
-  --t3-name-under-actions:
-    linear-gradient(to left, transparent 88px, #000 104px) 0 0 / 100% 18px no-repeat,
-    linear-gradient(#000, #000) 0 18px / 100% 100% no-repeat;
+/* The card shelf (Sidebar.tsx): hovering a card opens a row above the name for its actions,
+   the name moving down to make room, like the Dock magnifying under the pointer (owner, 31 Oct).
+   It stays open while an action has keyboard focus or its menu is open. Its -2 px margin takes
+   back the card's row gap while it is shut. */
+[data-app-sidebar] .t3-card.d-card .d-card-shelf {
+  display: grid;
+  grid-template-rows: 0fr;
+  margin-bottom: -2px;
+}
+[data-app-sidebar] .t3-card.d-card [data-card-actions] {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+[data-app-sidebar] .t3-card.d-card [data-card-actions] > * {
+  height: 20px;
+  margin-bottom: 2px;
 }
 [data-app-sidebar]
-  .t3-card.d-card:has([data-card-actions] :is(:focus-visible, [data-popup-open]))
-  .t3-ttl {
-  mask: var(--t3-name-under-actions);
+  .t3-card.d-card
+  .d-card-shelf:is([data-open], :has(:focus-visible, [data-popup-open])) {
+  grid-template-rows: 1fr;
+}
+[data-app-sidebar]
+  .t3-card.d-card
+  .d-card-shelf:is([data-open], :has(:focus-visible, [data-popup-open]))
+  > [data-card-actions] {
+  opacity: 1;
+  pointer-events: auto;
 }
 @media (any-hover: hover) {
-  [data-app-sidebar] .t3-card.d-card:has([data-card-actions]):hover .t3-ttl {
-    mask: var(--t3-name-under-actions);
+  [data-app-sidebar] .t3-card.d-card:hover .d-card-shelf {
+    grid-template-rows: 1fr;
   }
+  [data-app-sidebar] .t3-card.d-card:hover [data-card-actions] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+html[data-motion="full"] [data-app-sidebar] .t3-card.d-card .d-card-shelf {
+  transition: grid-template-rows var(--d-quick) var(--e-out);
+}
+html[data-motion="full"] [data-app-sidebar] .t3-card.d-card [data-card-actions] {
+  transition: opacity var(--d-quick) var(--e-out);
+}
+/* Guide lines (owner, 31 Oct): a group's folders and chats hang off one line in the gutter
+   left of the cards, as the legacy sidebar's projects do. */
+[data-app-sidebar] .t3-list > li:is(.hy-ph, [data-in-group]) {
+  position: relative;
+}
+[data-app-sidebar] .t3-list > li:is(.hy-ph, [data-in-group])::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 8px;
+  width: 1px;
+  background: var(--seam);
+}
+/* A folder row's 2 px gap is margin (control-v1.css), so its line reaches up through it. */
+[data-app-sidebar] .t3-list > li.hy-ph::before {
+  top: -2px;
 }
 /* The card's margin sits on its list row (Sidebar.tsx), where it collapses. */
 [data-app-sidebar] .t3-list > li > .t3-card {

@@ -53,10 +53,10 @@ code { font-size: .86em; color: var(--text-strong); background: var(--raised); p
 
 html[data-motion="full"] .ramp-flow:not(.still)::before { animation: bl-flow-y var(--rp) linear infinite; animation-delay: calc(var(--k) * var(--rp) * -1); }
 
-/* ---------- 4. lamp: motion and shape, no hue (BRIEF-2 §4) ----------
+/* ---------- 4. lamp: motion and shape; its hue is the state's (--lamp-*, tokens.css) ----------
    <span class="lamp st-working" data-st="working"><i></i></span>   size: --d (10 px in rows, 24 px in showcases)
    States: needs working bg done failed choose house outside idle gone. Change state ONLY via Bloom.setLamp(el, st)
-   or Bloom.setState(row, st). Ink tones only; the row's state bar carries the colour.
+   or Bloom.setState(row, st).
    .still freezes one lamp at its Reduce-motion pose regardless of the page's motion setting. */
 .lamp { --d: 10px; --rw: max(1.5px, calc(var(--d) * .2)); position: relative; display: inline-block; flex: none; width: var(--d); height: var(--d); vertical-align: middle; }
 
@@ -470,7 +470,7 @@ html[data-motion="full"] .sbar[data-st="outside"]::before { animation: none; }
 /* ---------- proposed: interrupted (a turn cut by a crash, a mass kill or Quit) ----------
    Lamp: the ring cut by one still bar as thick as the ring, top to bottom, one mask over the lamp box (Bloom ledger 6). Owner's form, pass 8.
    Bar: the working ramp held still, so the colour says "this was work" and the stillness says "nothing is running". */
-.st-intr { --c: var(--lamp-working); }
+.st-intr { --c: var(--ink-2); }   /* ink, not working's blue: nothing is running */
 
 .st-intr > i { box-shadow: inset 0 0 0 var(--rw) var(--c); }
 
@@ -555,6 +555,9 @@ html[data-motion="full"] .sbar[data-st="intr"]::before { animation: none; }
 .t3-bloom .t3-l1 .lamp { --d: 15px; }
 
 .t3-bloom .t3-card[data-st="needs"] { background: var(--needs-tint); }
+
+/* a working chat wears the background lamp (§6.1) in working's own blue */
+.t3-card[data-st="working"] .lamp { --c: var(--lamp-working); }
 
 .t3-foot { flex: none; padding: 4px 8px 8px; display: grid; gap: 8px; }
 

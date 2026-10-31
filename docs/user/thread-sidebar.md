@@ -76,9 +76,13 @@ scroll position instead of following the thread to its new place in the list.
 Pinning does not prevent automatic settlement. Settling a thread removes its pin.
 
 On web and desktop, a thread's card starts with its status ring, title, pin and open loose ends;
-a long title wraps onto more lines rather than being cut off. A second line appears only for something unusual: a state
-other than idle, a branch other than `main` or `master`, or a model other than the one a new
-thread in that folder starts on. A loose thread also names its folder there. To make a group,
+a long title wraps onto more lines rather than being cut off. The ring takes its state's colour:
+blue while working, red when it needs you, amber when it failed, green when done. A second line
+appears only for something unusual: a state other than idle or working, a branch other than `main`
+or `master`, or a model other than the one a new thread in that folder starts on. A loose thread
+also names its folder there. Hovering a card opens a row above its title for **Snooze** and
+**Settle**, so the title moves down rather than hiding under them. In a group, each folder shows
+its project's icon, and a line down the left joins the group's folders and threads. To make a group,
 use **New group** in the command palette, on a group's right-click menu, or under a thread's
 **Move to group**.
 

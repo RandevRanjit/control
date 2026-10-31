@@ -1075,15 +1075,16 @@ describe("MessagesTimeline", () => {
     expect(resolveTimelineMinimapHitStripWidth(792, 768)).toBe(0);
     // Partial gutter: strip shrinks to what fits between the viewport edge
     // and the content column.
-    expect(resolveTimelineMinimapHitStripWidth(820, 768)).toBe(14);
+    expect(resolveTimelineMinimapHitStripWidth(820, 768)).toBe(6);
+    expect(resolveTimelineMinimapHitStripWidth(872, 768)).toBe(32);
     // Full gutter: unchanged 40px-wide strip.
-    expect(resolveTimelineMinimapHitStripWidth(872, 768)).toBe(40);
+    expect(resolveTimelineMinimapHitStripWidth(888, 768)).toBe(40);
     expect(resolveTimelineMinimapHitStripWidth(1400, 768)).toBe(40);
     // Full Chat width: the column spans the viewport, so the strip is inert
     // however wide the window gets.
     expect(resolveTimelineMinimapHitStripWidth(2560, 2560)).toBe(0);
     // Wide Chat width on a window just wider than the column: partial strip.
-    expect(resolveTimelineMinimapHitStripWidth(1204, 1152)).toBe(14);
+    expect(resolveTimelineMinimapHitStripWidth(1204, 1152)).toBe(6);
     expect(resolveTimelineMinimapHitStripWidth(0, 0)).toBe(0);
     expect(resolveTimelineMinimapHitStripWidth(Number.NaN, 768)).toBe(0);
 

@@ -121,17 +121,21 @@ Top to bottom (box numbers are in `measure.md` §Sidebar):
 4. **List**, which scrolls under a 28 px fade at its foot. The tiers are:
    - **Group row, 28.** A 12 px pearl in the group's identity tint, then the NAME in Regrade 11.5 / 640 caps
      (letter-spacing .02em). The count sits at the right in Plex 10.5, with a chevron.
-   - **Folder row, 22**, indented 16. A 12 px folder icon that draws 10 px (**0.8 of the 12 px pearl**), then the
-     folder name in Plex 11.
+   - **Folder row, 22**, indented 16. The project's own icon, 14 px (its favicon, else its tinted monogram; a plain
+     folder icon only when the project is unknown; owner, 31 Oct: *"it brings some life"*), then the folder name in
+     Plex 11. A 1 px `--seam` line runs down the 16 px gutter left of the cards, from a group's first folder row to
+     its last card, for structure as the legacy sidebar had (owner, 31 Oct).
    - **Chat card**: 224 wide, radius 10, padding 7 10 7 12, indented to x 24. One line, and a second only when there is
      something unusual to say, so most cards are 32 high and the rest 49 (owner, 29 Oct: *"those look the cleanest"*).
      A card takes height rather than cutting text (owner, 30 Oct): a long name wraps, and line 2's items wrap whole.
      - **Line 1 (18).** The **lamp** (10 px), the chat name in Regrade 13 / 520 strong ink, the pin and the loose-ends
        mail mark with its count; the lamp and marks sit on the name's first line. No token count (owner, 30 Oct: it
-       went against the sidebar's minimal feel). On hover the card's actions (snooze, Settle) float over the end of the
-       name's first line, which fades out under them, so the card never reflows.
+       went against the sidebar's minimal feel). On hover a 20 px shelf opens above the name for the card's actions
+       (snooze, Settle), the name moving down to make room, like the Dock magnifying under the pointer (owner, 31 Oct:
+       the floating actions took the name's room); 219 ms on `--e-out`, instant under Reduce motion.
      - **Line 2 (15)**, indented to the name, Plex 10.5 caption, only for what is unusual:
-       - the **state words** when the chat isn't idle (`needs you`, `working`, `interrupted`);
+       - the **state words** when the chat isn't idle or working (`needs you`, `interrupted`); working is the lamp's
+         to say (owner, 31 Oct);
        - the **branch icon** or **worktree icon** + its name when it isn't `main` or `master` (`site-v2`);
        - the **model** when it isn't the folder's default (`Sonnet 5.5`; the default is the one a new chat starts on).
        - A loose chat also names its folder first: its 12 px mark and name, since no folder row sits over it.
@@ -378,7 +382,7 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 
 ## 6. States
 
-### 6.1 Lamps (15 px, colourless, far right of line 1)
+### 6.1 Lamps (10 px on the card, in their state's colour)
 
 Bloom's lamps, with two version 1 changes:
 
@@ -397,6 +401,9 @@ Bloom's lamps, with two version 1 changes:
 
 - Working and compacting wear the background lamp, at the owner's wish: *"both are technically working… I'd prefer the
   lamp for the waiting one"*.
+- A lamp wears its bar's colour (`--lamp-*` → `--st-*`; owner, 31 Oct: in ink alone *"almost all of them were white"*):
+  working blue, background light blue, needs-you red, failed amber, done green, choose lilac; idle stays a grey ring,
+  and interrupted keeps ink so it never reads as working.
 - Interrupted (pass 8): *"a single vertical line the same thickness as the circle it is in"*.
 - Draw each lamp as one mask over the lamp's own box, never a positioned child (Bloom ledger rule 6). At 15 px the two
   snap apart otherwise.

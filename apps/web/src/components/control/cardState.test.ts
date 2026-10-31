@@ -86,11 +86,17 @@ describe("cardNotes", () => {
   it("names only what is unusual: another state, another branch, another model", () => {
     expect(
       cardNotes({
-        state: resolveCardState({ ...base, status: "working" }),
+        state: resolveCardState({ ...base, status: "failed" }),
         branch: "site-v2",
         model: "claude-sonnet-5-5",
         defaultModel: "claude-opus-5-5",
       }),
-    ).toEqual({ words: "working", branch: "site-v2", model: true });
+    ).toEqual({ words: "failed", branch: "site-v2", model: true });
+  });
+
+  it("leaves working to the lamp (owner, 31 Oct)", () => {
+    expect(
+      cardNotes({ ...usual, state: resolveCardState({ ...base, status: "working" }) }),
+    ).toEqual({ words: null, branch: null, model: false });
   });
 });

@@ -210,6 +210,7 @@ function SidebarProvider({
           className,
         )}
         data-sidebar-state={state}
+        data-sidebar-overlay={autoHideActive ? (revealed ? "revealed" : "hidden") : undefined}
         data-slot="sidebar-wrapper"
         style={
           {

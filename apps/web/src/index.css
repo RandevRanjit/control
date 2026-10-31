@@ -1973,6 +1973,20 @@ html:has([data-auto-hide="revealed"]) .drag-region:not([data-slot="sidebar-conta
   -webkit-app-region: initial;
 }
 
+/* An auto-hidden sidebar comes out over the content, but the title bars make room for it so what
+   they show stays in view (owner, 31 Oct). They move with it: out on --e-out, back on --e-in. */
+[data-sidebar-overlay="revealed"] .titlebar-inset {
+  padding-left: calc(var(--sidebar-width) + 16px);
+}
+html[data-motion="full"] [data-sidebar-overlay] .titlebar-inset {
+  transition:
+    padding-left var(--d-quick) var(--e-in),
+    padding-right var(--d-quick) var(--e-out);
+}
+html[data-motion="full"] [data-sidebar-overlay="revealed"] .titlebar-inset {
+  transition-timing-function: var(--e-out);
+}
+
 /* Every button takes the hand; Tailwind's preflight leaves plain ones the arrow. */
 @layer base {
   button:not(:disabled) {

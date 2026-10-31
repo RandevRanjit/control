@@ -18,10 +18,11 @@ const message = (
   role: ChatMessage["role"],
   runId: string,
   attachments: ChatMessage["attachments"],
+  text = "",
 ): ChatMessage => ({
   id: MessageId.make(id),
   role,
-  text: "",
+  text,
   attachments,
   runId: RunId.make(runId),
   streaming: false,
@@ -63,6 +64,7 @@ describe("deriveThreadOutputs", () => {
         ]),
       ],
       htmlRenders: [{ runId: RunId.make("r14"), attachmentId: "page", title: "Release size" }],
+      workspaceRoot: "/repo",
       checkpoints: [
         checkpoint("r14", [
           { path: "lib/release.ts", kind: "modified", additions: 2, deletions: 1 },
@@ -96,6 +98,7 @@ describe("deriveThreadOutputs", () => {
         runs: [run("r1", 1, "2026-10-27T18:20:00.000Z")],
         messages: [message("a1", "assistant", "r1", [])],
         htmlRenders: [],
+        workspaceRoot: "/repo",
         checkpoints: [
           checkpoint("r1", [
             { path: "src/app.tsx", kind: "modified", additions: 3, deletions: 1 },
@@ -114,9 +117,39 @@ describe("deriveThreadOutputs", () => {
         runs: [run("r1", 1, "2026-10-27T18:20:00.000Z")],
         messages: [message("a1", "assistant", "r1", [])],
         htmlRenders: [],
+        workspaceRoot: "/repo",
         checkpoints: [checkpoint("r1", [])],
         nowMs: Date.parse("2026-10-27T20:00:00.000Z"),
       }),
     ).toEqual([]);
+  });
+
+  it("lists the documents the agent linked in its reply, which a folder outside Git never diffs", () => {
+    const root = "/Users/me/Documents/TU Delft";
+    const reply = [
+      "The draft is built: [DCS exam pack.pdf](/Users/me/Documents/TU%20Delft/Exam%20pack/DCS%20exam%20pack.pdf).",
+      "Next to it is [print-all](<Exam pack/print-all.pdf>), built by [build.py](Exam%20pack/build.py).",
+      "Again: [the pack](/Users/me/Documents/TU%20Delft/Exam%20pack/DCS%20exam%20pack.pdf),",
+      "[notes](Exam%20pack/notes.md) and [elsewhere](/Users/me/Downloads/other.pdf).",
+    ].join("\n");
+    const turns = deriveThreadOutputs({
+      runs: [run("r65", 65, "2026-10-31T20:00:00.000Z")],
+      messages: [message("a65", "assistant", "r65", [], reply)],
+      htmlRenders: [],
+      workspaceRoot: root,
+      checkpoints: [
+        checkpoint("r65", [
+          { path: "Exam pack/notes.md", kind: "modified", additions: 2, deletions: 0 },
+        ]),
+      ],
+      nowMs: Date.parse("2026-10-31T20:00:30.000Z"),
+    });
+
+    // Once each, inside the folder, documents only; a file the checkpoint saw stays a change.
+    expect(turns[0]!.items.map(({ kind, name, meta }) => [kind, name, meta])).toEqual([
+      ["change", "Exam pack/notes.md", "+2"],
+      ["change", "Exam pack/DCS exam pack.pdf", "PDF"],
+      ["change", "Exam pack/print-all.pdf", "PDF"],
+    ]);
   });
 });

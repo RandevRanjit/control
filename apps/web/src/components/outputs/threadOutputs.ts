@@ -2,7 +2,10 @@ import { formatAttachmentSize } from "@control/client-runtime/state/attachments"
 import { whenLabel } from "@control/client-runtime/state/loose-ends";
 import type { OrchestrationV2Run, RunId } from "@control/contracts";
 import { filePreviewKind } from "@control/shared/filePreview";
+import { extractMarkdownLinkHrefs } from "@control/shared/markdownLinks";
 import * as DateTime from "effect/DateTime";
+
+import { resolveMarkdownFileLinkMeta } from "../../markdown-links";
 
 import {
   type ChatFileAttachment,
@@ -77,13 +80,17 @@ export function deriveThreadOutputs(input: {
   /** Pages the agent published with `html_render`. */
   htmlRenders: ReadonlyArray<{ runId: RunId | null; attachmentId: string; title: string }>;
   checkpoints: ReadonlyArray<TurnDiffSummary>;
+  /** Anchors the files the agent links in its reply; outside it, a link isn't an output. */
+  workspaceRoot: string | null;
   nowMs: number;
 }): ThreadOutputTurn[] {
   return input.runs
     .toSorted((left, right) => right.ordinal - left.ordinal)
     .flatMap((run) => {
-      const attachments = input.messages
-        .filter((message) => message.role === "assistant" && message.runId === run.id)
+      const replies = input.messages.filter(
+        (message) => message.role === "assistant" && message.runId === run.id,
+      );
+      const attachments = replies
         .flatMap((message) => message.attachments ?? [])
         .flatMap((attachment) =>
           isImageAttachment(attachment) || isFileAttachment(attachment)
@@ -111,7 +118,22 @@ export function deriveThreadOutputs(input: {
           runId: run.id,
           path: file.path,
         }));
-      const items = [...attachments, ...pages, ...changes];
+      // A folder outside Git has no checkpoint diff, and Git never sees ignored files, so the
+      // documents the agent links in its reply count too.
+      const seen = new Set(changes.map((change) => change.id));
+      const linked = replies
+        .flatMap((message) => extractMarkdownLinkHrefs(message.text))
+        .flatMap((href): ThreadOutput[] => {
+          const path = resolveMarkdownFileLinkMeta(
+            href,
+            input.workspaceRoot ?? undefined,
+          )?.workspaceRelativePath;
+          const id = `change:${run.id}:${path}`;
+          if (!path || !ARTEFACT_EXTENSION.test(path) || seen.has(id)) return [];
+          seen.add(id);
+          return [{ id, kind: "change", name: path, meta: extension(path), runId: run.id, path }];
+        });
+      const items = [...attachments, ...pages, ...changes, ...linked];
       if (items.length === 0) return [];
       const atMs = DateTime.toEpochMillis(run.completedAt ?? run.startedAt ?? run.requestedAt);
       return [

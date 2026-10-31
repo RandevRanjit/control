@@ -11104,6 +11104,7 @@ export default function ChatView(props: ChatViewProps) {
         environmentId={activeThread.environmentId}
         runs={serverProjection?.runs ?? []}
         checkpoints={turnDiffSummaries}
+        workspaceRoot={activeWorkspaceRoot ?? null}
         renderWorkspaceFile={(path) =>
           activeWorkspaceRoot ? (
             <Suspense fallback={null}>

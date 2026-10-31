@@ -28,6 +28,7 @@ export function OutputsPanel(props: {
   >;
   htmlRenders: ReadonlyArray<{ runId: RunId | null; attachmentId: string; title: string }>;
   checkpoints: ReadonlyArray<TurnDiffSummary>;
+  workspaceRoot: string | null;
   /** Shows a workspace file the agent wrote, as Folder does. */
   renderWorkspaceFile: (path: string) => ReactNode;
 }) {
@@ -39,9 +40,10 @@ export function OutputsPanel(props: {
         messages: props.messages,
         htmlRenders: props.htmlRenders,
         checkpoints: props.checkpoints,
+        workspaceRoot: props.workspaceRoot,
         nowMs: Date.now(),
       }),
-    [props.runs, props.messages, props.htmlRenders, props.checkpoints],
+    [props.runs, props.messages, props.htmlRenders, props.checkpoints, props.workspaceRoot],
   );
   const items = turns.flatMap((turn) => turn.items);
   const [pickedId, setPickedId] = useState<string | null>(null);

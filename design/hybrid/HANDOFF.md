@@ -468,7 +468,9 @@ Bloom's clock is unchanged (`design/bloom/HANDOFF.md`, Motion):
   that mounts late lands in step (`sync()` in `design/hybrid/src/runtime.js`). In React, run one hook over
   `document.getAnimations()` on mount and on each frame where animations were added.
 - Reduce motion (`html[data-motion="reduce"]`, from the OS or Settings > Reduce motion) stills every loop to its
-  still pose and makes the transitions below instant. The reference shots use it.
+  still pose and makes the transitions below instant. Every motion check reads that one gate, never the OS media
+  query alone: scrolling, shimmer, streaming and diff fades, icon morphs, the terminal cursor's blink (owner,
+  1 Nov). The reference shots use it.
 - What moves in version 1:
   - the lamps;
   - the bead bars;

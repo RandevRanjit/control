@@ -116,6 +116,7 @@ function fixture(profile?: DeviceShapeProfile) {
     return id;
   });
   vi.stubGlobal("cancelAnimationFrame", (id: number) => pending.delete(id));
+  vi.stubGlobal("document", { documentElement: { dataset: { motion: "full" } } });
   const canvas = Object.assign(new EventTarget(), { width: 0, height: 0 }) as HTMLCanvasElement;
   const source = { width: 1206, height: 2622 } as HTMLCanvasElement;
   const onUnavailable = vi.fn();

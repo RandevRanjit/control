@@ -617,6 +617,7 @@ import {
   ATTACHMENT_ONLY_BOOTSTRAP_PROMPT,
   recallableComposerPrompt,
 } from "./chat/composerPromptHistory";
+import { motionReduced } from "~/lib/motion";
 
 const EMPTY_PROVIDERS: ServerProvider[] = [];
 const EMPTY_PROVIDER_MODELS: ServerProvider["models"] = [];
@@ -6489,7 +6490,7 @@ export default function ChatView(props: ChatViewProps) {
     // list lands short of the real end (#6519).
     requestAnimationFrame(() => {
       void legendListRef.current?.scrollToEnd?.({
-        animated: animated && !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        animated: animated && !motionReduced(),
       });
     });
   }, []);
@@ -6691,7 +6692,7 @@ export default function ChatView(props: ChatViewProps) {
         scrollNode.addEventListener("scrollend", finishAnimatedPositioning, { once: true });
         void list.scrollToIndex({
           index: anchorIndex,
-          animated: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+          animated: !motionReduced(),
           viewPosition: 0,
           viewOffset: CHAT_LIST_ANCHOR_OFFSET,
         });

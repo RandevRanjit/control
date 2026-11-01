@@ -101,9 +101,9 @@ function fixture(
     return id;
   });
   vi.stubGlobal("cancelAnimationFrame", (id: number) => pending.delete(id));
-  vi.stubGlobal("matchMedia", () => ({ matches: reduced }));
   const drawImage = vi.fn();
   vi.stubGlobal("document", {
+    documentElement: { dataset: { motion: reduced ? "reduce" : "full" } },
     createElement: () => ({
       width: 0,
       height: 0,

@@ -40,9 +40,7 @@ describe("settings search targets", () => {
     } as unknown as HTMLElement;
     vi.stubGlobal("document", {
       getElementById: vi.fn(() => target),
-    });
-    vi.stubGlobal("window", {
-      matchMedia: vi.fn(() => ({ matches: false })),
+      documentElement: { dataset: { motion: "full" } },
     });
 
     expect(scrollToSettingsTarget("providers")).toBe(true);
@@ -57,7 +55,7 @@ describe("settings search targets", () => {
     expect(addEventListener).toHaveBeenCalledWith("blur", expect.any(Function), { once: true });
   });
 
-  it("does not animate the destination when reduced motion is requested", () => {
+  it("does not animate the destination when Settings > Reduce motion is on", () => {
     const scrollIntoView = vi.fn();
     const focus = vi.fn();
     const remove = vi.fn();
@@ -72,9 +70,7 @@ describe("settings search targets", () => {
     } as unknown as HTMLElement;
     vi.stubGlobal("document", {
       getElementById: vi.fn(() => target),
-    });
-    vi.stubGlobal("window", {
-      matchMedia: vi.fn(() => ({ matches: true })),
+      documentElement: { dataset: { motion: "reduce" } },
     });
 
     expect(scrollToSettingsTarget("word-wrap")).toBe(true);

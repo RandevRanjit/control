@@ -124,7 +124,9 @@ class TestSelection {
 }
 
 function createSource({ reducedMotion = false } = {}) {
-  vi.stubGlobal("window", { matchMedia: vi.fn(() => ({ matches: reducedMotion })) });
+  vi.stubGlobal("document", {
+    documentElement: { dataset: { motion: reducedMotion ? "reduce" : "full" } },
+  });
   let now = 0;
   vi.stubGlobal("performance", { now: () => now });
   const frames = new Map<number, FrameRequestCallback>();

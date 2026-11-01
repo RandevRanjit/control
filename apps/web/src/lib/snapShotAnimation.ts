@@ -3,6 +3,7 @@ import type { ScopedThreadRef, SnapShotSource } from "@control/contracts";
 
 import type { DraftId } from "../composerDraftStore";
 import { getDesktopSnapShotBridge } from "./desktopSnapShot";
+import { motionReduced } from "./motion";
 
 type SnapShotTarget = DraftId | ScopedThreadRef;
 
@@ -104,7 +105,7 @@ export function setSnapShotAnimationDestination(
   target: HTMLElement,
   source?: SnapShotSource,
 ): void {
-  if (!target.isConnected || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  if (!target.isConnected || motionReduced()) {
     return;
   }
   const bridge = getDesktopSnapShotBridge();

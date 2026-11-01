@@ -190,12 +190,12 @@ describe("window capture delivery", () => {
           ...(accessibleText ? { accessibleText } : {}),
         },
       };
+      vi.stubGlobal("document", { documentElement: { dataset: { motion: "full" } } });
       vi.stubGlobal("window", {
         localStorage: storage,
         desktopBridge: bridge,
         setTimeout,
         clearTimeout,
-        matchMedia: () => ({ matches: false }),
         getComputedStyle: () => ({
           backgroundColor: "rgb(0, 0, 0)",
           borderTopColor: "rgb(255, 255, 255)",

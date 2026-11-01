@@ -1,3 +1,5 @@
+import { motionReduced } from "~/lib/motion";
+
 export const DRAFT_HERO_TRANSITION_ANIMATION_ID = "control-draft-hero-transition";
 export const DRAFT_HERO_TRANSITION_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
 export const MOBILE_COMPOSER_VIEW_TRANSITION_NAME = "control-mobile-composer";
@@ -48,8 +50,7 @@ export async function runMobileComposerTransition(
 
   const transitionDocument = document as ComposerViewTransitionDocument;
   const mobileViewport = window.matchMedia?.("(max-width: 639px)").matches ?? false;
-  const prefersReducedMotion =
-    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+  const prefersReducedMotion = motionReduced();
   if (
     !options.active ||
     !mobileViewport ||

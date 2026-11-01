@@ -369,6 +369,11 @@ html[data-lock-plate] [data-slot="toast-viewport"] {
    media query alone. */
 @custom-variant motion-safe (&:where(html[data-motion="full"] *));
 @custom-variant motion-reduce (&:where(html[data-motion="reduce"] *));
+/* Shadow roots (Pierre trees, diffs) can't see html[data-motion], but custom properties reach
+   them: they write `animation: var(--motion-off, <the animation>)`. */
+html[data-motion="reduce"] {
+  --motion-off: none;
+}
 /* Window Controls Overlay: active when Electron exposes native titlebar control geometry. */
 @custom-variant wco (&:is(.wco, .wco *));
 
@@ -871,18 +876,20 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(control-
 }
 
 @utility live-tool-shine {
-  @media (prefers-reduced-motion: no-preference) and (forced-colors: none) {
-    color: transparent;
-    background-image:
-      linear-gradient(to right, transparent, var(--contrast-foreground), transparent),
-      linear-gradient(var(--contrast-secondary-label), var(--contrast-secondary-label));
-    background-size:
-      4.5rem 100%,
-      100% 100%;
-    background-repeat: no-repeat;
-    background-clip: text;
-    animation: live-tool-shine 2.2s steps(30) infinite;
-    animation-play-state: var(--visible-animation-state, paused);
+  &:where(html[data-motion="full"] *) {
+    @media (forced-colors: none) {
+      color: transparent;
+      background-image:
+        linear-gradient(to right, transparent, var(--contrast-foreground), transparent),
+        linear-gradient(var(--contrast-secondary-label), var(--contrast-secondary-label));
+      background-size:
+        4.5rem 100%,
+        100% 100%;
+      background-repeat: no-repeat;
+      background-clip: text;
+      animation: live-tool-shine 2.2s steps(30) infinite;
+      animation-play-state: var(--visible-animation-state, paused);
+    }
   }
 }
 
@@ -944,7 +951,12 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(control-
   animation-play-state: var(--visible-animation-state, paused);
   will-change: var(--visible-animation-will-change, auto);
 
-  @media (prefers-reduced-motion: reduce), (forced-colors: active) {
+  &:where(html[data-motion="reduce"] *) {
+    animation: none;
+    opacity: 0;
+    will-change: auto;
+  }
+  @media (forced-colors: active) {
     animation: none;
     opacity: 0;
     will-change: auto;
@@ -957,7 +969,11 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(control-
   animation-play-state: var(--visible-animation-state, paused);
   will-change: var(--visible-animation-will-change, auto);
 
-  @media (prefers-reduced-motion: reduce), (forced-colors: active) {
+  &:where(html[data-motion="reduce"] *) {
+    animation: none;
+    will-change: auto;
+  }
+  @media (forced-colors: active) {
     animation: none;
     will-change: auto;
   }
@@ -2268,14 +2284,12 @@ html[data-motion="full"] [data-sidebar-overlay="revealed"] .titlebar-inset {
    when an element is first inserted, and the rule is gated on data-streaming,
    so opening a finished thread never replays the fade. Opacity only, one
    shot, no layout change. */
-@media (prefers-reduced-motion: no-preference) {
-  .chat-markdown[data-streaming] > *,
-  .chat-markdown[data-streaming] .chat-markdown-shiki {
-    transition: opacity 600ms ease-out;
+:where(html[data-motion="full"]) .chat-markdown[data-streaming] > *,
+:where(html[data-motion="full"]) .chat-markdown[data-streaming] .chat-markdown-shiki {
+  transition: opacity 600ms ease-out;
 
-    @starting-style {
-      opacity: 0;
-    }
+  @starting-style {
+    opacity: 0;
   }
 }
 
@@ -2500,16 +2514,14 @@ html[data-motion="full"] [data-sidebar-overlay="revealed"] .titlebar-inset {
   animation: preview-loading-progress 5.3s cubic-bezier(0.1, 0.5, 0.2, 1) forwards;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .preview-loading-progress,
-  .preview-loading-progress[data-loading="true"] {
-    transition: none;
-    animation: none;
-  }
+:where(html[data-motion="reduce"]) .preview-loading-progress,
+:where(html[data-motion="reduce"]) .preview-loading-progress[data-loading="true"] {
+  transition: none;
+  animation: none;
+}
 
-  .preview-loading-progress[data-loading="true"] {
-    transform: scaleX(0.9);
-  }
+:where(html[data-motion="reduce"]) .preview-loading-progress[data-loading="true"] {
+  transform: scaleX(0.9);
 }
 
 /* Let the sortable rows open label clearance before painting the dividers.

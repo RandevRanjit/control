@@ -40,6 +40,7 @@ import {
   type SettingInheritanceState,
   type SettingOverridingProject,
 } from "./SettingInheritance";
+import { motionReduced } from "~/lib/motion";
 
 const EMPTY_SETTING_KEYS: readonly (keyof ServerSettings)[] = [];
 
@@ -81,7 +82,7 @@ function SettingsSearchTargetProvider({
 }
 
 function scrollAndFocusSettingsTarget(target: HTMLElement, highlight = true): void {
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const prefersReducedMotion = motionReduced();
   const markedScrollTarget =
     typeof target.querySelector === "function"
       ? target.querySelector<HTMLElement>(":scope > [data-settings-scroll-target]")

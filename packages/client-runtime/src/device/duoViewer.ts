@@ -192,8 +192,8 @@ export function createDuoViewer(options: {
   let presentationAngle = 180;
   let targetPresentation = new Quaternion();
   let lastTime = 0;
-  const reduced =
-    typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // The web app's motion gate: Settings > Reduce motion or the OS.
+  const reduced = document.documentElement.dataset.motion === "reduce";
   const applyPose = () => {
     if (!model) return;
     const before = hingeLeaf && appliedAngle !== angle ? model.leafRotation(hingeLeaf) : null;

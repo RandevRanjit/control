@@ -53,7 +53,9 @@ list; Settings slides in from the right. Moving between threads keeps each threa
 without replaying its transitions.
 
 Turn on **Reduce motion** to make panels, menus and thread changes instant and hold the status lights
-still. It's on whenever reduced motion is enabled in your operating system.
+still. It also stops smooth scrolling, the shimmer on running tools, the fade on streaming text and
+diffs, icon morphs, and the terminal cursor's blink. It's on whenever reduced motion is enabled in your
+operating system.
 
 ## Custom themes
 

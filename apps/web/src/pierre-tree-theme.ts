@@ -24,9 +24,7 @@ export const PIERRE_TREE_UNSAFE_CSS = `
   [data-item-contains-git-change='true'] > [data-item-section='git'] { opacity: 1; }
   button[data-type='item'] { border-radius: 5px; }
   svg[data-icon-name='control-tree-icon-loading'] { opacity: 0.6; }
-  @media (prefers-reduced-motion: no-preference) {
-    svg[data-icon-name='control-tree-icon-loading'] { animation: control-tree-spin 1s linear infinite; }
-  }
+  svg[data-icon-name='control-tree-icon-loading'] { animation: var(--motion-off, control-tree-spin 1s linear infinite); }
   @keyframes control-tree-spin { to { transform: rotate(360deg); } }
 `;
 

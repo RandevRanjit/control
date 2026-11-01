@@ -132,8 +132,8 @@ export function createPhoneViewer(options: {
   });
   motion.setPose(rest, performance.now(), true);
   const framing = createDeviceFraming();
-  const reducedMotion = () =>
-    globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+  // The web app's motion gate: Settings > Reduce motion or the OS.
+  const reducedMotion = () => document.documentElement.dataset.motion === "reduce";
   let viewport = { width: 0, height: 0, pixelRatio: 1 };
   let drawingBuffer = { width: 0, height: 0, pixelRatio: 0 };
 

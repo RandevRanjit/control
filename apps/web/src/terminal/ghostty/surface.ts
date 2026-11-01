@@ -16,6 +16,7 @@ import {
 } from "./renderer";
 import symbolsFontUrl from "./fonts/SymbolsNerdFontMono-Regular.woff2?url";
 import { restoreLoadedTerminalFonts } from "../terminalFonts";
+import { motionReduced, onMotionChange } from "../../lib/motion";
 
 export const DEFAULT_TERMINAL_FONT_SIZE = 12;
 const MIN_TERMINAL_FONT_SIZE = 6;
@@ -645,9 +646,9 @@ export class GhosttyTerminalSurface {
   private lastMouseMotionData = "";
   private mouseAnyEventTracking = false;
   private dprMedia: MediaQueryList | null = null;
-  // Read live on every blink decision, and watched so that dropping the
-  // preference restarts a blink cycle that has no timer left to notice it.
-  private readonly reducedMotionMedia = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+  // Reduce motion is read live on every blink decision, and watched so that turning it off
+  // restarts a blink cycle that has no timer left to notice it.
+  private readonly stopWatchingMotion: () => void;
   private inputLeft = -1;
   private inputTop = -1;
 
@@ -680,7 +681,7 @@ export class GhosttyTerminalSurface {
     this.resizeObserver = new ResizeObserver(() => this.fit());
     this.installEvents();
     this.watchDevicePixelRatio();
-    this.reducedMotionMedia?.addEventListener("change", this.onReducedMotionChange);
+    this.stopWatchingMotion = onMotionChange(this.onReducedMotionChange);
     document.fonts.addEventListener("loadingdone", this.onFontsLoaded);
     this.resizeObserver.observe(mount);
   }
@@ -1068,7 +1069,7 @@ export class GhosttyTerminalSurface {
     document.fonts.removeEventListener("loadingdone", this.onFontsLoaded);
     this.dprMedia?.removeEventListener("change", this.onDevicePixelRatioChange);
     this.dprMedia = null;
-    this.reducedMotionMedia?.removeEventListener("change", this.onReducedMotionChange);
+    this.stopWatchingMotion();
     if (this.selectionScrollTimer !== null) window.clearInterval(this.selectionScrollTimer);
     if (this.resizeNotifyTimer !== null) {
       window.clearTimeout(this.resizeNotifyTimer);
@@ -2030,7 +2031,7 @@ export class GhosttyTerminalSurface {
       focused: this.focused,
       cursorBlinking: snapshot.cursorBlinking,
       cursorVisible: snapshot.cursorVisible,
-      reducedMotion: this.reducedMotionMedia?.matches ?? false,
+      reducedMotion: motionReduced(),
     });
   }
 

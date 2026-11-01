@@ -2,10 +2,34 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 
 import { observeVisibleAnimation } from "./visibleAnimation";
 
-let page = Object.assign(new EventTarget(), { visibilityState: "visible" });
-let motion = Object.assign(new EventTarget(), { matches: false });
+let page = testPage();
+let motionObservers: TestMutationObserver[] = [];
 let observers: TestIntersectionObserver[] = [];
 let cleanups: Array<() => void> = [];
+
+function testPage() {
+  return Object.assign(new EventTarget(), {
+    visibilityState: "visible",
+    documentElement: { dataset: { motion: "full" } as DOMStringMap },
+  });
+}
+
+// Settings > Reduce motion or the OS, as __root.tsx writes it to html[data-motion].
+function setMotion(motion: "full" | "reduce") {
+  page.documentElement.dataset.motion = motion;
+  for (const observer of motionObservers) observer.callback();
+}
+
+class TestMutationObserver {
+  constructor(readonly callback: () => void) {
+    motionObservers.push(this);
+  }
+
+  observe = vi.fn();
+  disconnect = vi.fn(() => {
+    motionObservers = motionObservers.filter((observer) => observer !== this);
+  });
+}
 
 class TestIntersectionObserver {
   constructor(private readonly callback: IntersectionObserverCallback) {
@@ -43,12 +67,12 @@ function attach(element: HTMLElement) {
 }
 
 beforeEach(() => {
-  page = Object.assign(new EventTarget(), { visibilityState: "visible" });
-  motion = Object.assign(new EventTarget(), { matches: false });
+  page = testPage();
+  motionObservers = [];
   observers = [];
   cleanups = [];
   vi.stubGlobal("document", page);
-  vi.stubGlobal("window", { matchMedia: () => motion });
+  vi.stubGlobal("MutationObserver", TestMutationObserver);
   vi.stubGlobal("IntersectionObserver", TestIntersectionObserver);
 });
 
@@ -84,27 +108,25 @@ describe("observeVisibleAnimation", () => {
     expect(second.state()).toBe("running");
 
     observer.report(first.element, false);
-    motion.matches = true;
-    motion.dispatchEvent(new Event("change"));
+    setMotion("reduce");
     expect(first.state()).toBe("paused");
     expect(second.state()).toBe("paused");
 
-    motion.matches = false;
-    motion.dispatchEvent(new Event("change"));
+    setMotion("full");
     expect(first.state()).toBe("paused");
     expect(second.state()).toBe("running");
   });
 
   it.each(["hidden", "reduced motion"])("starts paused with %s already active", (condition) => {
     page.visibilityState = condition === "hidden" ? "hidden" : "visible";
-    motion.matches = condition === "reduced motion";
+    page.documentElement.dataset.motion = condition === "reduced motion" ? "reduce" : "full";
     const animation = animationElement();
     attach(animation.element);
     observers[0]!.report(animation.element, true);
     expect(animation.state()).toBe("paused");
 
     page.visibilityState = "visible";
-    motion.matches = false;
+    page.documentElement.dataset.motion = "full";
     page.dispatchEvent(new Event("visibilitychange"));
     expect(animation.state()).toBe("running");
   });
@@ -112,15 +134,13 @@ describe("observeVisibleAnimation", () => {
   it("shares observers, releases the final ref, and ignores late callbacks after remount", () => {
     const addVisibility = vi.spyOn(page, "addEventListener");
     const removeVisibility = vi.spyOn(page, "removeEventListener");
-    const addMotion = vi.spyOn(motion, "addEventListener");
-    const removeMotion = vi.spyOn(motion, "removeEventListener");
     const first = animationElement();
     const second = animationElement();
     const detachFirst = attach(first.element);
     const detachSecond = attach(second.element);
     expect(observers).toHaveLength(1);
     expect(addVisibility).toHaveBeenCalledTimes(1);
-    expect(addMotion).toHaveBeenCalledTimes(1);
+    expect(motionObservers).toHaveLength(1);
 
     const previousObserver = observers[0]!;
     detachFirst?.();
@@ -132,7 +152,7 @@ describe("observeVisibleAnimation", () => {
     detachSecond?.();
     expect(previousObserver.disconnect).toHaveBeenCalledTimes(1);
     expect(removeVisibility).toHaveBeenCalledTimes(1);
-    expect(removeMotion).toHaveBeenCalledTimes(1);
+    expect(motionObservers).toHaveLength(0);
 
     attach(second.element);
     expect(observers).toHaveLength(2);

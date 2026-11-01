@@ -274,7 +274,7 @@ import { createContextPresentationRegistry } from "../contextPresentationRegistr
 import { useOpenPrLink } from "~/lib/openPullRequestLink";
 import { useClientSettings } from "~/hooks/useSettings";
 import type { ChatMarkdownContextReference } from "../ChatMarkdown";
-import { useMediaQuery } from "~/hooks/useMediaQuery";
+import { useReducedMotion } from "~/panelAnimations";
 import { cn } from "~/lib/utils";
 import { useUiStateStore } from "~/uiStateStore";
 import { type TimestampFormat } from "@control/contracts/settings";
@@ -657,7 +657,7 @@ const ConversationTimeline = memo(function ConversationTimeline({
     rememberedPosition?.atEnd === false ? null : listIdentityKey,
   );
   const restoringThreadPosition = positionedThreadKey !== listIdentityKey;
-  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const prefersReducedMotion = useReducedMotion();
   const listIdentityRef = useRef(listIdentityKey);
   // The list stays mounted across thread switches. Its first end pins on the
   // new thread must snap, not glide, even if that thread is mid-turn.
@@ -1618,7 +1618,7 @@ const ConversationTimeline = memo(function ConversationTimeline({
                 onManualNavigation();
                 void listRef.current?.scrollToIndex({
                   index: item.rowIndex,
-                  animated: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+                  animated: !prefersReducedMotion,
                   viewOffset: 24,
                 });
               }}

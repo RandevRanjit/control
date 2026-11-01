@@ -33,6 +33,7 @@ import {
 } from "../../lib/desktopSnapShot";
 import { readFileAsDataUrl } from "../ChatView.logic";
 import { stackedThreadToast, toastManager } from "../ui/toast";
+import { motionReduced } from "~/lib/motion";
 
 type CaptureTarget = DraftId | ScopedThreadRef;
 
@@ -349,7 +350,7 @@ export function SnapShotCoordinator() {
         }
         case "started": {
           playCaptureSound(event.id);
-          if (animateCaptures && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          if (animateCaptures && !motionReduced()) {
             void beginSnapShotAnimationWhenReady(
               event.id,
               resolveSnapShotDeliveryTarget(

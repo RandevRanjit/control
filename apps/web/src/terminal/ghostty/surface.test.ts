@@ -118,7 +118,15 @@ describe("GhosttyTerminalSurface visibility", () => {
     vi.stubGlobal("document", {
       createElement: (tag: string) => (tag === "canvas" ? canvas : new TerminalTestElement()),
       fonts: Object.assign(new EventTarget(), { load: async () => [], add() {} }),
+      documentElement: { dataset: { motion: "full" } },
     });
+    vi.stubGlobal(
+      "MutationObserver",
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    );
     vi.stubGlobal(
       "window",
       Object.assign(new EventTarget(), {

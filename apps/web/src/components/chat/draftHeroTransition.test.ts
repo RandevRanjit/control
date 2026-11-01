@@ -131,14 +131,15 @@ describe("runMobileComposerTransition", () => {
     expect(update).toHaveBeenCalledOnce();
   });
 
-  it("updates without a view transition when reduced motion is preferred", async () => {
+  it("updates without a view transition when Settings > Reduce motion is on", async () => {
     const startViewTransition = vi.fn();
     vi.stubGlobal("document", {
-      documentElement: { dataset: {} },
+      documentElement: { dataset: { motion: "reduce" } },
       startViewTransition,
     });
+    // The OS asks for full motion; the app's switch alone reduces it.
     vi.stubGlobal("window", {
-      matchMedia: () => ({ matches: true }),
+      matchMedia: (query: string) => ({ matches: query === "(max-width: 639px)" }),
     });
     const update = vi.fn();
 

@@ -42,12 +42,18 @@ export function usePanelNavigationSuppression(navigationKey: string): boolean {
   return suppressed;
 }
 
-export function usePanelAnimationSettings(): { active: boolean; durationMs: number } {
+/** Settings > Reduce motion or the OS: what __root.tsx writes to html[data-motion]. */
+export function useReducedMotion(): boolean {
   const reduceMotion = useClientSettings((settings) => settings.reduceMotion);
-  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const systemReducesMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  return reduceMotion || systemReducesMotion;
+}
+
+export function usePanelAnimationSettings(): { active: boolean; durationMs: number } {
+  const reducedMotion = useReducedMotion();
   const suppressed = useContext(PanelAnimationSuppressionContext);
   return {
-    active: !reduceMotion && !prefersReducedMotion && !suppressed,
+    active: !reducedMotion && !suppressed,
     durationMs: PANEL_ANIMATION_DURATION_MS,
   };
 }

@@ -14,7 +14,11 @@ import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { selectActiveRightPanelSurface, useRightPanelStore } from "~/rightPanelStore";
 
 vi.mock("@effect/atom-react", () => ({ useAtomValue: () => [] }));
-vi.mock("../../state/server", () => ({ primaryServerKeybindingsAtom: "keybindings" }));
+vi.mock("../../state/server", () => ({
+  primaryServerKeybindingsAtom: "keybindings",
+  primaryServerSettingsAtom: "settings",
+  serverEnvironment: {},
+}));
 vi.mock("../../state/threads", () => ({ threadEnvironment: {} }));
 vi.mock("../../state/use-orchestration-command", () => ({
   useOrchestrationCommand: () => vi.fn(),

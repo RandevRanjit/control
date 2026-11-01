@@ -20,6 +20,7 @@ class FakeDomEvent {
 }
 
 class FakeElement {
+  animate = vi.fn();
   children: FakeElement[] = [];
   parent: FakeElement | null = null;
   style: Record<string, string> & { cssText?: string } = {};
@@ -150,6 +151,7 @@ class FakeBody extends FakeElement {
 
 class FakeDocument {
   body = new FakeBody();
+  documentElement = { dataset: { motion: "full" } };
   activeElement: FakeElement | null = null;
   private readonly listeners = new Map<string, FakeListener[]>();
 

@@ -40,7 +40,15 @@ import { mediaFileReference } from "@control/client-runtime/media-reference";
 import { Globe, PanelLeft, WrapTextIcon } from "lucide-react";
 import { Code2, Eye, Table2 } from "lucide";
 import * as Schema from "effect/Schema";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { isBrowserPreviewFile, openFileInPreview } from "~/browser/openFileInPreview";
 import { useAssetUrlRefresh, useAssetUrlState } from "~/assets/assetUrls";
@@ -52,7 +60,7 @@ import { useRemoteOpenState } from "~/remoteOpen";
 import { useClientSettings, useUpdateClientSettings } from "~/hooks/useSettings";
 import { useTheme } from "~/hooks/useTheme";
 import { getLocalStorageItem, setLocalStorageItem, useLocalStorage } from "~/hooks/useLocalStorage";
-import { useResizableWidth } from "~/hooks/useResizableWidth";
+import { RESIZABLE_WIDTH_PROPERTY, useResizableWidth } from "~/hooks/useResizableWidth";
 import { RightPanelResizeHandle } from "~/components/preview/RightPanelResizeHandle";
 import { RightPanelChipsSlot } from "../rightPanelToolsSlot";
 import { useWorkspaceMutationRefresh } from "~/hooks/useWorkspaceMutationRefresh";
@@ -1264,11 +1272,14 @@ export default function FilePreviewPanel({
   // open files' tabs over the file; the tree alone until a file opens, or the file alone once
   // the tree is hidden. One grid, so the tree keeps its state as the layout changes.
   const treeBeside = showExplorer && previewPath !== null;
-  const layout = treeBeside
-    ? {
-        gridTemplateColumns: `min(${explorerWidth.width}px, 45%) minmax(0, 1fr)`,
+  const layout: CSSProperties = treeBeside
+    ? ({
+        // A drag writes this property on the grid, the handle's parent, so the tree follows the
+        // pointer without a render.
+        [RESIZABLE_WIDTH_PROPERTY]: `${explorerWidth.width}px`,
+        gridTemplateColumns: `min(var(${RESIZABLE_WIDTH_PROPERTY}), 45%) minmax(0, 1fr)`,
         gridTemplateAreas: '"tree tabs" "tree sub" "tree notes" "tree body"',
-      }
+      } as CSSProperties)
     : {
         gridTemplateColumns: "minmax(0, 1fr)",
         gridTemplateAreas: `"tabs" "sub" "notes" "${showExplorer ? "tree" : "body"}"`,
@@ -1294,7 +1305,7 @@ export default function FilePreviewPanel({
   return (
     <div
       ref={setRootElement}
-      className="grid min-h-0 flex-1 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden bg-background"
+      className="relative grid min-h-0 flex-1 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden bg-background"
       style={layout}
     >
       {tabsRow}
@@ -1539,6 +1550,12 @@ export default function FilePreviewPanel({
           )
         ) : null}
       </div>
+      {treeBeside ? (
+        <RightPanelResizeHandle
+          handlers={explorerWidth.handlers}
+          className="-right-1 left-auto [grid-area:tree]"
+        />
+      ) : null}
       {showExplorer ? (
         <aside
           className={cn(
@@ -1547,12 +1564,6 @@ export default function FilePreviewPanel({
           )}
           style={{ gridArea: "tree" }}
         >
-          {treeBeside ? (
-            <RightPanelResizeHandle
-              handlers={explorerWidth.handlers}
-              className="-right-1 left-auto"
-            />
-          ) : null}
           <FileBrowserPanel
             key={`${environmentId}:${treeRoot}`}
             environmentId={environmentId}

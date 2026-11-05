@@ -19,7 +19,6 @@ import * as CheckpointService from "./CheckpointService.ts";
 import * as EventSink from "./EventSink.ts";
 import * as IdAllocator from "./IdAllocator.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
-import * as RunOutputs from "./RunOutputs.ts";
 
 export class CheckpointCaptureExecutionError extends Schema.TaggedError<CheckpointCaptureExecutionError>()(
   "CheckpointCaptureExecutionError",
@@ -121,7 +120,7 @@ export const layer: Layer.Layer<
             scope,
             ordinalWithinScope: baselineOrdinalWithinScope,
           });
-      const capturedCheckpoint = yield* checkpoints.capture({
+      const checkpoint = yield* checkpoints.capture({
         scope,
         runId: run.id,
         nodeId: rootNode.id,
@@ -129,26 +128,6 @@ export const layer: Layer.Layer<
         appRunOrdinal: run.ordinal,
         capturedAt,
       });
-      // Outside Git there is no diff to say what the run made. Listing it is a courtesy, so it
-      // never costs the run its checkpoint.
-      const outputs =
-        capturedCheckpoint.status === "missing"
-          ? yield* RunOutputs.runOutputs({
-              threadId: input.threadId,
-              run,
-              cwd: scope.cwd,
-            }).pipe(
-              Effect.provideService(ProjectionStore.ProjectionStoreV2, projections),
-              Effect.catchCause((cause) =>
-                Effect.logWarning("orchestration V2 run outputs scan failed", {
-                  runId: run.id,
-                  cause: String(cause),
-                }).pipe(Effect.as([])),
-              ),
-            )
-          : [];
-      const checkpoint =
-        outputs.length > 0 ? { ...capturedCheckpoint, outputs } : capturedCheckpoint;
       // Match RunExecutionService: capture loaded the waiting run before
       // materializing baselines. Omit delegatedCompletion so a newer cohort
       // write during capture is not overwritten by this stale snapshot

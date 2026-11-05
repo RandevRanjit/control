@@ -1,3 +1,8 @@
+// @effect-diagnostics nodeBuiltinImport:off - The outputs test scans a real folder.
+import * as NodeFSP from "node:fs/promises";
+import * as NodeOS from "node:os";
+import * as NodePath from "node:path";
+
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { assert, it } from "@effect/vitest";
 import {
@@ -737,3 +742,101 @@ it.layer(layerProjectionStoreTest)("CheckpointCaptureServiceV2", (it) => {
     }),
   );
 });
+
+it.effect.each([
+  { status: "missing" as const, outputs: ["pack.pdf"] },
+  { status: "ready" as const, outputs: undefined },
+])("records a run's outputs only where Git can't diff, status=$status", ({ status, outputs }) =>
+  Effect.gen(function* () {
+    const now = yield* DateTime.now;
+    const cwd = yield* Effect.acquireRelease(
+      Effect.promise(async () => {
+        const folder = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "capture-outputs-"));
+        await NodeFSP.writeFile(NodePath.join(folder, "pack.pdf"), "x");
+        return folder;
+      }),
+      (folder) => Effect.promise(() => NodeFSP.rm(folder, { recursive: true, force: true })),
+    );
+    const committed = yield* Ref.make<ReadonlyArray<OrchestrationV2DomainEvent>>([]);
+    const run = {
+      id: runId,
+      threadId,
+      ordinal: 1,
+      providerInstanceId,
+      status: "waiting",
+      requestedAt: DateTime.subtract(now, { minutes: 1 }),
+      checkpointId: null,
+    };
+    const scope = { id: scopeId, threadId, nodeId: rootNodeId, cwd, createdAt: now };
+    const checkpoint = {
+      id: CheckpointId.make(`checkpoint:outputs-${status}`),
+      threadId,
+      scopeId,
+      runId,
+      nodeId: rootNodeId,
+      parentCheckpointId: null,
+      ordinalWithinScope: 1,
+      appRunOrdinal: 1,
+      ref: CheckpointRef.make(`checkpoint-ref:outputs-${status}`),
+      status,
+      files: [],
+      capturedAt: now,
+    };
+
+    yield* Effect.gen(function* () {
+      const service = yield* CheckpointCaptureService.CheckpointCaptureServiceV2;
+      yield* service.execute({ threadId, runId, scopeId });
+    }).pipe(
+      Effect.provide(
+        CheckpointCaptureService.layer.pipe(
+          Layer.provide(
+            Layer.mergeAll(
+              IdAllocator.layer,
+              Layer.mock(ProjectionStore.ProjectionStoreV2)({
+                getCheckpointCaptureContext: () =>
+                  Effect.succeed({
+                    run,
+                    rootNode: { id: rootNodeId, checkpointScopeId: scopeId, providerTurnId: null },
+                    scope,
+                    providerThread: { id: providerThreadId, driver },
+                    readyCheckpointOrdinals: [0],
+                  } as never),
+                // A folder Git can diff never pays for the scan.
+                getThreadRecords: (() =>
+                  status === "ready"
+                    ? Effect.die("a ready checkpoint must not scan the folder")
+                    : Effect.succeed({
+                        runs: [run],
+                        turnItems: [
+                          { type: "command_execution", runId, input: "ls", output: "pack.pdf" },
+                        ],
+                      })) as never,
+              }),
+              Layer.mock(CheckpointService.CheckpointServiceV2)({
+                capture: () => Effect.succeed(checkpoint),
+              }),
+              Layer.mock(EventSink.EventSinkV2)({
+                commitCommand: (input) =>
+                  Ref.set(committed, input.events).pipe(
+                    Effect.as({
+                      commandId: input.commandId,
+                      committed: true,
+                      sequence: 1,
+                      events: input.events,
+                      effects: [],
+                    } as never),
+                  ),
+              }),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    const events = yield* Ref.get(committed);
+    const captured = events.find((event) => event.type === "checkpoint.captured");
+    assert.equal(captured?.type, "checkpoint.captured");
+    if (captured?.type !== "checkpoint.captured") return;
+    assert.deepEqual(captured.payload.outputs, outputs);
+  }).pipe(Effect.scoped),
+);

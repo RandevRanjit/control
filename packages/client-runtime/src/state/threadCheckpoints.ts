@@ -21,6 +21,7 @@ export interface ThreadCheckpointSummary {
     readonly additions: number;
     readonly deletions: number;
   }>;
+  readonly outputs?: ReadonlyArray<string>;
   readonly assistantMessageId: MessageId | null;
   readonly completedAt: string;
 }
@@ -44,6 +45,7 @@ export function deriveThreadCheckpointSummaries(
         checkpointRef: checkpoint.ref,
         status: checkpoint.status,
         files: checkpoint.files,
+        ...(checkpoint.outputs === undefined ? {} : { outputs: checkpoint.outputs }),
         assistantMessageId,
         completedAt: DateTime.formatIso(checkpoint.capturedAt),
       },

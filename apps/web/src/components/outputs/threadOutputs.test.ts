@@ -152,4 +152,35 @@ describe("deriveThreadOutputs", () => {
       ["change", "Exam pack/print-all.pdf", "PDF"],
     ]);
   });
+
+  it("lists what the server found the run made, once even if the reply links it too", () => {
+    const outputs = deriveThreadOutputs({
+      runs: [run("run-1", 1, "2026-11-03T15:45:00.000Z")],
+      messages: [
+        message(
+          "m1",
+          "assistant",
+          "run-1",
+          undefined,
+          "See [the rules](</Users/me/TU Delft/Exam pack/HF R.pdf>).",
+        ),
+      ],
+      htmlRenders: [],
+      checkpoints: [
+        {
+          runId: RunId.make("run-1"),
+          status: "missing",
+          files: [],
+          outputs: ["Exam pack/HF R.pdf", "Exam pack/HF P.pdf"],
+        } as unknown as TurnDiffSummary,
+      ],
+      workspaceRoot: "/Users/me/TU Delft",
+      nowMs: Date.parse("2026-11-03T16:00:00.000Z"),
+    });
+
+    expect(outputs[0]?.items.map((item) => [item.kind, item.name, item.meta])).toEqual([
+      ["change", "Exam pack/HF R.pdf", "PDF"],
+      ["change", "Exam pack/HF P.pdf", "PDF"],
+    ]);
+  });
 });

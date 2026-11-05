@@ -2,6 +2,7 @@ import { formatAttachmentSize } from "@control/client-runtime/state/attachments"
 import { whenLabel } from "@control/client-runtime/state/loose-ends";
 import type { OrchestrationV2Run, RunId } from "@control/contracts";
 import { filePreviewKind } from "@control/shared/filePreview";
+import { isArtefactPath } from "@control/shared/artefactFiles";
 import { extractMarkdownLinkHrefs } from "@control/shared/markdownLinks";
 import * as DateTime from "effect/DateTime";
 
@@ -58,10 +59,6 @@ function attachmentOutput(attachment: ChatImageAttachment | ChatFileAttachment):
   };
 }
 
-/** Workspace files a person reads rather than runs: documents, pictures, media and builds. */
-const ARTEFACT_EXTENSION =
-  /\.(md|markdown|mdx|txt|pdf|rtf|docx?|odt|pptx?|key|xlsx?|numbers|pages|csv|tsv|png|jpe?g|gif|webp|avif|heic|svg|ico|mp4|mov|webm|m4v|mp3|wav|m4a|aiff?|flac|dmg|zip|pkg|ipa|apk|aab|tar|gz|tgz|whl|msi|exe)$/i;
-
 function changeMeta(file: TurnDiffSummary["files"][number]): string {
   if (file.kind === "added") return "new";
   const parts = [
@@ -109,7 +106,7 @@ export function deriveThreadOutputs(input: {
       const changes = input.checkpoints
         .filter((checkpoint) => checkpoint.runId === run.id)
         .flatMap((checkpoint) => checkpoint.files)
-        .filter((file) => file.kind !== "deleted" && ARTEFACT_EXTENSION.test(file.path))
+        .filter((file) => file.kind !== "deleted" && isArtefactPath(file.path))
         .map((file): ThreadOutput => ({
           id: `change:${run.id}:${file.path}`,
           kind: "change",
@@ -118,22 +115,26 @@ export function deriveThreadOutputs(input: {
           runId: run.id,
           path: file.path,
         }));
-      // A folder outside Git has no checkpoint diff, and Git never sees ignored files, so the
-      // documents the agent links in its reply count too.
+      // A folder outside Git has no checkpoint diff, so the server lists what the run made. Git
+      // never sees ignored files, so the documents the agent links in its reply count too.
       const seen = new Set(changes.map((change) => change.id));
+      const found = input.checkpoints
+        .filter((checkpoint) => checkpoint.runId === run.id)
+        .flatMap((checkpoint) => checkpoint.outputs ?? []);
       const linked = replies
         .flatMap((message) => extractMarkdownLinkHrefs(message.text))
-        .flatMap((href): ThreadOutput[] => {
-          const path = resolveMarkdownFileLinkMeta(
-            href,
-            input.workspaceRoot ?? undefined,
-          )?.workspaceRelativePath;
-          const id = `change:${run.id}:${path}`;
-          if (!path || !ARTEFACT_EXTENSION.test(path) || seen.has(id)) return [];
-          seen.add(id);
-          return [{ id, kind: "change", name: path, meta: extension(path), runId: run.id, path }];
-        });
-      const items = [...attachments, ...pages, ...changes, ...linked];
+        .map(
+          (href) =>
+            resolveMarkdownFileLinkMeta(href, input.workspaceRoot ?? undefined)
+              ?.workspaceRelativePath,
+        );
+      const named = [...found, ...linked].flatMap((path): ThreadOutput[] => {
+        const id = `change:${run.id}:${path}`;
+        if (!path || !isArtefactPath(path) || seen.has(id)) return [];
+        seen.add(id);
+        return [{ id, kind: "change", name: path, meta: extension(path), runId: run.id, path }];
+      });
+      const items = [...attachments, ...pages, ...changes, ...named];
       if (items.length === 0) return [];
       const atMs = DateTime.toEpochMillis(run.completedAt ?? run.startedAt ?? run.requestedAt);
       return [

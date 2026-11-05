@@ -399,6 +399,10 @@
       "types": "./src/markdownLinks.ts",
       "import": "./src/markdownLinks.ts"
     },
+    "./artefactFiles": {
+      "types": "./src/artefactFiles.ts",
+      "import": "./src/artefactFiles.ts"
+    },
     "./fileLinks": {
       "types": "./src/fileLinks.ts",
       "import": "./src/fileLinks.ts"

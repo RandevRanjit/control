@@ -46,6 +46,8 @@ import {
   type OrchestratorMcpLooseEndCloseInput,
   type OrchestratorMcpLooseEndIdResult,
   type OrchestratorMcpLooseEndListResult,
+  type OrchestratorMcpOutputAddInput,
+  type OrchestratorMcpOutputAddResult,
   type OrchestratorMcpThreadListInput,
   type OrchestratorMcpThreadListItem,
   type OrchestratorMcpThreadListResult,
@@ -78,8 +80,10 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -192,6 +196,10 @@ export interface OrchestratorMcpServiceShape {
    * Loose ends (design/hybrid HANDOFF §17), always the caller's own chat's:
    * what it has handed the owner to do, or is waiting on him to answer.
    */
+  readonly addOutputs: (
+    scope: McpInvocationScope,
+    input: OrchestratorMcpOutputAddInput,
+  ) => Effect.Effect<OrchestratorMcpOutputAddResult, OrchestratorMcpFailure>;
   readonly addLooseEnd: (
     scope: McpInvocationScope,
     input: OrchestratorMcpLooseEndAddInput,
@@ -920,6 +928,8 @@ function timelineItem(input: {
 
 const make = Effect.gen(function* () {
   const crypto = yield* Crypto.Crypto;
+  const fileSystem = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   const threadManagement = yield* ThreadManagementService.ThreadManagementService;
   const providerRegistry = yield* ProviderRegistry.ProviderRegistry;
   const providerAdapters = yield* ProviderAdapterRegistry.ProviderAdapterRegistryV2;
@@ -2439,6 +2449,41 @@ const make = Effect.gen(function* () {
           total: filtered.length,
         } satisfies OrchestratorMcpThreadListResult;
       }),
+    // The call itself is the record, as html_render's is: clients read the paths off its result.
+    addOutputs: (scope, input) =>
+      Effect.gen(function* () {
+        const { parent } = yield* loadThreadCaller(scope, "output_add");
+        const root =
+          parent.thread.worktreePath ??
+          (yield* requireProject(parent.thread.projectId)).workspaceRoot;
+        const checked = yield* Effect.forEach(input.paths, (given) =>
+          Effect.gen(function* () {
+            const resolved = path.resolve(root, given);
+            const relative = path.relative(root, resolved);
+            if (relative === "" || relative === ".." || relative.startsWith(`..${path.sep}`)) {
+              return { given, relative, problem: `outside this thread's folder (${root})` };
+            }
+            const stat = yield* fileSystem.stat(resolved).pipe(Effect.option);
+            return {
+              given,
+              relative,
+              problem: Option.isNone(stat)
+                ? "not found"
+                : stat.value.type === "File"
+                  ? null
+                  : "not a file",
+            };
+          }),
+        );
+        const problems = checked.filter((file) => file.problem !== null);
+        if (problems.length > 0) {
+          return yield* failure(
+            "invalid_request",
+            `Nothing filed. ${problems.map((file) => `${file.given}: ${file.problem}`).join("; ")}.`,
+          );
+        }
+        return { filedOutputs: checked.map((file) => file.relative.replaceAll("\\", "/")) };
+      }),
     addLooseEnd: (scope, input) =>
       Effect.gen(function* () {
         yield* requireCapability(scope);
@@ -2772,6 +2817,8 @@ export const layer: Layer.Layer<
   OrchestratorMcpService,
   never,
   | Crypto.Crypto
+  | FileSystem.FileSystem
+  | Path.Path
   | ThreadManagementService.ThreadManagementService
   | ThreadLaunchService.ThreadLaunchService
   | GitVcsDriver.GitVcsDriver

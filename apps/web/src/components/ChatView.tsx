@@ -287,6 +287,7 @@ import { PullRequestsUnavailableState } from "./pullRequest/PullRequestsUnavaila
 import { type PanelTabsConfig, RightPanelTabs } from "./RightPanelTabs";
 import { GitGraphPanel } from "./git/GitGraphPanel";
 import { OutputsPanel } from "./outputs/OutputsPanel";
+import { filedOutputsFromTimeline } from "./outputs/threadOutputs";
 import { LooseEndsHeadIcon, toggleLooseEnds } from "./looseEnds/LooseEnds";
 import { ThreadPullRequestsPanel } from "./pullRequest/ThreadPullRequestsPanel";
 import { useDeviceState } from "~/state/device";
@@ -11104,8 +11105,6 @@ export default function ChatView(props: ChatViewProps) {
         activeThreadKey={activeThreadKey}
         environmentId={activeThread.environmentId}
         runs={serverProjection?.runs ?? []}
-        checkpoints={turnDiffSummaries}
-        workspaceRoot={activeWorkspaceRoot ?? null}
         renderWorkspaceFile={(path) =>
           activeWorkspaceRoot ? (
             <Suspense fallback={null}>
@@ -12347,7 +12346,7 @@ function ThreadOutputsPanel({
   draftEntries,
   activeThreadKey,
   ...panelProps
-}: Omit<ComponentProps<typeof OutputsPanel>, "messages" | "htmlRenders"> & {
+}: Omit<ComponentProps<typeof OutputsPanel>, "messages" | "htmlRenders" | "filed"> & {
   readonly threadDetailRef: ScopedThreadRef | null;
   readonly entriesInput: LiveTimelineEntriesInput;
   readonly draftEntries: ReadonlyArray<TimelineEntry> | null;
@@ -12370,7 +12369,10 @@ function ThreadOutputsPanel({
       ),
     [entries],
   );
-  return <OutputsPanel {...panelProps} messages={messages} htmlRenders={htmlRenders} />;
+  const filed = useMemo(() => filedOutputsFromTimeline(entries), [entries]);
+  return (
+    <OutputsPanel {...panelProps} messages={messages} htmlRenders={htmlRenders} filed={filed} />
+  );
 }
 
 /** Keeps the thread's preview tabs synced while no browser panel is mounted. */

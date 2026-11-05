@@ -17,6 +17,7 @@ import {
 } from "@control/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
 
@@ -48,6 +49,68 @@ const layerOrchestratorService = OrchestratorMcpService.layer.pipe(
 );
 
 describe("OrchestratorMcpService", () => {
+  it.effect("files outputs from the thread's folder, or nothing if any path is wrong", () =>
+    Effect.gen(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "control-outputs-" });
+      const beside = yield* fileSystem.makeTempDirectoryScoped({ prefix: "control-outputs-" });
+      yield* fileSystem.makeDirectory(`${root}/Exam pack`);
+      yield* fileSystem.writeFileString(`${root}/Exam pack/R.pdf`, "pdf");
+      yield* fileSystem.writeFileString(`${root}/..notes.md`, "notes");
+      yield* fileSystem.writeFileString(`${beside}/other.pdf`, "pdf");
+
+      const threadId = ThreadId.make("thread:mcp-outputs");
+      const layerDependencies = Layer.mergeAll(
+        NodeServices.layer,
+        Layer.mock(ThreadManagementService.ThreadManagementService)({
+          getThreadRecords: () =>
+            Effect.succeed({
+              thread: { id: threadId, worktreePath: root },
+            } as unknown as OrchestrationV2ThreadProjection),
+        }),
+        Layer.mock(ProviderRegistry.ProviderRegistry)({ getProviders: Effect.succeed([]) }),
+        Layer.mock(ProviderAdapterRegistry.ProviderAdapterRegistryV2)({
+          list: () => Effect.succeed([]),
+        }),
+        Layer.mock(ProjectService.ProjectService)({}),
+        Layer.mock(SecretRequests.SecretRequests)({}),
+        Layer.mock(ScheduledTaskService.ScheduledTaskService)({}),
+      );
+      const scope: McpInvocationScope = {
+        environmentId: EnvironmentId.make("environment:mcp-outputs"),
+        requestNamespace: "provider-session:mcp-outputs",
+        thread: {
+          threadId,
+          providerSessionId: "provider-session:mcp-outputs",
+          providerInstanceId: ProviderInstanceId.make("claudeAgent"),
+        },
+        client: undefined,
+        capabilities: new Set(["orchestration"]),
+        issuedAt: 1,
+      };
+
+      yield* Effect.gen(function* () {
+        const service = yield* OrchestratorMcpService.OrchestratorMcpService;
+        const filed = yield* service.addOutputs(scope, {
+          paths: [`${root}/Exam pack/R.pdf`, "..notes.md"],
+        });
+        assert.deepEqual(filed, { filedOutputs: ["Exam pack/R.pdf", "..notes.md"] });
+
+        const refused = yield* service
+          .addOutputs(scope, {
+            paths: ["Exam pack/R.pdf", "gone.pdf", "Exam pack", `${beside}/other.pdf`, "../x.pdf"],
+          })
+          .pipe(Effect.flip);
+        assert.equal(refused.code, "invalid_request");
+        assert.include(refused.message, "gone.pdf: not found");
+        assert.include(refused.message, "Exam pack: not a file");
+        assert.include(refused.message, `${beside}/other.pdf: outside`);
+        assert.include(refused.message, "../x.pdf: outside");
+        assert.notInclude(refused.message, "Exam pack/R.pdf");
+      }).pipe(Effect.provide(layerOrchestratorService.pipe(Layer.provide(layerDependencies))));
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+  );
+
   it.effect("retries terminal acknowledgement with a fresh command id", () =>
     Effect.gen(function* () {
       const parentThreadId = ThreadId.make("thread:mcp-ack-parent");

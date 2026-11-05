@@ -2,7 +2,7 @@ import type { EnvironmentId, OrchestrationV2Run, RunId } from "@control/contract
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 
-import type { ChatMessage, TurnDiffSummary } from "~/types";
+import type { ChatMessage } from "~/types";
 import { cn } from "~/lib/utils";
 
 import { useTheme } from "~/hooks/useTheme";
@@ -13,7 +13,7 @@ import { deriveThreadOutputs, type ThreadOutput } from "./threadOutputs";
 
 /** The name a row's icon is read from: each output takes its file's icon, as the tree does (§20.3). */
 const iconPath = (item: ThreadOutput) =>
-  item.kind === "change" ? item.path : item.kind === "page" ? `${item.name}.html` : item.name;
+  item.kind === "filed" ? item.path : item.kind === "page" ? `${item.name}.html` : item.name;
 
 /**
  * The panel's Outputs view (design §5.3): what the agent made in this thread, grouped by turn,
@@ -27,9 +27,8 @@ export function OutputsPanel(props: {
     Pick<OrchestrationV2Run, "id" | "ordinal" | "requestedAt" | "startedAt" | "completedAt">
   >;
   htmlRenders: ReadonlyArray<{ runId: RunId | null; attachmentId: string; title: string }>;
-  checkpoints: ReadonlyArray<TurnDiffSummary>;
-  workspaceRoot: string | null;
-  /** Shows a workspace file the agent wrote, as Folder does. */
+  filed: ReadonlyArray<{ runId: RunId | null; path: string }>;
+  /** Shows a workspace file the agent filed, as Folder does. */
   renderWorkspaceFile: (path: string) => ReactNode;
 }) {
   const { resolvedTheme } = useTheme();
@@ -39,11 +38,10 @@ export function OutputsPanel(props: {
         runs: props.runs,
         messages: props.messages,
         htmlRenders: props.htmlRenders,
-        checkpoints: props.checkpoints,
-        workspaceRoot: props.workspaceRoot,
+        filed: props.filed,
         nowMs: Date.now(),
       }),
-    [props.runs, props.messages, props.htmlRenders, props.checkpoints, props.workspaceRoot],
+    [props.runs, props.messages, props.htmlRenders, props.filed],
   );
   const items = turns.flatMap((turn) => turn.items);
   const [pickedId, setPickedId] = useState<string | null>(null);
@@ -69,8 +67,8 @@ export function OutputsPanel(props: {
       </div>
       {turns.length === 0 ? (
         <p className="px-3.5 py-3 text-muted-foreground text-xs">
-          Screenshots, documents, pages and builds the agent makes show here. Code it changes is in
-          Git.
+          Screenshots, documents, pages and builds the agent hands you show here. Code it changes is
+          in Git.
         </p>
       ) : (
         <div
@@ -122,7 +120,7 @@ export function OutputsPanel(props: {
       )}
       {picked === null ? null : (
         <div className="flex min-h-0 flex-1 flex-col" data-outputs-preview>
-          {picked.kind === "change" ? (
+          {picked.kind === "filed" ? (
             props.renderWorkspaceFile(picked.path)
           ) : picked.kind === "page" ? (
             <AttachmentFilePreview

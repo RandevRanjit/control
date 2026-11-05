@@ -2,8 +2,9 @@ import { MessageId, RunId } from "@control/contracts";
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";
 
-import type { ChatMessage, TurnDiffSummary } from "../../types";
-import { deriveThreadOutputs } from "./threadOutputs";
+import type { TimelineEntry } from "../../session-logic";
+import type { ChatMessage } from "../../types";
+import { deriveThreadOutputs, filedOutputsFromTimeline } from "./threadOutputs";
 
 const at = (iso: string) => DateTime.makeUnsafe(iso);
 const run = (id: string, ordinal: number, completedAt: string) => ({
@@ -29,8 +30,21 @@ const message = (
   createdAt: "2026-10-27T20:00:00.000Z",
   updatedAt: "2026-10-27T20:00:00.000Z",
 });
-const checkpoint = (runId: string, files: TurnDiffSummary["files"]) =>
-  ({ runId: RunId.make(runId), checkpointTurnCount: 1, files }) as unknown as TurnDiffSummary;
+const toolCall = (toolName: string, runId: string, status: string, output: unknown) =>
+  ({
+    id: `call-${toolName}-${runId}`,
+    kind: "work",
+    createdAt: "2026-10-27T20:00:00.000Z",
+    entry: {
+      structuredPayload: {
+        type: "dynamic_tool",
+        toolName,
+        runId: RunId.make(runId),
+        status,
+        output,
+      },
+    },
+  }) as unknown as TimelineEntry;
 
 describe("deriveThreadOutputs", () => {
   it("lists what the agent made, by turn, newest turn first", () => {
@@ -64,14 +78,9 @@ describe("deriveThreadOutputs", () => {
         ]),
       ],
       htmlRenders: [{ runId: RunId.make("r14"), attachmentId: "page", title: "Release size" }],
-      workspaceRoot: "/repo",
-      checkpoints: [
-        checkpoint("r14", [
-          { path: "lib/release.ts", kind: "modified", additions: 2, deletions: 1 },
-          { path: "docs/RELEASE.md", kind: "modified", additions: 4, deletions: 10 },
-          { path: "app/admin/page.tsx", kind: "added", additions: 31, deletions: 0 },
-          { path: "public/hero.png", kind: "added", additions: 0, deletions: 0 },
-        ]),
+      filed: [
+        { runId: RunId.make("r14"), path: "docs/RELEASE.md" },
+        { runId: RunId.make("r14"), path: "public/v1.2/hero.png" },
       ],
       nowMs: Date.parse("2026-10-27T20:00:30.000Z"),
     });
@@ -82,9 +91,8 @@ describe("deriveThreadOutputs", () => {
       ["shot", "button.cta.png", "PNG · 41 KB"],
       ["file", "DESIGN.md", "Markdown"],
       ["page", "Release size", "Page"],
-      // Code the turn changed is Git's; the documents and pictures it wrote are outputs.
-      ["change", "docs/RELEASE.md", "+4 −10"],
-      ["change", "public/hero.png", "new"],
+      ["filed", "docs/RELEASE.md", "MD"],
+      ["filed", "public/v1.2/hero.png", "PNG"],
     ]);
     // The user's own picture is not an output; the build is.
     expect(turns[1]!.items.map(({ kind, name, meta }) => [kind, name, meta])).toEqual([
@@ -92,95 +100,63 @@ describe("deriveThreadOutputs", () => {
     ]);
   });
 
-  it("leaves out turns that only changed code", () => {
+  it("leaves out a turn that filed nothing, whatever its reply links", () => {
     expect(
       deriveThreadOutputs({
         runs: [run("r1", 1, "2026-10-27T18:20:00.000Z")],
-        messages: [message("a1", "assistant", "r1", [])],
+        messages: [message("a1", "assistant", "r1", [], "Built [the pack](/repo/pack.pdf).")],
         htmlRenders: [],
-        workspaceRoot: "/repo",
-        checkpoints: [
-          checkpoint("r1", [
-            { path: "src/app.tsx", kind: "modified", additions: 3, deletions: 1 },
-            { path: "package.json", kind: "modified", additions: 1, deletions: 1 },
-            { path: "site/index.html", kind: "modified", additions: 1, deletions: 1 },
-          ]),
-        ],
+        filed: [],
         nowMs: Date.parse("2026-10-27T20:00:00.000Z"),
       }),
     ).toEqual([]);
   });
 
-  it("leaves out turns that made nothing", () => {
-    expect(
-      deriveThreadOutputs({
-        runs: [run("r1", 1, "2026-10-27T18:20:00.000Z")],
-        messages: [message("a1", "assistant", "r1", [])],
-        htmlRenders: [],
-        workspaceRoot: "/repo",
-        checkpoints: [checkpoint("r1", [])],
-        nowMs: Date.parse("2026-10-27T20:00:00.000Z"),
-      }),
-    ).toEqual([]);
-  });
-
-  it("lists the documents the agent linked in its reply, which a folder outside Git never diffs", () => {
-    const root = "/Users/me/Documents/TU Delft";
-    const reply = [
-      "The draft is built: [DCS exam pack.pdf](/Users/me/Documents/TU%20Delft/Exam%20pack/DCS%20exam%20pack.pdf).",
-      "Next to it is [print-all](<Exam pack/print-all.pdf>), built by [build.py](Exam%20pack/build.py).",
-      "Again: [the pack](/Users/me/Documents/TU%20Delft/Exam%20pack/DCS%20exam%20pack.pdf),",
-      "[notes](Exam%20pack/notes.md) and [elsewhere](/Users/me/Downloads/other.pdf).",
-    ].join("\n");
+  it("lists a file once however many times a turn files it, and again in a later turn", () => {
+    const pack = { path: "Exam pack/HF R.pdf" };
     const turns = deriveThreadOutputs({
-      runs: [run("r65", 65, "2026-10-31T20:00:00.000Z")],
-      messages: [message("a65", "assistant", "r65", [], reply)],
+      runs: [run("r1", 1, "2026-11-03T15:45:00.000Z"), run("r2", 2, "2026-11-03T16:45:00.000Z")],
+      messages: [],
       htmlRenders: [],
-      workspaceRoot: root,
-      checkpoints: [
-        checkpoint("r65", [
-          { path: "Exam pack/notes.md", kind: "modified", additions: 2, deletions: 0 },
-        ]),
+      filed: [
+        { runId: RunId.make("r1"), ...pack },
+        { runId: RunId.make("r1"), ...pack },
+        { runId: RunId.make("r2"), ...pack },
       ],
-      nowMs: Date.parse("2026-10-31T20:00:30.000Z"),
+      nowMs: Date.parse("2026-11-03T17:00:00.000Z"),
     });
 
-    // Once each, inside the folder, documents only; a file the checkpoint saw stays a change.
-    expect(turns[0]!.items.map(({ kind, name, meta }) => [kind, name, meta])).toEqual([
-      ["change", "Exam pack/notes.md", "+2"],
-      ["change", "Exam pack/DCS exam pack.pdf", "PDF"],
-      ["change", "Exam pack/print-all.pdf", "PDF"],
+    expect(turns.map((turn) => turn.items.map((item) => item.id))).toEqual([
+      ["filed:r2:Exam pack/HF R.pdf"],
+      ["filed:r1:Exam pack/HF R.pdf"],
+    ]);
+  });
+});
+
+describe("filedOutputsFromTimeline", () => {
+  it("reads completed output_add calls, in any provider's spelling of the name", () => {
+    const filed = { filedOutputs: ["a.pdf", "b/c.png"] };
+    expect(
+      filedOutputsFromTimeline([
+        toolCall("mcp__control__output_add", "r1", "completed", filed),
+        toolCall("control.output_add", "r2", "completed", { filedOutputs: ["d.csv"] }),
+      ]),
+    ).toEqual([
+      { runId: RunId.make("r1"), path: "a.pdf" },
+      { runId: RunId.make("r1"), path: "b/c.png" },
+      { runId: RunId.make("r2"), path: "d.csv" },
     ]);
   });
 
-  it("lists what the server found the run made, once even if the reply links it too", () => {
-    const outputs = deriveThreadOutputs({
-      runs: [run("run-1", 1, "2026-11-03T15:45:00.000Z")],
-      messages: [
-        message(
-          "m1",
-          "assistant",
-          "run-1",
-          undefined,
-          "See [the rules](</Users/me/TU Delft/Exam pack/HF R.pdf>).",
-        ),
-      ],
-      htmlRenders: [],
-      checkpoints: [
-        {
-          runId: RunId.make("run-1"),
-          status: "missing",
-          files: [],
-          outputs: ["Exam pack/HF R.pdf", "Exam pack/HF P.pdf"],
-        } as unknown as TurnDiffSummary,
-      ],
-      workspaceRoot: "/Users/me/TU Delft",
-      nowMs: Date.parse("2026-11-03T16:00:00.000Z"),
-    });
-
-    expect(outputs[0]?.items.map((item) => [item.kind, item.name, item.meta])).toEqual([
-      ["change", "Exam pack/HF R.pdf", "PDF"],
-      ["change", "Exam pack/HF P.pdf", "PDF"],
-    ]);
+  it("ignores a failed call, a running one and another tool that returns the same shape", () => {
+    const filed = { filedOutputs: ["a.pdf"] };
+    expect(
+      filedOutputsFromTimeline([
+        toolCall("mcp__control__output_add", "r1", "failed", filed),
+        toolCall("mcp__control__output_add", "r1", "completed", { ...filed, isError: true }),
+        toolCall("mcp__control__output_add", "r1", "running", filed),
+        toolCall("mcp__other__output_add", "r1", "completed", filed),
+      ]),
+    ).toEqual([]);
   });
 });

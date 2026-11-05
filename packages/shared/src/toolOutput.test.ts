@@ -2,11 +2,45 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   compactDynamicToolOutput,
+  filedOutputsFromToolItem,
   MAX_TOOL_OUTPUT_IMAGES,
   omitToolOutputImageData,
   toolOutputImages,
   toolOutputIndicatesFailure,
 } from "./toolOutput.ts";
+
+describe("filedOutputsFromToolItem", () => {
+  const filedOutputs = ["Exam pack/R.pdf", "b.png"];
+  const json = JSON.stringify({ filedOutputs });
+
+  it("reads the paths through every envelope a result is stored in, and off the wire", () => {
+    for (const output of [
+      { structuredContent: { filedOutputs }, content: [{ type: "text", text: json }] },
+      [{ type: "text", text: json }],
+      json,
+    ]) {
+      const toolName = "mcp__control__output_add";
+      expect(filedOutputsFromToolItem({ toolName, output })).toEqual(filedOutputs);
+      expect(
+        filedOutputsFromToolItem({ toolName, output: compactDynamicToolOutput(output) }),
+      ).toEqual(filedOutputs);
+    }
+  });
+
+  it("only counts Control's own tool, when it succeeded", () => {
+    const toolName = "mcp__control__output_add";
+    expect(filedOutputsFromToolItem({ toolName: "mcp__x__output_add", output: json })).toBe(
+      undefined,
+    );
+    expect(filedOutputsFromToolItem({ toolName, output: { filedOutputs, isError: true } })).toBe(
+      undefined,
+    );
+    expect(filedOutputsFromToolItem({ toolName, output: { filedOutputs: [1] } })).toBe(undefined);
+    expect(
+      filedOutputsFromToolItem({ toolName, output: { filedOutputs: Array(21).fill("a.pdf") } }),
+    ).toBe(undefined);
+  });
+});
 
 describe("compactDynamicToolOutput", () => {
   it("extracts IDs through the MCP result envelopes used by Control summaries", () => {

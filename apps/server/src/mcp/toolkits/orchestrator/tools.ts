@@ -20,6 +20,8 @@ import {
   OrchestratorMcpThreadInterruptResult,
   OrchestratorMcpGroupSiblingsResult,
   OrchestratorMcpLooseEndAddInput,
+  OrchestratorMcpOutputAddInput,
+  OrchestratorMcpOutputAddResult,
   OrchestratorMcpLooseEndCloseInput,
   OrchestratorMcpLooseEndIdResult,
   OrchestratorMcpLooseEndListResult,
@@ -202,6 +204,20 @@ const GroupSiblingsTool = Tool.make("group_siblings", {
   .annotate(Tool.Destructive, false)
   .annotate(Tool.Idempotent, true);
 
+const OutputAddTool = Tool.make("output_add", {
+  description:
+    "File what you made for the user to read or look at, not code: a figure, image, PDF, report or build. It lists under this turn in their Outputs tab. Each path must be a file in this thread's folder. Nothing notifies them. Returns the filed paths, relative to the folder.",
+  parameters: OrchestratorMcpOutputAddInput,
+  success: OrchestratorMcpOutputAddResult,
+  failure: OrchestratorMcpFailure,
+  failureMode: "return",
+  dependencies,
+})
+  .annotate(Tool.Title, "File outputs")
+  .annotate(Tool.Readonly, false)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true);
+
 const LooseEndAddTool = Tool.make("loose_end_add", {
   description:
     "File a loose end in this thread: something you handed the user to do, or a question you are waiting on them to answer. It stays until they tick it done or dismiss it, or you call loose_end_close. Nothing notifies them; the thread's open count is the only signal. Not for your own todo list, unsent text, or a question you can ask now. Returns the id.",
@@ -350,6 +366,7 @@ export const OrchestratorToolkit = Toolkit.make(
   CreateThreadsTool,
   ThreadListTool,
   GroupSiblingsTool,
+  OutputAddTool,
   LooseEndAddTool,
   LooseEndListTool,
   LooseEndCloseTool,

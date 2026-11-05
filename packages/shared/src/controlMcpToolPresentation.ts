@@ -51,6 +51,7 @@ export type ControlMcpToolSummaryAction =
   | "environment-read"
   | "environment-update"
   | "lock-read"
+  | "output-add"
   | "loose-end-add"
   | "loose-end-list"
   | "loose-end-close"
@@ -314,6 +315,7 @@ const CONTROL_MCP_TOOLS: Readonly<Record<string, ControlMcpToolDefinition>> = {
     "environment-update",
   ),
   lock_read: tool(["Read", "Reading", "Read", "the lock"], "lock-read"),
+  output_add: tool(["File", "Filing", "Filed", "outputs"], "output-add"),
   loose_end_add: tool(["File", "Filing", "Filed", "a loose end"], "loose-end-add"),
   loose_end_list: tool(["List", "Listing", "Listed", "loose ends"], "loose-end-list"),
   loose_end_close: tool(["Close", "Closing", "Closed", "a loose end"], "loose-end-close"),

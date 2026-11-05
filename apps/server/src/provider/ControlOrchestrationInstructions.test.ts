@@ -23,6 +23,7 @@ describe("Control orchestration provider instructions", () => {
   it("keeps Control's own rules: secrets, loose ends, local models, background output", () => {
     assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "Never ask for one in chat");
     assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "`loose_end_add`");
+    assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "`output_add`");
     assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "`local_model_run`");
     assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "--line-buffered");
     assert.include(CONTROL_ORCHESTRATION_INSTRUCTIONS, "control-thread://v1/<threadId>");

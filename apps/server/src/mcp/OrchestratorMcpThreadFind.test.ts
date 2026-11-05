@@ -1,4 +1,5 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
 import {
   CommandId,
@@ -57,6 +58,7 @@ const layerTest = McpHttpServer.layerOrchestratorToolkit.pipe(
   Layer.provide(Layer.mock(SecretRequests.SecretRequests)({})),
   Layer.provide(Layer.mock(ThreadLaunchService.ThreadLaunchService)({})),
   Layer.provide(Layer.mock(GitVcsDriver.GitVcsDriver)({})),
+  Layer.provide(NodeServices.layer),
   Layer.provide(Layer.mock(ControlLock.ControlLock)({})),
   Layer.provideMerge(McpServer.McpServer.layer),
   Layer.provideMerge(layerThreads),

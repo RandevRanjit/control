@@ -1,5 +1,6 @@
 import {
   isProviderSendTurnSupportedImageMimeType,
+  MAX_FILED_OUTPUTS_PER_CALL,
   PROVIDER_SEND_TURN_MAX_IMAGE_BYTES,
 } from "@control/contracts";
 import * as Predicate from "effect/Predicate";
@@ -19,6 +20,7 @@ const MAX_THREADS = 100;
 const MAX_CONTENT_BLOCKS = 32;
 const MAX_ENVELOPE_DEPTH = 4;
 const MAX_ENVELOPE_NODES = 128;
+const OUTPUT_ADD_TOOL_NAME = "output_add";
 const encoder = new TextEncoder();
 
 interface ResultReadBudget {
@@ -40,6 +42,7 @@ interface CompactToolOutput {
   scheduledTaskId?: string;
   status?: "rolled_back";
   htmlRender?: HtmlRenderReference;
+  filedOutputs?: ReadonlyArray<string>;
   [MCP_APP_OUTPUT_KEY]?: McpAppReference;
   thread?: { threadId: string };
   threads?: Array<{ threadId?: string; status?: "rolled_back" }>;
@@ -126,6 +129,14 @@ export function compactDynamicToolOutput(value: unknown): CompactToolOutput | un
     if (data.status === "rolled_back") output.status = "rolled_back";
     const htmlRender = readHtmlRenderReference(data.htmlRender);
     if (htmlRender !== undefined) output.htmlRender = htmlRender;
+    const filedOutputs = data.filedOutputs;
+    if (
+      Array.isArray(filedOutputs) &&
+      filedOutputs.length <= MAX_FILED_OUTPUTS_PER_CALL &&
+      filedOutputs.every((path) => typeof path === "string")
+    ) {
+      output.filedOutputs = filedOutputs;
+    }
     const mcpApp = readMcpAppReference(data[MCP_APP_OUTPUT_KEY]);
     // Kept under its stored key, so the compact wire output reads back the same way.
     if (mcpApp !== undefined) output[MCP_APP_OUTPUT_KEY] = mcpApp;
@@ -190,6 +201,16 @@ export function htmlRenderFromToolItem(item: {
   if (resolveControlMcpToolId(item.toolName) !== HTML_RENDER_TOOL_NAME) return undefined;
   const output = compactDynamicToolOutput(item.output);
   return output?.isError ? undefined : output?.htmlRender;
+}
+
+/** The workspace files a completed `output_add` call filed, if this item is one. */
+export function filedOutputsFromToolItem(item: {
+  readonly toolName: string | null | undefined;
+  readonly output?: unknown;
+}): ReadonlyArray<string> | undefined {
+  if (resolveControlMcpToolId(item.toolName) !== OUTPUT_ADD_TOOL_NAME) return undefined;
+  const output = compactDynamicToolOutput(item.output);
+  return output?.isError ? undefined : output?.filedOutputs;
 }
 
 /**

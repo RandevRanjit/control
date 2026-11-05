@@ -11,6 +11,15 @@ function completed(input: unknown, output?: unknown): ControlToolSummaryCall {
 }
 
 describe("summarizeControlToolCalls", () => {
+  it("counts the files output_add filed, not its calls", () => {
+    expect(
+      summarizeControlToolCalls("output-add", [
+        completed({ paths: ["a.pdf", "b.pdf"] }, { filedOutputs: ["a.pdf", "b.pdf"] }),
+        completed({ paths: ["c.pdf"] }, { filedOutputs: ["c.pdf"] }),
+      ]).label,
+    ).toBe("Filed 3 outputs");
+  });
+
   it("counts registered projects, repository destinations, and accepted thread launches", () => {
     expect(
       summarizeControlToolCalls("project-create", [

@@ -116,6 +116,13 @@ const handlers = {
       return yield* service.listGroupSiblings(scope);
     }),
   ),
+  output_add: McpToolAccess.actsAsCaller((input) =>
+    Effect.gen(function* () {
+      const scope = yield* McpInvocationContext.McpInvocationContext;
+      const service = yield* OrchestratorMcpService.OrchestratorMcpService;
+      return yield* service.addOutputs(scope, input);
+    }),
+  ),
   loose_end_add: McpToolAccess.actsAsCaller((input) =>
     Effect.gen(function* () {
       const scope = yield* McpInvocationContext.McpInvocationContext;

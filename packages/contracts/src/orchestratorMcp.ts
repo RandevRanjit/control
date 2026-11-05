@@ -370,6 +370,23 @@ export const OrchestratorMcpGroupSiblingsResult = Schema.Struct({
 });
 export type OrchestratorMcpGroupSiblingsResult = typeof OrchestratorMcpGroupSiblingsResult.Type;
 
+export const MAX_FILED_OUTPUTS_PER_CALL = 20;
+
+/** Outputs (design/hybrid HANDOFF §5.3): what the calling chat made for the owner to read. */
+export const OrchestratorMcpOutputAddInput = Schema.Struct({
+  paths: Schema.Array(TrimmedNonEmptyString.check(Schema.isMaxLength(1_024)))
+    .check(Schema.isMinLength(1), Schema.isMaxLength(MAX_FILED_OUTPUTS_PER_CALL))
+    .annotate({
+      description: "Files in this thread's folder, absolute or relative to it.",
+    }),
+});
+export type OrchestratorMcpOutputAddInput = typeof OrchestratorMcpOutputAddInput.Type;
+
+export const OrchestratorMcpOutputAddResult = Schema.Struct({
+  filedOutputs: Schema.Array(Schema.String),
+});
+export type OrchestratorMcpOutputAddResult = typeof OrchestratorMcpOutputAddResult.Type;
+
 /** Loose ends (design/hybrid HANDOFF §17): what the calling chat has handed the owner to do. */
 export const OrchestratorMcpLooseEndAddInput = Schema.Struct({
   line: TrimmedNonEmptyString.check(Schema.isMaxLength(200)).annotate({

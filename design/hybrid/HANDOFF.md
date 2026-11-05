@@ -326,12 +326,13 @@ A turn can hold several stacks and replies, alternating; the last reply ends the
 ### 5.3 Outputs (F28, F30)
 
 - **Head.** `Outputs`, `this thread, newest first`, and the count at the right.
-- **What counts** (owner, 29 Oct). Things a person reads, not code: screenshots, files and pages the agent sent, and
-  the documents, pictures, media and builds a turn wrote into the folder (Markdown, PDF, images, CSV, DMG…). Code a
-  turn changed is Git's.
+- **What counts** (owner, 5 Nov). Things a person reads, not code: screenshots, files and pages the agent sent, and
+  the documents, pictures, media and builds it filed from the folder with `output_add` (Markdown, PDF, images, CSV,
+  DMG…). The agent files them, as it does loose ends; Control never guesses from Git, a scan or a reply. Git stays
+  Git.
 - **List.** Grouped under turn headings (`T14 · now`, `T12 · 23:20`) with a chevron. Only the newest turn starts
   open; a closed turn shows its count. Each row is 28 high: the file's 14 px icon (§20.3; owner, 29 Oct), the name in
-  Plex 11.5 and the meta at the right (`PNG · 212 × 40`, `DMG · 11.7 MB`, `+4 −10`). The picked row takes the card
+  Plex 11.5 and the meta at the right (`PNG · 212 × 40`, `DMG · 11.7 MB`). The picked row takes the card
   tone.
 - **Preview.** The picked output renders underneath, on `--deep`, radius 10. A Markdown report is shown rendered:
   - the heading in Regrade 16 / 640, text in Regrade 13, code in Plex on the card tone;

@@ -12,6 +12,7 @@ Ordinary coding tasks need no Control tools. Control MCP tools may be deferred: 
 - \`schedule_task\`: pass \`schedule\` as a structured object, never as JSON text: \`{"type":"interval","everyMs":3600000}\`, \`{"type":"fixed_time","timeOfDay":"09:00","weekdays":[1,2,3,4,5]}\`, or \`{"type":"webhook"}\`. Runs post into this thread; set \`bindToCurrentThread=false\` only when the user wants a fresh thread per run. Report the next run time, or the \`webhookUrl\` (none: Control Connect remote access is off).
 - A secret: call \`request_secret\` and pass its \`secretRef\` on; it works once. Never ask for one in chat, invent one, or repeat one.
 - Something only the user can do, or a turn that ends waiting on their answer: \`loose_end_add\`, then \`loose_end_close\` once you see it done. Not your own todo list.
+- What you or a subagent made for the user to read or look at, not code (figure, image, PDF, report, build): \`output_add\`. It lists them in their Outputs tab, so don't list them in your reply.
 - Private files that must not reach you: \`local_model_run\` (\`local_model_list\` shows the models).
 - Link another thread as \`[title](control-thread://v1/<threadId>)\` with its exact, unencoded id.
 

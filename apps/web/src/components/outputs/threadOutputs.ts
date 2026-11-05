@@ -2,24 +2,21 @@ import { formatAttachmentSize } from "@control/client-runtime/state/attachments"
 import { whenLabel } from "@control/client-runtime/state/loose-ends";
 import type { OrchestrationV2Run, RunId } from "@control/contracts";
 import { filePreviewKind } from "@control/shared/filePreview";
-import { isArtefactPath } from "@control/shared/artefactFiles";
-import { extractMarkdownLinkHrefs } from "@control/shared/markdownLinks";
+import { filedOutputsFromToolItem } from "@control/shared/toolOutput";
 import * as DateTime from "effect/DateTime";
 
-import { resolveMarkdownFileLinkMeta } from "../../markdown-links";
-
+import type { TimelineEntry } from "../../session-logic";
 import {
   type ChatFileAttachment,
   type ChatImageAttachment,
   type ChatMessage,
   isFileAttachment,
   isImageAttachment,
-  type TurnDiffSummary,
 } from "../../types";
 
 /**
- * One thing a turn made (design §5.3): a screenshot, a file, a page, a build output, or a document
- * or picture it wrote into the workspace. Code it changed is Git's, not an output (owner, 29 Oct).
+ * One thing a turn handed the reader (design §5.3): a screenshot, a file or a page it sent, or
+ * anything in the folder it filed with `output_add`. Code is Git's, not an output (owner, 5 Nov).
  */
 export type ThreadOutput =
   | {
@@ -30,7 +27,7 @@ export type ThreadOutput =
       attachment: ChatImageAttachment | ChatFileAttachment;
     }
   | { id: string; kind: "page"; name: string; meta: string; attachmentId: string }
-  | { id: string; kind: "change"; name: string; meta: string; runId: RunId; path: string };
+  | { id: string; kind: "filed"; name: string; meta: string; path: string };
 
 export interface ThreadOutputTurn {
   runId: RunId;
@@ -59,13 +56,13 @@ function attachmentOutput(attachment: ChatImageAttachment | ChatFileAttachment):
   };
 }
 
-function changeMeta(file: TurnDiffSummary["files"][number]): string {
-  if (file.kind === "added") return "new";
-  const parts = [
-    file.additions > 0 ? `+${file.additions}` : null,
-    file.deletions > 0 ? `−${file.deletions}` : null,
-  ].filter((part) => part !== null);
-  return parts.length > 0 ? parts.join(" ") : file.kind;
+/** The files completed `output_add` calls filed, each with the run that filed it. */
+export function filedOutputsFromTimeline(entries: ReadonlyArray<TimelineEntry>) {
+  return entries.flatMap((entry) => {
+    const item = entry.kind === "work" ? entry.entry.structuredPayload : undefined;
+    if (item?.type !== "dynamic_tool" || item.status !== "completed") return [];
+    return (filedOutputsFromToolItem(item) ?? []).map((path) => ({ runId: item.runId, path }));
+  });
 }
 
 /** Everything the agent made in a thread, grouped by turn, newest turn first. */
@@ -76,9 +73,8 @@ export function deriveThreadOutputs(input: {
   messages: ReadonlyArray<ChatMessage>;
   /** Pages the agent published with `html_render`. */
   htmlRenders: ReadonlyArray<{ runId: RunId | null; attachmentId: string; title: string }>;
-  checkpoints: ReadonlyArray<TurnDiffSummary>;
-  /** Anchors the files the agent links in its reply; outside it, a link isn't an output. */
-  workspaceRoot: string | null;
+  /** Files the agent listed with `output_add`, relative to the thread's folder. */
+  filed: ReadonlyArray<{ runId: RunId | null; path: string }>;
   nowMs: number;
 }): ThreadOutputTurn[] {
   return input.runs
@@ -103,38 +99,16 @@ export function deriveThreadOutputs(input: {
           meta: "Page",
           attachmentId: render.attachmentId,
         }));
-      const changes = input.checkpoints
-        .filter((checkpoint) => checkpoint.runId === run.id)
-        .flatMap((checkpoint) => checkpoint.files)
-        .filter((file) => file.kind !== "deleted" && isArtefactPath(file.path))
-        .map((file): ThreadOutput => ({
-          id: `change:${run.id}:${file.path}`,
-          kind: "change",
-          name: file.path,
-          meta: changeMeta(file),
-          runId: run.id,
-          path: file.path,
-        }));
-      // A folder outside Git has no checkpoint diff, so the server lists what the run made. Git
-      // never sees ignored files, so the documents the agent links in its reply count too.
-      const seen = new Set(changes.map((change) => change.id));
-      const found = input.checkpoints
-        .filter((checkpoint) => checkpoint.runId === run.id)
-        .flatMap((checkpoint) => checkpoint.outputs ?? []);
-      const linked = replies
-        .flatMap((message) => extractMarkdownLinkHrefs(message.text))
-        .map(
-          (href) =>
-            resolveMarkdownFileLinkMeta(href, input.workspaceRoot ?? undefined)
-              ?.workspaceRelativePath,
-        );
-      const named = [...found, ...linked].flatMap((path): ThreadOutput[] => {
-        const id = `change:${run.id}:${path}`;
-        if (!path || !isArtefactPath(path) || seen.has(id)) return [];
-        seen.add(id);
-        return [{ id, kind: "change", name: path, meta: extension(path), runId: run.id, path }];
-      });
-      const items = [...attachments, ...pages, ...changes, ...named];
+      const filed = [
+        ...new Set(input.filed.filter((file) => file.runId === run.id).map((file) => file.path)),
+      ].map((path): ThreadOutput => ({
+        id: `filed:${run.id}:${path}`,
+        kind: "filed",
+        name: path,
+        meta: extension(path.slice(path.lastIndexOf("/") + 1)),
+        path,
+      }));
+      const items = [...attachments, ...pages, ...filed];
       if (items.length === 0) return [];
       const atMs = DateTime.toEpochMillis(run.completedAt ?? run.startedAt ?? run.requestedAt);
       return [

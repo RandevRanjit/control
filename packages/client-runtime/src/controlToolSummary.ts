@@ -426,6 +426,25 @@ export function summarizeControlToolCalls(
       );
       break;
     }
+    case "output-add":
+      label = phrase(
+        "Filed",
+        "file",
+        quantity(
+          selected.reduce(
+            (sum, call) =>
+              sum +
+              (Array.isArray(call.output?.filedOutputs)
+                ? call.output.filedOutputs.length
+                : Array.isArray(call.input?.paths)
+                  ? call.input.paths.length
+                  : 0),
+            0,
+          ),
+          "output",
+        ),
+      );
+      break;
     case "loose-end-add":
       label = phrase("Filed", "file", quantity(selected.length, "loose end"));
       break;

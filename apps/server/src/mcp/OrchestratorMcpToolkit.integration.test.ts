@@ -39,6 +39,7 @@ import {
   ThreadMetadataMcpUpdateResult,
   TurnItemId,
 } from "@control/contracts";
+import { filedOutputsFromToolItem } from "@control/shared/toolOutput";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -761,6 +762,13 @@ describe("orchestrator MCP toolkit", () => {
             expect((yield* orchestrator.getThreadShell(parentThreadId))?.pinnedAt).not.toBeNull();
             yield* invoke("thread_organize", { action: "unpin" });
             expect((yield* orchestrator.getThreadShell(parentThreadId))?.pinnedAt).toBeNull();
+
+            // Outputs (HANDOFF §5.3): this project's folder doesn't exist, so nothing can be filed.
+            const unfiled = yield* invoke("output_add", { paths: ["gone.pdf"] });
+            expect(unfiled.isError).toBe(true);
+            expect(
+              filedOutputsFromToolItem({ toolName: "mcp__control__output_add", output: unfiled }),
+            ).toBeUndefined();
 
             // Loose ends (HANDOFF §17): filed in this chat's running turn, listed, closed by the agent.
             const filed = yield* invoke("loose_end_add", {

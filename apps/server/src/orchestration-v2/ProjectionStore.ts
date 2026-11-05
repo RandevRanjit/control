@@ -6,6 +6,7 @@ import {
 } from "@control/shared/orchestrationV2ThreadError";
 import { threadPullRequestsOf } from "@control/shared/threadPullRequests";
 import * as NodeSqliteClient from "@control/shared/nodeSqliteClient";
+import { projectTurnItemForWire } from "./WireProjection.ts";
 import * as Stream from "effect/Stream";
 import {
   makeThreadFind,
@@ -16,6 +17,7 @@ import {
 import type {
   OrchestrationV2SearchThreadInput,
   OrchestrationV2SearchThreadResult,
+  OrchestrationV2ThreadHistoryPage,
 } from "@control/contracts";
 import type {
   OrchestrationV2AppThread,
@@ -42,7 +44,6 @@ import type {
   ProviderThreadId,
   ProviderTurnId,
   RunAttemptId,
-  MessageId,
 } from "@control/contracts";
 import {
   OrchestrationV2AppThreadJson as OrchestrationV2AppThreadJsonSchema,
@@ -64,6 +65,7 @@ import {
   OrchestrationV2TurnItemJson as OrchestrationV2TurnItemJsonSchema,
   orchestrationV2RunWorkStartedAt,
   RunId,
+  MessageId,
   RuntimeRequestId,
   CheckpointScopeId,
   ThreadId,
@@ -89,8 +91,13 @@ import { MCP_APP_OUTPUT_KEY } from "@control/shared/mcpApp";
 import { threadHtmlRenderAttachmentIds } from "../attachmentStore.ts";
 import {
   isThreadHistoryUserTurn,
+  isConversationHistoryItem,
   isThreadHistoryTurnStart,
   THREAD_HISTORY_MAX_RAW_TURNS,
+  selectHistoryPageFromCursor,
+  selectRecentTimelineWindow,
+  THREAD_HISTORY_PAGE_POLICY,
+  OLDER_THREAD_USER_TURN_LIMIT,
 } from "./threadHistoryPaging.ts";
 
 export class ProjectionStoreApplyEventError extends Schema.TaggedError<ProjectionStoreApplyEventError>()(
@@ -373,6 +380,12 @@ export interface ProjectionStoreV2Shape {
   readonly getThreadAttachmentIds: (
     threadId: ThreadId,
   ) => Effect.Effect<ReadonlyArray<string>, ProjectionStoreV2Error>;
+  readonly getThreadHistoryPage: (
+    threadId: ThreadId,
+    cursor: string,
+    throughEntryId?: string,
+    conversationOnly?: boolean,
+  ) => Effect.Effect<OrchestrationV2ThreadHistoryPage, ProjectionStoreV2Error>;
   readonly getTimelinePage: (
     threadId: ThreadId,
     options: ProjectionTimelinePageOptions,
@@ -1050,6 +1063,11 @@ type ShellRunItemCountRow = {
   readonly item_count: number;
 };
 
+const encodeTimelineSources = Schema.encodeEffect(
+  Schema.fromJsonString(
+    Schema.Array(Schema.Struct({ threadId: Schema.String, id: Schema.String })),
+  ),
+);
 const encodeIdList = Schema.encodeSync(Schema.fromJsonString(Schema.Array(Schema.String)));
 
 // An empty list filter selects no rows, but SQLite still walks every row of
@@ -4957,12 +4975,17 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
         );
 
     // Only the timeline index is assembled across fork ancestry. Payloads are read
-    // after page selection, so a small MCP page never hydrates all tool output.
+    // after page selection, so history and MCP pages hydrate only the requested rows.
     type TimelineIndexItem = Pick<
       OrchestrationV2TurnItem,
       "id" | "threadId" | "runId" | "nodeId" | "type"
     > & {
-      readonly inputIntent?: "queued_turn";
+      readonly inputIntent?: Extract<
+        OrchestrationV2TurnItem,
+        { type: "user_message" }
+      >["inputIntent"];
+      readonly createdBy?: "user" | "agent" | "system";
+      readonly messageId?: MessageId;
     };
     type TimelineIndexRow = {
       readonly sourceThreadId: ThreadId;
@@ -4989,9 +5012,13 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
           run_id: string | null;
           node_id: string | null;
           type: OrchestrationV2TurnItem["type"];
-          input_intent: string | null;
+          input_intent: NonNullable<TimelineIndexItem["inputIntent"]> | null;
+          created_by: "user" | "agent" | "system" | null;
+          message_id: string | null;
         }>`SELECT turn_item_id, run_id, node_id, type,
-          CASE WHEN type = 'user_message' THEN json_extract(payload_json, '$.inputIntent') END AS input_intent
+          CASE WHEN type = 'user_message' THEN json_extract(payload_json, '$.inputIntent') END AS input_intent,
+          CASE WHEN type = 'user_message' THEN json_extract(payload_json, '$.createdBy') END AS created_by,
+          CASE WHEN type IN ('user_message', 'assistant_message') THEN json_extract(payload_json, '$.messageId') END AS message_id
         FROM orchestration_v2_projection_turn_items WHERE thread_id = ${threadId}
         ORDER BY ordinal ASC, turn_item_id ASC`;
         const items: Array<TimelineIndexItem> = rows.map((row) => ({
@@ -5000,7 +5027,9 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
           runId: row.run_id === null ? null : RunId.make(row.run_id),
           nodeId: row.node_id === null ? null : NodeId.make(row.node_id),
           type: row.type,
-          ...(row.input_intent === "queued_turn" ? { inputIntent: "queued_turn" as const } : {}),
+          ...(row.input_intent === null ? {} : { inputIntent: row.input_intent }),
+          ...(row.created_by === null ? {} : { createdBy: row.created_by }),
+          ...(row.message_id === null ? {} : { messageId: MessageId.make(row.message_id) }),
         }));
         const local: Array<TimelineIndexRow> = items.map((item) => ({
           sourceThreadId: threadId,
@@ -5073,6 +5102,118 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
     const { findRows, searchThread, searchThreadStream } = yield* makeThreadFind((threadId) =>
       readTimelineIndex(threadId, new Set()).pipe(Effect.map((index) => index.visible)),
     );
+
+    const getThreadHistoryPage: ProjectionStoreV2Shape["getThreadHistoryPage"] = (
+      threadId,
+      cursor,
+      throughEntryId,
+      conversationOnly,
+    ) =>
+      sql
+        .withTransaction(
+          Effect.gen(function* () {
+            const index = yield* readTimelineIndex(threadId, new Set());
+            if (index.records.thread.deletedAt !== null)
+              return yield* new ProjectionStoreThreadNotFoundError({ threadId });
+            const revisions = yield* sql<{
+              sequence: number;
+            }>`SELECT COALESCE(MAX(sequence), 0) AS sequence
+          FROM orchestration_events WHERE application_event_version = 2
+          AND aggregate_kind = 'thread' AND stream_id = ${threadId}`;
+            const snapshotSequence = revisions[0]?.sequence ?? 0;
+            // Choose complete turns from the light index before loading any bodies.
+            // A history page does not need nodes, provider turns, or other control state.
+            const page = yield* Effect.try({
+              try: () =>
+                selectHistoryPageFromCursor({
+                  items: index.visible.map((row, position) => ({
+                    ...row,
+                    position,
+                    canonicalPosition: position,
+                  })),
+                  cursor,
+                  snapshotSequence,
+                  rowEncodedBytes: () => 0,
+                  throughEntryId,
+                }),
+              catch: (cause) => new ProjectionStoreReadError({ threadId, cause }),
+            });
+            const end = (page.items.at(-1)?.canonicalPosition ?? -1) + 1;
+            const hasUserTurns = index.visible
+              .slice(0, end)
+              .some((row) => isThreadHistoryUserTurn(row.item));
+            const materialized =
+              conversationOnly && hasUserTurns
+                ? page.items.filter((row) => isConversationHistoryItem(row.item))
+                : page.items;
+            const sources = yield* encodeTimelineSources(
+              materialized
+                .filter((row) => !row.synthetic)
+                .map((row) => ({ threadId: row.sourceThreadId, id: row.sourceItemId })),
+            );
+            const payloads = yield* sql<{
+              thread_id: string;
+              turn_item_id: string;
+              payload_json: string;
+            }>`
+          SELECT item.thread_id, item.turn_item_id, item.payload_json
+          FROM orchestration_v2_projection_turn_items item JOIN json_each(${sources}) wanted
+          ON item.thread_id = json_extract(wanted.value, '$.threadId')
+            AND item.turn_item_id = json_extract(wanted.value, '$.id')`;
+            const byIdentity = new Map(
+              payloads.map((row) => [`${row.thread_id}:${row.turn_item_id}`, row.payload_json]),
+            );
+            const items = yield* Effect.forEach(materialized, (row) =>
+              Effect.gen(function* () {
+                const payload = byIdentity.get(`${row.sourceThreadId}:${row.sourceItemId}`);
+                const item =
+                  row.synthetic ??
+                  (payload === undefined
+                    ? yield* new ProjectionStoreReadError({ threadId })
+                    : yield* decodeTurnItemPayload(payload));
+                return {
+                  position: row.canonicalPosition,
+                  visibility: row.visibility,
+                  sourceThreadId: row.sourceThreadId,
+                  sourceItemId: row.sourceItemId,
+                  item: projectTurnItemForWire(item),
+                };
+              }),
+            );
+            if (hasUserTurns)
+              return {
+                ...page,
+                snapshotSequence,
+                items: items.map((row, position) => ({ ...row, position })),
+              };
+            // The no-turn fallback also respects the encoded byte budget after projection.
+            const bounded = selectRecentTimelineWindow({
+              items,
+              snapshotSequence,
+              policy: {
+                ...THREAD_HISTORY_PAGE_POLICY,
+                maxUserTurns: OLDER_THREAD_USER_TURN_LIMIT,
+                maxItems:
+                  THREAD_HISTORY_PAGE_POLICY.maxItems * (throughEntryId === undefined ? 1 : 2),
+              },
+            });
+            return {
+              snapshotSequence,
+              items: conversationOnly
+                ? bounded.items.filter((row) => isConversationHistoryItem(row.item))
+                : bounded.items,
+              nextCursor: bounded.hasMoreHistory ? bounded.nextCursor : page.nextCursor,
+              hasMoreHistory: bounded.hasMoreHistory || page.hasMoreHistory,
+            };
+          }),
+        )
+        .pipe(
+          Effect.mapError((cause) =>
+            isProjectionStoreThreadNotFoundError(cause) || isProjectionStoreReadError(cause)
+              ? cause
+              : new ProjectionStoreReadError({ threadId, cause }),
+          ),
+        );
 
     const getTimelinePage: ProjectionStoreV2Shape["getTimelinePage"] = (threadId, options) =>
       // Find parses outside the page's transaction, so a query holds no read open while it scans.
@@ -6113,6 +6254,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
       getThreadSnapshot: readOnReader(getThreadSnapshot),
       getThreadSnapshotWindow: readOnReader(getThreadSnapshotWindow),
       getTimelinePage: readOnReader(getTimelinePage),
+      getThreadHistoryPage: readOnReader(getThreadHistoryPage),
       searchThread,
       searchThreadStream,
       getThreadAttachmentIds: readOnReader(getThreadAttachmentIds),
@@ -6802,6 +6944,36 @@ export const layerMemory: Layer.Layer<ProjectionStoreV2> = Layer.effect(
                     projection.thread.worktreePath ?? undefined,
                   ),
                 ),
+          ),
+        ),
+      getThreadHistoryPage: (threadId, cursor, throughEntryId, conversationOnly) =>
+        service.getThreadSnapshot(threadId).pipe(
+          Effect.flatMap(({ projection, snapshotSequence }) =>
+            Effect.gen(function* () {
+              if (projection.thread.deletedAt !== null)
+                return yield* new ProjectionStoreThreadNotFoundError({ threadId });
+              return yield* Effect.try({
+                try: () => {
+                  const page = selectHistoryPageFromCursor({
+                    items: projection.visibleTurnItems.map((row) => ({
+                      ...row,
+                      item: projectTurnItemForWire(row.item),
+                    })),
+                    cursor,
+                    throughEntryId,
+                    snapshotSequence,
+                  });
+                  return {
+                    ...page,
+                    snapshotSequence,
+                    items: conversationOnly
+                      ? page.items.filter((row) => isConversationHistoryItem(row.item))
+                      : page.items,
+                  };
+                },
+                catch: (cause) => new ProjectionStoreReadError({ threadId, cause }),
+              });
+            }),
           ),
         ),
       getTimelinePage: (threadId, options) =>

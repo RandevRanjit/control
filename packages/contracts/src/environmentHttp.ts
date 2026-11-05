@@ -502,6 +502,8 @@ const EnvironmentOrchestrationThreadHistoryQuery = Schema.Struct({
   cursor: TrimmedNonEmptyString,
   /** A find jump: page through this entry when it is near, so one request reaches it. */
   throughEntryId: Schema.optional(TrimmedNonEmptyString),
+  /** `conversation` leaves out folded tool activity, so a find jump shows its message first. */
+  view: Schema.optional(Schema.Literals(["conversation", "activity"])),
 });
 
 const EnvironmentOrchestrationThreadHistoryErrors = [

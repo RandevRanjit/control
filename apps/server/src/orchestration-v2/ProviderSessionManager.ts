@@ -187,9 +187,10 @@ export interface ProviderSessionManagerV2Shape {
   }) => Effect.Effect<void, ProviderSessionManagerV2Error>;
   /**
    * CONTROL's update queue (HANDOFF-v2 §4): counts the instance's live
-   * sessions whose binary differs from `installedVersion`. With `apply`, each
-   * is released as soon as it is idle (at once if it already is); one with
-   * pending background work waits for it to end. `outdated` counts sessions
+   * sessions whose binary differs from `installedVersion`. With `apply`, each,
+   * and each that has not reported its binary yet, is released as soon as it
+   * is idle (at once if it already is); one with pending background work
+   * waits for it to end. `outdated` counts sessions
    * not yet queued, `waiting` those queued and still live; `runningVersion` is
    * the oldest binary they run (the menu-bar header's version), null when none.
    */
@@ -2313,13 +2314,19 @@ export const layerWithOptions = (
                 continue;
               }
               const version = yield* entry.runtime.runtimeVersion;
-              if (version === undefined || version === input.installedVersion) continue;
-              if (runningVersion === null || compareSemverVersions(version, runningVersion) < 0) {
+              if (version === input.installedVersion) continue;
+              if (
+                version !== undefined &&
+                (runningVersion === null || compareSemverVersions(version, runningVersion) < 0)
+              ) {
                 runningVersion = version;
               }
               if (entry.releaseForUpdate) continue;
+              // A session reports its binary once its first turn starts (Claude's init frame
+              // follows the prompt hooks), so one still starting may predate the install. The
+              // note counts only known versions; an update moves both.
               if (!input.apply) {
-                outdated += 1;
+                if (version !== undefined) outdated += 1;
                 continue;
               }
               const key = sessionKey(entry.runtime.providerSessionId);

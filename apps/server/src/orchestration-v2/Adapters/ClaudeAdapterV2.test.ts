@@ -81,6 +81,8 @@ import {
 } from "../ProviderAdapter.ts";
 import type { ProviderContinuationRequest } from "../ProviderContinuationRequests.ts";
 import { makeProviderFailure } from "../ProviderFailure.ts";
+import { withInstalledClaudeModels } from "../../provider/ClaudeModelCatalog.ts";
+import { SYNTHETIC_CLAUDE_MODEL_CATALOG } from "../../provider/ClaudeModelCatalog.testFixtures.ts";
 import * as ClaudeAdapterV2 from "./ClaudeAdapterV2.ts";
 import * as IdAllocator from "../IdAllocator.ts";
 
@@ -210,6 +212,37 @@ describe("ClaudeAdapterV2 runtime query policy", () => {
     assert.isUndefined(options.thinking);
     assert.equal(options.extraArgs?.["thinking-display"], "omitted");
     assert.notInclude(options.settings ?? {}, { showThinkingSummaries: true });
+  });
+
+  it("runs a model Claude reports, but the bundle lacks, with the options the picker showed", () => {
+    // The installed Claude ships a newer model of a known line (as 2.1.321 did with Fable 5.2).
+    const catalog = withInstalledClaudeModels(SYNTHETIC_CLAUDE_MODEL_CATALOG, [
+      {
+        value: "capable",
+        resolvedModel: "claude-synthetic-capable-2",
+        displayName: "Capable",
+        description: "",
+      },
+    ]);
+    const modelSelection = {
+      ...CLAUDE_TEST_MODEL_SELECTION,
+      model: "claude-synthetic-capable-2",
+      options: [
+        { id: "effort", value: "max" },
+        { id: "fastMode", value: true },
+      ],
+    };
+    const options = ClaudeAdapterV2.makeClaudeQueryOptions({
+      modelSelection,
+      catalog,
+      nativeThreadId: "new-model-thread",
+      resume: false,
+      cwd: "/workspace",
+    });
+    // Its line's runtime comes along too: the default context window's model suffix.
+    assert.equal(options.model, "claude-synthetic-capable-2[expanded]");
+    assert.equal(options.effort, "max");
+    assert.include(options.settings, { fastMode: true });
   });
 
   it("does not enable thinking when the model option disables it", () => {

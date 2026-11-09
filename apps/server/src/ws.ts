@@ -157,7 +157,6 @@ import * as ProviderRegistry from "./provider/ProviderRegistry.ts";
 import * as ProviderInstanceRegistry from "./provider/ProviderInstanceRegistry.ts";
 import * as ModelManifest from "./provider/ModelManifest.ts";
 import * as ProviderMaintenance from "./provider/providerMaintenance.ts";
-import * as ProviderMaintenanceRunner from "./provider/providerMaintenanceRunner.ts";
 import * as ProviderSessionUpdates from "./provider/ProviderSessionUpdates.ts";
 import * as ClaudeSettingsFile from "./provider/ClaudeSettingsFile.ts";
 import * as ProviderAuthService from "./provider/ProviderAuthService.ts";
@@ -2846,6 +2845,7 @@ export const layer = Layer.unwrap(
     const serverBrowser = yield* ServerBrowser.ServerBrowser;
     const serverSelfUpdate = yield* ServerSelfUpdate.ServerSelfUpdate;
     const pullRequests = yield* PullRequestService.PullRequestService;
+    const providerSessionUpdates = yield* ProviderSessionUpdates.ProviderSessionUpdates;
     const sql = yield* SqlClient.SqlClient;
     return HttpRouter.add(
       "GET",
@@ -2908,7 +2908,10 @@ export const layer = Layer.unwrap(
               Layer.provide(Layer.succeed(SqlClient.SqlClient, sql)),
               Layer.provide(AgentSessionScanner.layer),
               Layer.provide(
-                ProviderSessionUpdates.layer.pipe(Layer.provide(ProviderMaintenanceRunner.layer)),
+                Layer.succeed(
+                  ProviderSessionUpdates.ProviderSessionUpdates,
+                  providerSessionUpdates,
+                ),
               ),
               Layer.provide(Layer.succeed(ServerSelfUpdate.ServerSelfUpdate, serverSelfUpdate)),
               // One server-lifetime service means clients share the same PR caches, and a WS

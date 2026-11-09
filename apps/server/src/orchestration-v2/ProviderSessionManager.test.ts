@@ -2794,6 +2794,34 @@ it.effect("ProviderSessionManagerV2 updates an idle session on an older binary a
   }),
 );
 
+it.effect("ProviderSessionManagerV2 moves a session that has not reported its binary yet", () =>
+  Effect.gen(function* () {
+    const state = yield* Ref.make(emptyState);
+    const effect = Effect.gen(function* () {
+      const { manager, providerSessionId } = yield* openUpdateCandidate("provider-update-unknown");
+      const instanceId = ProviderInstanceId.make("codex");
+
+      // The note counts only sessions known to run an older binary.
+      assert.deepEqual(
+        yield* manager.updateOutdated({ instanceId, installedVersion: "1.1.0", apply: false }),
+        { outdated: 0, waiting: 0, runningVersion: null },
+      );
+      // An update cannot prove it runs 1.1.0, so it moves too.
+      yield* manager.updateOutdated({ instanceId, installedVersion: "1.1.0", apply: true });
+      yield* TestClock.adjust("0 millis");
+      yield* Effect.yieldNow;
+      assert.isTrue(Option.isNone(yield* manager.get(providerSessionId)));
+      assert.equal((yield* Ref.get(state)).closeCount, 1);
+    });
+
+    yield* effect.pipe(
+      Effect.provide(
+        layerTest({ state, idleTimeoutMs: 60_000, runtimeVersion: Effect.succeed(undefined) }),
+      ),
+    );
+  }),
+);
+
 it.effect("ProviderSessionManagerV2 holds an update while background work is pending", () =>
   Effect.gen(function* () {
     const state = yield* Ref.make(emptyState);

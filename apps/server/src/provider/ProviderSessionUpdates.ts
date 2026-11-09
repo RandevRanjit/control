@@ -1,12 +1,15 @@
 /**
- * CONTROL's Claude update (HANDOFF-v2 §4), behind both of its prompts: the update note on the sidebar
- * and menu bar, and the provider update toast. Either Update does the whole job, so neither prompt
- * needs pressing again after the other.
+ * CONTROL's Claude update (HANDOFF-v2 §4). Chats follow the installed Claude on their own, whoever
+ * installed it: idle ones move at once, working ones when their turn ends. The update note (sidebar
+ * and menu bar) and the provider update toast only install a newer CLI when one is on offer, and
+ * either Update does the whole job.
  */
 import type { ServerProvider, ServerProviderSessionUpdates } from "@control/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
 
 import * as ProviderSessionManager from "../orchestration-v2/ProviderSessionManager.ts";
 import * as ProviderMaintenanceRunner from "./providerMaintenanceRunner.ts";
@@ -44,13 +47,13 @@ const make = Effect.gen(function* () {
   const providerSessions = yield* ProviderSessionManager.ProviderSessionManagerV2;
   const providerMaintenanceRunner = yield* ProviderMaintenanceRunner.ProviderMaintenanceRunner;
 
-  const sessionUpdates = (apply: boolean) =>
+  const sessionUpdatesFor = (providers: ReadonlyArray<ServerProvider>, apply: boolean) =>
     Effect.gen(function* () {
       let installedVersion: string | null = null;
       let runningVersion: string | null = null;
       let outdated = 0;
       let waiting = 0;
-      for (const provider of yield* providerRegistry.getProviders) {
+      for (const provider of providers) {
         if (provider.version === null) continue;
         const counts = yield* providerSessions.updateOutdated({
           instanceId: provider.instanceId,
@@ -65,6 +68,10 @@ const make = Effect.gen(function* () {
       }
       return { installedVersion, runningVersion, outdated, waiting };
     });
+  const sessionUpdates = (apply: boolean) =>
+    providerRegistry.getProviders.pipe(
+      Effect.flatMap((providers) => sessionUpdatesFor(providers, apply)),
+    );
 
   const updateProvider: ProviderSessionUpdates["Service"]["updateProvider"] = (target) => {
     const driver = typeof target === "string" ? target : target.provider;
@@ -81,6 +88,33 @@ const make = Effect.gen(function* () {
         ),
       );
   };
+
+  // Whatever changed the installed Claude (Control's Update, Claude's own updater, a terminal
+  // `claude update`), chats move onto it: idle ones at once, working ones when their turn ends.
+  // Seeded with what is installed now, so the first change published is already a change.
+  const withVersions = (
+    seen: ReadonlyMap<string, string>,
+    providers: ReadonlyArray<ServerProvider>,
+  ) => {
+    const next = new Map(seen);
+    for (const provider of providers) {
+      if (provider.version !== null) next.set(provider.instanceId, provider.version);
+    }
+    return next;
+  };
+  const installedVersions = yield* Ref.make(
+    withVersions(new Map(), yield* providerRegistry.getProviders),
+  );
+  yield* Stream.runForEach(providerRegistry.streamChanges, (providers) =>
+    Ref.modify(installedVersions, (seen) => {
+      const next = withVersions(seen, providers);
+      const changed = [...next].some(([instanceId, version]) => seen.get(instanceId) !== version);
+      return [changed, next] as const;
+    }).pipe(
+      Effect.flatMap((changed) => (changed ? sessionUpdatesFor(providers, true) : Effect.void)),
+      Effect.ignoreCause({ log: true }),
+    ),
+  ).pipe(Effect.forkScoped);
 
   const update = Effect.gen(function* () {
     for (const provider of yield* providerRegistry.getProviders) {

@@ -418,7 +418,7 @@ describe("provider update launch notification logic", () => {
       phase: "succeeded",
       type: "success",
       title: "Provider updated",
-      description: "New sessions will use the updated provider.",
+      description: "Idle threads switch now, working ones when they finish.",
       dismissAfterVisibleMs: 3_000,
     });
   });
@@ -612,7 +612,7 @@ describe("provider update launch notification logic", () => {
       key: "succeeded:claudeAgent:2026-04-23T10:00:00.000Z:Provider updated.",
       tone: "success",
       title: "Claude updated: v1.1.0",
-      description: "New sessions will use the updated provider.",
+      description: "Idle threads switch now, working ones when they finish.",
       dismissAfterVisibleMs: 3_000,
     });
   });
@@ -1026,13 +1026,13 @@ describe("provider update launch notification logic", () => {
       phase: "succeeded",
       type: "success",
       title: "Provider updated",
-      description: "New sessions will use the updated provider.",
+      description: "Idle threads switch now, working ones when they finish.",
     };
     const successPill: ProviderUpdateSidebarPillView = {
       key: "succeeded:claudeAgent",
       tone: "success",
       title: "Claude updated",
-      description: "New sessions will use the updated provider.",
+      description: "Idle threads switch now, working ones when they finish.",
     };
 
     it("prefers a transport error", () => {
@@ -1210,7 +1210,7 @@ describe("getProviderUpdateRunToastView", () => {
     ).toEqual({
       type: "success",
       title: "2 providers updated",
-      description: "New sessions will use the updated providers.",
+      description: "Idle threads switch now, working ones when they finish.",
     });
     expect(
       getProviderUpdateRunToastView([

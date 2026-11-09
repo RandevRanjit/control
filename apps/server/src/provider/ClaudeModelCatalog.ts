@@ -5,6 +5,7 @@ import {
   ProviderDriverKind,
   type ServerProviderModel,
 } from "@control/contracts";
+import type { ModelInfo } from "@anthropic-ai/claude-agent-sdk";
 import * as Option from "effect/Option";
 import {
   getModelSelectionStringOptionValue,
@@ -70,6 +71,116 @@ export function resolveClaudeModelCatalog(manifest: ModelManifestData): ClaudeMo
 }
 
 export const BUNDLED_CLAUDE_MODEL_CATALOG = resolveClaudeModelCatalog(BUNDLED_MODEL_MANIFEST);
+
+const EFFORT_LABELS: Record<string, string> = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+  xhigh: "Extra High",
+  max: "Max",
+};
+
+/** `claude-fable-5-2` → `claude-fable`: models of one line share Control's options for it. */
+const modelFamily = (slug: string) => slug.replace(/(-\d+)+$/, "");
+
+/** `claude-fable-5-2` → `Claude Fable 5.2`, the manifest's naming. */
+const modelName = (slug: string) => {
+  const parts = slug.split("-");
+  const words = parts.filter((part) => !/^\d+$/.test(part));
+  const version = parts.filter((part) => /^\d+$/.test(part)).join(".");
+  return [...words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)), version]
+    .filter((part) => part !== "")
+    .join(" ");
+};
+
+/**
+ * The installed Claude decides which models are current, from the rows it reports at start-up
+ * (`initializationResult().models`): a model it reports that the manifest lacks joins with its
+ * line's options (Fable 5.2 takes Fable 5.1's), or with the effort levels and fast mode it reports
+ * for a new line; manifest models it no longer reports move to the older models; its aliases
+ * (`fable`) point where it says. Rows without a plain `resolvedModel` id (older CLIs, a suffixed
+ * variant such as `[1m]`) change nothing.
+ */
+export function withInstalledClaudeModels(
+  catalog: ClaudeModelCatalog,
+  reported: ReadonlyArray<ModelInfo>,
+): ClaudeModelCatalog {
+  const rows = reported.filter((row) => /^claude-[a-z0-9-]+$/.test(row.resolvedModel ?? ""));
+  if (rows.length === 0) return catalog;
+  const reportedSlugs = new Set(rows.map((row) => row.resolvedModel!));
+  const aliasTarget = new Map(
+    rows
+      .filter((row) => row.value !== "default" && row.value !== row.resolvedModel)
+      .map((row) => [row.value.toLowerCase(), row.resolvedModel!]),
+  );
+  const known = new Set(catalog.models.map((entry) => entry.model.slug));
+
+  const added: Array<ClaudeCatalogModel> = [];
+  for (const row of rows) {
+    const slug = row.resolvedModel!;
+    if (known.has(slug)) continue;
+    known.add(slug);
+    const family = catalog.models.filter(
+      (entry) => !entry.model.isCustom && modelFamily(entry.model.slug) === modelFamily(slug),
+    );
+    const predecessor = family.find((entry) => !entry.model.isLegacy) ?? family[0];
+    const levels = row.supportedEffortLevels ?? [];
+    added.push({
+      model: {
+        slug,
+        name: modelName(slug),
+        badge: "new",
+        isCustom: false,
+        capabilities: predecessor?.model.capabilities ?? {
+          optionDescriptors: [
+            ...(levels.length === 0
+              ? []
+              : [
+                  {
+                    id: "effort",
+                    label: "Reasoning",
+                    type: "select" as const,
+                    options: levels.map((id) => ({ id, label: EFFORT_LABELS[id] ?? id })),
+                  },
+                ]),
+            ...(row.supportsFastMode
+              ? [{ id: "fastMode", label: "Fast Mode", type: "boolean" as const }]
+              : []),
+          ],
+        },
+      },
+      runtime: predecessor?.runtime ?? {},
+      compatibility: {},
+    });
+  }
+
+  const models = [...added, ...catalog.models].map((entry): ClaudeCatalogModel => {
+    if (entry.model.isCustom) return entry;
+    const { isLegacy: _isLegacy, aliases: currentAliases, ...model } = entry.model;
+    const aliases = [
+      ...(currentAliases ?? []).filter((alias) => {
+        const target = aliasTarget.get(alias.toLowerCase());
+        return target === undefined || target === model.slug;
+      }),
+      ...[...aliasTarget]
+        .filter(
+          ([alias, target]) =>
+            target === model.slug &&
+            !currentAliases?.some((existing) => existing.toLowerCase() === alias),
+        )
+        .map(([alias]) => alias),
+    ];
+    return {
+      ...entry,
+      model: {
+        ...model,
+        ...(aliases.length > 0 ? { aliases } : {}),
+        ...(reportedSlugs.has(model.slug) ? {} : { isLegacy: true }),
+      },
+    };
+  });
+  return { models };
+}
 
 /**
  * Scope the catalog to one instance's settings: custom model slugs stay opaque

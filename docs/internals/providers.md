@@ -42,6 +42,22 @@ Ownership is cached per instance and re-read immediately before an update runs. 
 changed since the advisory, and reports success only when the refreshed provider is still installed
 with a readable, current version.
 
+## Chats and the Claude model list follow the installed binary
+
+Whoever installs a new Claude (Control's Update, Claude's own updater, a terminal `claude update`),
+the next provider check sees the new version and
+[ProviderSessionUpdates](../../apps/server/src/provider/ProviderSessionUpdates.ts) queues every live
+chat not proven to run it: idle ones are released at once, working ones when their turn ends, and
+pending background work holds a chat as it holds idle release. The next send starts the new binary,
+since `claude` is looked up on `PATH` at each spawn. Claude reports its version only in the init
+frame, which follows the prompt hooks, so a chat that is still starting counts as old.
+
+The Claude model list is the manifest plus the rows the installed binary reports at start-up
+(`initializationResult().models`, read by the capabilities probe, which is cached per version).
+Those rows decide which models are current and where aliases point, and add any model the manifest
+lacks, with its line's options. Turns compile against that same catalog, which the driver passes to
+the adapter: the bundled catalog alone drops a new model's effort and fast mode.
+
 ## Protocol traps
 
 Native `/goal` state belongs to the provider and is mirrored on the provider thread. Claude's SDK mode emits no goal events; its adapter reads goal state from the

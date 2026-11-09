@@ -13,6 +13,7 @@ import {
   resolveClaudeModelsForVersion,
   resolveClaudeModelSlug,
   scopeClaudeModelCatalog,
+  withInstalledClaudeModels,
 } from "./ClaudeModelCatalog.ts";
 
 /**
@@ -240,6 +241,65 @@ describe("Claude model catalog", () => {
     assert.deepStrictEqual(
       resolveClaudeModelsForVersion(catalog, "3.2.0").map((model) => model.slug),
       ["claude-synthetic-next", "claude-custom-tuned"],
+    );
+  });
+  it("follows the models the installed Claude reports", () => {
+    const catalog = resolveClaudeModelCatalog(manifest());
+    const row = (
+      value: string,
+      resolvedModel: string | undefined,
+      levels: Array<"low" | "xhigh">,
+    ) => ({
+      value,
+      ...(resolvedModel === undefined ? {} : { resolvedModel }),
+      displayName: value,
+      description: "",
+      supportedEffortLevels: levels,
+      supportsFastMode: true,
+    });
+    const live = withInstalledClaudeModels(catalog, [
+      row("default", "claude-synthetic-next-2", ["low"]),
+      row("synthetic", "claude-synthetic-next-2", ["low"]),
+      row("fresh", "claude-fresh-1-5", ["low", "xhigh"]),
+    ]);
+    const bySlug = (slug: string) => live.models.find((entry) => entry.model.slug === slug)!.model;
+
+    // A newer model of a known line joins with that line's options and takes its alias.
+    assert.strictEqual(bySlug("claude-synthetic-next-2").name, "Claude Synthetic Next 2");
+    assert.strictEqual(bySlug("claude-synthetic-next-2").badge, "new");
+    assert.isUndefined(bySlug("claude-synthetic-next-2").isLegacy);
+    assert.strictEqual(resolveClaudeModelSlug(live, "synthetic"), "claude-synthetic-next-2");
+    assert.strictEqual(
+      resolveClaudeCatalogEffort(live, "claude-synthetic-next-2", "extreme"),
+      "extreme",
+    );
+    assert.strictEqual(
+      normalizeClaudeCatalogEffort(live, "extreme", "claude-synthetic-next-2"),
+      "high",
+    );
+    // The one it replaces stays selectable among the older models.
+    assert.isTrue(bySlug("claude-synthetic-next").isLegacy);
+    assert.isUndefined(bySlug("claude-synthetic-next").aliases);
+    // A new line gets the effort levels and fast mode Claude reports for it.
+    assert.strictEqual(bySlug("claude-fresh-1-5").name, "Claude Fresh 1.5");
+    assert.strictEqual(resolveClaudeCatalogEffort(live, "claude-fresh-1-5", "xhigh"), "xhigh");
+    assert.deepStrictEqual(
+      bySlug("claude-fresh-1-5").capabilities?.optionDescriptors?.map(
+        (descriptor) => descriptor.id,
+      ),
+      ["effort", "fastMode"],
+    );
+    // A suffixed variant is not a model of its own.
+    assert.isUndefined(
+      withInstalledClaudeModels(catalog, [
+        row("synthetic", "claude-synthetic-next", ["low"]),
+        row("synthetic[1m]", "claude-synthetic-next[1m]", ["low"]),
+      ]).models.find((entry) => entry.model.slug.includes("[")),
+    );
+    // An older CLI that reports no resolved ids leaves the manifest as it is.
+    assert.strictEqual(
+      withInstalledClaudeModels(catalog, [row("synthetic", undefined, ["low"])]),
+      catalog,
     );
   });
 });

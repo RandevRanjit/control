@@ -5,8 +5,10 @@ import {
   type ServerProvider,
   type ServerProviderUpdateState,
 } from "@control/contracts";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 
@@ -159,6 +161,95 @@ describe("ProviderSessionUpdates", () => {
         service.updateProvider({ provider: CLAUDE, instanceId: INSTANCE }),
       );
       assert.deepStrictEqual(moves, []);
+    }),
+  );
+  /**
+   * The watcher with `installed` readable at start-up, then each refresh published as the registry
+   * does (readable, then published). Returns the versions it moved chats onto, read once the last
+   * refresh's move landed.
+   */
+  const watch = (
+    installed: ReadonlyArray<ServerProvider>,
+    refreshes: ReadonlyArray<ServerProvider>,
+  ) =>
+    Effect.gen(function* () {
+      const providers = yield* Ref.make(installed);
+      const changes = yield* Queue.unbounded<ReadonlyArray<ServerProvider>>();
+      const moves = yield* Ref.make<ReadonlyArray<string>>([]);
+      const done = yield* Deferred.make<void>();
+      const last = refreshes.at(-1)!.version;
+      yield* Effect.gen(function* () {
+        yield* ProviderSessionUpdates.ProviderSessionUpdates;
+        for (const next of refreshes) {
+          yield* Ref.set(providers, [next]);
+          yield* Queue.offer(changes, [next]);
+        }
+        yield* Deferred.await(done);
+      }).pipe(
+        Effect.provide(
+          ProviderSessionUpdates.layer.pipe(
+            Layer.provide(
+              Layer.mergeAll(
+                Layer.succeed(ProviderRegistry.ProviderRegistry, {
+                  getProviders: Ref.get(providers),
+                  refresh: unused,
+                  refreshInstance: unused,
+                  refreshWorkspaceSnapshot: unused,
+                  getProviderMaintenanceCapabilitiesForInstance: unused,
+                  setProviderMaintenanceActionState: unused,
+                  streamChanges: Stream.fromQueue(changes),
+                }),
+                Layer.succeed(
+                  ProviderSessionManager.ProviderSessionManagerV2,
+                  ProviderSessionManager.ProviderSessionManagerV2.of({
+                    shutdown: Effect.void,
+                    open: unused,
+                    get: unused,
+                    close: unused,
+                    closeInstance: unused,
+                    release: unused,
+                    detach: unused,
+                    updateOutdated: ({ installedVersion, apply }) =>
+                      Effect.gen(function* () {
+                        if (apply) yield* Ref.update(moves, (all) => [...all, installedVersion]);
+                        if (installedVersion === last) yield* Deferred.succeed(done, undefined);
+                        return { outdated: 0, waiting: 0, runningVersion: null };
+                      }),
+                  }),
+                ),
+                Layer.succeed(ProviderMaintenanceRunner.ProviderMaintenanceRunner, {
+                  updateProvider: unused,
+                }),
+              ),
+            ),
+          ),
+        ),
+      );
+      return yield* Ref.get(moves);
+    });
+
+  it.effect("Claude updating itself moves the chats without a click", () =>
+    Effect.gen(function* () {
+      // Started before Claude was checked; Claude's own updater lands 2.1.305, then 2.1.306.
+      const moves = yield* watch(
+        [],
+        [
+          claude,
+          { ...claude, version: LATEST },
+          { ...claude, version: LATEST, checkedAt: "2026-10-20T10:05:00.000Z" },
+          { ...claude, version: "2.1.306" },
+        ],
+      );
+      // Each new version moves the chats once; a refresh that changes no version moves nothing.
+      assert.deepStrictEqual(moves, ["2.1.304", LATEST, "2.1.306"]);
+    }),
+  );
+
+  it.effect("the first change published after start-up moves the chats", () =>
+    Effect.gen(function* () {
+      // 2.1.304 was installed when the server started; the registry publishes only changes.
+      const moves = yield* watch([claude], [claude, { ...claude, version: LATEST }]);
+      assert.deepStrictEqual(moves, [LATEST]);
     }),
   );
 });

@@ -121,11 +121,8 @@ function getProviderUpdatedTitle(provider: Pick<ServerProvider, "driver" | "vers
     : `${providerName} updated`;
 }
 
-function getProviderUpdatedDescription(providerCount: number): string {
-  return providerCount === 1
-    ? "New sessions will use the updated provider."
-    : "New sessions will use the updated providers.";
-}
+// The server moves chats onto the installed CLI itself (ProviderSessionUpdates).
+const PROVIDER_UPDATED_DESCRIPTION = "Idle threads switch now, working ones when they finish.";
 
 function getProviderFailedUpdateTitle(
   provider: Pick<ServerProvider, "driver" | "versionAdvisory">,
@@ -323,7 +320,7 @@ export function getProviderUpdateProgressToastView(input: {
       phase: "succeeded",
       type: "success",
       title: input.providerCount === 1 ? "Provider updated" : "Provider updates finished",
-      description: getProviderUpdatedDescription(input.providerCount),
+      description: PROVIDER_UPDATED_DESCRIPTION,
       dismissAfterVisibleMs: PROVIDER_UPDATE_SUCCESS_VISIBLE_MS,
     };
   }
@@ -371,7 +368,7 @@ export function getProviderUpdateRunToastView(
     return {
       type: "success",
       title: settled.length === 1 ? "Provider updated" : `${settled.length} providers updated`,
-      description: getProviderUpdatedDescription(settled.length),
+      description: PROVIDER_UPDATED_DESCRIPTION,
     };
   }
   return {
@@ -567,7 +564,7 @@ export function getProviderUpdateSidebarPillView(
         succeededProviders.length === 1
           ? getProviderUpdatedTitle(succeededProvider)
           : `${succeededProviders.length} providers updated`,
-      description: getProviderUpdatedDescription(succeededProviders.length),
+      description: PROVIDER_UPDATED_DESCRIPTION,
       dismissAfterVisibleMs: PROVIDER_UPDATE_SUCCESS_VISIBLE_MS,
     });
   }

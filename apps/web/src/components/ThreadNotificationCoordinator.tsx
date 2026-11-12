@@ -164,17 +164,19 @@ function EnvironmentNotifications({
               : status === "failed"
                 ? "Thread failed"
                 : "Input needed";
-      if (hasNotificationSound(mode)) {
+      // Focused on Control, the owner is already looking: only an opted-in toast shows, and the
+      // sound rings only with an alert that shows (owner, 5 Nov).
+      const focused = document.visibilityState === "visible" && document.hasFocus();
+      const showToast =
+        inAppNotificationsEnabled &&
+        focused &&
+        (activeEnvironmentId !== environmentId || activeThreadId !== thread.id);
+      if (hasNotificationSound(mode) && (!focused || showToast)) {
         void playNotificationSound(kind, () =>
           hasNotificationSound(getClientSettings().notificationMode),
         );
       }
-      if (
-        inAppNotificationsEnabled &&
-        document.visibilityState === "visible" &&
-        document.hasFocus() &&
-        (activeEnvironmentId !== environmentId || activeThreadId !== thread.id)
-      ) {
+      if (showToast) {
         const toastId = toastManager.add({
           type: kind === "completion" ? "success" : status === "failed" ? "error" : "warning",
           title,
@@ -207,7 +209,7 @@ function EnvironmentNotifications({
       }
       if (
         !hasDesktopNotifications(mode) ||
-        (document.visibilityState === "visible" && document.hasFocus()) ||
+        focused ||
         typeof Notification === "undefined" ||
         Notification.permission !== "granted"
       )

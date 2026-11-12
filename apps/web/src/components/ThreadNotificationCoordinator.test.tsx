@@ -311,6 +311,21 @@ describe("thread notifications", () => {
     expect(state.notification).not.toHaveBeenCalled();
   });
 
+  it("stays silent while Control is focused and shows no alert, and rings once it is away", async () => {
+    state.mode = "notifications-and-sound";
+    state.inApp = false;
+    await render();
+    await complete();
+    expect(state.sound).not.toHaveBeenCalled();
+    expect(state.notification).not.toHaveBeenCalled();
+
+    state.focused = false;
+    state.input = true;
+    await render();
+    expect(state.sound).toHaveBeenCalledWith("input", expect.any(Function));
+    expect(state.notification).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps system alerts when the app is in the background", async () => {
     state.mode = "notifications";
     state.focused = false;

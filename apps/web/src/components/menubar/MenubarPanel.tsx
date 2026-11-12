@@ -35,7 +35,7 @@ import {
 } from "../Sidebar.logic";
 import { SidebarUsageStrip } from "../sidebar/SidebarChrome";
 import { SidebarSessionUpdateNote } from "../sidebar/SidebarSessionUpdateNote";
-import { sessionUpdateNoteView } from "../sidebar/sessionUpdateNote";
+import { claudeUpdateOffer, sessionUpdateNoteView } from "../sidebar/sessionUpdateNote";
 import { menubarIcon, menubarPanelHeight, menubarView, settleIcon } from "./menubar.logic";
 
 const act = (action: DesktopMenubarAction) => void window.desktopBridge?.menubar?.act(action);
@@ -66,10 +66,11 @@ export function MenubarPanel() {
           input: {},
         }),
   );
+  const updateOffer = claudeUpdateOffer(useAtomValue(primaryServerProvidersAtom));
   const icon = menubarIcon({
     serverUp,
     fullLock: until !== null,
-    update: sessionUpdateNoteView(updates.data, false)?.kind === "out",
+    update: sessionUpdateNoteView(updates.data, false, updateOffer)?.kind === "out",
     view,
   });
   useSettledIcon(icon);

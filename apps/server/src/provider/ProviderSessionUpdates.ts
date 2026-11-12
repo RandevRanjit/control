@@ -1,8 +1,7 @@
 /**
  * CONTROL's Claude update (HANDOFF-v2 §4). Chats follow the installed Claude on their own, whoever
  * installed it: idle ones move at once, working ones when their turn ends. The update note (sidebar
- * and menu bar) and the provider update toast only install a newer CLI when one is on offer, and
- * either Update does the whole job.
+ * and menu bar) is the one place a newer CLI is offered, and its Update does the whole job.
  */
 import type { ServerProvider, ServerProviderSessionUpdates } from "@control/contracts";
 import * as Context from "effect/Context";
@@ -15,7 +14,7 @@ import * as ProviderSessionManager from "../orchestration-v2/ProviderSessionMana
 import * as ProviderMaintenanceRunner from "./providerMaintenanceRunner.ts";
 import * as ProviderRegistry from "./ProviderRegistry.ts";
 
-/** A newer CLI its installer fetches in one go, as the toast offers it, with no update already under way. */
+/** A newer CLI its installer fetches in one go, as the note offers it, with no update already under way. */
 const installOnOffer = (provider: ServerProvider) =>
   provider.enabled &&
   provider.versionAdvisory?.status === "behind_latest" &&
@@ -37,7 +36,7 @@ export class ProviderSessionUpdates extends Context.Service<
      * is installed; the provider's update state reports the failure.
      */
     readonly update: Effect.Effect<ServerProviderSessionUpdates>;
-    /** An install from the toast or Settings: once it succeeds, idle chats move onto the new binary. */
+    /** An install from Settings: once it succeeds, idle chats move onto the new binary. */
     readonly updateProvider: ProviderMaintenanceRunner.ProviderMaintenanceRunner["Service"]["updateProvider"];
   }
 >()("@control/server/provider/ProviderSessionUpdates") {}

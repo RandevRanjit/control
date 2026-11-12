@@ -205,7 +205,7 @@ const scope = {
   capabilities: new Set(["preview"] as const),
   issuedAt: 1,
 };
-/** The same thread, as another of its agent sessions. */
+/** The same thread after its agent restarts with a new credential. */
 const asSession = (providerSessionId: string) => ({
   ...scope,
   thread: { ...testThread, providerSessionId },
@@ -464,14 +464,32 @@ it.live.each([
   ).pipe(Effect.provide(layer)),
 );
 
-it.live("enforces provider ownership and explicit targets when a session has multiple tabs", () =>
+it.live("a thread's restarted agent keeps the tabs it opened, but not the owner's", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const { broker, tabId } = yield* ready;
+      const restarted = asSession("agent-b");
+      expect(
+        yield* broker.invoke({
+          scope: restarted,
+          operation: "evaluate",
+          input: { expression: "current()" },
+        }),
+      ).toBe("evaluated");
+      expect(
+        yield* broker.invoke({
+          scope: restarted,
+          tabId,
+          operation: "evaluate",
+          input: { expression: "named()" },
+        }),
+      ).toBe("evaluated");
+      const manager = yield* Manager.PreviewManager;
+      const owners = yield* manager.open({ threadId: scope.thread.threadId, runtime: "server" });
       const foreign = yield* broker
         .invoke<void>({
-          scope: asSession("agent-b"),
-          tabId,
+          scope,
+          tabId: PreviewTabId.make(owners.tabId),
           operation: "evaluate",
           input: { expression: "foreign()" },
         })
@@ -480,10 +498,14 @@ it.live("enforces provider ownership and explicit targets when a session has mul
         _tag: "PreviewAutomationControlInterruptedError",
         reason: "agentMismatch",
       });
-      expect(contexts[0]!.sessions[0]!.send).not.toHaveBeenCalledWith(
-        "Runtime.evaluate",
-        expect.anything(),
-      );
+    }),
+  ).pipe(Effect.provide(layer)),
+);
+
+it.live("enforces explicit targets when a session has multiple tabs", () =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const { broker, tabId } = yield* ready;
       yield* broker.invoke({
         scope,
         operation: "open",
@@ -769,19 +791,6 @@ it.live("the owner can close a tab while an agent action waits on its dialog", (
         accept: vi.fn(),
         dismiss: vi.fn(),
       });
-      const foreign = yield* broker
-        .invoke<void>({
-          scope: asSession("agent-b"),
-          tabId,
-          operation: "close",
-          input: {},
-        })
-        .pipe(Effect.flip);
-      expect(foreign).toMatchObject({
-        _tag: "PreviewAutomationControlInterruptedError",
-        reason: "agentMismatch",
-      });
-      expect(page.close).not.toHaveBeenCalled();
       yield* broker.invoke({ scope, tabId, operation: "close", input: {} });
       expect(yield* Fiber.join(running)).toBe("closed");
       expect(page.close).toHaveBeenCalled();
@@ -1073,9 +1082,9 @@ it.live("an agent's tabs stop at the limit until an unwatched idle tab closes", 
         _tag: "PreviewAutomationControlInterruptedError",
         reason: "tabLimit",
       });
-      // Another agent session keeps its own budget.
+      // Another thread keeps its own budget.
       yield* broker.invoke({
-        scope: asSession("agent-b"),
+        scope: { ...scope, thread: { ...testThread, threadId: ThreadId.make("other-thread") } },
         operation: "open",
         input: { reuseExistingTab: false, show: false },
       });

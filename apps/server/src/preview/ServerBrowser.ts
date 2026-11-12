@@ -1128,7 +1128,7 @@ const make = Effect.gen(function* () {
   const assertTabCapacity = (agentSessionId: string) => {
     if (atTabLimit(agentSessionId))
       throw new BrowserControlInterrupted(
-        `Too many server browser tabs are open (${AGENT_TAB_LIMIT} per agent session, ${SERVER_TAB_LIMIT} per server). Close one with preview_close or reuse one from preview_status tabs.`,
+        `Too many server browser tabs are open (${AGENT_TAB_LIMIT} per thread, ${SERVER_TAB_LIMIT} per server). Close one with preview_close or reuse one from preview_status tabs.`,
         "tabLimit",
       );
   };
@@ -1493,7 +1493,7 @@ const make = Effect.gen(function* () {
     }
     if (tab.control.agentId !== request.agentSessionId)
       throw new BrowserControlInterrupted(
-        "This tab belongs to another agent session or a human. Open your own tab.",
+        "This tab is the owner's, not an agent's. Open your own tab.",
         "agentMismatch",
       );
     return tab;

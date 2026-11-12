@@ -113,7 +113,7 @@ export const PreviewAutomationStatus = Schema.Struct({
       }),
     ),
   ),
-  /** Server hosts: every tab this agent session owns, including popups its pages opened. */
+  /** Server hosts: every tab this thread's agent owns, including popups its pages opened. */
   tabs: Schema.optional(
     Schema.Array(
       Schema.Struct({
@@ -964,7 +964,7 @@ export class PreviewAutomationControlInterruptedError extends Schema.TaggedError
 ) {
   override get message(): string {
     if (this.reason === "agentMismatch")
-      return "This browser tab belongs to another agent session or a human. Open your own tab.";
+      return "This browser tab is the owner's, not an agent's. Open your own tab.";
     if (this.reason === "humanControl")
       return "A human controls this browser tab. Wait until they release control.";
     if (this.reason === "tabRequired")

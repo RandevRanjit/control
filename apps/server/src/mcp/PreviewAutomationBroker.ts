@@ -185,6 +185,14 @@ const HOST_REPLY_GRACE_MS = 5_000;
 const hostAssignmentKey = (scope: McpInvocationContext.McpThreadInvocationScope): string =>
   `${scope.environmentId}\u0000${scope.thread.providerSessionId}`;
 
+/**
+ * Who owns a tab, as the browser host checks it: the thread, not its credential. A thread holds
+ * one credential at a time and gets a new one whenever its agent restarts, so the restarted agent
+ * keeps the tabs it opened instead of finding them owned by a stranger.
+ */
+const tabOwnerKey = (scope: McpInvocationContext.McpThreadInvocationScope): string =>
+  `${scope.environmentId}\u0000${scope.thread.threadId}`;
+
 const isPreviewTabId = Schema.is(PreviewTabId);
 const decodeControlReason = Schema.decodeUnknownOption(PreviewAutomationControlReason);
 
@@ -670,7 +678,7 @@ export const make = Effect.gen(function* PreviewAutomationBrokerMake() {
             threadId: input.scope.thread.threadId,
             tabId: requestContext.tabId,
             tabIdExplicit: input.tabId !== undefined,
-            agentSessionId: hostAssignmentKey(input.scope),
+            agentSessionId: tabOwnerKey(input.scope),
             operation: input.operation,
             input: input.input,
             timeoutMs,

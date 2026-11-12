@@ -88,7 +88,10 @@ import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 
-import { userFacingDispatchErrorMessage } from "../orchestration-v2/UserFacingErrors.ts";
+import {
+  OrchestratorCommandRejectedError,
+  OrchestratorDispatchError,
+} from "../orchestration-v2/Orchestrator.ts";
 import * as ProviderAdapterRegistry from "../orchestration-v2/ProviderAdapterRegistry.ts";
 import {
   subagentResultForRun,
@@ -248,18 +251,20 @@ export class OrchestratorMcpService extends Context.Service<
 >()("@control/server/mcp/OrchestratorMcpService") {}
 
 const isThreadManagementError = Schema.is(ThreadManagementService.ThreadManagementError);
+const isDispatchRejection = Schema.is(
+  Schema.Union([OrchestratorDispatchError, OrchestratorCommandRejectedError]),
+);
 
 function failure(code: OrchestratorMcpFailure["code"], message: string): OrchestratorMcpFailure {
   return new OrchestratorMcpFailure({ code, message });
 }
 
 function threadManagementFailure(error: unknown): OrchestratorMcpFailure {
-  // A rejected command carries the orchestrator's reason ("already closed") under its generic wrapper.
-  if (!isThreadManagementError(error))
-    return failure(
-      "orchestration_error",
-      userFacingDispatchErrorMessage(error) ?? errorMessage(error),
-    );
+  // The decider's string reason ("already closed") is public; any other cause may hold private
+  // paths. Same rule as threadAccess's dispatchFailure, which this module cannot import.
+  if (isDispatchRejection(error) && typeof error.cause === "string" && error.cause.length > 0)
+    return failure("orchestration_error", Array.from(error.cause).slice(0, 1000).join(""));
+  if (!isThreadManagementError(error)) return failure("orchestration_error", errorMessage(error));
   switch (error._tag) {
     case "ThreadManagementThreadNotFoundError":
       return failure("thread_not_found", error.message);

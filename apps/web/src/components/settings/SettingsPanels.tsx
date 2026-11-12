@@ -524,6 +524,9 @@ export function useSettingsRestore(onRestored?: () => void) {
       ...(settings.sidebarAutoHide !== DEFAULT_UNIFIED_SETTINGS.sidebarAutoHide
         ? ["Hide sidebar automatically"]
         : []),
+      ...(settings.sidebarAutoHideMakesRoom !== DEFAULT_UNIFIED_SETTINGS.sidebarAutoHideMakesRoom
+        ? ["Make room for the sidebar"]
+        : []),
       ...(settings.reduceMotion !== DEFAULT_UNIFIED_SETTINGS.reduceMotion ? ["Reduce motion"] : []),
       ...(settings.environmentIdentificationMode !==
       DEFAULT_UNIFIED_SETTINGS.environmentIdentificationMode
@@ -658,6 +661,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       settings.chatWidth,
       settings.mathRenderingEnabled,
       settings.sidebarAutoHide,
+      settings.sidebarAutoHideMakesRoom,
       settings.enableAgentBrowserAccess,
       settings.confirmQuit,
       settings.confirmThreadArchive,
@@ -781,6 +785,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       chatWidth: DEFAULT_UNIFIED_SETTINGS.chatWidth,
       mathRenderingEnabled: DEFAULT_UNIFIED_SETTINGS.mathRenderingEnabled,
       sidebarAutoHide: DEFAULT_UNIFIED_SETTINGS.sidebarAutoHide,
+      sidebarAutoHideMakesRoom: DEFAULT_UNIFIED_SETTINGS.sidebarAutoHideMakesRoom,
       timestampFormat: DEFAULT_UNIFIED_SETTINGS.timestampFormat,
       notificationMode: DEFAULT_UNIFIED_SETTINGS.notificationMode,
       inAppNotificationsEnabled: DEFAULT_UNIFIED_SETTINGS.inAppNotificationsEnabled,
@@ -1461,6 +1466,34 @@ export function AppearanceSettingsPanel() {
             />
           }
         />
+        {settings.sidebarAutoHide ? (
+          <SettingsRow
+            {...searchableSetting("sidebar-auto-hide-makes-room")}
+            description="When the sidebar comes out, the thread and composer move over beside it instead of sitting underneath."
+            resetAction={
+              settings.sidebarAutoHideMakesRoom !==
+              DEFAULT_UNIFIED_SETTINGS.sidebarAutoHideMakesRoom ? (
+                <SettingResetButton
+                  label="make room for the sidebar"
+                  onClick={() =>
+                    updateSettings({
+                      sidebarAutoHideMakesRoom: DEFAULT_UNIFIED_SETTINGS.sidebarAutoHideMakesRoom,
+                    })
+                  }
+                />
+              ) : null
+            }
+            control={
+              <Switch
+                checked={settings.sidebarAutoHideMakesRoom}
+                onCheckedChange={(checked) =>
+                  updateSettings({ sidebarAutoHideMakesRoom: Boolean(checked) })
+                }
+                aria-label="Make room for the sidebar"
+              />
+            }
+          />
+        ) : null}
       </SettingsSection>
 
       <SettingsSection id="motion" title="Motion">

@@ -518,6 +518,9 @@ export const ClientSettingsSchema = Schema.Struct({
   // The left sidebar floats over the content like the macOS Dock: the pointer at the
   // window's edge shows it, and it hides once the pointer has been away for 2 seconds.
   sidebarAutoHide: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
+  // While the auto-hidden sidebar is out, the thread moves over to make room instead of sitting
+  // under it.
+  sidebarAutoHideMakesRoom: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
 });
 export type ClientSettings = typeof ClientSettingsSchema.Type;
 
@@ -1585,5 +1588,6 @@ export const ClientSettingsPatch = Schema.Struct({
   wordWrap: Schema.optionalKey(Schema.Boolean),
   mathRenderingEnabled: Schema.optionalKey(Schema.Boolean),
   sidebarAutoHide: Schema.optionalKey(Schema.Boolean),
+  sidebarAutoHideMakesRoom: Schema.optionalKey(Schema.Boolean),
 });
 export type ClientSettingsPatch = typeof ClientSettingsPatch.Type;

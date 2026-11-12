@@ -254,6 +254,12 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: ["dock auto hide left edge pointer mouse reveal collapse"],
   },
   {
+    id: "sidebar-auto-hide-makes-room",
+    title: "Make room for the sidebar",
+    to: "/settings/appearance",
+    searchTerms: ["push shift move thread composer overlap cover auto hide"],
+  },
+  {
     id: "reduce-motion",
     title: "Reduce motion",
     to: "/settings/appearance",

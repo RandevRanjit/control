@@ -35,6 +35,8 @@ const SIDEBAR_RESIZE_DEFAULT_MIN_WIDTH = 16 * 16;
 type SidebarAutoHideContext = {
   revealed: boolean;
   controller: SidebarAutoHide;
+  /** The content moves over while it shows, instead of sitting under it. */
+  makesRoom: boolean;
 };
 
 type SidebarContextProps = {
@@ -101,11 +103,18 @@ function useSidebarVisibility() {
   return autoHide ? autoHide.revealed : open;
 }
 
+/** Whether an auto-hidden sidebar is out and the content should make room for it. */
+function useSidebarMakingRoom() {
+  const { autoHide } = useSidebar();
+  return autoHide !== null && autoHide.makesRoom && autoHide.revealed;
+}
+
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
   onOpenChange: setOpenProp,
   autoHide = false,
+  autoHideMakesRoom = false,
   className,
   style,
   children,
@@ -116,6 +125,8 @@ function SidebarProvider({
   onOpenChange?: (open: boolean) => void;
   /** Float the desktop sidebar over the content, shown from the edge and hidden when left. */
   autoHide?: boolean;
+  /** While the auto-hidden sidebar shows, the content makes room (useSidebarMakingRoom). */
+  autoHideMakesRoom?: boolean;
 }) {
   const isMobile = useIsMobile();
   const autoHideActive = autoHide && !isMobile;
@@ -179,7 +190,9 @@ function SidebarProvider({
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
-      autoHide: autoHideActive ? { revealed, controller: autoHideController } : null,
+      autoHide: autoHideActive
+        ? { revealed, controller: autoHideController, makesRoom: autoHideMakesRoom }
+        : null,
       isMobile,
       open: layoutOpen,
       openMobile,
@@ -191,6 +204,7 @@ function SidebarProvider({
     [
       autoHideActive,
       autoHideController,
+      autoHideMakesRoom,
       revealed,
       state,
       layoutOpen,
@@ -921,5 +935,6 @@ export {
   SidebarRail,
   SidebarTrigger,
   useSidebar,
+  useSidebarMakingRoom,
   useSidebarVisibility,
 };

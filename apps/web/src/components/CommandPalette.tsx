@@ -2074,6 +2074,22 @@ function OpenCommandPaletteDialog(props: {
       await updateClientSettings({ sidebarAutoHide: !clientSettings.sidebarAutoHide });
     },
   });
+  if (clientSettings.sidebarAutoHide) {
+    actionItems.push({
+      kind: "action",
+      value: "action:sidebar-auto-hide-makes-room",
+      searchTerms: ["sidebar", "make room", "push", "shift", "move", "overlap", "cover"],
+      title: clientSettings.sidebarAutoHideMakesRoom
+        ? "Let the sidebar cover the thread"
+        : "Make room for the sidebar",
+      icon: <PanelLeftDashedIcon className={ITEM_ICON_CLASS} />,
+      run: async () => {
+        await updateClientSettings({
+          sidebarAutoHideMakesRoom: !clientSettings.sidebarAutoHideMakesRoom,
+        });
+      },
+    });
+  }
 
   // New group lives here and on a group's menu; the sidebar's top row keeps only the pen (owner, 29 Oct).
   if (projects.length > 0 && primaryEnvironmentId !== null) {

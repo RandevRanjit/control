@@ -136,6 +136,13 @@ describe("ClientSettings rich text composer", () => {
       sidebarAutoHide: true,
     });
   });
+
+  it("lets an auto-hidden sidebar cover the thread unless making room is chosen", () => {
+    expect(decodeClientSettings({}).sidebarAutoHideMakesRoom).toBe(false);
+    expect(decodeClientSettingsPatch({ sidebarAutoHideMakesRoom: true })).toEqual({
+      sidebarAutoHideMakesRoom: true,
+    });
+  });
   it("enables rich text for new and existing settings without a saved preference", () => {
     expect(decodeClientSettings({}).composerRichTextEnabled).toBe(true);
     expect(decodeClientSettings({ sendShortcut: "mod-enter" }).composerRichTextEnabled).toBe(true);

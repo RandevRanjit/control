@@ -54,6 +54,10 @@ thread; it slides away two seconds after the pointer leaves, and stays while one
 menus is open or you're typing in it. The sidebar shortcut shows and hides it too. On
 web and desktop only.
 
+Turn on **Make room for the sidebar** beneath it (or run it from the command palette) and
+the thread and composer move over beside the sidebar while it's out, instead of sitting
+underneath it.
+
 ## Pin and reorder threads
 
 Pin a thread from its menu to keep it above your active work.

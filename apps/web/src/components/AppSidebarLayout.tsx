@@ -240,6 +240,9 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const legacySidebarEnabled = useLegacySidebarEnabled();
   const sidebarAutoHide = useClientSettings((settings) => settings.sidebarAutoHide);
+  const sidebarAutoHideMakesRoom = useClientSettings(
+    (settings) => settings.sidebarAutoHideMakesRoom,
+  );
   const { active: panelAnimationsActive, durationMs: panelAnimationDurationMs } =
     usePanelAnimationSettings();
   // Settings routes show the settings nav in place of whichever thread
@@ -349,6 +352,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
         data-lock={lockUntil === null ? undefined : "through"}
         data-panel-animations={routePanelAnimationsActive ? "true" : "false"}
         autoHide={sidebarAutoHide}
+        autoHideMakesRoom={sidebarAutoHideMakesRoom}
         defaultOpen
         style={sidebarProviderStyle}
       >

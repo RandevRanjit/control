@@ -8,9 +8,49 @@ import {
   type CSSProperties,
 } from "react";
 import { flushSync } from "react-dom";
+import { motionReduced } from "~/lib/motion";
+import { useSidebarMakingRoom } from "../ui/sidebar";
 import { ChatCanvasContext } from "./ChatCanvasContext";
 import { resolveChatCanvasLayout, type ChatCanvasPreview } from "./chatCanvasLayout";
 import type { PreviewMiniPlayerObstacles } from "../preview/previewMiniPlayerLayout";
+
+// The auto-hidden sidebar's own slide (ui/sidebar.tsx): Bloom's --d-quick, out on --e-out and
+// back on --e-in.
+const SIDEBAR_SLIDE_MS = 218.75;
+const SIDEBAR_EASE_OUT = "cubic-bezier(.61,1,.88,1)";
+const SIDEBAR_EASE_IN = "cubic-bezier(.12,0,.39,0)";
+// What --chat-lane-push moves: the timeline, the composer and the scroll-to-bottom button.
+const LANE_CONTENT =
+  ".messages-timeline-scroll > *, .chat-composer-lane > *, .chat-scroll-to-bottom > *";
+
+/**
+ * The lanes take their new place in one layout, then each glides there from where it was, in step
+ * with the sidebar. Animating the padding instead re-wrapped the text on every frame.
+ */
+function glideLanes(canvas: HTMLElement, push: string, previousPush: string, running: Animation[]) {
+  const lanes = [...canvas.querySelectorAll<HTMLElement>(LANE_CONTENT)];
+  // Measure a centred column where there is one: the timeline's rows sit inside a wider block.
+  const left = () =>
+    lanes.map(
+      (lane) => (lane.querySelector(".chat-content-lane") ?? lane).getBoundingClientRect().left,
+    );
+  // Where each lane shows now, mid-glide included.
+  canvas.style.setProperty("--chat-lane-push", previousPush);
+  const from = left();
+  for (const animation of running.splice(0)) animation.cancel();
+  canvas.style.setProperty("--chat-lane-push", push);
+  const to = left();
+  lanes.forEach((lane, index) => {
+    const offset = from[index]! - to[index]!;
+    if (Math.abs(offset) < 0.5) return;
+    running.push(
+      lane.animate([{ translate: `${offset}px 0` }, { translate: "0 0" }], {
+        duration: SIDEBAR_SLIDE_MS,
+        easing: push === "0px" ? SIDEBAR_EASE_IN : SIDEBAR_EASE_OUT,
+      }),
+    );
+  });
+}
 
 /**
  * Owns the available conversation space. Cards only report where they sit; chat
@@ -121,6 +161,17 @@ export function ChatCanvas({
     detailsCardTopInset,
   ]);
   const { layout } = context;
+  // An auto-hidden sidebar that makes room pushes the lanes over by its width while it is out.
+  const lanePush = useSidebarMakingRoom() ? "var(--sidebar-width)" : "0px";
+  const shownLanePush = useRef(lanePush);
+  const laneGlides = useRef<Animation[]>([]);
+  useLayoutEffect(() => {
+    const previousPush = shownLanePush.current;
+    shownLanePush.current = lanePush;
+    const element = elementRef.current;
+    if (previousPush === lanePush || !element || motionReduced()) return;
+    glideLanes(element, lanePush, previousPush, laneGlides.current);
+  }, [lanePush]);
   return (
     <ChatCanvasContext value={context}>
       <div
@@ -132,7 +183,8 @@ export function ChatCanvas({
         style={
           {
             "--chat-timeline-gutter": `${measurements.timelineGutter}px`,
-            "--chat-lane-inset-start": `${layout.chat.insetStart}px`,
+            "--chat-lane-push": lanePush,
+            "--chat-lane-inset-start": `calc(${layout.chat.insetStart}px + var(--chat-lane-push))`,
             "--chat-lane-inset-end": `${layout.chat.insetEnd}px`,
           } as CSSProperties
         }

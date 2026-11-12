@@ -9,6 +9,7 @@ let result: ReturnType<typeof useResizableWidth>;
 let captured = false;
 const hostStyle = new Map<string, string>();
 const target = {
+  style: { setProperty() {}, removeProperty() {} },
   parentElement: {
     style: {
       setProperty: (property: string, value: string) => hostStyle.set(property, value),

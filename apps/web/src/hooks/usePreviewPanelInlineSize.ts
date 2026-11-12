@@ -43,6 +43,8 @@ export function usePreviewPanelInlineSize(
     minWidth: PREVIEW_PANEL_MIN_WIDTH,
     maxWidth,
     edge: "left",
+    // Live widths reflowed the chat beside the panel on every frame of a slow drag (owner, 12 Nov).
+    applyOnRelease: true,
   });
 }
 

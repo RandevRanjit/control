@@ -24,6 +24,11 @@ export interface UseResizableWidthOptions {
    *   - "right" → panel grows rightward (left-anchored panels)
    */
   readonly edge: "left" | "right";
+  /**
+   * During a drag only the handle moves, as a guide to where the edge will land; the panel takes
+   * the width on release, so what sits beside it never reflows under the pointer.
+   */
+  readonly applyOnRelease?: boolean;
 }
 
 export interface ResizableWidthHandlers {
@@ -41,14 +46,15 @@ export interface ResizableWidthHandlers {
  *
  * During a drag the hook writes `RESIZABLE_WIDTH_PROPERTY` on the handle's
  * parent, so the panel follows the cursor in the same frame without
- * re-rendering the owner. `width` state and localStorage commit once when the
- * user lifts the pointer or the drag is interrupted.
+ * re-rendering the owner (with `applyOnRelease`, it moves only the handle).
+ * `width` state and localStorage commit once when the user lifts the pointer
+ * or the drag is interrupted.
  */
 export function useResizableWidth(options: UseResizableWidthOptions): {
   readonly width: number;
   readonly handlers: ResizableWidthHandlers;
 } {
-  const { storageKey, defaultWidth, minWidth, maxWidth, edge } = options;
+  const { storageKey, defaultWidth, minWidth, maxWidth, edge, applyOnRelease } = options;
 
   const clamp = (value: number): number => {
     if (!Number.isFinite(value)) return defaultWidth;
@@ -79,7 +85,8 @@ export function useResizableWidth(options: UseResizableWidthOptions): {
   }, [clamp, clampedWidth, storageKey]);
 
   const { refresh, ...handlers } = useResizeDrag<HTMLElement>((event) => {
-    const host = event.currentTarget.parentElement;
+    const handle = event.currentTarget;
+    const host = handle.parentElement;
     // A collapsible host animates width; live drag writes must not. The host
     // renders its own transition-duration, so override a property it leaves alone.
     host?.style.setProperty("transition-property", "none");
@@ -88,7 +95,12 @@ export function useResizableWidth(options: UseResizableWidthOptions): {
       edge,
       resize(value) {
         const nextWidth = latestOptions.current.clamp(value);
-        host?.style.setProperty(RESIZABLE_WIDTH_PROPERTY, `${nextWidth}px`);
+        if (applyOnRelease) {
+          const offset = (nextWidth - latestOptions.current.width) * (edge === "left" ? -1 : 1);
+          handle.style.setProperty("translate", `${offset}px`);
+        } else {
+          host?.style.setProperty(RESIZABLE_WIDTH_PROPERTY, `${nextWidth}px`);
+        }
         return nextWidth;
       },
       finish(finalWidth) {
@@ -102,6 +114,7 @@ export function useResizableWidth(options: UseResizableWidthOptions): {
       },
       cleanup(committed) {
         host?.style.removeProperty("transition-property");
+        handle.style.removeProperty("translate");
         // React skips the write when the rendered width did not change.
         if (!committed) {
           host?.style.setProperty(RESIZABLE_WIDTH_PROPERTY, `${latestOptions.current.width}px`);

@@ -16,6 +16,7 @@ import {
   UsageDay,
   type UsageSummaryInput,
 } from "@control/contracts";
+import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -742,18 +743,34 @@ describe("UsageService", () => {
       const service = yield* UsageService.make.pipe(
         Effect.provide(layerService({ prefix: "usage-service-saved-window-test", home, settings })),
       );
-      const first = yield* service.readSummary(WINDOW);
+      // Read as of mid-August: the scan keeps 92 days of files by mtime, so on the real clock
+      // this 1 August transcript ages out of every read.
+      const realClock = yield* Clock.Clock;
+      const now = Date.parse("2026-08-15T00:00:00Z");
+      const readSummary = (input: UsageSummaryInput) =>
+        service.readSummary(input).pipe(
+          Effect.provideService(Clock.Clock, {
+            currentTimeMillisUnsafe: () => now,
+            currentTimeMillis: Effect.succeed(now),
+            currentTimeNanosUnsafe: () => BigInt(now) * 1_000_000n,
+            currentTimeNanos: Effect.succeed(BigInt(now) * 1_000_000n),
+            monotonicTimeNanosUnsafe: () => realClock.monotonicTimeNanosUnsafe(),
+            monotonicTimeNanos: realClock.monotonicTimeNanos,
+            sleep: (duration) => realClock.sleep(duration),
+          }),
+        );
+      const first = yield* readSummary(WINDOW);
       yield* Effect.promise(() =>
         NodeFSP.rm(NodePath.join(home, "claude", "projects"), { recursive: true }),
       );
 
-      const reached = yield* service.readSummary(WINDOW);
+      const reached = yield* readSummary(WINDOW);
       assert.deepStrictEqual(reached.buckets, first.buckets);
       assert.strictEqual(reached.sources[0]?.status, "ok");
 
       // A missing source cannot claim this directory from another environment
       // that still reads it, so it adds nothing to a window after its last write.
-      const later = yield* service.readSummary({
+      const later = yield* readSummary({
         timeZone: "UTC",
         sinceDay: UsageDay.make("2026-08-10"),
         untilDay: UsageDay.make("2026-08-12"),

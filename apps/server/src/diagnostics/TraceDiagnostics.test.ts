@@ -23,6 +23,7 @@ function record(input: {
   readonly durationMs: number;
   readonly exit?: { readonly _tag: "Success" | "Failure" | "Interrupted"; readonly cause?: string };
   readonly events?: ReadonlyArray<unknown>;
+  readonly attributes?: Readonly<Record<string, unknown>>;
 }) {
   return JSON.stringify({
     type: "effect-span",
@@ -34,7 +35,7 @@ function record(input: {
     startTimeUnixNano: ns(input.startMs),
     endTimeUnixNano: ns(input.startMs + input.durationMs),
     durationMs: input.durationMs,
-    attributes: {},
+    attributes: input.attributes ?? {},
     events: input.events ?? [],
     links: [],
     exit: input.exit ?? { _tag: "Success" },
@@ -63,6 +64,38 @@ function readTraces(fileSystem: Partial<FileSystem.FileSystem>) {
 }
 
 describe("TraceDiagnostics", () => {
+  it("lists the slowest client interactions and counts the ones over budget", () => {
+    const interaction = (spanId: string, durationMs: number, target: string, event = "click") =>
+      record({
+        name: "ui.interaction",
+        traceId: `trace-${spanId}`,
+        spanId,
+        startMs: 1_000,
+        durationMs,
+        attributes: { event, target },
+      });
+    const result = aggregateLines([
+      interaction("a", 64, 'tab "Folder"'),
+      interaction("b", 180, 'tab "Outputs"'),
+      interaction("c", 112, "resize handle", "drag"),
+      record({ name: "server.work", traceId: "t", spanId: "s", startMs: 0, durationMs: 900 }),
+    ]);
+
+    assert.strictEqual(result.interactionCount, 3);
+    assert.strictEqual(result.slowInteractionCount, 2);
+    assert.deepStrictEqual(
+      result.slowestInteractions?.map(({ event, target, durationMs }) => [
+        event,
+        target,
+        durationMs,
+      ]),
+      [
+        ["click", 'tab "Outputs"', 180],
+        ["drag", "resize handle", 112],
+        ["click", 'tab "Folder"', 64],
+      ],
+    );
+  });
   it.effect("aggregates failures, slow spans, log levels, and parse errors", () =>
     Effect.sync(() => {
       const diagnostics = aggregateLines([

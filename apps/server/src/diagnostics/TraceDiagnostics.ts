@@ -1,11 +1,14 @@
-import type {
-  ServerTraceDiagnosticsErrorKind,
-  ServerTraceDiagnosticsFailureSummary,
-  ServerTraceDiagnosticsLogEvent,
-  ServerTraceDiagnosticsRecentFailure,
-  ServerTraceDiagnosticsResult,
-  ServerTraceDiagnosticsSpanOccurrence,
-  ServerTraceDiagnosticsSpanSummary,
+import {
+  UI_INTERACTION_BUDGET_MS,
+  UI_INTERACTION_SPAN_NAME,
+  type ServerTraceDiagnosticsErrorKind,
+  type ServerTraceDiagnosticsFailureSummary,
+  type ServerTraceDiagnosticsInteraction,
+  type ServerTraceDiagnosticsLogEvent,
+  type ServerTraceDiagnosticsRecentFailure,
+  type ServerTraceDiagnosticsResult,
+  type ServerTraceDiagnosticsSpanOccurrence,
+  type ServerTraceDiagnosticsSpanSummary,
 } from "@control/contracts";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -27,6 +30,7 @@ interface TraceRecordLike {
   readonly durationMs?: unknown;
   readonly exit?: unknown;
   readonly events?: unknown;
+  readonly attributes?: unknown;
 }
 
 interface TraceEventLike {
@@ -224,6 +228,10 @@ export function makeTraceDiagnosticsAggregator(
   const latestFailures: ServerTraceDiagnosticsRecentFailure[] = [];
   const slowestSpans: ServerTraceDiagnosticsSpanOccurrence[] = [];
   const latestWarningAndErrorLogs: ServerTraceDiagnosticsLogEvent[] = [];
+  // Clicks, keys and drags the web client timed (interactionTiming.ts).
+  let interactionCount = 0;
+  let slowInteractionCount = 0;
+  const slowestInteractions: ServerTraceDiagnosticsInteraction[] = [];
   const logLevelCounts: Record<string, number> = {};
 
   const addLine = (line: string) => {
@@ -285,6 +293,23 @@ export function makeTraceDiagnosticsAggregator(
       slowSpanCount += 1;
     }
     insertBounded(slowestSpans, spanItem, TOP_LIMIT, slowestFirst);
+
+    if (name === UI_INTERACTION_SPAN_NAME) {
+      const attributes = readEventAttributes(parsed);
+      interactionCount += 1;
+      if (durationMs > UI_INTERACTION_BUDGET_MS) slowInteractionCount += 1;
+      insertBounded(
+        slowestInteractions,
+        {
+          event: toStringValue(attributes.event) ?? "click",
+          target: toStringValue(attributes.target) ?? "an unnamed element",
+          durationMs,
+          endedAt,
+        },
+        TOP_LIMIT,
+        (left, right) => right.durationMs - left.durationMs,
+      );
+    }
 
     if (isFailure) {
       const cause = readExitCause(parsed.exit);
@@ -378,6 +403,9 @@ export function makeTraceDiagnosticsAggregator(
         .slice(0, TOP_LIMIT),
       latestFailures,
       latestWarningAndErrorLogs,
+      interactionCount,
+      slowInteractionCount,
+      slowestInteractions,
       partialFailure: input.partialFailure ? Option.some(true) : Option.none(),
       error: Option.fromNullishOr(input.error),
     };

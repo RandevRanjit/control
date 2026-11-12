@@ -425,6 +425,13 @@ Use traces when the question is:
 
 ### "Why is the UI feeling slow?"
 
+Every click, key press and drag the web client times at 50 ms or slower becomes a `ui.interaction`
+span (attributes `event`, `target`, and `longFrames` for a drag), timed from the input to the next
+paint. Settings › Diagnostics lists the slowest and counts those over the 100 ms budget. To check
+the everyday interactions against that budget on a production build, run
+`node apps/server/scripts/design-check/latency.ts` with `seed.ts` running; it exits 1 when any is
+over.
+
 1. Search for slow top-level spans in the trace file or Tempo.
 2. Check child spans for sqlite, git, provider, or terminal work.
 3. Look at the matching duration metrics to see whether the slowness is systemic.

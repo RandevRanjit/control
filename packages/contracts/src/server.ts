@@ -390,6 +390,19 @@ export const ServerTraceDiagnosticsLogEvent = Schema.Struct({
 });
 export type ServerTraceDiagnosticsLogEvent = typeof ServerTraceDiagnosticsLogEvent.Type;
 
+/** The client span for a click, key press or drag the browser timed at 50 ms or slower. */
+export const UI_INTERACTION_SPAN_NAME = "ui.interaction";
+/** A reaction slower than this misses the owner's budget (5 Nov). */
+export const UI_INTERACTION_BUDGET_MS = 100;
+
+export const ServerTraceDiagnosticsInteraction = Schema.Struct({
+  event: TrimmedNonEmptyString,
+  target: TrimmedNonEmptyString,
+  durationMs: Schema.Number,
+  endedAt: Schema.DateTimeUtc,
+});
+export type ServerTraceDiagnosticsInteraction = typeof ServerTraceDiagnosticsInteraction.Type;
+
 export const ServerTraceDiagnosticsResult = Schema.Struct({
   traceFilePath: TrimmedNonEmptyString,
   scannedFilePaths: Schema.Array(TrimmedNonEmptyString),
@@ -408,6 +421,10 @@ export const ServerTraceDiagnosticsResult = Schema.Struct({
   commonFailures: Schema.Array(ServerTraceDiagnosticsFailureSummary),
   latestFailures: Schema.Array(ServerTraceDiagnosticsRecentFailure),
   latestWarningAndErrorLogs: Schema.Array(ServerTraceDiagnosticsLogEvent),
+  // Timed client interactions (UI_INTERACTION_SPAN_NAME); absent from servers before 12 Nov.
+  interactionCount: Schema.optionalKey(NonNegativeInt),
+  slowInteractionCount: Schema.optionalKey(NonNegativeInt),
+  slowestInteractions: Schema.optionalKey(Schema.Array(ServerTraceDiagnosticsInteraction)),
   partialFailure: Schema.Option(Schema.Boolean),
   error: Schema.Option(
     Schema.Struct({

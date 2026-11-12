@@ -20,10 +20,11 @@ import * as NodeUtil from "node:util";
 
 import { chromium, type Page } from "playwright-core";
 
+import { readSession, signIn } from "./session.ts";
+
 // The page functions run in Chromium; the server program has no DOM lib.
 declare const document: any, getComputedStyle: any, Image: any;
 
-const SESSION_FILE = NodePath.join(NodeOS.tmpdir(), "control-design-check.json");
 const { values } = NodeUtil.parseArgs({
   options: {
     design: { type: "string" },
@@ -42,13 +43,7 @@ NodeFS.mkdirSync(out, { recursive: true });
 const themes = (values.theme ? [values.theme] : ["field", "night"]) as ReadonlyArray<
   "field" | "night"
 >;
-const session = JSON.parse(NodeFS.readFileSync(SESSION_FILE, "utf8")) as {
-  origin: string;
-  bootstrap: string;
-  environmentId: string;
-  selectedThreadId: string;
-  shownAt: number;
-};
+const session = readSession();
 
 /** The regions compared, in CSS px; the right panel (1072–1512) is masked. The centre stops
  *  at 1071: the panel's 1 px edge is the design's shadow there and the app's border at 1072.
@@ -274,35 +269,6 @@ const CROP = async (input: {
   return canvas.toDataURL("image/png");
 };
 
-async function signIn(page: Page): Promise<void> {
-  const tokenResponse = await fetch(`${session.origin}/oauth/token`, {
-    method: "POST",
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
-      subject_token: session.bootstrap,
-      subject_token_type: "urn:control:params:oauth:token-type:environment-bootstrap",
-      requested_token_type: "urn:ietf:params:oauth:token-type:access_token",
-    }),
-  });
-  const { access_token } = (await tokenResponse.json()) as { access_token: string };
-  const pairing = await fetch(`${session.origin}/api/auth/pairing-token`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${access_token}`, "Content-Type": "application/json" },
-    body: "{}",
-  });
-  const { credential } = (await pairing.json()) as { credential: string };
-  await page.goto(session.origin);
-  const status = await page.evaluate(async (value) => {
-    const response = await fetch("/api/auth/browser-session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ credential: value }),
-    });
-    return `${response.status} ${await response.text()}`;
-  }, credential);
-  if (!status.startsWith("200")) throw new Error(`Browser sign-in failed: ${status}`);
-}
-
 const parts = readParts();
 const report: string[] = ["# Design check", ""];
 let failing = 0;
@@ -340,7 +306,7 @@ try {
       `control:preview-panel-width:${session.environmentId}:${session.selectedThreadId}`,
     );
     const page = await context.newPage();
-    await signIn(page);
+    await signIn(page, session);
     await page.clock.setFixedTime(new Date(session.shownAt));
     await page.goto(`${session.origin}/${session.environmentId}/${session.selectedThreadId}`);
     await page.waitForLoadState("networkidle");

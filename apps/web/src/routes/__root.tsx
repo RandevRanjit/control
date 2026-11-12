@@ -61,6 +61,7 @@ import {
 import { useUiStateStore } from "../uiStateStore";
 import { syncBrowserChromeTheme } from "../hooks/useTheme";
 import { configureClientTracing } from "../observability/clientTracing";
+import { startInteractionTiming } from "../observability/interactionTiming";
 import { resolveInitialServerAuthGateState } from "../environments/primary";
 import { isLocalEnvironmentDisabled } from "../localEnvironment";
 import { useAtomValue } from "@effect/atom-react";
@@ -493,6 +494,8 @@ function errorReport(error: unknown, pathname: string): string {
 function AuthenticatedTracingBootstrap() {
   useEffect(() => {
     void configureClientTracing();
+    // Slow clicks, keys and drags become spans that Settings › Diagnostics lists.
+    return startInteractionTiming();
   }, []);
 
   return null;

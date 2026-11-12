@@ -1,7 +1,7 @@
 import { ProcessSignalActions } from "./ProcessSignalActions";
 import { resolveUsageAccess } from "@control/client-runtime/state/usage-access";
 import { environmentSession } from "../../state/session";
-import { AuthOrchestrationOperateScope } from "@control/contracts";
+import { AuthOrchestrationOperateScope, UI_INTERACTION_BUDGET_MS } from "@control/contracts";
 import { readEnvironmentScope, useEnvironmentScope } from "../../state/session";
 import { AuthEnvironmentMaintainScope } from "@control/contracts";
 import { RefreshIcon } from "~/components/ui/refresh-icon";
@@ -1154,6 +1154,54 @@ export function DiagnosticsSettingsPanel() {
             ) : null}
           </div>
         ) : null}
+      </SettingsSection>
+
+      <SettingsSection
+        title="Slowest Interactions"
+        headerAction={
+          data?.interactionCount ? (
+            <span className="text-xs text-muted-foreground">
+              {formatCount(data.slowInteractionCount ?? 0)} of {formatCount(data.interactionCount)}{" "}
+              over {UI_INTERACTION_BUDGET_MS} ms
+            </span>
+          ) : null
+        }
+      >
+        {data?.slowestInteractions && data.slowestInteractions.length > 0 ? (
+          <DiagnosticsTable
+            headers={["Interaction", "Reaction", "When"]}
+            minTableWidth="min-w-[640px]"
+            columnWidths={["w-[66%]", "w-[17%]", "w-[17%]"]}
+          >
+            {data.slowestInteractions.map((interaction) => (
+              <tr key={`${DateTime.toEpochMillis(interaction.endedAt)}:${interaction.target}`}>
+                <td className="px-4 py-3 align-top text-xs text-foreground first:sm:pl-5">
+                  <span className="text-muted-foreground">{interaction.event}</span>{" "}
+                  {interaction.target}
+                </td>
+                <td
+                  className={cn(
+                    "px-4 py-3 align-top font-mono tabular-nums",
+                    interaction.durationMs > UI_INTERACTION_BUDGET_MS && "text-destructive",
+                  )}
+                >
+                  {formatDuration(interaction.durationMs)}
+                </td>
+                <td className="w-px whitespace-nowrap px-4 py-3 align-top font-mono tabular-nums text-muted-foreground last:sm:pr-5">
+                  {formatRelativeNoWrap(interaction.endedAt)}
+                </td>
+              </tr>
+            ))}
+          </DiagnosticsTable>
+        ) : (
+          <EmptyRows
+            label={
+              isInitialLoading
+                ? "Loading interactions..."
+                : "No click, key press or drag has taken 50 ms or more."
+            }
+          />
+        )}
       </SettingsSection>
 
       <SettingsSection title="Latest Failures">

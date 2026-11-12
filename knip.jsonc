@@ -24,6 +24,7 @@
         "src/bin.ts!",
         "src/claude-history-worker.ts!",
         "scripts/cli.ts",
+        "scripts/design-check/latency.ts",
         "scripts/design-check/seed.ts",
         "scripts/design-check/shoot.ts",
         "scripts/evaluate-thread-titles.ts",

@@ -33,19 +33,25 @@ const REGISTER_EVERY_PR =
  */
 export const PullRequestTargetInput = Schema.Struct({
   threadId: Schema.optional(
-    ThreadId.annotate({
-      description: "Thread to act on. Omit for this thread.",
-    }),
+    ThreadId.pipe(
+      Schema.annotateEncoded({
+        description: "Thread to act on. Omit for this thread.",
+      }),
+    ),
   ),
   url: Schema.optional(
-    TrimmedNonEmptyString.annotate({
-      description: "The PR's web URL, such as https://github.com/owner/repo/pull/123. Preferred.",
-    }),
+    TrimmedNonEmptyString.pipe(
+      Schema.annotateEncoded({
+        description: "The PR's web URL, such as https://github.com/owner/repo/pull/123. Preferred.",
+      }),
+    ),
   ),
   repository: Schema.optional(
-    TrimmedNonEmptyString.annotate({
-      description: "owner/repo. With `number` when there is no `url`.",
-    }),
+    TrimmedNonEmptyString.pipe(
+      Schema.annotateEncoded({
+        description: "owner/repo. With `number` when there is no `url`.",
+      }),
+    ),
   ),
   number: Schema.optional(
     PositiveInt.annotate({
@@ -53,9 +59,11 @@ export const PullRequestTargetInput = Schema.Struct({
     }),
   ),
   host: Schema.optional(
-    TrimmedNonEmptyString.annotate({
-      description: "Such as github.com. Default: this thread's project host.",
-    }),
+    TrimmedNonEmptyString.pipe(
+      Schema.annotateEncoded({
+        description: "Such as github.com. Default: this thread's project host.",
+      }),
+    ),
   ),
 });
 export type PullRequestTargetInput = typeof PullRequestTargetInput.Type;
@@ -276,7 +284,9 @@ const ListThreadPullRequestsTool = Tool.make("list_thread_pull_requests", {
     "List PRs linked to a thread (omit `threadId` for this thread), with last known state and stack order (bottom to top).",
   parameters: Schema.Struct({
     threadId: Schema.optional(
-      ThreadId.annotate({ description: "Thread to list. Omit for this thread." }),
+      ThreadId.pipe(
+        Schema.annotateEncoded({ description: "Thread to list. Omit for this thread." }),
+      ),
     ),
   }),
   success: ListThreadPullRequestsResult,

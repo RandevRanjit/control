@@ -116,6 +116,58 @@ it("publishes unique tool names with reference-free object-root inputs", () => {
   expect([...names].filter((name) => name.includes("lock"))).toEqual(["lock_read"]);
 });
 
+/** A description anywhere on a field's schema, as written in its contract. */
+const writtenDescription = (node: unknown, seen = new Set<unknown>()): boolean => {
+  if (typeof node !== "object" || node === null || seen.has(node)) return false;
+  seen.add(node);
+  if (typeof (node as { description?: unknown }).description === "string") return true;
+  return Object.entries(node).some(
+    // A nested struct's fields are its own; they don't describe this one.
+    ([key, value]) => key !== "propertySignatures" && writtenDescription(value, seen),
+  );
+};
+const publishedDescription = (schema: unknown): boolean => {
+  if (typeof schema !== "object" || schema === null) return false;
+  const record = schema as Record<string, unknown>;
+  return (
+    typeof record.description === "string" ||
+    [record.anyOf, record.oneOf, record.allOf].some(
+      (members) => Array.isArray(members) && members.some(publishedDescription),
+    )
+  );
+};
+
+it("publishes every parameter description its contract writes", () => {
+  // A transformed field (trimmed text, ids) described with annotate() drops it from the JSON
+  // schema agents read; annotateEncoded() keeps it. preview_act's shared fields are described
+  // in the tool itself.
+  for (const toolkit of [
+    OrchestratorToolkit,
+    PreviewToolkit,
+    WorktreeToolkit,
+    ThreadToolkit,
+    AttachmentToolkit,
+    ProjectToolkit,
+    EnvironmentToolkit,
+    PreviewControlsToolkit,
+    DeviceToolkit,
+    PullRequestsToolkit,
+    HtmlToolkit,
+  ]) {
+    for (const tool of Object.values(toolkit.tools)) {
+      if (tool.name === "preview_act") continue;
+      const published = (Tool.getJsonSchema(tool) as { properties?: Record<string, unknown> })
+        .properties;
+      const fields = (tool.parametersSchema as { fields?: Record<string, { ast: unknown }> })
+        .fields;
+      for (const [key, field] of Object.entries(fields ?? {})) {
+        if (!writtenDescription(field.ast)) continue;
+        expect(publishedDescription(published?.[key]), `${tool.name}.${key}`).toBe(true);
+      }
+    }
+  }
+});
+
 const threadId = ThreadId.make("mcp-core-thread");
 const scope: McpInvocationContext.McpInvocationScope = {
   environmentId: EnvironmentId.make("mcp-core-environment"),

@@ -481,10 +481,12 @@ export type DeviceToolListResult = typeof DeviceToolListResult.Type;
 
 export const DeviceToolOpenInput = Schema.Struct({
   deviceId: Schema.optional(
-    DeviceId.annotate({
-      description:
-        "Simulator udid or emulator serial from device_list. Omit to use the booted device for the platform, or the most recently used one.",
-    }),
+    DeviceId.pipe(
+      Schema.annotateEncoded({
+        description:
+          "Simulator udid or emulator serial from device_list. Omit to use the booted device for the platform, or the most recently used one.",
+      }),
+    ),
   ),
   platform: Schema.optional(
     DevicePlatform.annotate({
@@ -492,7 +494,9 @@ export const DeviceToolOpenInput = Schema.Struct({
     }),
   ),
   hostId: Schema.optional(
-    DeviceHostId.annotate({ description: "Device host from device_list. Defaults to local." }),
+    DeviceHostId.pipe(
+      Schema.annotateEncoded({ description: "Device host from device_list. Defaults to local." }),
+    ),
   ),
 }).annotate({
   description: "Boots and shows a device.",
@@ -513,10 +517,12 @@ export type DeviceToolOpenResult = typeof DeviceToolOpenResult.Type;
 
 export const DeviceToolTargetInput = Schema.Struct({
   deviceId: Schema.optional(
-    DeviceId.annotate({
-      description:
-        "Device from device_list. Omit to use the device most recently opened in this thread.",
-    }),
+    DeviceId.pipe(
+      Schema.annotateEncoded({
+        description:
+          "Device from device_list. Omit to use the device most recently opened in this thread.",
+      }),
+    ),
   ),
   hostId: Schema.optional(DeviceHostId),
 });
@@ -535,9 +541,11 @@ export type DeviceToolScreenshotResult = typeof DeviceToolScreenshotResult.Type;
 
 export const DeviceToolCloseInput = Schema.Struct({
   deviceId: Schema.optional(
-    DeviceId.annotate({
-      description: "Device to close. Omit to close every device in this thread.",
-    }),
+    DeviceId.pipe(
+      Schema.annotateEncoded({
+        description: "Device to close. Omit to close every device in this thread.",
+      }),
+    ),
   ),
   hostId: Schema.optional(DeviceHostId),
   shutdown: Schema.optional(

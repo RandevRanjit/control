@@ -46,15 +46,21 @@ import {
 } from "./model.ts";
 import { ProviderDriverKind, ProviderInstanceId } from "./providerInstance.ts";
 
-const OrchestratorMcpPrompt = TrimmedNonEmptyString.check(Schema.isMaxLength(120_000)).annotate({
-  description: "Complete task or message text for the target agent.",
-});
-const OrchestratorMcpTitle = TrimmedNonEmptyString.check(Schema.isMaxLength(512)).annotate({
-  description: "Optional concise display title.",
-});
-const OrchestratorMcpClientRequestId = TrimmedNonEmptyString.check(
-  Schema.isMaxLength(256),
-).annotate({ description: "Stable idempotency key to reuse when retrying this mutation." });
+const OrchestratorMcpPrompt = TrimmedNonEmptyString.check(Schema.isMaxLength(120_000)).pipe(
+  Schema.annotateEncoded({
+    description: "Complete task or message text for the target agent.",
+  }),
+);
+const OrchestratorMcpTitle = TrimmedNonEmptyString.check(Schema.isMaxLength(512)).pipe(
+  Schema.annotateEncoded({
+    description: "Optional concise display title.",
+  }),
+);
+const OrchestratorMcpClientRequestId = TrimmedNonEmptyString.check(Schema.isMaxLength(256)).pipe(
+  Schema.annotateEncoded({
+    description: "Stable idempotency key to reuse when retrying this mutation.",
+  }),
+);
 
 /**
  * OpenCode 1.15 has been observed serializing nested MCP union objects as JSON
@@ -176,9 +182,11 @@ export type OrchestratorMcpTerminalDelegatedTaskStatus =
   typeof OrchestratorMcpTerminalDelegatedTaskStatus.Type;
 
 export const OrchestratorMcpDelegateTaskInput = Schema.Struct({
-  task: OrchestratorMcpPrompt.annotate({
-    description: "Self-contained task for one delegated child agent/subagent.",
-  }),
+  task: OrchestratorMcpPrompt.pipe(
+    Schema.annotateEncoded({
+      description: "Self-contained task for one delegated child agent/subagent.",
+    }),
+  ),
   target: Schema.optional(OrchestratorMcpTarget),
   title: Schema.optional(OrchestratorMcpTitle),
   role: Schema.optional(OrchestratorMcpTaskRole),
@@ -295,10 +303,12 @@ export const OrchestratorMcpThreadStatus = Schema.Union([
 export type OrchestratorMcpThreadStatus = typeof OrchestratorMcpThreadStatus.Type;
 
 const OrchestratorMcpProjectTarget = Schema.optional(
-  ProjectId.annotate({
-    description:
-      "Project to act on. Omit for the calling thread's project; required when the caller is not a Control thread.",
-  }),
+  ProjectId.pipe(
+    Schema.annotateEncoded({
+      description:
+        "Project to act on. Omit for the calling thread's project; required when the caller is not a Control thread.",
+    }),
+  ),
 );
 
 export const OrchestratorMcpThreadListInput = Schema.Struct({
@@ -389,10 +399,12 @@ export type OrchestratorMcpOutputAddResult = typeof OrchestratorMcpOutputAddResu
 
 /** Loose ends (design/hybrid HANDOFF §17): what the calling chat has handed the owner to do. */
 export const OrchestratorMcpLooseEndAddInput = Schema.Struct({
-  line: TrimmedNonEmptyString.check(Schema.isMaxLength(200)).annotate({
-    description:
-      "One line, in your words, of what the owner has to do or answer, e.g. 'Send the drafted emails'. 200 characters at most; detail goes in `reason`.",
-  }),
+  line: TrimmedNonEmptyString.check(Schema.isMaxLength(200)).pipe(
+    Schema.annotateEncoded({
+      description:
+        "One line, in your words, of what the owner has to do or answer, e.g. 'Send the drafted emails'. 200 characters at most; detail goes in `reason`.",
+    }),
+  ),
   reason: Schema.optional(
     Schema.String.check(Schema.isMaxLength(1_000)).annotate({
       description: "A sentence or two on why only the owner can do it.",
@@ -428,9 +440,11 @@ export const OrchestratorMcpLooseEndListResult = Schema.Struct({
 export type OrchestratorMcpLooseEndListResult = typeof OrchestratorMcpLooseEndListResult.Type;
 
 export const OrchestratorMcpLooseEndCloseInput = Schema.Struct({
-  id: LooseEndId.annotate({
-    description: "The id loose_end_add returned, or one from loose_end_list.",
-  }),
+  id: LooseEndId.pipe(
+    Schema.annotateEncoded({
+      description: "The id loose_end_add returned, or one from loose_end_list.",
+    }),
+  ),
 });
 export type OrchestratorMcpLooseEndCloseInput = typeof OrchestratorMcpLooseEndCloseInput.Type;
 
@@ -730,10 +744,12 @@ export type OrchestratorMcpScheduleTaskResult = typeof OrchestratorMcpScheduleTa
 
 export const OrchestratorMcpListScheduledTasksInput = Schema.Struct({
   projectId: Schema.optional(
-    ProjectId.annotate({
-      description:
-        "Only list this project's tasks. Omit for the calling thread's project, or for every project when the caller is not a Control thread.",
-    }),
+    ProjectId.pipe(
+      Schema.annotateEncoded({
+        description:
+          "Only list this project's tasks. Omit for the calling thread's project, or for every project when the caller is not a Control thread.",
+      }),
+    ),
   ),
 });
 export type OrchestratorMcpListScheduledTasksInput =
@@ -757,13 +773,17 @@ export type OrchestratorMcpUpdateScheduledTaskInput =
   typeof OrchestratorMcpUpdateScheduledTaskInput.Type;
 
 export const OrchestratorMcpRequestSecretInput = Schema.Struct({
-  label: TrimmedNonEmptyString.annotate({
-    description: "What you need, shown as the card's title, e.g. 'GitHub webhook secret'.",
-  }),
-  reason: TrimmedNonEmptyString.annotate({
-    description:
-      "One or two sentences on what it is for and where the user gets or also enters it.",
-  }),
+  label: TrimmedNonEmptyString.pipe(
+    Schema.annotateEncoded({
+      description: "What you need, shown as the card's title, e.g. 'GitHub webhook secret'.",
+    }),
+  ),
+  reason: TrimmedNonEmptyString.pipe(
+    Schema.annotateEncoded({
+      description:
+        "One or two sentences on what it is for and where the user gets or also enters it.",
+    }),
+  ),
   placeholder: Schema.optional(TrimmedNonEmptyString).annotate({
     description: "Hint inside the input, e.g. 'Paste your GitHub token'.",
   }),

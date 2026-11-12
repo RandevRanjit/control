@@ -30,6 +30,23 @@ describe("orchestrator MCP tool guidance", () => {
     );
   });
 
+  it("publishes the loose-end line cap and where a close's id comes from", () => {
+    const property = (tool: Tool.Any, key: string) =>
+      (
+        Tool.getJsonSchema(tool) as {
+          readonly properties?: Readonly<Record<string, { readonly description?: unknown }>>;
+        }
+      ).properties?.[key]?.description;
+    assert.include(
+      String(property(OrchestratorToolkit.tools.loose_end_add, "line")),
+      "200 characters at most",
+    );
+    assert.include(
+      String(property(OrchestratorToolkit.tools.loose_end_close, "id")),
+      "loose_end_add returned",
+    );
+  });
+
   it("documents wait timeout as a parent budget, not a child failure", () => {
     const schema = Tool.getJsonSchema(DelegateTaskTool) as {
       readonly properties?: Readonly<

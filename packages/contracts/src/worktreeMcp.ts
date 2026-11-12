@@ -11,14 +11,18 @@ import { TrimmedNonEmptyString } from "./baseSchemas.ts";
  * the conversation continues inside the worktree on the thread's next run.
  */
 export const WorktreeMcpHandoffInput = Schema.Struct({
-  branch: TrimmedNonEmptyString.annotate({
-    description: "Branch name to create for the worktree (e.g. 'feature/my-change').",
-  }),
-  baseRef: Schema.optional(
-    TrimmedNonEmptyString.annotate({
-      description:
-        "Branch or ref the worktree branch starts from. Defaults to the branch currently checked out in the project workspace.",
+  branch: TrimmedNonEmptyString.pipe(
+    Schema.annotateEncoded({
+      description: "Branch name to create for the worktree (e.g. 'feature/my-change').",
     }),
+  ),
+  baseRef: Schema.optional(
+    TrimmedNonEmptyString.pipe(
+      Schema.annotateEncoded({
+        description:
+          "Branch or ref the worktree branch starts from. Defaults to the branch currently checked out in the project workspace.",
+      }),
+    ),
   ),
   startFromOrigin: Schema.optional(
     Schema.Boolean.annotate({
@@ -30,10 +34,12 @@ export const WorktreeMcpHandoffInput = Schema.Struct({
     TrimmedNonEmptyString.check(
       // Absolute POSIX (/...), Windows drive (C:\ or C:/), or UNC (\\host).
       Schema.isPattern(/^(?:[A-Za-z]:[\\/]|[\\/])/),
-    ).annotate({
-      description:
-        "Absolute filesystem path for the new worktree. Relative paths are rejected. Defaults to the server-managed worktrees directory.",
-    }),
+    ).pipe(
+      Schema.annotateEncoded({
+        description:
+          "Absolute filesystem path for the new worktree. Relative paths are rejected. Defaults to the server-managed worktrees directory.",
+      }),
+    ),
   ),
   runSetupScript: Schema.optional(
     Schema.Boolean.annotate({
@@ -41,10 +47,12 @@ export const WorktreeMcpHandoffInput = Schema.Struct({
     }),
   ),
   continuationPrompt: Schema.optional(
-    TrimmedNonEmptyString.check(Schema.isMaxLength(120_000)).annotate({
-      description:
-        "Message queued as the thread's next turn after the handoff. The handoff detaches the current provider session, so pass the remaining work here to automatically resume inside the worktree; omit it to stop after the handoff and wait for the next message.",
-    }),
+    TrimmedNonEmptyString.check(Schema.isMaxLength(120_000)).pipe(
+      Schema.annotateEncoded({
+        description:
+          "Message queued as the thread's next turn after the handoff. The handoff detaches the current provider session, so pass the remaining work here to automatically resume inside the worktree; omit it to stop after the handoff and wait for the next message.",
+      }),
+    ),
   ),
 });
 export type WorktreeMcpHandoffInput = typeof WorktreeMcpHandoffInput.Type;

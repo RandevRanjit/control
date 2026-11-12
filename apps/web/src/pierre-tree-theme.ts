@@ -18,6 +18,10 @@ export const PIERRE_TREE_UNSAFE_CSS = `
     --trees-git-ignored-color-override: var(--text-caption);
     --trees-focus-ring-color-override: var(--focus);
   }
+  /* A long name's middle "…" hides the letters under it with its background. The tree's own is
+     transparent (above), so the marker takes the panel's, or both halves of the name show. Rows
+     reset the variable, so it is set where the marker reads it. */
+  [data-truncate-container] { --truncate-marker-background-color: var(--color-background); }
   /* A clicked row shows as picked by its tone; the ring is for the keyboard. */
   button[data-type='item'][data-item-focused='true']:not(:focus-visible)::before { outline: none; }
   /* A changed folder's dot at full strength, in its files' ink. */

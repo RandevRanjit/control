@@ -19,6 +19,8 @@ beforeEach(() => {
   HTMLElement.prototype.setPointerCapture = (id: number) => void (captured = id);
   HTMLElement.prototype.hasPointerCapture = (id: number) => captured === id;
   HTMLElement.prototype.releasePointerCapture = () => void (captured = null);
+  // Nor animations; the rail's release reads them.
+  Element.prototype.getAnimations = () => [];
 });
 
 afterEach(async () => {
@@ -27,13 +29,13 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-async function renderSidebar() {
+async function renderSidebar(autoHide = true) {
   const onResize = vi.fn();
   const container = document.body.appendChild(document.createElement("div"));
   await act(() => {
     root = createRoot(container);
     root.render(
-      <SidebarProvider autoHide>
+      <SidebarProvider autoHide={autoHide}>
         <Sidebar resizable={{ maxWidth: 600, onResize }}>
           <SidebarTrigger />
           <SidebarRail />
@@ -71,6 +73,29 @@ describe("auto-hidden sidebar rail", () => {
     expect(onResize).toHaveBeenLastCalledWith(356);
     expect(slot("sidebar-wrapper").style.getPropertyValue("--sidebar-width")).toBe("356px");
     expect(slot("sidebar-container").dataset.autoHide).toBe("revealed");
+  });
+
+  it("holds a pinned sidebar's width during a drag, shows where its edge will land, and applies on release", async () => {
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    });
+    const { onResize } = await renderSidebar(false);
+    const rail = slot("sidebar-rail");
+    await act(() => {
+      rail.dispatchEvent(pointer("pointerdown", 256));
+      rail.dispatchEvent(pointer("pointermove", 356));
+    });
+    // The chat beside the sidebar keeps its width, so its text does not reflow under the pointer.
+    expect(slot("sidebar-gap").style.width).toBe("");
+    expect(slot("sidebar-container").style.width).toBe("");
+    expect(slot("sidebar-wrapper").style.getPropertyValue("--sidebar-width")).toBe("16rem");
+    expect(rail.style.transform).toBe("translateX(100px)");
+
+    await act(() => rail.dispatchEvent(pointer("pointerup", 356)));
+    expect(onResize).toHaveBeenLastCalledWith(356);
+    expect(slot("sidebar-wrapper").style.getPropertyValue("--sidebar-width")).toBe("356px");
+    expect(rail.style.transform).toBe("");
   });
 
   it("is inert while the sidebar is hidden", async () => {

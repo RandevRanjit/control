@@ -490,26 +490,32 @@ function SidebarRail({
     if (!wrapper || !sidebarRoot || !sidebarContainer) return null;
 
     const side = sidebarInstance?.side ?? "left";
-    let width = clampSidebarWidth(
+    const startWidth = clampSidebarWidth(
       sidebarContainer.getBoundingClientRect().width,
       resolvedResizable,
     );
-    // Drag frames write width to the gap and container only. Changing the
-    // inherited --sidebar-width on the wrapper restyles the whole app, so it is
-    // written once when the drag commits. A floating sidebar's gap stays shut.
-    const widthTargets = [
+    let width = startWidth;
+    // During a drag only the rail moves, as a guide to where the edge will land; the sidebar takes
+    // the width on release, so the chat beside it never reflows under the pointer (it re-wrapped
+    // on every frame). The rail, gap and container hold their open/close transitions off until
+    // the new width has been styled, so the release doesn't animate.
+    const held = [
+      rail,
       autoHide ? null : sidebarRoot.querySelector<HTMLElement>("[data-slot='sidebar-gap']"),
       sidebarContainer,
     ].filter((element): element is HTMLElement => element !== null);
-    const setTargetWidth = (value: number) => {
-      widthTargets.forEach((element) => {
-        element.style.setProperty("width", `${value}px`);
-      });
-    };
-    widthTargets.forEach((element) => {
+    held.forEach((element) => {
       element.style.setProperty("transition-duration", "0ms");
     });
-    setTargetWidth(width);
+    const release = () => {
+      rail.style.removeProperty("transform");
+      held.forEach((element) => {
+        // getAnimations styles the element at its new width (and the rail back at the edge)
+        // while its transition is still held off.
+        element.getAnimations();
+        element.style.removeProperty("transition-duration");
+      });
+    };
 
     return {
       width,
@@ -528,13 +534,17 @@ function SidebarRail({
             wrapper,
           }) ?? true;
         if (accepted) {
-          setTargetWidth(nextWidth);
           width = nextWidth;
+          rail.style.setProperty(
+            "transform",
+            `translateX(${(width - startWidth) * (side === "left" ? 1 : -1)}px)`,
+          );
         }
         return width;
       },
       finish(finalWidth, moved) {
         wrapper.style.setProperty("--sidebar-width", `${finalWidth}px`);
+        release();
         suppressClickRef.current = moved;
         const options = latestResizable.current;
         if (options?.storageKey) {
@@ -546,19 +556,16 @@ function SidebarRail({
         }
         options?.onResize?.(finalWidth);
       },
-      cleanup() {
-        widthTargets.forEach((element) => {
-          element.style.removeProperty("width");
-          element.style.removeProperty("transition-duration");
-        });
+      cleanup(committed) {
+        // A committed drag releases in finish, once the new width is set.
+        if (!committed) release();
       },
     };
-    // Toggling the sidebar cancels a drag so the inline width never pins a
-    // collapsed sidebar open.
+    // Toggling the sidebar cancels a drag so the guide never outlives it.
   }, String(open));
   React.useLayoutEffect(() => {
     latestResizable.current = resolvedResizable;
-    // Bounds follow the window; keep an active drag's inline width inside them.
+    // Bounds follow the window; keep an active drag's guide inside them.
     resize.refresh();
   }, [resolvedResizable]);
 

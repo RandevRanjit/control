@@ -75,4 +75,25 @@ describe("right panel resize", () => {
     expect(host.style.getPropertyValue(RESIZABLE_WIDTH_PROPERTY)).toBe("660px");
     expect(handle.style.translate).toBe("");
   });
+
+  it("keeps its width while it closes, so it slides out instead of squeezing the chat", async () => {
+    const container = document.body.appendChild(document.createElement("div"));
+    const render = (open: boolean) =>
+      act(() =>
+        root!.render(
+          <PreviewPanelShell mode="inline" open={open}>
+            content
+          </PreviewPanelShell>,
+        ),
+      );
+    root = createRoot(container);
+    await render(true);
+    const host = document.querySelector<HTMLElement>("[data-preview-panel-mode='inline']")!;
+    expect(host.style.width).toBe(`var(${RESIZABLE_WIDTH_PROPERTY})`);
+
+    await render(false);
+    expect(host.style.width).toBe(`var(${RESIZABLE_WIDTH_PROPERTY})`);
+    // Out of the row, so the chat takes the room in one layout.
+    expect(host.classList).toContain("absolute");
+  });
 });

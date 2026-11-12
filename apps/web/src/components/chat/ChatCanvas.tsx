@@ -1,4 +1,5 @@
 import {
+  Component,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -6,22 +7,50 @@ import {
   useState,
   type ComponentProps,
   type CSSProperties,
+  type RefObject,
 } from "react";
 import { flushSync } from "react-dom";
 import { motionReduced } from "~/lib/motion";
-import { useSidebarMakingRoom } from "../ui/sidebar";
+import { useSidebar, useSidebarMakingRoom } from "../ui/sidebar";
 import { ChatCanvasContext } from "./ChatCanvasContext";
 import { resolveChatCanvasLayout, type ChatCanvasPreview } from "./chatCanvasLayout";
 import type { PreviewMiniPlayerObstacles } from "../preview/previewMiniPlayerLayout";
 
-// The auto-hidden sidebar's own slide (ui/sidebar.tsx): Bloom's --d-quick, out on --e-out and
-// back on --e-in.
+// The sidebars' and the right panel's own slide (ui/sidebar.tsx, PreviewPanelShell): Bloom's
+// --d-quick on --e-out; the auto-hidden sidebar goes back on --e-in.
 const SIDEBAR_SLIDE_MS = 218.75;
 const SIDEBAR_EASE_OUT = "cubic-bezier(.61,1,.88,1)";
 const SIDEBAR_EASE_IN = "cubic-bezier(.12,0,.39,0)";
 // What --chat-lane-push moves: the timeline, the composer and the scroll-to-bottom button.
 const LANE_CONTENT =
   ".messages-timeline-scroll > *, .chat-composer-lane > *, .chat-scroll-to-bottom > *";
+// What a panel opening or closing beside the chat moves: the lanes, the head and the minimap. The
+// timeline's scroller moves whole, so its clip goes with the thread.
+const COLUMN_CONTENT =
+  ".messages-timeline-scroll, .chat-composer-lane > *, .chat-scroll-to-bottom > *, [data-chat-header] > *, [data-testid='timeline-minimap']";
+
+/** Where each lane shows: its centred column where it has one (the timeline's rows sit inside a wider block). */
+function laneLefts(lanes: HTMLElement[]) {
+  return lanes.map(
+    (lane) => (lane.querySelector(".chat-content-lane") ?? lane).getBoundingClientRect().left,
+  );
+}
+
+/** Each lane, already in its new place, glides there from where it showed (`from`). */
+function glideFrom(lanes: HTMLElement[], from: number[], easing: string, running: Animation[]) {
+  for (const animation of running.splice(0)) animation.cancel();
+  const to = laneLefts(lanes);
+  lanes.forEach((lane, index) => {
+    const offset = from[index]! - to[index]!;
+    if (Math.abs(offset) < 0.5) return;
+    running.push(
+      lane.animate([{ translate: `${offset}px 0` }, { translate: "0 0" }], {
+        duration: SIDEBAR_SLIDE_MS,
+        easing,
+      }),
+    );
+  });
+}
 
 /**
  * The lanes take their new place in one layout, then each glides there from where it was, in step
@@ -29,27 +58,94 @@ const LANE_CONTENT =
  */
 function glideLanes(canvas: HTMLElement, push: string, previousPush: string, running: Animation[]) {
   const lanes = [...canvas.querySelectorAll<HTMLElement>(LANE_CONTENT)];
-  // Measure a centred column where there is one: the timeline's rows sit inside a wider block.
-  const left = () =>
-    lanes.map(
-      (lane) => (lane.querySelector(".chat-content-lane") ?? lane).getBoundingClientRect().left,
-    );
   // Where each lane shows now, mid-glide included.
   canvas.style.setProperty("--chat-lane-push", previousPush);
-  const from = left();
-  for (const animation of running.splice(0)) animation.cancel();
+  const from = laneLefts(lanes);
   canvas.style.setProperty("--chat-lane-push", push);
-  const to = left();
-  lanes.forEach((lane, index) => {
-    const offset = from[index]! - to[index]!;
-    if (Math.abs(offset) < 0.5) return;
-    running.push(
-      lane.animate([{ translate: `${offset}px 0` }, { translate: "0 0" }], {
-        duration: SIDEBAR_SLIDE_MS,
-        easing: push === "0px" ? SIDEBAR_EASE_IN : SIDEBAR_EASE_OUT,
-      }),
+  glideFrom(lanes, from, push === "0px" ? SIDEBAR_EASE_IN : SIDEBAR_EASE_OUT, running);
+}
+
+type ColumnGlideProps = {
+  column: RefObject<HTMLElement | null>;
+  sidebarOpen: boolean;
+  rightPanelOpen: boolean;
+};
+
+/**
+ * The pinned sidebar and the right panel take their new width in one layout; the chat column's
+ * lanes and head then glide there from where they were, in step with the panel's own slide.
+ * Animating the width instead re-rendered the chat and re-wrapped its text on every frame.
+ * A class, because getSnapshotBeforeUpdate is React's one read of the layout before a commit.
+ */
+class ColumnGlide extends Component<ColumnGlideProps> {
+  private readonly running: Animation[] = [];
+
+  private animated() {
+    return this.props.column.current?.closest("[data-panel-animations='true']") != null;
+  }
+
+  override getSnapshotBeforeUpdate(previous: ColumnGlideProps) {
+    const column = this.props.column.current;
+    const toggled =
+      previous.sidebarOpen !== this.props.sidebarOpen ||
+      previous.rightPanelOpen !== this.props.rightPanelOpen;
+    if (!column || !toggled || !this.animated()) return null;
+    const lanes = [...column.querySelectorAll<HTMLElement>(COLUMN_CONTENT)];
+    // Where each shows now, mid-glide included.
+    return { lanes, from: laneLefts(lanes) };
+  }
+
+  override componentDidUpdate(
+    previous: ColumnGlideProps,
+    _state: unknown,
+    snapshot: { lanes: HTMLElement[]; from: number[] } | null,
+  ) {
+    const column = this.props.column.current;
+    // A route change holds panels still; so does the chat.
+    if (!snapshot || !column || !this.animated()) return;
+    if (previous.sidebarOpen !== this.props.sidebarOpen) {
+      // The gap beside the pinned sidebar takes its new width at once; the sidebar still slides.
+      const gap = column
+        .closest("[data-slot='sidebar-wrapper']")
+        ?.querySelector("[data-slot='sidebar-gap']");
+      for (const transition of gap?.getAnimations() ?? []) transition.finish();
+    }
+    // The column and what holds it, up to the sidebar's inset, clip at their new edges. Until the
+    // glide lands they clip only the edge that stays, so what glides in past the moving one shows,
+    // under the sidebar or the panel sliding in (a clip-path keeps the chat below them).
+    const clips: HTMLElement[] = [];
+    for (let clip: HTMLElement | null = column; clip; clip = clip.parentElement) {
+      clips.push(clip);
+      if (clip.dataset.slot === "sidebar-inset") break;
+    }
+    const open = previous.sidebarOpen !== this.props.sidebarOpen ? "0 0 0 -100vw" : "0 -100vw 0 0";
+    const restore = () =>
+      clips.forEach((clip) => {
+        clip.style.removeProperty("overflow");
+        clip.style.removeProperty("clip-path");
+      });
+    clips.forEach((clip) => {
+      clip.style.setProperty("overflow", "visible");
+      clip.style.setProperty("clip-path", `inset(${open})`);
+    });
+    glideFrom(snapshot.lanes, snapshot.from, SIDEBAR_EASE_OUT, this.running);
+    const last = this.running.at(-1);
+    if (!last) return restore();
+    // A newer glide takes over the clips.
+    last.finished.then(
+      () => this.running.includes(last) && restore(),
+      () => {},
     );
-  });
+  }
+
+  override render() {
+    return null;
+  }
+}
+
+/** Glides `column`'s content as the pinned sidebar or the right panel opens or closes. */
+export function ChatColumnGlide(props: Omit<ColumnGlideProps, "sidebarOpen">) {
+  return <ColumnGlide {...props} sidebarOpen={useSidebar().open} />;
 }
 
 /**

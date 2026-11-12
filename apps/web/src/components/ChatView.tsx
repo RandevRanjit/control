@@ -1,4 +1,5 @@
 import { ThreadFind, ThreadFindCanvas, type ThreadFindControls } from "./chat/ThreadFindProvider";
+import { ChatColumnGlide } from "./chat/ChatCanvas";
 import { THREAD_FIND_BAR_RESERVED_HEIGHT } from "./chat/ThreadFindBar";
 import { usageLimitRecoveryBannerItem } from "./chat/UsageLimitRecoveryBanner";
 import {
@@ -1941,6 +1942,7 @@ export default function ChatView(props: ChatViewProps) {
   const isMobileViewport = useMediaQuery("max-sm");
   const [workspaceLayoutRef, workspaceLayoutWidth] = useElementWidth<HTMLDivElement>();
   const threadPanelPopoverAnchorRef = useRef<HTMLElement | null>(null);
+  const chatColumnRef = useRef<HTMLDivElement | null>(null);
   // Tracks whether the user explicitly dismissed the sidebar for the active turn.
   // When set, the thread-change reset effect will open the sidebar instead of closing it.
   // Used by "Implement in a new thread" to carry the sidebar-open intent across navigation.
@@ -11435,12 +11437,14 @@ export default function ChatView(props: ChatViewProps) {
       </Dialog>
       {rightPanelControlsAtRoot ? panelLayoutControls : null}
       <div
+        ref={chatColumnRef}
         className={cn(
           "t3-main flex min-h-0 min-w-0 flex-col overflow-x-hidden",
           rightPanelMaximized ? "w-0 flex-none" : "flex-1",
         )}
         data-chat-column-maximized-away={rightPanelMaximized ? "true" : "false"}
       >
+        <ChatColumnGlide column={chatColumnRef} rightPanelOpen={rightPanelOpen} />
         {/* Design v1's head (§4.1): what this chat loads, then the panel toggles. */}
         <header
           ref={threadPanelPopoverAnchorRef}

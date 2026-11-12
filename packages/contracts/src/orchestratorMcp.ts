@@ -391,7 +391,7 @@ export type OrchestratorMcpOutputAddResult = typeof OrchestratorMcpOutputAddResu
 export const OrchestratorMcpLooseEndAddInput = Schema.Struct({
   line: TrimmedNonEmptyString.check(Schema.isMaxLength(200)).annotate({
     description:
-      "One line, in your words, of what the owner has to do or answer, e.g. 'Send the drafted emails'.",
+      "One line, in your words, of what the owner has to do or answer, e.g. 'Send the drafted emails'. 200 characters at most; detail goes in `reason`.",
   }),
   reason: Schema.optional(
     Schema.String.check(Schema.isMaxLength(1_000)).annotate({
@@ -427,7 +427,11 @@ export const OrchestratorMcpLooseEndListResult = Schema.Struct({
 });
 export type OrchestratorMcpLooseEndListResult = typeof OrchestratorMcpLooseEndListResult.Type;
 
-export const OrchestratorMcpLooseEndCloseInput = Schema.Struct({ id: LooseEndId });
+export const OrchestratorMcpLooseEndCloseInput = Schema.Struct({
+  id: LooseEndId.annotate({
+    description: "The id loose_end_add returned, or one from loose_end_list.",
+  }),
+});
 export type OrchestratorMcpLooseEndCloseInput = typeof OrchestratorMcpLooseEndCloseInput.Type;
 
 /** CONTROL's bridge (HANDOFF-v2 §4): read-only access to the owner's terminal Claude chats. */

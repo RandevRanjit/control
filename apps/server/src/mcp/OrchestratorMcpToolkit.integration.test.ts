@@ -795,7 +795,11 @@ describe("orchestrator MCP toolkit", () => {
             ).toBe(parentRun?.id);
             expect((yield* invoke("loose_end_close", { id: looseEndId })).isError).toBe(false);
             expect((yield* orchestrator.getThreadShell(parentThreadId))?.openLooseEndCount).toBe(0);
-            expect((yield* invoke("loose_end_close", { id: looseEndId })).isError).toBe(true);
+            expect(declaredFailure(yield* invoke("loose_end_close", { id: looseEndId }))).toEqual({
+              _tag: "OrchestratorMcpFailure",
+              code: "orchestration_error",
+              message: `Loose end ${looseEndId} is already closed.`,
+            });
             const outsideAChat = yield* invokeAs(
               { ...invocation, thread: undefined },
               "loose_end_add",

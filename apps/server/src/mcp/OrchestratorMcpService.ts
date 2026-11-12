@@ -88,6 +88,7 @@ import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 
+import { userFacingDispatchErrorMessage } from "../orchestration-v2/UserFacingErrors.ts";
 import * as ProviderAdapterRegistry from "../orchestration-v2/ProviderAdapterRegistry.ts";
 import {
   subagentResultForRun,
@@ -253,7 +254,12 @@ function failure(code: OrchestratorMcpFailure["code"], message: string): Orchest
 }
 
 function threadManagementFailure(error: unknown): OrchestratorMcpFailure {
-  if (!isThreadManagementError(error)) return failure("orchestration_error", errorMessage(error));
+  // A rejected command carries the orchestrator's reason ("already closed") under its generic wrapper.
+  if (!isThreadManagementError(error))
+    return failure(
+      "orchestration_error",
+      userFacingDispatchErrorMessage(error) ?? errorMessage(error),
+    );
   switch (error._tag) {
     case "ThreadManagementThreadNotFoundError":
       return failure("thread_not_found", error.message);

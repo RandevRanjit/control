@@ -22,8 +22,8 @@ const SIDEBAR_SLIDE_MS = 218.75;
 const SIDEBAR_EASE_OUT = "cubic-bezier(.61,1,.88,1)";
 const SIDEBAR_EASE_IN = "cubic-bezier(.12,0,.39,0)";
 // What --chat-lane-push moves: the timeline, the composer and the scroll-to-bottom button.
-const LANE_CONTENT =
-  ".messages-timeline-scroll > *, .chat-composer-lane > *, .chat-scroll-to-bottom > *";
+const BESIDE_TIMELINE = ".chat-composer-lane > *, .chat-scroll-to-bottom > *";
+const LANE_CONTENT = `.messages-timeline-scroll > *, ${BESIDE_TIMELINE}`;
 // What a panel opening or closing beside the chat moves: the lanes, the head and the minimap. The
 // timeline's scroller moves whole, so its clip goes with the thread.
 const COLUMN_CONTENT =
@@ -63,6 +63,117 @@ function glideLanes(canvas: HTMLElement, push: string, previousPush: string, run
   const from = laneLefts(lanes);
   canvas.style.setProperty("--chat-lane-push", push);
   glideFrom(lanes, from, push === "0px" ? SIDEBAR_EASE_IN : SIDEBAR_EASE_OUT, running);
+}
+
+/**
+ * The text at the middle of the thread's view, where a reader's eyes rest. The returned function
+ * scrolls that text back to the height it shows at now. Null while the thread is pinned to its
+ * end, which stays pinned.
+ */
+function readingPlace(timeline: HTMLElement) {
+  if (timeline.scrollHeight - timeline.clientHeight - timeline.scrollTop <= 1) return null;
+  const view = timeline.getBoundingClientRect();
+  const caret = document.caretPositionFromPoint?.(
+    view.left + view.width / 2,
+    view.top + view.height / 2,
+  );
+  const text = caret?.offsetNode;
+  if (!caret || !(text instanceof Text) || !timeline.contains(text) || !text.length) return null;
+  const character = document.createRange();
+  const offset = Math.min(caret.offset, text.length - 1);
+  character.setStart(text, offset);
+  character.setEnd(text, offset + 1);
+  const top = character.getBoundingClientRect().top;
+  return () => {
+    const moved = character.getBoundingClientRect().top - top;
+    if (Math.abs(moved) >= 0.5) timeline.scrollTop += moved;
+  };
+}
+
+const READER_INPUT = ["wheel", "touchmove", "pointerdown"] as const;
+// The running hold on each thread; a newer re-wrap ends it.
+const readingHolds = new WeakMap<HTMLElement, () => void>();
+
+/**
+ * Holds the reading place while the virtualised thread measures its re-wrapped rows, which lands
+ * a frame or two later. Scrolling, a click or a key hands the thread back at once.
+ */
+function keepReadingPlace(timeline: HTMLElement, hold: () => void) {
+  const until = performance.now() + 300;
+  let held = true;
+  const release = () => {
+    held = false;
+    readingHolds.delete(timeline);
+    for (const type of READER_INPUT) timeline.removeEventListener(type, release);
+    document.removeEventListener("keydown", release);
+  };
+  readingHolds.set(timeline, release);
+  for (const type of READER_INPUT) timeline.addEventListener(type, release, { passive: true });
+  document.addEventListener("keydown", release);
+  const frame = () => {
+    if (!held) return;
+    hold();
+    if (performance.now() < until) requestAnimationFrame(frame);
+    else release();
+  };
+  frame();
+}
+
+/**
+ * Wide and Full lanes have no room to spare, so making room re-wraps the thread once. The thread
+ * fades out where it is, re-wraps while it can't be seen, and fades back in with the text being
+ * read at the same height; the composer still glides. Where the lane keeps its width it only
+ * glides, as Comfortable does.
+ */
+function rewrapLanes(
+  canvas: HTMLElement,
+  push: string,
+  previousPush: string,
+  running: Animation[],
+) {
+  const timeline = canvas.querySelector<HTMLElement>(".messages-timeline-scroll");
+  // The composer shares the thread's lane width and is cheap to lay out, so it tells whether
+  // the thread would re-wrap without re-wrapping it.
+  const composer = canvas.querySelector(".chat-composer-lane > *");
+  if (timeline && composer) {
+    for (const animation of running.splice(0)) animation.cancel();
+    readingHolds.get(timeline)?.();
+    timeline.style.removeProperty("--chat-lane-inset-start");
+    canvas.style.setProperty("--chat-lane-push", previousPush);
+    const width = composer.getBoundingClientRect().width;
+    const hold = readingPlace(timeline);
+    const beside = [...canvas.querySelectorAll<HTMLElement>(BESIDE_TIMELINE)];
+    const from = laneLefts(beside);
+    // The thread keeps its old inset until it has faded out.
+    const inset = getComputedStyle(timeline).getPropertyValue("--chat-lane-inset-start");
+    timeline.style.setProperty("--chat-lane-inset-start", inset);
+    canvas.style.setProperty("--chat-lane-push", push);
+    if (composer.getBoundingClientRect().width !== width) {
+      const fade = (opacity: number[], easing: string) =>
+        timeline.animate(
+          opacity.map((value) => ({ opacity: value })),
+          { duration: SIDEBAR_SLIDE_MS / 2, easing },
+        );
+      const rewrap = () => {
+        timeline.style.removeProperty("--chat-lane-inset-start");
+        if (hold) keepReadingPlace(timeline, hold);
+      };
+      if (motionReduced()) return rewrap();
+      glideFrom(beside, from, push === "0px" ? SIDEBAR_EASE_IN : SIDEBAR_EASE_OUT, running);
+      const out = fade([1, 0], SIDEBAR_EASE_IN);
+      running.push(out);
+      out.finished.then(
+        () => {
+          rewrap();
+          running.push(fade([0, 1], SIDEBAR_EASE_OUT));
+        },
+        () => {},
+      );
+      return;
+    }
+    timeline.style.removeProperty("--chat-lane-inset-start");
+  }
+  if (!motionReduced()) glideLanes(canvas, push, previousPush, running);
 }
 
 type ColumnGlideProps = {
@@ -265,8 +376,13 @@ export function ChatCanvas({
     const previousPush = shownLanePush.current;
     shownLanePush.current = lanePush;
     const element = elementRef.current;
-    if (previousPush === lanePush || !element || motionReduced()) return;
-    glideLanes(element, lanePush, previousPush, laneGlides.current);
+    if (previousPush === lanePush || !element) return;
+    const chatWidth = document.documentElement.dataset.chatWidth;
+    if (chatWidth === "wide" || chatWidth === "full") {
+      rewrapLanes(element, lanePush, previousPush, laneGlides.current);
+    } else if (!motionReduced()) {
+      glideLanes(element, lanePush, previousPush, laneGlides.current);
+    }
   }, [lanePush]);
   return (
     <ChatCanvasContext value={context}>

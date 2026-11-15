@@ -26,6 +26,7 @@ import {
   type ReorderQueuedRunInput,
   type LinkThreadPullRequestInput,
   type ReopenLooseEndInput,
+  type SwitchThreadLoadInput,
   type RespondToThreadApprovalInput,
   type RespondToThreadUserInputInput,
   type DismissThreadUserInputInput,
@@ -62,6 +63,7 @@ import {
   clearLooseEnds,
   closeLooseEnd,
   reopenLooseEnd,
+  switchThreadLoad,
   reorderQueuedRun,
   resumeThreadQueue,
   retryWorkspacePreparation,
@@ -244,6 +246,12 @@ export function createThreadEnvironmentAtoms<R, E>(
     reopenLooseEnd: createEnvironmentCommand(runtime, {
       label: "environment-data:commands:thread:reopen-loose-end",
       execute: (input: ReopenLooseEndInput) => reopenLooseEnd(input),
+      scheduler,
+      concurrency,
+    }),
+    switchLoad: createEnvironmentCommand(runtime, {
+      label: "environment-data:commands:thread:switch-load",
+      execute: (input: SwitchThreadLoadInput) => switchThreadLoad(input),
       scheduler,
       concurrency,
     }),

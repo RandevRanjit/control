@@ -46,6 +46,8 @@ import {
   type OrchestrationV2RunAttempt,
   type OrchestrationV2ThreadShell,
   type OrchestrationV2ThreadShellSnapshot,
+  type OrchestrationV2ThreadLoadsOff,
+  type OrchestrationV2ThreadLoadSwitch,
   type OrchestrationV2StoredEvent,
   type OrchestrationV2Subagent,
   type OrchestrationV2ThreadProjection,
@@ -562,6 +564,27 @@ function withPullRequestWatch(
 ): ThreadPullRequestLink {
   const { watch: _previous, ...rest } = link;
   return watch === undefined ? rest : { ...rest, watch };
+}
+
+/** A chat's off lists after one switch; a name is listed once, in order. */
+function switchLoad(
+  current: OrchestrationV2AppThread["loadsOff"],
+  loadSwitch: OrchestrationV2ThreadLoadSwitch,
+): OrchestrationV2ThreadLoadsOff {
+  const off = current ?? { mcpServers: [], plugins: [] };
+  const key = loadSwitch.kind === "mcpServer" ? "mcpServers" : "plugins";
+  const others = off[key].filter((name) => name !== loadSwitch.name);
+  return {
+    ...off,
+    [key]: loadSwitch.on ? others : [...others, loadSwitch.name].toSorted(),
+  };
+}
+
+function isOnlyLoadSwitch(
+  command: Extract<OrchestrationV2Command, { type: "thread.metadata.update" }>,
+) {
+  const { type: _type, commandId: _commandId, threadId: _threadId, loadSwitch, ...rest } = command;
+  return loadSwitch !== undefined && Object.values(rest).every((value) => value === undefined);
 }
 
 /** A legacy single-PR link as a link entry. Re-linking a pull request keeps its watch. */
@@ -3041,7 +3064,11 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
               : command.regenerateTitle === false || command.title !== undefined
                 ? { titleRegeneration: null }
                 : {}),
-            updatedAt: now,
+            ...(command.loadSwitch === undefined
+              ? {}
+              : { loadsOff: switchLoad(thread.loadsOff, command.loadSwitch) }),
+            // A switch is a setting, not chat activity, so it leaves the sidebar's order alone.
+            updatedAt: isOnlyLoadSwitch(command) ? thread.updatedAt : now,
           };
         }
         case "thread.pull-request.link":

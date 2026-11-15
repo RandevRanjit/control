@@ -71,6 +71,7 @@ import {
   type OrchestrationV2ProviderFailure,
   OrchestrationV2ProviderGoal,
   type OrchestrationV2ProviderThreadLoads,
+  type OrchestrationV2ThreadLoadsOff,
   type OrchestrationV2PlanArtifact,
   type OrchestrationV2PlanStep,
   type OrchestrationV2PendingBackgroundTask,
@@ -126,6 +127,11 @@ import {
   resolveClaudeHomePath,
 } from "../../provider/Drivers/ClaudeHome.ts";
 import { claudeHooks } from "../../provider/Drivers/ClaudeHooks.ts";
+import {
+  claudeLoadAbout,
+  type ClaudeLoadDetails,
+  withServerStatus,
+} from "../../provider/Drivers/ClaudeLoadAbout.ts";
 import { readClaudeSettingsEnvVar } from "../../provider/Drivers/ClaudeSettingsEnv.ts";
 import {
   BUNDLED_CLAUDE_MODEL_CATALOG,
@@ -458,6 +464,8 @@ export interface ClaudeAgentSdkQuerySession {
     SDKControlGetContextUsageResponse,
     ClaudeAgentSdkQueryRunnerError
   >;
+  /** What the session's skills, agent types and MCP servers are, for the head's lists. */
+  readonly loadDetails?: Effect.Effect<ClaudeLoadDetails, ClaudeAgentSdkQueryRunnerError>;
   readonly close: Effect.Effect<void, ClaudeAgentSdkQueryRunnerError>;
 }
 
@@ -884,6 +892,17 @@ export const layerQueryRunner: Layer.Layer<
             try: () => queryRuntime.getContextUsage({ detail: "summary" }),
             catch: (cause) => queryRunnerError(cause, "getContextUsage"),
           }),
+          loadDetails: Effect.tryPromise({
+            try: async () => {
+              const [commands, agents, mcpServers] = await Promise.all([
+                queryRuntime.supportedCommands(),
+                queryRuntime.supportedAgents(),
+                queryRuntime.mcpServerStatus(),
+              ]);
+              return { commands, agents, mcpServers };
+            },
+            catch: (cause) => queryRunnerError(cause, "loadDetails"),
+          }),
           close: Queue.shutdown(promptQueue).pipe(
             Effect.andThen(closeClaudeQuery(queryRuntime)),
             Effect.tap(() =>
@@ -1183,6 +1202,29 @@ export const CLAUDE_CONTROL_MCP_TOOL_TIMEOUT_MS = 65 * 60 * 1_000;
 // therefore travels in the child's environment, which only its owner can read,
 // and the CLI expands the `${VAR}` reference when it connects.
 const CLAUDE_CONTROL_MCP_AUTHORIZATION_ENV = "CONTROL_MCP_AUTHORIZATION";
+
+/**
+ * The flag settings that start a chat's session without what the owner switched off for it
+ * (`loadsOff`): a denied server never connects, and a plugin set false loads none of its
+ * skills, agents, hooks or servers. Flag settings live only for the session, so nothing is
+ * written to the owner's settings files. CONTROL's own servers are never denied.
+ */
+export function claudeLoadsOffSettings(
+  loadsOff: OrchestrationV2ThreadLoadsOff | undefined,
+  ownServers: ReadonlyArray<string>,
+): ClaudeSdkSettings | undefined {
+  const servers = (loadsOff?.mcpServers ?? []).filter((name) => !ownServers.includes(name));
+  const plugins = loadsOff?.plugins ?? [];
+  if (servers.length === 0 && plugins.length === 0) return undefined;
+  return {
+    ...(servers.length === 0
+      ? {}
+      : { deniedMcpServers: servers.map((serverName) => ({ serverName })) }),
+    ...(plugins.length === 0
+      ? {}
+      : { enabledPlugins: Object.fromEntries(plugins.map((id) => [id, false])) }),
+  };
+}
 
 export function claudeMcpQueryOverrides(input: {
   readonly threadId: ThreadId;
@@ -3382,6 +3424,8 @@ interface ClaudeLiveQueryContext {
   readonly query: ClaudeAgentSdkQuerySession;
   readonly queryPolicyKey: string;
   readonly selectionKey: string;
+  // What the chat had switched off when this process started (claudeLoadsOffSettings).
+  readonly loadsOff: OrchestrationV2ThreadLoadsOff | undefined;
   readonly closed: Deferred.Deferred<void, never>;
   // Whether this CLI process echoes a prompt's uuid on the first frame of
   // the turn answering it ("early") or only on its result. Learned from the
@@ -3778,6 +3822,7 @@ export function makeClaudeAdapterV2(
   const sessionLoads = (
     message: Extract<SDKMessage, { type: "system"; subtype: "init" }>,
     cwd: string,
+    off: OrchestrationV2ThreadLoadsOff | undefined,
   ) =>
     Effect.gen(function* () {
       const hookHandlers = yield* claudeHooks({
@@ -3791,12 +3836,12 @@ export function makeClaudeAdapterV2(
       const hooks = hookHandlers.map((handler) => handler.event);
       const skills = message.skills ?? [];
       // Claude names a server's tools mcp__<name, other than [A-Za-z0-9_-] as _>__<tool>.
-      const mcpServers = (message.mcp_servers ?? []).map(({ name, status }) => {
+      const mcpServers = (message.mcp_servers ?? []).map(({ name, status, source }) => {
         const prefix = `mcp__${name.replace(/[^A-Za-z0-9_-]/g, "_")}__`;
         const tools = (message.tools ?? []).flatMap((tool) =>
           tool.startsWith(prefix) ? [tool.slice(prefix.length)] : [],
         );
-        return { name, status, tools };
+        return { name, status, tools, ...(source === undefined ? {} : { source }) };
       });
       const plugins = (message.plugins ?? []).map((plugin) => plugin.name);
       const agents = message.agents ?? [];
@@ -3806,7 +3851,57 @@ export function makeClaudeAdapterV2(
         mcpServers: mcpServers.length,
         plugins: plugins.length,
         agents: agents.length,
-        names: { hooks, hookHandlers, skills, mcpServers, plugins, agents },
+        names: {
+          hooks,
+          hookHandlers,
+          skills,
+          mcpServers,
+          plugins,
+          agents,
+          ...(off === undefined || off.mcpServers.length + off.plugins.length === 0 ? {} : { off }),
+        },
+      } satisfies OrchestrationV2ProviderThreadLoads;
+    }).pipe(
+      Effect.provideService(FileSystem.FileSystem, fileSystem),
+      Effect.provideService(Path.Path, path),
+    );
+
+  // The loads with what the live session says about them: descriptions, sources, a failed
+  // server's error and its tools' hints. Plugin ids come from the init frame's `source`.
+  const describeLoads = (
+    loads: OrchestrationV2ProviderThreadLoads,
+    names: NonNullable<OrchestrationV2ProviderThreadLoads["names"]>,
+    message: Extract<SDKMessage, { type: "system"; subtype: "init" }>,
+    cwd: string,
+    details: ClaudeLoadDetails,
+  ) =>
+    Effect.gen(function* () {
+      const about = yield* claudeLoadAbout({
+        settings: adapterOptions.settings,
+        environment: adapterOptions.environment,
+        claudeHome: yield* resolveClaudeHomePath(
+          adapterOptions.settings,
+          adapterOptions.environment,
+        ),
+        cwd,
+        names,
+        plugins: (message.plugins ?? []).map((plugin) => ({
+          name: plugin.name,
+          path: plugin.path,
+          ...("source" in plugin && typeof plugin.source === "string" ? { id: plugin.source } : {}),
+        })),
+        details,
+      });
+      const statuses = new Map(details.mcpServers.map((server) => [server.name, server]));
+      return {
+        ...loads,
+        names: {
+          ...names,
+          mcpServers: names.mcpServers.map((server) =>
+            withServerStatus(server, statuses.get(server.name)),
+          ),
+          about,
+        },
       } satisfies OrchestrationV2ProviderThreadLoads;
     }).pipe(
       Effect.provideService(FileSystem.FileSystem, fileSystem),
@@ -3920,6 +4015,8 @@ export function makeClaudeAdapterV2(
         const goalsByNativeThread = new Map<string, OrchestrationV2ProviderGoal | null>();
         // What each session loaded at its latest init frame.
         const loadsByNativeThread = new Map<string, OrchestrationV2ProviderThreadLoads>();
+        // The loads as the init frame names them, before the session describes them.
+        const namedLoadsByNativeThread = new Map<string, OrchestrationV2ProviderThreadLoads>();
         // The CLI's latest context report per session.
         const contextUsageByNativeThread = new Map<string, ThreadTokenUsageSnapshot>();
         // Turns whose model output met an active goal's Stop hook check at its end.
@@ -4453,12 +4550,29 @@ export function makeClaudeAdapterV2(
         const trackClaudeLoads = Effect.fnUntraced(function* (input: {
           readonly nativeThreadId: string;
           readonly cwd: string;
+          readonly query: ClaudeAgentSdkQuerySession;
+          readonly off: OrchestrationV2ThreadLoadsOff | undefined;
           readonly message: SDKMessage;
         }) {
           if (input.message.type !== "system" || input.message.subtype !== "init") return;
-          const loads = yield* sessionLoads(input.message, input.cwd);
-          const current = loadsByNativeThread.get(input.nativeThreadId);
-          if (current !== undefined && Equal.equals(current, loads)) return;
+          const named = yield* sessionLoads(input.message, input.cwd, input.off);
+          // Every turn opens with an init frame; the session is asked about its loads only
+          // when they change. A failed or slow answer leaves the names without details.
+          const previous = namedLoadsByNativeThread.get(input.nativeThreadId);
+          if (previous !== undefined && Equal.equals(previous, named)) return;
+          namedLoadsByNativeThread.set(input.nativeThreadId, named);
+          const details =
+            input.query.loadDetails === undefined
+              ? undefined
+              : yield* input.query.loadDetails.pipe(
+                  Effect.timeoutOption("3 seconds"),
+                  Effect.map(Option.getOrUndefined),
+                  Effect.orElseSucceed(() => undefined),
+                );
+          const loads =
+            details === undefined
+              ? named
+              : yield* describeLoads(named, named.names, input.message, input.cwd, details);
           loadsByNativeThread.set(input.nativeThreadId, loads);
           const providerThread = (yield* Ref.get(lastProviderThreadByNativeThread)).get(
             input.nativeThreadId,
@@ -6869,6 +6983,8 @@ export function makeClaudeAdapterV2(
           yield* trackClaudeLoads({
             nativeThreadId: liveQuery.nativeThreadId,
             cwd: path.resolve(context.input.runtimePolicy.cwd ?? "."),
+            query: liveQuery.query,
+            off: liveQuery.loadsOff,
             message,
           });
           yield* trackClaudeContextUsage({
@@ -8438,7 +8554,18 @@ export function makeClaudeAdapterV2(
               ? {}
               : { allowedTools: queryPolicy.allowedTools }),
           });
-          const queryPolicyKey = claudeEffectiveQueryPolicyKey(queryPolicy, mcpOverrides);
+          const loadsOffSettings = claudeLoadsOffSettings(
+            turnInput.appThread.loadsOff,
+            Object.keys(mcpOverrides.mcpServers ?? {}),
+          );
+          // The CLI reads a switch only as it starts, so a changed one replaces the process.
+          const queryPolicyKey =
+            claudeEffectiveQueryPolicyKey(queryPolicy, mcpOverrides) +
+            [
+              ...(turnInput.appThread.loadsOff?.mcpServers ?? []),
+              "",
+              ...(turnInput.appThread.loadsOff?.plugins ?? []),
+            ].join("\u0000");
           const catalog = yield* modelCatalog;
           const compiledSelection = compileClaudeModelSelection(turnInput.modelSelection, catalog);
           const resumeSessionAt = yield* getNativeConversationHeadId(turnInput.providerThread);
@@ -8565,6 +8692,7 @@ export function makeClaudeAdapterV2(
             onUserDialog,
             supportedDialogKinds: ["resume_return"],
             ...(toolSearchOverride === undefined ? {} : { toolSearchOverride }),
+            ...(loadsOffSettings === undefined ? {} : { sdkSettings: loadsOffSettings }),
           });
           const querySession = yield* queryRunner
             .open({
@@ -8617,6 +8745,7 @@ export function makeClaudeAdapterV2(
             query: querySession,
             queryPolicyKey,
             selectionKey: compiledSelection.queryIdentity,
+            loadsOff: turnInput.appThread.loadsOff,
             closed,
             promptEchoMode: "unknown",
             openedPermissionMode: queryOptions.permissionMode,

@@ -27,6 +27,7 @@ import {
   type ModelSelection,
   NodeId,
   type OrchestrationV2AppThread,
+  type OrchestrationV2ThreadLoadsOff,
   OrchestrationV2ProviderThread,
   ProjectId,
   ProviderInstanceId,
@@ -2707,6 +2708,10 @@ describe("ClaudeAdapterV2 background wake turns", () => {
     readonly freshQueueOnReopen?: boolean;
     // What the CLI reports when asked for its context usage.
     readonly contextUsage?: Parameters<typeof ClaudeAdapterV2.claudeContextUsage>[0];
+    // What the CLI says about its skills, agent types and MCP servers.
+    readonly loadDetails?: Effect.Success<
+      NonNullable<ClaudeAdapterV2.ClaudeAgentSdkQuerySession["loadDetails"]>
+    >;
   }) =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
@@ -2744,6 +2749,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
       const planReceipts =
         yield* Queue.unbounded<Extract<ProviderAdapterV2Event, { type: "plan.updated" }>>();
       let openedOptions: ClaudeAdapterV2.ClaudeAgentSdkQueryOptions | undefined;
+      let loadDetailsCalls = 0;
       const adapter = ClaudeAdapterV2.makeClaudeAdapterV2({
         instanceId: ClaudeAdapterV2.CLAUDE_DEFAULT_INSTANCE_ID,
         settings: options?.settings ?? DEFAULT_CLAUDE_SETTINGS,
@@ -2818,6 +2824,14 @@ describe("ClaudeAdapterV2 background wake turns", () => {
                       getContextUsage: Effect.succeed(
                         options.contextUsage as SDKControlGetContextUsageResponse,
                       ),
+                    }),
+                ...(options?.loadDetails === undefined
+                  ? {}
+                  : {
+                      loadDetails: Effect.sync(() => {
+                        loadDetailsCalls += 1;
+                        return options.loadDetails!;
+                      }),
                     }),
                 close: options?.close?.(sdkMessages) ?? Effect.void,
               };
@@ -2894,6 +2908,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
         runtimeRequestReceipts,
         planReceipts,
         getOpenedOptions: () => openedOptions,
+        loadDetailsCalls: () => loadDetailsCalls,
         terminalEvents,
         hasPendingBackgroundWork,
       };
@@ -3811,6 +3826,212 @@ describe("ClaudeAdapterV2 background wake turns", () => {
       });
     }).pipe(Effect.scoped, Effect.provide(Layer.merge(IdAllocator.layer, NodeServices.layer))),
   );
+
+  it.effect(
+    "describes what the session loaded, asking the session only when the names change",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "claude-v2-load-about-" });
+        const claudeHome = path.join(root, "claude-home");
+        const workspace = path.join(root, "workspace");
+        const plugin = path.join(root, "plugins", "lint");
+        for (const [file, text] of [
+          [
+            path.join(claudeHome, "skills", "mine", "SKILL.md"),
+            "---\nname: mine\ndescription: Mine.\n---\n",
+          ],
+          [
+            path.join(workspace, ".claude", "skills", "shared", "SKILL.md"),
+            "---\nname: shared\ndescription: Ours.\n---\n",
+          ],
+          [
+            path.join(claudeHome, "agents", "review.md"),
+            "---\nname: reviewer\ndescription: Reviews.\n---\n",
+          ],
+          [
+            path.join(plugin, ".claude-plugin", "plugin.json"),
+            '{"description":"Lints.\\n\\nAnd more."}',
+          ],
+        ] as const) {
+          yield* fs.makeDirectory(path.dirname(file), { recursive: true });
+          yield* fs.writeFileString(file, text);
+        }
+        const harness = yield* makeWakeHarnessWithOptions({
+          environment: { CLAUDE_CONFIG_DIR: claudeHome },
+          loadDetails: {
+            commands: [
+              { name: "mine", description: "Mine, as the CLI says.\n\nDetail.", argumentHint: "" },
+              { name: "lint:fix", description: "(lint) Fixes lint.", argumentHint: "" },
+              { name: "simplify", description: "x".repeat(300), argumentHint: "" },
+            ],
+            agents: [
+              { name: "Explore", description: "Searches.", model: "haiku" },
+              { name: "reviewer", description: "Reviews.", model: "inherit" },
+              { name: "lint:checker", description: "Checks." },
+            ],
+            mcpServers: [
+              {
+                name: "github",
+                status: "connected",
+                tools: [
+                  { name: "get_pr", annotations: { readOnly: true } },
+                  { name: "delete_repo", annotations: { destructive: true } },
+                  { name: "create_issue" },
+                ],
+              },
+              { name: "linear", status: "failed", error: "Connection refused" },
+            ],
+          },
+        });
+        yield* harness.runtime.startTurn(
+          makeClaudeTestTurnInput({
+            threadId: harness.threadId,
+            providerThread: harness.providerThread,
+            now: yield* DateTime.now,
+            attemptId: RunAttemptId.make("load-about-attempt"),
+            text: "Hello",
+            attachments: [],
+            runtimePolicy: ProviderAdapterV2RuntimePolicy.make({
+              ...CLAUDE_TEST_RUNTIME_POLICY,
+              cwd: workspace,
+            }),
+          }),
+        );
+        const init = (uuid: string) =>
+          claudeSdkFrame({
+            type: "system",
+            subtype: "init",
+            claude_code_version: "2.1.300",
+            cwd: workspace,
+            skills: ["mine", "shared", "simplify", "lint:fix"],
+            mcp_servers: [
+              { name: "github", status: "connected", source: "user" },
+              { name: "linear", status: "failed", source: "project" },
+            ],
+            tools: ["mcp__github__get_pr", "mcp__github__delete_repo", "mcp__github__create_issue"],
+            plugins: [{ name: "lint", path: plugin, source: "lint@tools" }],
+            agents: ["Explore", "reviewer", "lint:checker"],
+            uuid,
+            session_id: WAKE_NATIVE_SESSION,
+          });
+        yield* harness.offerAndWait(init("00000000-0000-4000-8000-000000000291"));
+        // The next turn's frame names the same loads: the session is not asked again.
+        yield* harness.offerAndWait(init("00000000-0000-4000-8000-000000000292"));
+        assert.equal(harness.loadDetailsCalls(), 1);
+
+        const names = harness.events
+          .flatMap((event) =>
+            event.type === "provider_thread.updated" ? [event.providerThread] : [],
+          )
+          .at(-1)?.loads?.names;
+        assert.deepEqual(names?.mcpServers, [
+          {
+            name: "github",
+            status: "connected",
+            source: "user",
+            tools: ["get_pr", "delete_repo", "create_issue"],
+            toolHints: { get_pr: "read-only", delete_repo: "destructive" },
+          },
+          {
+            name: "linear",
+            status: "failed",
+            source: "project",
+            tools: [],
+            error: "Connection refused",
+          },
+        ]);
+        assert.deepEqual(names?.about, {
+          skills: {
+            mine: { description: "Mine, as the CLI says.", source: "user" },
+            shared: { source: "project" },
+            simplify: { description: `${"x".repeat(199)}…`, source: "built-in" },
+            "lint:fix": { description: "Fixes lint.", source: "lint" },
+          },
+          agents: {
+            Explore: { description: "Searches.", source: "built-in", model: "haiku" },
+            reviewer: { description: "Reviews.", source: "user" },
+            "lint:checker": { description: "Checks.", source: "lint" },
+          },
+          plugins: { lint: { description: "Lints.", id: "lint@tools" } },
+        });
+      }).pipe(Effect.scoped, Effect.provide(Layer.merge(IdAllocator.layer, NodeServices.layer))),
+  );
+
+  it.effect("starts a session without the MCP servers and plugins switched off for its chat", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeWakeHarnessWithOptions({
+        close: Queue.shutdown,
+        freshQueueOnReopen: true,
+      });
+      const turn = Effect.fnUntraced(function* (
+        ordinal: number,
+        loadsOff: OrchestrationV2ThreadLoadsOff | undefined,
+      ) {
+        const input = makeClaudeTestTurnInput({
+          threadId: harness.threadId,
+          providerThread: harness.providerThread,
+          now: yield* DateTime.now,
+          attemptId: RunAttemptId.make(`attempt-loads-off-${ordinal}`),
+          providerTurnOrdinal: ordinal,
+          text: "Hello",
+          attachments: [],
+        });
+        yield* harness.runtime.startTurn({
+          ...input,
+          appThread: { ...input.appThread, ...(loadsOff === undefined ? {} : { loadsOff }) },
+        });
+        const settings = harness.getOpenedOptions()?.settings;
+        yield* harness.offerAndWait(
+          claudeSdkFrame({
+            type: "system",
+            subtype: "init",
+            claude_code_version: "2.1.300",
+            uuid: `00000000-0000-4000-8000-00000000030${ordinal}`,
+            session_id: WAKE_NATIVE_SESSION,
+          }),
+        );
+        yield* harness.offerAndWait(
+          makeResultFrame({ uuid: `loads-off-result-${ordinal}`, result: "Done." }),
+        );
+        assert.equal((yield* Queue.take(harness.terminalReceipts)).status, "completed");
+        return typeof settings === "object"
+          ? { denied: settings.deniedMcpServers, plugins: settings.enabledPlugins }
+          : undefined;
+      });
+      assert.deepEqual(yield* turn(1, undefined), { denied: undefined, plugins: undefined });
+      const off = { mcpServers: ["tavily"], plugins: ["playwright@claude-plugins-official"] };
+      assert.deepEqual(yield* turn(2, off), {
+        denied: [{ serverName: "tavily" }],
+        plugins: { "playwright@claude-plugins-official": false },
+      });
+      // The CLI reads the switches only as it starts: a change replaced the process, and an
+      // unchanged list keeps it.
+      assert.equal(harness.processQueues.length, 2);
+      yield* turn(3, off);
+      assert.equal(harness.processQueues.length, 2);
+      const names = harness.events
+        .flatMap((event) =>
+          event.type === "provider_thread.updated" ? [event.providerThread] : [],
+        )
+        .at(-1)?.loads?.names;
+      // The session says what it started without, so the head can list it to switch back on.
+      assert.deepEqual(names?.off, off);
+    }).pipe(Effect.scoped, Effect.provide(Layer.merge(IdAllocator.layer, NodeServices.layer))),
+  );
+
+  it("never denies CONTROL's own MCP server", () => {
+    assert.deepEqual(
+      ClaudeAdapterV2.claudeLoadsOffSettings({ mcpServers: ["control", "tavily"], plugins: [] }, [
+        "control",
+      ]),
+      { deniedMcpServers: [{ serverName: "tavily" }] },
+    );
+    assert.isUndefined(
+      ClaudeAdapterV2.claudeLoadsOffSettings({ mcpServers: ["control"], plugins: [] }, ["control"]),
+    );
+  });
 
   describe("Plan-mode tool approval", () => {
     const openPlanTurn = Effect.fn("openPlanTurn")(function* (

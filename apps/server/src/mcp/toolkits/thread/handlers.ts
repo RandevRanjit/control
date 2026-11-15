@@ -178,7 +178,7 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
     ),
   ),
   thread_configure: McpToolAccess.either(
-    (input) => input.modelSelection === undefined,
+    (input) => input.modelSelection === undefined && input.switch === undefined,
     McpToolAccess.reads((input) =>
       Effect.gen(function* () {
         const {
@@ -189,16 +189,28 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
           modelSelection: thread.modelSelection,
           runtimeMode: thread.runtimeMode,
           interactionMode: thread.interactionMode,
+          off: thread.loadsOff ?? { mcpServers: [], plugins: [] },
         };
       }),
     ),
     writesThread((input) =>
       Effect.gen(function* () {
-        const modelSelection = yield* required(input.modelSelection, "modelSelection");
         const {
           threads,
           projection: { thread },
         } = yield* readThread(input.threadId);
+        if (input.switch !== undefined) {
+          const switched = yield* threads
+            .dispatch({
+              type: "thread.metadata.update",
+              threadId: thread.id,
+              commandId: yield* newCommandId(),
+              loadSwitch: input.switch,
+            })
+            .pipe(Effect.mapError(dispatchFailure));
+          if (input.modelSelection === undefined) return { sequence: switched.sequence };
+        }
+        const modelSelection = yield* required(input.modelSelection, "modelSelection");
         const type = modelSelectionCommandType(thread.providerInstanceId, modelSelection);
         const result = yield* threads
           .dispatch({ type, threadId: thread.id, commandId: yield* newCommandId(), modelSelection })

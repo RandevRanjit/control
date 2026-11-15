@@ -14,6 +14,8 @@ import {
   IsoDateTime,
   OrchestratorMcpFailure,
   OrchestrationV2DispatchCommandResult,
+  OrchestrationV2ThreadLoadsOff,
+  OrchestrationV2ThreadLoadSwitch,
   ThreadId,
   RunId,
   NonNegativeInt,
@@ -138,14 +140,21 @@ const threadConfiguration = Schema.Struct({
   modelSelection: ModelSelection,
   runtimeMode: RuntimeMode,
   interactionMode: ProviderInteractionMode,
+  off: OrchestrationV2ThreadLoadsOff,
 });
 const ThreadConfigureTool = Tool.make("thread_configure", {
   ...commandTool,
   description:
-    "Read a thread's provider, model and modes, or set its provider, model and options with `modelSelection`. Omit `threadId` for this thread. Permission modes stay. Values from `orchestrator_capabilities`.",
+    "Read a thread's provider, model, modes and switched-off MCP servers and plugins (`off`), or set its provider, model and options with `modelSelection`, or switch one MCP server or plugin off or on with `switch`. Omit `threadId` for this thread. Permission modes stay. Values from `orchestrator_capabilities`.",
   parameters: Schema.Struct({
     threadId: Schema.optional(ThreadId),
     modelSelection: Schema.optional(ModelSelection),
+    switch: Schema.optional(
+      OrchestrationV2ThreadLoadSwitch.annotate({
+        description:
+          "An MCP server by its name, or a plugin by `name@marketplace`. Takes effect from the thread's next turn, which starts a new Claude process; CONTROL's own server stays on.",
+      }),
+    ),
   }),
   success: Schema.Union([threadConfiguration, OrchestrationV2DispatchCommandResult]),
 }).annotate(Tool.Destructive, true);

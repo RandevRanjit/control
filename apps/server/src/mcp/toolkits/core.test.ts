@@ -608,6 +608,68 @@ it.effect("a read-only client reads threads and is refused every write before it
 );
 const dispatched: Array<string> = [];
 
+it.effect("thread_configure reads a chat's switched-off loads and switches one", () =>
+  Effect.gen(function* () {
+    const server = yield* McpServer.McpServer;
+    const call = (access: "read-only" | "full-access", args: Record<string, unknown>) =>
+      server
+        .callTool({ name: "thread_configure", arguments: args })
+        .pipe(
+          Effect.provideService(McpInvocationContext.McpInvocationContext, clientScope(access)),
+          Effect.provideService(McpSchema.McpServerClient, client),
+        );
+    const read = yield* call("read-only", { threadId: "switch-thread" });
+    expect(read.structuredContent).toMatchObject({
+      off: { mcpServers: ["tavily"], plugins: [] },
+    });
+    const loadSwitch = { kind: "plugin", name: "playwright@claude-plugins-official", on: false };
+    const refused = yield* call("read-only", { threadId: "switch-thread", switch: loadSwitch });
+    expect(declaredFailure(refused)).toMatchObject({ code: "capability_denied" });
+    expect(switches).toEqual([]);
+    const switched = yield* call("full-access", { threadId: "switch-thread", switch: loadSwitch });
+    expect(switched.isError).toBe(false);
+    expect(switches).toEqual([
+      { type: "thread.metadata.update", threadId: "switch-thread", loadSwitch },
+    ]);
+  }).pipe(
+    Effect.provide(
+      McpHttpServer.layerThreadToolkit.pipe(
+        Layer.provideMerge(McpServer.McpServer.layer),
+        Layer.provide(NodeCrypto.layer),
+        Layer.provide(
+          Layer.mock(ThreadManagement.ThreadManagementService)({
+            getThreadShell: () =>
+              Effect.succeed({
+                id: ThreadId.make("switch-thread"),
+                projectId: "project",
+                deletedAt: null,
+              } as never),
+            getProjectThreadRecords: () =>
+              Effect.succeed({
+                thread: {
+                  id: ThreadId.make("switch-thread"),
+                  projectId: "project",
+                  modelSelection: { instanceId: "claudeAgent", model: "claude-opus-5-5" },
+                  runtimeMode: "auto",
+                  interactionMode: "default",
+                  loadsOff: { mcpServers: ["tavily"], plugins: [] },
+                  deletedAt: null,
+                },
+              } as never),
+            dispatch: (command) =>
+              Effect.sync(() => {
+                const { commandId: _commandId, ...rest } = command as { commandId: string };
+                switches.push(rest);
+                return { sequence: 8 } as never;
+              }),
+          }),
+        ),
+      ),
+    ),
+  ),
+);
+const switches: Array<unknown> = [];
+
 it.effect("refuses act-as-caller tools to a client caller", () =>
   Effect.gen(function* () {
     const server = yield* McpServer.McpServer;

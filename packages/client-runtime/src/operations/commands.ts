@@ -11,6 +11,7 @@ import {
   type GroupId,
   type GroupMutation,
   type LooseEndId,
+  type OrchestrationV2ThreadLoadSwitch,
   type MessageId,
   type ModelSelection,
   type NodeId,
@@ -137,6 +138,10 @@ export interface CloseLooseEndInput extends ThreadCommandInput {
 
 export interface ReopenLooseEndInput extends ThreadCommandInput {
   readonly looseEndId: LooseEndId;
+}
+
+export interface SwitchThreadLoadInput extends ThreadCommandInput {
+  readonly loadSwitch: OrchestrationV2ThreadLoadSwitch;
 }
 
 export interface VisitThreadInput extends ThreadCommandInput {
@@ -618,6 +623,18 @@ export const reopenLooseEnd = Effect.fn("EnvironmentCommands.reopenLooseEnd")(fu
     commandId: yield* allocateCommandId(input),
     threadId: input.threadId,
     looseEndId: input.looseEndId,
+  });
+});
+
+/** A switch in the head's MCP and Plugins lists: off or on for this chat from its next turn. */
+export const switchThreadLoad = Effect.fn("EnvironmentCommands.switchThreadLoad")(function* (
+  input: SwitchThreadLoadInput,
+) {
+  return yield* dispatch({
+    type: "thread.metadata.update",
+    commandId: yield* allocateCommandId(input),
+    threadId: input.threadId,
+    loadSwitch: input.loadSwitch,
   });
 });
 

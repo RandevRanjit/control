@@ -391,6 +391,20 @@ const LenientThreadOpens = Schema.NullOr(OrchestrationV2ThreadOpens).pipe(
   Schema.catchDecoding(() => Effect.succeedSome(null)),
 );
 
+export const OrchestrationV2ThreadLoadsOff = Schema.Struct({
+  mcpServers: Schema.Array(Schema.String),
+  plugins: Schema.Array(Schema.String),
+});
+export type OrchestrationV2ThreadLoadsOff = typeof OrchestrationV2ThreadLoadsOff.Type;
+
+/** One switch in the head's lists: an MCP server by name or a plugin by `name@marketplace`. */
+export const OrchestrationV2ThreadLoadSwitch = Schema.Struct({
+  kind: Schema.Literals(["mcpServer", "plugin"]),
+  name: TrimmedNonEmptyString,
+  on: Schema.Boolean,
+});
+export type OrchestrationV2ThreadLoadSwitch = typeof OrchestrationV2ThreadLoadSwitch.Type;
+
 export const OrchestrationV2AppThread = Schema.Struct({
   ...OrchestrationV2CreationFields,
   id: ThreadId,
@@ -470,6 +484,12 @@ export const OrchestrationV2AppThread = Schema.Struct({
       }),
     ),
   ),
+  /**
+   * What the owner switched off for this chat (the head's lists): MCP servers by name and
+   * plugins by `name@marketplace`. A session starts without them, so a switch takes effect
+   * from the chat's next turn. Absent means nothing is off.
+   */
+  loadsOff: Schema.optional(OrchestrationV2ThreadLoadsOff),
   deletedAt: Schema.NullOr(Schema.DateTimeUtc),
 });
 export type OrchestrationV2AppThread = typeof OrchestrationV2AppThread.Type;
@@ -914,6 +934,11 @@ export const OrchestrationV2ProviderGoal = Schema.Struct({
 export type OrchestrationV2ProviderGoal = typeof OrchestrationV2ProviderGoal.Type;
 
 /** What a session loaded at its start: its init frame's lists, and the hooks it runs. */
+const OrchestrationV2LoadAbout = Schema.Struct({
+  description: Schema.optional(Schema.String),
+  source: Schema.optional(Schema.String),
+});
+
 export const OrchestrationV2ProviderThreadLoads = Schema.Struct({
   hooks: NonNegativeInt,
   skills: NonNegativeInt,
@@ -942,10 +967,49 @@ export const OrchestrationV2ProviderThreadLoads = Schema.Struct({
           status: Schema.String,
           /** The server's tools, without the mcp__server__ prefix. */
           tools: Schema.optional(Schema.Array(Schema.String)),
+          /** Where it is configured: user, project, local, plugin, claudeai, dynamic (CONTROL's own). */
+          source: Schema.optional(Schema.String),
+          /** Why it failed to connect. */
+          error: Schema.optional(Schema.String),
+          /** Tools the server marks `read-only` or `destructive`, by tool name. */
+          toolHints: Schema.optional(
+            Schema.Record(Schema.String, Schema.Literals(["read-only", "destructive"])),
+          ),
         }),
       ),
       plugins: Schema.Array(Schema.String),
       agents: Schema.Array(Schema.String),
+      /**
+       * What the session started without: the chat's `loadsOff` as it stood then. A switched-off
+       * server or plugin is missing from the lists above, so the head lists it from here.
+       */
+      off: Schema.optional(OrchestrationV2ThreadLoadsOff),
+      /**
+       * What each skill, agent type and plugin is, by name, read from the live session when
+       * the names change. A description is its first paragraph, cut to 200 characters.
+       */
+      about: Schema.optional(
+        Schema.Struct({
+          /** `source`: user, project, built-in, or the plugin's name. */
+          skills: Schema.Record(Schema.String, OrchestrationV2LoadAbout),
+          /** `source`: user, project, built-in, or the plugin's name; `model` when it pins one. */
+          agents: Schema.Record(
+            Schema.String,
+            Schema.Struct({
+              ...OrchestrationV2LoadAbout.fields,
+              model: Schema.optional(Schema.String),
+            }),
+          ),
+          /** `id` is `name@marketplace`, what a plugin switch names. */
+          plugins: Schema.Record(
+            Schema.String,
+            Schema.Struct({
+              description: Schema.optional(Schema.String),
+              id: Schema.optional(Schema.String),
+            }),
+          ),
+        }),
+      ),
     }),
   ),
 });
@@ -3008,6 +3072,8 @@ export const OrchestrationV2Command = Schema.Union([
     limitRecovery: Schema.optional(Schema.NullOr(OrchestrationV2LimitRecoveryUpdate)),
     /** Link (object) or unlink (null) a pull request (#8160); absent leaves it unchanged. */
     linkedPullRequest: Schema.optional(Schema.NullOr(ThreadLinkedPullRequest)),
+    /** Switches one MCP server or plugin off or on for this chat (`loadsOff`). */
+    loadSwitch: Schema.optional(OrchestrationV2ThreadLoadSwitch),
   }),
   Schema.Struct({
     type: Schema.Literal("thread.pull-request.link"),

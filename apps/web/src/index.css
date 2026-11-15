@@ -164,9 +164,10 @@ html[data-motion="full"] [data-app-sidebar] .t3-card.d-card [data-card-actions] 
   color: var(--st-working);
 }
 /* A pill's list, in the Loose ends popover's form (HANDOFF §17.2): a float panel with a 30 px
-   head, rows in the row type, a plugin's names under its name in Plex caption. */
+   head, a filter, then a tree of rows (HeadLoads.tsx). 372 wide, as Loose ends', so a row's
+   description has room for two lines. */
 .d-ldp.panel {
-  width: 300px;
+  width: 372px;
   padding: 6px;
   border-radius: var(--r-l);
   color: var(--text-body);
@@ -185,6 +186,9 @@ html[data-motion="full"] [data-app-sidebar] .t3-card.d-card [data-card-actions] 
   font: 500 11px/1 var(--f-mono);
   color: var(--text-caption);
 }
+.d-ldp-q {
+  padding: 0 4px 6px;
+}
 .d-ldp-sec + .d-ldp-sec {
   margin-top: 6px;
 }
@@ -194,95 +198,145 @@ html[data-motion="full"] [data-app-sidebar] .t3-card.d-card [data-card-actions] 
   font: 400 10.5px/1 var(--f-mono);
   color: var(--text-caption);
 }
-.d-ldp-r {
+/* A row: the fold chevron's 12 px slot (empty when nothing folds, so names line up), an
+   optional status mark, the name and its caption with what it does under both, then controls. */
+.d-ldt-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 6px;
+  border-radius: var(--r-s);
+}
+.d-ldt-main {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 32px;
+  padding: 7px 4px 7px 6px;
+  border: 0;
+  border-radius: var(--r-s);
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+button.d-ldt-main {
+  cursor: pointer;
+}
+button.d-ldt-main:hover {
+  background: var(--hy-card);
+}
+button.d-ldt-main:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.d-ldt-chev {
+  display: flex;
+  flex: none;
+  width: 12px;
+  height: 18px;
+  align-items: center;
+  color: var(--text-caption);
+}
+.d-ldt-chev svg {
+  width: 12px;
+  height: 12px;
+}
+.d-ldt-text {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+.d-ldt-line {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
   gap: 10px;
-  margin: 0;
-  padding: 5px 10px;
-  font: var(--w-med) 13px/18px var(--f-chrome);
-  color: var(--text-body);
 }
-.d-ldp-r > span:first-of-type {
+.d-ldt-name {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font: var(--w-med) 13px/18px var(--f-chrome);
+  color: var(--text-strong);
 }
-.d-ldp-r > span + span {
-  flex: none;
-  font: 400 10.5px/1 var(--f-mono);
-  color: var(--text-caption);
-}
-.d-ldp-r > span[data-failed] {
-  color: var(--st-failed);
-}
-/* A row that folds open (a hook event, a plugin, a server): the chevron first, 12 px (§20.1);
-   plain rows in the same list keep their names in line with it. */
-.d-ldp-f {
-  width: 100%;
-  align-items: center;
-  border: 0;
-  border-radius: var(--r-s);
-  background: none;
-  text-align: left;
-  cursor: pointer;
-}
-.d-ldp-f:hover {
-  background: var(--hy-card);
-}
-.d-ldp-f > svg {
-  width: 12px;
-  height: 12px;
-  flex: none;
-  color: var(--text-caption);
-}
-.d-ldp-f > span:first-of-type {
-  flex: 1;
-}
-.d-ldp-r[data-indent] {
-  padding-left: 32px;
-}
-/* What a fold opens to: a hook's command, a skill, a tool, in Plex, wrapping rather than cut. */
-.d-ldp-l {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin: 0;
-  padding: 3px 10px 3px 32px;
-  font: 400 11px/15px var(--f-mono);
+/* A tool or a hook's command is code: Plex, smaller, wrapping rather than cut. */
+.d-ldt-name[data-code] {
+  overflow-wrap: anywhere;
+  white-space: normal;
+  font: 400 11.5px/18px var(--f-mono);
   color: var(--text-body);
 }
-.d-ldp-l > span:first-child {
-  min-width: 0;
-  overflow-wrap: anywhere;
+.d-ldt-row[data-code] .d-ldt-main {
+  min-height: 26px;
+  padding-block: 4px;
 }
-.d-ldp-l > span + span {
+.d-ldt-desc {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font: var(--w-reg) 12px/16px var(--f-chrome);
+  color: var(--text-secondary);
+}
+.d-ldt-note {
+  font: 400 10.5px/14px var(--f-mono);
+  color: var(--st-working);
+}
+.d-ldt-cap {
   flex: none;
-  font-size: 10.5px;
+  max-width: 168px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 10.5px/18px var(--f-mono);
   color: var(--text-caption);
 }
-/* An MCP server's status, an icon in its state's colour; the word shows on hover. */
-.d-ldp-st {
-  display: inline-flex;
+.d-ldt-cap[data-tone="failed"] {
+  color: var(--st-failed);
+}
+.d-ldt-cap[data-tone="working"] {
+  color: var(--st-working);
+}
+.d-ldt-sw {
+  display: flex;
+  flex: none;
+  padding-left: 4px;
+}
+/* What a row folds open to hangs under its chevron, behind a guide line, so a parent's next
+   sibling can never read as one of its children. */
+.d-ldt-kids {
+  margin: 0 0 4px 11px;
+  padding-left: 7px;
+  border-left: 1px solid var(--seam);
+}
+/* A server's or agent's state, an icon in its state's colour; the word shows on hover. */
+.d-ldt-st {
+  display: flex;
+  flex: none;
+  height: 18px;
   align-items: center;
-  gap: 6px;
+  color: var(--text-caption);
 }
-.d-ldp-st svg {
-  display: block;
-  width: 12px;
-  height: 12px;
+.d-ldt-st svg {
+  width: 13px;
+  height: 13px;
 }
-.d-ldp-st [data-st="connected"] {
+.d-ldt-st:is([data-st="connected"], [data-st="done"]) {
   color: var(--st-done);
 }
-.d-ldp-st [data-st="needs-auth"] {
+.d-ldt-st[data-st="needs-auth"] {
   color: var(--st-needs);
 }
-.d-ldp-st [data-st="failed"] {
+.d-ldt-st[data-st="failed"] {
   color: var(--st-failed);
+}
+.d-ldt-st[data-st="running"] {
+  color: var(--st-working);
 }
 .d-ldp-e {
   margin: 0;

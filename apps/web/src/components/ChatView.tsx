@@ -297,7 +297,7 @@ import { Dialog } from "./ui/dialog";
 import { WizardPopup } from "./ui/wizard";
 import { BranchToolbar, type BranchToolbarHandle } from "./BranchToolbar";
 import { ContextBar } from "./control/ContextBar";
-import { HeadLoads } from "./control/HeadLoads";
+import { type HeadActions, HeadLoads } from "./control/HeadLoads";
 import { headAgents } from "./control/headAgents.logic";
 import { turnTotalsByRun, type TurnTotals } from "./control/turnTotals";
 import { makeWorkspaceFileDropHandlers } from "./chat/workspaceFileDrop";
@@ -7397,6 +7397,26 @@ export default function ChatView(props: ChatViewProps) {
     },
     [environmentId, navigate],
   );
+  const switchLoad = useOrchestrationCommand(
+    threadEnvironment.switchLoad,
+    "Failed to switch it for this chat",
+  );
+  // The head's lists put a skill or agent type in front of the draft, switch a server or
+  // plugin for this chat, and open a subagent's thread.
+  const headActions = useMemo<HeadActions>(
+    () => ({
+      compose: (text) => {
+        const store = useComposerDraftStore.getState();
+        const current = store.getComposerDraft(composerDraftTarget)?.prompt ?? "";
+        store.setPrompt(composerDraftTarget, `${text}${current.trimStart()}`);
+        focusComposer();
+      },
+      switchLoad: (loadSwitch) =>
+        void switchLoad({ environmentId, input: { threadId, loadSwitch } }),
+      openThread: onOpenRelatedThread,
+    }),
+    [composerDraftTarget, environmentId, focusComposer, onOpenRelatedThread, switchLoad, threadId],
+  );
   const childThreadInputs = useChildThreadInputs(activeThreadRef);
   const childInputBannerItem = useMemo<ComposerBannerStackItem | null>(() => {
     const first = childThreadInputs[0];
@@ -11467,7 +11487,13 @@ export default function ChatView(props: ChatViewProps) {
               className="pointer-events-none fixed top-[var(--workspace-controls-top)] right-[var(--workspace-controls-right)] h-[var(--workspace-topbar-height)] w-28 [-webkit-app-region:no-drag]"
             />
           ) : null}
-          <HeadLoads loads={activeLoads} agents={activeAgents} />
+          <HeadLoads
+            threadRef={routeThreadRef}
+            loads={activeLoads}
+            off={serverProjection?.thread.loadsOff}
+            agents={activeAgents}
+            actions={headActions}
+          />
           {/* A sheet panel carries the toggles in its own tab bar. */}
           {rightPanelControlsInPanel ? null : panelToggleControls}
         </header>

@@ -83,8 +83,21 @@ const workflowNotice = (
     source: label === undefined ? { kind: "workflow" } : { kind: "workflow", label },
   }) as OrchestrationV2TurnItem;
 
+const userMessage = (runId: string, text: string) =>
+  ({
+    ...itemBase(`message-${runId}`, "2026-10-21T09:59:00Z"),
+    runId: RunId.make(runId),
+    type: "user_message",
+    text,
+  }) as OrchestrationV2TurnItem;
+
+const runs = [
+  { id: RunId.make("run-1"), ordinal: 1 },
+  { id: RunId.make("run-2"), ordinal: 2 },
+];
+
 describe("headAgents", () => {
-  it("counts the subagents and workflows a chat started, running ones apart", () => {
+  it("nests each subagent under the message that started it, and under its parent subagent", () => {
     const agents = headAgents({
       subagents: [
         subagent("a"),
@@ -93,17 +106,64 @@ describe("headAgents", () => {
           completedAt: at("2026-10-21T10:05:00Z"),
           updatedAt: at("2026-10-21T10:05:00Z"),
         }),
+        // Started by b.
+        subagent("b1", { parentNodeId: NodeId.make("b"), startedAt: at("2026-10-21T10:01:00Z") }),
         subagent("c", {
+          runId: RunId.make("run-2"),
           status: "failed",
           completedAt: at("2026-10-21T10:02:00Z"),
-          updatedAt: at("2026-10-21T10:02:00Z"),
         }),
         subagent("d", {
+          runId: RunId.make("run-2"),
           status: "interrupted",
           completedAt: at("2026-10-21T10:01:00Z"),
-          updatedAt: at("2026-10-21T10:01:00Z"),
         }),
       ],
+      runs,
+      providerThreads: [],
+      turnItems: [
+        userMessage("run-1", "Review the diff\nand the tests"),
+        userMessage("run-2", "  Fix what they found  "),
+      ],
+    });
+
+    expect(agents.started).toBe(5);
+    expect(agents.running).toBe(2);
+    const tree = agents.turns.map((turn) => [
+      turn.ordinal,
+      turn.label,
+      turn.agents.map((row) => [
+        row.name,
+        row.outcome,
+        row.childThreadId,
+        row.children.map((child) => child.name),
+      ]),
+    ]);
+    expect(tree).toEqual([
+      [
+        2,
+        "Fix what they found",
+        [
+          ["Agent c", "failed", "child-c", []],
+          ["Agent d", "stopped", "child-d", []],
+        ],
+      ],
+      [
+        1,
+        "Review the diff",
+        [
+          // Running first.
+          ["Agent a", null, "child-a", []],
+          ["Agent b", "done", "child-b", ["Agent b1"]],
+        ],
+      ],
+    ]);
+  });
+
+  it("lists workflows apart: running ones, then the done ones newest first", () => {
+    const agents = headAgents({
+      subagents: [],
+      runs,
       providerThreads: [
         {
           pendingBackgroundTasks: [
@@ -118,36 +178,16 @@ describe("headAgents", () => {
         // A Workflow call the tool refused never ran.
         workflowCall("call-3", "failed"),
         workflowNotice("notice-1", "2026-10-21T10:03:00Z", "completed", "Two agents say hello"),
+        workflowNotice("notice-2", "2026-10-21T10:04:00Z", "failed"),
       ],
     });
-
-    expect(agents.started).toBe(6);
-    expect(agents.running.map(({ kind, name, outcome }) => [kind, name, outcome])).toEqual([
-      ["subagent", "Agent a", null],
-      ["workflow", "Review the diff", null],
-    ]);
-    expect(agents.done.map(({ kind, name, outcome }) => [kind, name, outcome])).toEqual([
-      ["subagent", "Agent b", "done"],
-      ["workflow", "Two agents say hello", "done"],
-      ["subagent", "Agent c", "failed"],
-      ["subagent", "Agent d", "stopped"],
-    ]);
-  });
-
-  it("names a workflow notice that reports several by its summary", () => {
-    const agents = headAgents({
-      subagents: [],
-      providerThreads: [],
-      turnItems: [workflowNotice("notice-1", "2026-10-21T10:03:00Z", "failed")],
-    });
-    expect(agents.done).toEqual([
-      {
-        id: "notice-1",
-        kind: "workflow",
-        name: "Workflow finished",
-        timing: null,
-        outcome: "failed",
-      },
+    expect(agents.started).toBe(2);
+    expect(agents.running).toBe(1);
+    expect(agents.workflows.map(({ name, outcome }) => [name, outcome])).toEqual([
+      ["Review the diff", null],
+      // A notice that reports several is named by its summary.
+      ["Workflow finished", "failed"],
+      ["Two agents say hello", "done"],
     ]);
   });
 });

@@ -777,6 +777,8 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
               aria-selected={active}
               data-on={active ? "" : undefined}
               onMouseDown={handleTabMouseDown}
+              // The whole chip switches, not just its title: a click on its padding counts.
+              onClick={() => props.onActivate(surface)}
               onAuxClick={(event) => handleTabAuxClick(event, surface)}
               onContextMenu={(event) => void handleTabContextMenu(event, surface)}
               className={cn(
@@ -868,7 +870,6 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
                             setRenamingDevice(surface.id);
                         }}
                         className="cursor-pointer flex min-w-0 items-center"
-                        onClick={() => props.onActivate(surface)}
                       >
                         <span className="truncate">
                           {/* The chip's number already says which shell: `1 Terminal`, or the

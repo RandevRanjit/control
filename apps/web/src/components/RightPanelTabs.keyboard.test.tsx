@@ -239,6 +239,26 @@ describe("right panel tabs", () => {
     expect(chipTitles()).toEqual(["Browser", "Browser"]);
   });
 
+  it("switches tabs on one click anywhere on the chip, and closes from the close button alone", async () => {
+    const onActivate = vi.fn();
+    const onCloseSurface = vi.fn();
+    await renderPanel(
+      { surfaces: [browserA, browserB], activeSurfaceId: browserA.id, onActivate, onCloseSurface },
+      "browser",
+    );
+    const chip = container.querySelectorAll<HTMLElement>(
+      "[data-right-panel-subtabs] [role='tab']",
+    )[1]!;
+    // The chip's padding, around its title and icon: where a click on the tab often lands.
+    await act(() => chip.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(onActivate).toHaveBeenCalledExactlyOnceWith(browserB);
+
+    onActivate.mockClear();
+    await act(() => chip.querySelector<HTMLElement>("[aria-label='Close Browser']")!.click());
+    expect(onCloseSurface).toHaveBeenCalledExactlyOnceWith(browserB);
+    expect(onActivate).not.toHaveBeenCalled();
+  });
+
   it("offers a new page from the Browser tab's chips", async () => {
     await renderPanel({ surfaces: [browserA], activeSurfaceId: browserA.id }, "browser");
     expect(container.querySelector('[aria-label="Add to Browser"]')).not.toBeNull();

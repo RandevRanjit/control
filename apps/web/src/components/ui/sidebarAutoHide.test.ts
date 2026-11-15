@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { createSidebarAutoHide, SIDEBAR_AUTO_HIDE_DELAY_MS } from "./sidebarAutoHide";
+import { createSidebarAutoHide, SIDEBAR_AUTO_HIDE_DELAYS_MS } from "./sidebarAutoHide";
+
+const SIDEBAR_AUTO_HIDE_DELAY_MS = SIDEBAR_AUTO_HIDE_DELAYS_MS.late;
 
 function setup(held = { value: false }) {
   const changes: boolean[] = [];

@@ -68,6 +68,7 @@ import {
   useSidebar,
   useSidebarVisibility,
 } from "./ui/sidebar";
+import { SIDEBAR_AUTO_HIDE_DELAYS_MS } from "./ui/sidebarAutoHide";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "./ui/tooltip";
 
 const MACOS_TRAFFIC_LIGHTS_LEFT_INSET = "var(--desktop-window-controls-inset, 90px)";
@@ -243,6 +244,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
   const sidebarAutoHideMakesRoom = useClientSettings(
     (settings) => settings.sidebarAutoHideMakesRoom,
   );
+  const sidebarAutoHideDelay = useClientSettings((settings) => settings.sidebarAutoHideDelay);
   const { active: panelAnimationsActive, durationMs: panelAnimationDurationMs } =
     usePanelAnimationSettings();
   // Settings routes show the settings nav in place of whichever thread
@@ -353,6 +355,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
         data-panel-animations={routePanelAnimationsActive ? "true" : "false"}
         autoHide={sidebarAutoHide}
         autoHideMakesRoom={sidebarAutoHideMakesRoom}
+        autoHideDelayMs={SIDEBAR_AUTO_HIDE_DELAYS_MS[sidebarAutoHideDelay]}
         defaultOpen
         style={sidebarProviderStyle}
       >

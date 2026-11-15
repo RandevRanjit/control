@@ -260,6 +260,12 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: ["push shift move thread composer overlap cover auto hide"],
   },
   {
+    id: "sidebar-auto-hide-delay",
+    title: "Hide sidebar after",
+    to: "/settings/appearance",
+    searchTerms: ["auto hide delay timing speed fast medium late seconds wait animation"],
+  },
+  {
     id: "reduce-motion",
     title: "Reduce motion",
     to: "/settings/appearance",

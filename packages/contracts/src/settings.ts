@@ -311,6 +311,10 @@ export const DiffColorScheme = Schema.Literals(["red-green", "blue-orange"]);
 export const ChatWidth = Schema.Literals(["comfortable", "wide", "full"]);
 export type ChatWidth = typeof ChatWidth.Type;
 
+/** How long an auto-hidden sidebar waits after the pointer leaves: 0.5, 1 or 2 seconds. */
+export const SidebarAutoHideDelay = Schema.Literals(["fast", "medium", "late"]);
+export type SidebarAutoHideDelay = typeof SidebarAutoHideDelay.Type;
+
 export const ClientSettingsSchema = Schema.Struct({
   notificationMode: NotificationMode.pipe(
     Schema.withDecodingDefault(Effect.succeed("off" as const)),
@@ -516,11 +520,14 @@ export const ClientSettingsSchema = Schema.Struct({
   // and KaTeX out of the render path entirely.
   mathRenderingEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(true))),
   // The left sidebar floats over the content like the macOS Dock: the pointer at the
-  // window's edge shows it, and it hides once the pointer has been away for 2 seconds.
+  // window's edge shows it, and it hides once the pointer has been away for sidebarAutoHideDelay.
   sidebarAutoHide: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
   // While the auto-hidden sidebar is out, the thread moves over to make room instead of sitting
   // under it.
   sidebarAutoHideMakesRoom: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
+  sidebarAutoHideDelay: SidebarAutoHideDelay.pipe(
+    Schema.withDecodingDefault(Effect.succeed("late" as const)),
+  ),
 });
 export type ClientSettings = typeof ClientSettingsSchema.Type;
 
@@ -1589,5 +1596,6 @@ export const ClientSettingsPatch = Schema.Struct({
   mathRenderingEnabled: Schema.optionalKey(Schema.Boolean),
   sidebarAutoHide: Schema.optionalKey(Schema.Boolean),
   sidebarAutoHideMakesRoom: Schema.optionalKey(Schema.Boolean),
+  sidebarAutoHideDelay: Schema.optionalKey(SidebarAutoHideDelay),
 });
 export type ClientSettingsPatch = typeof ClientSettingsPatch.Type;

@@ -98,6 +98,45 @@ describe("auto-hidden sidebar rail", () => {
     expect(rail.style.transform).toBe("");
   });
 
+  it.each([
+    [500, 500],
+    [undefined, 2000],
+  ])(
+    "with autoHideDelayMs %s, hides %i ms after the pointer leaves",
+    async (autoHideDelayMs, waits) => {
+      vi.useFakeTimers();
+      try {
+        const container = document.body.appendChild(document.createElement("div"));
+        await act(() => {
+          root = createRoot(container);
+          root.render(
+            <SidebarProvider autoHide {...(autoHideDelayMs ? { autoHideDelayMs } : {})}>
+              <Sidebar>
+                <SidebarTrigger />
+              </Sidebar>
+            </SidebarProvider>,
+          );
+        });
+        // React's pointerenter and pointerleave come from pointerover and pointerout.
+        const cross = (type: string, target: Element, relatedTarget: Element) =>
+          act(() => {
+            target.dispatchEvent(new MouseEvent(type, { bubbles: true, relatedTarget }));
+          });
+        await cross("pointerover", slot("sidebar-edge"), document.body);
+        expect(slot("sidebar-container").dataset.autoHide).toBe("revealed");
+        await cross("pointerover", slot("sidebar-trigger"), document.body);
+        await cross("pointerout", slot("sidebar-trigger"), document.body);
+
+        await act(() => vi.advanceTimersByTime(waits - 1));
+        expect(slot("sidebar-container").dataset.autoHide).toBe("revealed");
+        await act(() => vi.advanceTimersByTime(1));
+        expect(slot("sidebar-container").dataset.autoHide).toBe("hidden");
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
+
   it("is inert while the sidebar is hidden", async () => {
     await renderSidebar();
     expect(slot("sidebar-container").dataset.autoHide).toBe("hidden");

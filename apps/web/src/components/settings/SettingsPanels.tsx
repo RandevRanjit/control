@@ -28,6 +28,7 @@ import {
   type ChatWidth,
   type DiffLayout,
   type EnvironmentIdentificationMode,
+  type SidebarAutoHideDelay,
   MAX_APPEARANCE_CONTRAST,
   MAX_AUTO_COMPACT_IDLE_MINUTES,
   MAX_AUTO_COMPACT_TOKENS,
@@ -208,6 +209,12 @@ const CHAT_WIDTH_LABELS: Record<ChatWidth, string> = {
   comfortable: "Comfortable",
   wide: "Wide",
   full: "Full",
+};
+
+const SIDEBAR_AUTO_HIDE_DELAY_LABELS: Record<SidebarAutoHideDelay, string> = {
+  fast: "Fast (0.5 s)",
+  medium: "Medium (1 s)",
+  late: "Late (2 s)",
 };
 
 const DIFF_LAYOUT_LABELS: Record<DiffLayout, string> = {
@@ -527,6 +534,9 @@ export function useSettingsRestore(onRestored?: () => void) {
       ...(settings.sidebarAutoHideMakesRoom !== DEFAULT_UNIFIED_SETTINGS.sidebarAutoHideMakesRoom
         ? ["Make room for the sidebar"]
         : []),
+      ...(settings.sidebarAutoHideDelay !== DEFAULT_UNIFIED_SETTINGS.sidebarAutoHideDelay
+        ? ["Hide sidebar after"]
+        : []),
       ...(settings.reduceMotion !== DEFAULT_UNIFIED_SETTINGS.reduceMotion ? ["Reduce motion"] : []),
       ...(settings.environmentIdentificationMode !==
       DEFAULT_UNIFIED_SETTINGS.environmentIdentificationMode
@@ -662,6 +672,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       settings.mathRenderingEnabled,
       settings.sidebarAutoHide,
       settings.sidebarAutoHideMakesRoom,
+      settings.sidebarAutoHideDelay,
       settings.enableAgentBrowserAccess,
       settings.confirmQuit,
       settings.confirmThreadArchive,
@@ -786,6 +797,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       mathRenderingEnabled: DEFAULT_UNIFIED_SETTINGS.mathRenderingEnabled,
       sidebarAutoHide: DEFAULT_UNIFIED_SETTINGS.sidebarAutoHide,
       sidebarAutoHideMakesRoom: DEFAULT_UNIFIED_SETTINGS.sidebarAutoHideMakesRoom,
+      sidebarAutoHideDelay: DEFAULT_UNIFIED_SETTINGS.sidebarAutoHideDelay,
       timestampFormat: DEFAULT_UNIFIED_SETTINGS.timestampFormat,
       notificationMode: DEFAULT_UNIFIED_SETTINGS.notificationMode,
       inAppNotificationsEnabled: DEFAULT_UNIFIED_SETTINGS.inAppNotificationsEnabled,
@@ -1447,7 +1459,7 @@ export function AppearanceSettingsPanel() {
         />
         <SettingsRow
           {...searchableSetting("sidebar-auto-hide")}
-          description="Keep the left sidebar out of the way, like the Dock. Move the pointer to the window's left edge to show it; it hides two seconds after the pointer leaves."
+          description="Keep the left sidebar out of the way, like the Dock. Move the pointer to the window's left edge to show it; it hides soon after the pointer leaves."
           resetAction={
             settings.sidebarAutoHide !== DEFAULT_UNIFIED_SETTINGS.sidebarAutoHide ? (
               <SettingResetButton
@@ -1491,6 +1503,50 @@ export function AppearanceSettingsPanel() {
                 }
                 aria-label="Make room for the sidebar"
               />
+            }
+          />
+        ) : null}
+        {settings.sidebarAutoHide ? (
+          <SettingsRow
+            {...searchableSetting("sidebar-auto-hide-delay")}
+            description="How long the sidebar waits after the pointer leaves before it slides away."
+            resetAction={
+              settings.sidebarAutoHideDelay !== DEFAULT_UNIFIED_SETTINGS.sidebarAutoHideDelay ? (
+                <SettingResetButton
+                  label="hide sidebar after"
+                  onClick={() =>
+                    updateSettings({
+                      sidebarAutoHideDelay: DEFAULT_UNIFIED_SETTINGS.sidebarAutoHideDelay,
+                    })
+                  }
+                />
+              ) : null
+            }
+            control={
+              <div className="w-full sm:w-40">
+                <Select
+                  value={settings.sidebarAutoHideDelay}
+                  onValueChange={(value) => {
+                    if (value === "fast" || value === "medium" || value === "late")
+                      updateSettings({ sidebarAutoHideDelay: value });
+                  }}
+                >
+                  <SelectTrigger
+                    size="sm"
+                    className="w-full min-w-0"
+                    aria-label="Hide sidebar after"
+                  >
+                    <SelectValue>
+                      {SIDEBAR_AUTO_HIDE_DELAY_LABELS[settings.sidebarAutoHideDelay]}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectPopup align="end" alignItemWithTrigger={false}>
+                    <SelectItem value="fast">Fast (0.5 s)</SelectItem>
+                    <SelectItem value="medium">Medium (1 s)</SelectItem>
+                    <SelectItem value="late">Late (2 s, default)</SelectItem>
+                  </SelectPopup>
+                </Select>
+              </div>
             }
           />
         ) : null}

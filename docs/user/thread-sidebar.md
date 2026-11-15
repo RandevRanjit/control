@@ -51,12 +51,14 @@ Turn on **Hide sidebar automatically** in **Settings → Appearance**, or run **
 sidebar automatically** from the command palette, to keep the sidebar out of the way as
 the macOS Dock does. Move the pointer to the window's left edge to bring it out over the
 thread; it slides away two seconds after the pointer leaves, and stays while one of its
-menus is open or you're typing in it. The sidebar shortcut shows and hides it too. On
-web and desktop only.
+menus is open or you're typing in it. **Hide sidebar after** beneath it makes that wait
+Fast (half a second), Medium (one second) or Late (two seconds). The sidebar shortcut
+shows and hides it too. On web and desktop only.
 
 Turn on **Make room for the sidebar** beneath it (or run it from the command palette) and
 the thread and composer move over beside the sidebar while it's out, instead of sitting
-underneath it.
+underneath it. With the thread width at Wide or Full the text has to re-wrap to fit: the
+thread fades out and back in, and the line in the middle of the view stays where it was.
 
 ## Pin and reorder threads
 

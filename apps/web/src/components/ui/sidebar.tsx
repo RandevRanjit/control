@@ -21,7 +21,11 @@ import { useIsMobile } from "~/hooks/useMediaQuery";
 import { usePaneEnter } from "~/panelAnimations";
 import { getLocalStorageItem, setLocalStorageItem } from "~/hooks/useLocalStorage";
 import { resolveSidebarState, type ResponsiveSidebarState } from "./sidebarState";
-import { createSidebarAutoHide, type SidebarAutoHide } from "./sidebarAutoHide";
+import {
+  createSidebarAutoHide,
+  SIDEBAR_AUTO_HIDE_DELAYS_MS,
+  type SidebarAutoHide,
+} from "./sidebarAutoHide";
 import * as Schema from "effect/Schema";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
@@ -115,6 +119,7 @@ function SidebarProvider({
   onOpenChange: setOpenProp,
   autoHide = false,
   autoHideMakesRoom = false,
+  autoHideDelayMs = SIDEBAR_AUTO_HIDE_DELAYS_MS.late,
   className,
   style,
   children,
@@ -127,6 +132,8 @@ function SidebarProvider({
   autoHide?: boolean;
   /** While the auto-hidden sidebar shows, the content makes room (useSidebarMakingRoom). */
   autoHideMakesRoom?: boolean;
+  /** How long the auto-hidden sidebar stays after the pointer leaves. */
+  autoHideDelayMs?: number;
 }) {
   const isMobile = useIsMobile();
   const autoHideActive = autoHide && !isMobile;
@@ -140,6 +147,10 @@ function SidebarProvider({
           "[data-slot='sidebar-container'][data-auto-hide] :is([data-popup-open], :focus-visible)",
         ) !== null,
     }),
+  );
+  React.useLayoutEffect(
+    () => autoHideController.setDelayMs(autoHideDelayMs),
+    [autoHideController, autoHideDelayMs],
   );
   React.useEffect(() => {
     // Turning auto-hide off (or onto a phone-sized window) forgets the reveal.

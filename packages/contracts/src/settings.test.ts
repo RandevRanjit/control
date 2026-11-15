@@ -143,6 +143,14 @@ describe("ClientSettings rich text composer", () => {
       sidebarAutoHideMakesRoom: true,
     });
   });
+
+  it("hides an auto-hidden sidebar late unless a shorter wait is chosen", () => {
+    expect(decodeClientSettings({}).sidebarAutoHideDelay).toBe("late");
+    expect(decodeClientSettingsPatch({ sidebarAutoHideDelay: "fast" })).toEqual({
+      sidebarAutoHideDelay: "fast",
+    });
+    expect(() => decodeClientSettingsPatch({ sidebarAutoHideDelay: "instant" })).toThrow();
+  });
   it("enables rich text for new and existing settings without a saved preference", () => {
     expect(decodeClientSettings({}).composerRichTextEnabled).toBe(true);
     expect(decodeClientSettings({ sendShortcut: "mod-enter" }).composerRichTextEnabled).toBe(true);

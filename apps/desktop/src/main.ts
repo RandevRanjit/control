@@ -70,6 +70,8 @@ import * as BrowserImport from "./preview/BrowserImport/BrowserImport.ts";
 import * as LinuxBrowserSecret from "./preview/BrowserImport/LinuxBrowserSecret.ts";
 import * as BrowserSession from "./preview/BrowserSession.ts";
 import * as DesktopBrowserHost from "./preview/DesktopBrowserHost.ts";
+import * as LoginAutofill from "./logins/LoginAutofill.ts";
+import * as LoginVault from "./logins/LoginVault.ts";
 import * as PreviewManager from "./preview/Manager.ts";
 import * as DesktopWindow from "./window/DesktopWindow.ts";
 import * as DesktopWslBackend from "./wsl/DesktopWslBackend.ts";
@@ -178,7 +180,13 @@ const layerDesktopPreview = PreviewManager.layer.pipe(
   Layer.provideMerge(layerDesktopFoundation),
 );
 
+const layerDesktopLogins = LoginAutofill.layer.pipe(
+  Layer.provideMerge(LoginVault.layer),
+  Layer.provideMerge(layerDesktopFoundation),
+);
+
 const layerDesktopWindow = DesktopWindow.layer.pipe(
+  Layer.provideMerge(layerDesktopLogins),
   Layer.provideMerge(layerDesktopServerExposure),
   Layer.provideMerge(layerDesktopPreview),
 );

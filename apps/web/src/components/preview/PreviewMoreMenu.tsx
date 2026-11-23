@@ -44,6 +44,8 @@ export interface PreviewMoreMenuActions {
   readonly clearCache: () => void;
   /** Absent where there is no inspector to open, such as a streamed server tab. */
   readonly openDevTools?: () => void;
+  /** Absent where the desktop app can't sign this page in. */
+  readonly saveLogin?: () => void;
   /** Absent where the tab cannot get its own window. */
   readonly toggleNativePictureInPicture?: () => void;
 }
@@ -194,6 +196,7 @@ export function PreviewMoreMenu({
               <span className="block truncate">Profile: {profileName}</span>
             </MenuGroupLabel>
           ) : null}
+          {actions.saveLogin ? <MenuItem onClick={actions.saveLogin}>Save login…</MenuItem> : null}
           <MenuItem onClick={actions.clearCookies}>Clear cookies</MenuItem>
           <MenuItem onClick={actions.clearCache}>Clear cache</MenuItem>
         </MenuGroup>

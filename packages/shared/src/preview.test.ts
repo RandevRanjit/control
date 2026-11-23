@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import {
+  PreviewUrlNormalizationError,
   isLoopbackHost,
+  loginOrigin,
   newPreviewTabId,
   normalizePreviewUrl,
-  PreviewUrlNormalizationError,
 } from "./preview.ts";
 
 describe("newPreviewTabId", () => {
@@ -89,4 +90,21 @@ describe("normalizePreviewUrl", () => {
       );
     }
   });
+});
+
+describe("loginOrigin", () => {
+  it("is the https origin of whatever address was given", () => {
+    expect(loginOrigin("login.example.com")).toBe("https://login.example.com");
+    expect(loginOrigin("https://login.example.com/sso?next=/home#top")).toBe(
+      "https://login.example.com",
+    );
+    expect(loginOrigin("https://login.example.com:8443/")).toBe("https://login.example.com:8443");
+  });
+
+  it.each(["", "http://login.example.com", "localhost:3000", "file:///etc/hosts", "not a site"])(
+    "has none for %j",
+    (address) => {
+      expect(loginOrigin(address)).toBeNull();
+    },
+  );
 });

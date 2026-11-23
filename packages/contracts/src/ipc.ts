@@ -1132,6 +1132,33 @@ export type DesktopMenubarAction = typeof DesktopMenubarActionSchema.Type;
 /** The menu action that opens a chat in the window, followed by its `{environmentId, threadId}` as JSON. */
 export const OPEN_THREAD_MENU_ACTION = "open-thread:";
 
+/** A website login the browser signs in with. The password never leaves the main process. */
+export const DesktopSavedLogin = Schema.Struct({
+  /** An https origin; the login is used on no other. */
+  origin: Schema.String,
+  username: Schema.String,
+  lastUsedAt: Schema.NullOr(Schema.String),
+  /** Set when the site turned it down. It isn't tried again until saved or retried. */
+  refusedAt: Schema.NullOr(Schema.String),
+});
+export type DesktopSavedLogin = typeof DesktopSavedLogin.Type;
+
+/** `site` is any https address on the site. One login per origin; saving replaces it. */
+export const DesktopSaveLoginInput = Schema.Struct({
+  site: Schema.String,
+  username: Schema.String,
+  password: Schema.String,
+});
+export type DesktopSaveLoginInput = typeof DesktopSaveLoginInput.Type;
+
+export interface DesktopLoginsBridge {
+  list: () => Promise<readonly DesktopSavedLogin[]>;
+  save: (input: DesktopSaveLoginInput) => Promise<void>;
+  remove: (origin: string) => Promise<void>;
+  /** Uses a login the site turned down again. */
+  retry: (origin: string) => Promise<void>;
+}
+
 export interface DesktopBridge {
   getAppBranding: () => DesktopAppBranding | null;
   /** Absolute path of a dropped or picked file; absent on desktop builds predating it. */
@@ -1155,6 +1182,8 @@ export interface DesktopBridge {
   getLocalEnvironmentEnabled?: () => boolean;
   setLocalEnvironmentEnabled?: (enabled: boolean) => Promise<void>;
   getLocalEnvironmentBearerToken: () => Promise<string>;
+  /** Absent on desktop builds predating saved logins. */
+  logins?: DesktopLoginsBridge;
   getClientSettings: () => Promise<ClientSettings | null>;
   setClientSettings: (settings: ClientSettings) => Promise<void>;
   getConnectionCatalog?: () => Promise<string | null>;

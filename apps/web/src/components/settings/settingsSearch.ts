@@ -729,6 +729,12 @@ export const SETTINGS_SEARCH_ITEMS = [
     targetId: "browser",
   },
   {
+    id: "saved-logins",
+    title: "Logins",
+    to: "/settings/integrations",
+    searchTerms: ["password manager username sign in autofill credentials website sso"],
+  },
+  {
     id: "browser-default-profile",
     title: "Default browser profile",
     to: "/settings/integrations",

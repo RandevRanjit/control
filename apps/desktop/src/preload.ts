@@ -113,6 +113,12 @@ contextBridge.exposeInMainWorld("desktopBridge", {
     ipcRenderer.sendSync(IpcChannels.GET_LOCAL_ENVIRONMENT_ENABLED_CHANNEL) !== false,
   setLocalEnvironmentEnabled: (enabled) =>
     ipcRenderer.invoke(IpcChannels.SET_LOCAL_ENVIRONMENT_ENABLED_CHANNEL, enabled),
+  logins: {
+    list: () => ipcRenderer.invoke(IpcChannels.LOGINS_LIST_CHANNEL),
+    save: (input) => ipcRenderer.invoke(IpcChannels.LOGINS_SAVE_CHANNEL, input),
+    remove: (origin) => ipcRenderer.invoke(IpcChannels.LOGINS_REMOVE_CHANNEL, { origin }),
+    retry: (origin) => ipcRenderer.invoke(IpcChannels.LOGINS_RETRY_CHANNEL, { origin }),
+  },
   getClientSettings: () => ipcRenderer.invoke(IpcChannels.GET_CLIENT_SETTINGS_CHANNEL),
   setClientSettings: (settings) =>
     ipcRenderer.invoke(IpcChannels.SET_CLIENT_SETTINGS_CHANNEL, settings),

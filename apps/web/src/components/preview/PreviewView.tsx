@@ -16,7 +16,7 @@ import {
   PREVIEW_ZOOM_LEVELS,
   type PreviewAdjustInput,
 } from "@control/contracts";
-import { normalizePreviewUrl } from "@control/shared/preview";
+import { loginOrigin, normalizePreviewUrl } from "@control/shared/preview";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
@@ -51,6 +51,8 @@ import { subscribePreviewAction } from "./previewActionBus";
 import { openPreviewSession } from "./openPreviewSession";
 import { PreviewChromeRow } from "./PreviewChromeRow";
 import { PreviewEmptyState } from "./PreviewEmptyState";
+import { LoginDialog } from "../settings/LoginDialog";
+import { loginsBridge } from "../settings/loginsBridge";
 import { PreviewMoreMenu, type PreviewMoreMenuActions } from "./PreviewMoreMenu";
 import {
   commitBrowserViewportChange,
@@ -428,6 +430,11 @@ export function PreviewView({
   const desktopCall = (op: ((tabId: string) => Promise<void>) | undefined) => () => {
     if (op && runtimeTabId) void op(runtimeTabId).catch(() => undefined);
   };
+  const [loginSite, setLoginSite] = useState<string | null>(null);
+  const saveLogin =
+    previewBridge && loginsBridge && url && loginOrigin(url) !== null
+      ? { saveLogin: () => setLoginSite(url) }
+      : {};
   const moreMenuActions: PreviewMoreMenuActions | null = serverOwnsRendering
     ? {
         hardReload: () => void adjustServerTab({ hardReload: true }),
@@ -439,6 +446,7 @@ export function PreviewView({
         clearCache: () => void adjustServerTab({ clear: "cache" }),
         ...(nativeServerTab && previewBridge
           ? {
+              ...saveLogin,
               openDevTools: desktopCall(previewBridge.openDevTools),
               toggleNativePictureInPicture: () => handleNativePictureInPicture(),
             }
@@ -464,6 +472,7 @@ export function PreviewView({
               .catch(() => undefined),
           openDevTools: desktopCall(previewBridge.openDevTools),
           toggleNativePictureInPicture: () => handleNativePictureInPicture(),
+          ...saveLogin,
         }
       : null;
 
@@ -966,6 +975,9 @@ export function PreviewView({
         }
       />
 
+      {loginSite !== null ? (
+        <LoginDialog site={loginSite} onClose={() => setLoginSite(null)} />
+      ) : null}
       <div ref={serverBodyRef} className="relative min-h-0 flex-1 overflow-hidden">
         {runtimeTabId && snapshot && isServerTab ? (
           <>

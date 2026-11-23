@@ -96,3 +96,13 @@ export function normalizePreviewUrl(rawUrl: string): string {
   }
   return parsed.href;
 }
+
+/** The origin a saved login for this address belongs to; null unless it is https. */
+export function loginOrigin(rawUrl: string): string | null {
+  try {
+    const url = new URL(normalizePreviewUrl(rawUrl));
+    return url.protocol === "https:" ? url.origin : null;
+  } catch {
+    return null;
+  }
+}

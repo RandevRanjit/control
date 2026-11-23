@@ -12,6 +12,7 @@ import {
   getLocalEnvironmentEnabled,
   setLocalEnvironmentEnabled,
 } from "./methods/localEnvironment.ts";
+import { listLogins, removeLogin, retryLogin, saveLogin } from "./methods/logins.ts";
 import {
   actMenubar,
   getMenubarEnabled,
@@ -115,6 +116,10 @@ export const installDesktopIpcHandlers = Effect.fn("desktop.ipc.installHandlers"
 
   yield* ipc.handle(getClientSettings);
   yield* ipc.handle(setClientSettings);
+  yield* ipc.handle(listLogins);
+  yield* ipc.handle(saveLogin);
+  yield* ipc.handle(removeLogin);
+  yield* ipc.handle(retryLogin);
   yield* ipc.handle(getConnectionCatalog);
   yield* ipc.handle(getSnapShotState);
   yield* ipc.handle(setupSnapShot);

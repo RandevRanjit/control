@@ -1,5 +1,6 @@
 import type { Session } from "electron";
 import { session } from "electron";
+import { isLoopbackHost } from "@control/shared/preview";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -22,16 +23,22 @@ const PROFILE_PARTITION_MARKER = "profile-";
 
 export type BrowserSessionPartitionNamespace = "profile";
 
-// Permissions granted to preview web content. `clipboard-sanitized-write` is the
-// Electron permission behind `navigator.clipboard.writeText()` — note it is NOT
-// `clipboard-write`, which is not a valid Electron permission name. Async
-// clipboard writes are gated by the permission *check* handler (not only the
-// request handler), so both handlers must allow it; otherwise built-in "Copy"
-// buttons — e.g. the Next.js / Vercel error overlay — fail with
+// `clipboard-sanitized-write` is the Electron permission behind
+// `navigator.clipboard.writeText()` — note it is NOT `clipboard-write`, which is
+// not a valid Electron permission name. Async clipboard writes are gated by the
+// permission *check* handler (not only the request handler), so both handlers
+// must allow it; otherwise built-in "Copy" buttons — e.g. the Next.js / Vercel
+// error overlay — fail with
 // `Failed to execute 'writeText' on 'Clipboard': Write permission denied`.
-const ALLOWED_PREVIEW_PERMISSIONS: ReadonlySet<string> = new Set([
+const ALLOWED_PREVIEW_PERMISSIONS: ReadonlySet<string> = new Set(["clipboard-sanitized-write"]);
+
+/**
+ * What an app served from this Mac may also do. There is no prompt, so any other
+ * site would get these in silence, such as reading the clipboard after a password
+ * was copied. Pasting with the keyboard needs no permission and works everywhere.
+ */
+const LOOPBACK_PREVIEW_PERMISSIONS: ReadonlySet<string> = new Set([
   "clipboard-read",
-  "clipboard-sanitized-write",
   "notifications",
   "geolocation",
   // Deliberately NOT local-fonts: preview sessions run untrusted web content,
@@ -39,6 +46,12 @@ const ALLOWED_PREVIEW_PERMISSIONS: ReadonlySet<string> = new Set([
   // fingerprint (and font file bytes via FontData.blob()). The app's own font
   // picker runs in the main window session, which is unaffected by this list.
 ]);
+
+const isPreviewPermissionAllowed = (permission: string, requestingUrl: string): boolean =>
+  ALLOWED_PREVIEW_PERMISSIONS.has(permission) ||
+  (LOOPBACK_PREVIEW_PERMISSIONS.has(permission) &&
+    URL.canParse(requestingUrl) &&
+    isLoopbackHost(new URL(requestingUrl).hostname));
 
 export class BrowserSessionPartitionDerivationError extends Schema.TaggedError<BrowserSessionPartitionDerivationError>()(
   "BrowserSessionPartitionDerivationError",
@@ -204,11 +217,11 @@ export const make = Effect.gen(function* BrowserSessionMake() {
           // the challenge every few seconds, so logins behind it never complete
           // (#5002). Re-setting the unchanged native string is harmless, so it
           // is the rewritten string itself that trips the check.
-          browserSession.setPermissionRequestHandler((_webContents, permission, callback) => {
-            callback(ALLOWED_PREVIEW_PERMISSIONS.has(permission));
-          });
-          browserSession.setPermissionCheckHandler((_webContents, permission) =>
-            ALLOWED_PREVIEW_PERMISSIONS.has(permission),
+          browserSession.setPermissionRequestHandler((_contents, permission, callback, details) =>
+            callback(isPreviewPermissionAllowed(permission, details.requestingUrl)),
+          );
+          browserSession.setPermissionCheckHandler((_contents, permission, requestingOrigin) =>
+            isPreviewPermissionAllowed(permission, requestingOrigin),
           );
           const next = new Map(sessions);
           next.set(partition, browserSession);

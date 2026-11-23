@@ -140,7 +140,7 @@ describe("BrowserSession", () => {
     }).pipe(Effect.provide(layer)),
   );
 
-  it.effect("grants clipboard-sanitized-write through both the request and check handlers", () =>
+  it.effect("lets a site copy, and only a page on this Mac read the clipboard", () =>
     Effect.gen(function* () {
       const browserSessions = yield* BrowserSession.BrowserSession;
       const partition = yield* browserSessions.getPartition("scope-a");
@@ -154,37 +154,35 @@ describe("BrowserSession", () => {
       assert.isFunction(requestHandler);
       assert.isFunction(checkHandler);
 
-      const requestAllows = (permission: string): boolean => {
-        let granted: boolean | undefined;
-        requestHandler(null, permission, (value: boolean) => {
-          granted = value;
-        });
-        assert.isDefined(granted);
-        return granted;
+      const grants = (url: string, permission: string): boolean => {
+        let requested: boolean | undefined;
+        requestHandler(
+          null,
+          permission,
+          (value: boolean) => {
+            requested = value;
+          },
+          { requestingUrl: url, isMainFrame: true },
+        );
+        const checked = checkHandler(null, permission, url, {}) as boolean;
+        assert.strictEqual(requested, checked, `${permission} on ${url}: request and check differ`);
+        return checked;
       };
 
-      for (const permission of [
-        "clipboard-read",
-        "clipboard-sanitized-write",
-        "notifications",
-        "geolocation",
-      ]) {
-        assert.isTrue(requestAllows(permission), `request handler should allow ${permission}`);
-        assert.isTrue(
-          checkHandler(null, permission) as boolean,
-          `check handler should allow ${permission}`,
-        );
+      const local = ["http://localhost:5173/", "http://127.0.0.1:8080/", "http://[::1]:3000/"];
+      const remote = ["https://example.com/", "http://localhost.evil.example/", "", "not a url"];
+      for (const url of [...local, ...remote]) {
+        assert.isTrue(grants(url, "clipboard-sanitized-write"), `copying from ${url}`);
+        // `clipboard-write` is not a real Electron permission, and the rest are never granted.
+        for (const permission of ["clipboard-write", "midi", "media", "local-fonts"]) {
+          assert.isFalse(grants(url, permission), `${permission} on ${url}`);
+        }
       }
-
-      // `clipboard-write` is not a real Electron permission — the async write API
-      // uses `clipboard-sanitized-write` — so the stale name must not be granted,
-      // and unrelated permissions stay denied.
-      for (const permission of ["clipboard-write", "midi"]) {
-        assert.isFalse(requestAllows(permission), `request handler should deny ${permission}`);
-        assert.isFalse(
-          checkHandler(null, permission) as boolean,
-          `check handler should deny ${permission}`,
-        );
+      for (const permission of ["clipboard-read", "notifications", "geolocation"]) {
+        for (const url of local) assert.isTrue(grants(url, permission), `${permission} on ${url}`);
+        for (const url of remote) {
+          assert.isFalse(grants(url, permission), `${permission} on ${url}`);
+        }
       }
     }).pipe(Effect.provide(layer)),
   );

@@ -2349,6 +2349,16 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       ],
       ...(signed ? { sign: path.join(repoRoot, "scripts/sign-macos.ts") } : {}),
     };
+    // The browser's cookies are encrypted with the app's Keychain key, and neither NODE_OPTIONS nor
+    // --inspect can put code inside the running app. The server is this binary running as Node.
+    buildConfig.electronFuses = {
+      runAsNode: true,
+      enableCookieEncryption: true,
+      enableNodeOptionsEnvironmentVariable: false,
+      enableNodeCliInspectArguments: false,
+      // Changing the binary breaks the ad hoc signature an unsigned build keeps.
+      resetAdHocDarwinSignature: !signed,
+    };
   }
 
   if (platform === "mac" && target === "dmg") {

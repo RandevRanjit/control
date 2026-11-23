@@ -7,17 +7,16 @@ import {
   shouldUseSidebarUpdateReleaseNotesPopover,
 } from "./SidebarUpdatePill";
 
-const nightlyState: DesktopUpdateState = {
+const availableState: DesktopUpdateState = {
   enabled: true,
   status: "available",
-  channel: "nightly",
   currentVersion: "0.0.35",
   hostArch: "arm64",
   appArch: "arm64",
   runningUnderArm64Translation: false,
-  availableVersion: "0.0.36-nightly.3",
+  availableVersion: "0.0.36",
   downloadedVersion: null,
-  releaseNotes: [{ version: "0.0.36-nightly.3", items: ["Newest change"], totalItems: 1 }],
+  releaseNotes: [{ version: "0.0.36", items: ["Newest change"], totalItems: 1 }],
   omittedReleaseCount: 0,
   downloadPercent: null,
   checkedAt: null,
@@ -27,18 +26,13 @@ const nightlyState: DesktopUpdateState = {
 };
 
 describe("sidebar update release notes popover", () => {
-  it("uses the popover only for visible nightly release notes", () => {
-    expect(shouldUseSidebarUpdateReleaseNotesPopover(true, nightlyState)).toBe(true);
-    expect(shouldUseSidebarUpdateReleaseNotesPopover(false, nightlyState)).toBe(false);
+  it("uses the popover only for visible release notes", () => {
+    expect(shouldUseSidebarUpdateReleaseNotesPopover(true, availableState)).toBe(true);
+    expect(shouldUseSidebarUpdateReleaseNotesPopover(false, availableState)).toBe(false);
+    expect(shouldUseSidebarUpdateReleaseNotesPopover(true, null)).toBe(false);
     expect(
       shouldUseSidebarUpdateReleaseNotesPopover(true, {
-        ...nightlyState,
-        channel: "latest",
-      }),
-    ).toBe(false);
-    expect(
-      shouldUseSidebarUpdateReleaseNotesPopover(true, {
-        ...nightlyState,
+        ...availableState,
         releaseNotes: [],
       }),
     ).toBe(false);
@@ -66,9 +60,9 @@ describe("sidebar update release notes popover", () => {
     const preventDefault = vi.fn();
     const event = { key: "Tab", shiftKey: false, preventDefault };
 
-    openSidebarUpdateReleaseNotesPopoverOnForwardTab(event, { open }, "nightly-release-notes");
+    openSidebarUpdateReleaseNotesPopoverOnForwardTab(event, { open }, "release-notes");
 
-    expect(open).toHaveBeenCalledWith("nightly-release-notes");
+    expect(open).toHaveBeenCalledWith("release-notes");
     expect(preventDefault).not.toHaveBeenCalled();
   });
 
@@ -78,7 +72,7 @@ describe("sidebar update release notes popover", () => {
     openSidebarUpdateReleaseNotesPopoverOnForwardTab(
       { key: "Tab", shiftKey: true },
       { open },
-      "nightly-release-notes",
+      "release-notes",
     );
 
     expect(open).not.toHaveBeenCalled();

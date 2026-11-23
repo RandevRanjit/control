@@ -42,11 +42,7 @@ import {
   resolveMergedStageDependencies,
   resolveFffNativeDependencies,
   resolveBuildOptions,
-  resolveDesktopBuildIconAssets,
-  resolveDesktopProductName,
-  resolveDesktopUpdateChannel,
   isDesktopPreviewVersion,
-  resolveDesktopWebAssetBrand,
   resolveResourceMonitorRustTargets,
   resolveWindowsServerAsarIgnoreGlobs,
   resourceMonitorExecutableName,
@@ -84,7 +80,6 @@ import {
   wslRuntimeArchiveStem,
 } from "./build-desktop-artifact.ts";
 import { cliArchiveStem } from "./build-cli-archive.ts";
-import { BRAND_ASSET_PATHS } from "./lib/brand-assets.ts";
 import { HostProcessArchitecture, HostProcessPlatform } from "@control/shared/hostProcess";
 import { symlinksSupported } from "@control/shared/testing/symlinks";
 
@@ -251,41 +246,15 @@ const makeWindowsPayloadFixture = Effect.fn("test.makeWindowsPayloadFixture")(fu
 });
 
 it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
-  it("resolves the dedicated nightly updater channel from nightly versions", () => {
-    assert.equal(resolveDesktopUpdateChannel("0.0.17-nightly.20260413.42"), "nightly");
-    assert.equal(resolveDesktopUpdateChannel("0.1.3-nightly.56"), "nightly");
-    assert.equal(resolveDesktopUpdateChannel("0.0.17"), "latest");
+  it("recognises builds that carry no update feed", () => {
     assert.equal(isDesktopPreviewVersion("0.1.3-preview.3"), true);
-    assert.equal(isDesktopPreviewVersion("0.1.3-nightly.56"), false);
-  });
-
-  it("switches desktop packaging product names to nightly for nightly builds", () => {
-    assert.equal(resolveDesktopProductName("0.0.17"), "Control");
-    assert.equal(resolveDesktopProductName("0.0.17-nightly.20260413.42"), "Control (Nightly)");
-  });
-
-  it("switches desktop packaging icons to the nightly artwork for nightly versions", () => {
-    assert.deepStrictEqual(resolveDesktopBuildIconAssets("0.0.17"), {
-      macIconPng: BRAND_ASSET_PATHS.productionMacIconPng,
-      linuxIconPng: BRAND_ASSET_PATHS.productionLinuxIconPng,
-      windowsIconIco: BRAND_ASSET_PATHS.productionWindowsIconIco,
-    });
-
-    assert.deepStrictEqual(resolveDesktopBuildIconAssets("0.0.17-nightly.20260413.42"), {
-      macIconPng: BRAND_ASSET_PATHS.nightlyMacIconPng,
-      linuxIconPng: BRAND_ASSET_PATHS.nightlyLinuxIconPng,
-      windowsIconIco: BRAND_ASSET_PATHS.nightlyWindowsIconIco,
-    });
-  });
-
-  it("switches the bundled splash and favicon branding for nightly versions", () => {
-    assert.equal(resolveDesktopWebAssetBrand("0.0.17"), "production");
-    assert.equal(resolveDesktopWebAssetBrand("0.0.17-nightly.20260413.42"), "nightly");
+    assert.equal(isDesktopPreviewVersion("0.0.33-pr.8182.1"), true);
+    assert.equal(isDesktopPreviewVersion("0.1.99"), false);
   });
 
   it.effect("resolves GitHub desktop publish config from Effect config", () =>
     Effect.gen(function* () {
-      const latestConfig = yield* resolveGitHubPublishConfig("latest").pipe(
+      const overrideConfig = yield* resolveGitHubPublishConfig().pipe(
         Effect.provide(
           ConfigProvider.layer(
             ConfigProvider.fromEnv({
@@ -296,7 +265,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           ),
         ),
       );
-      const nightlyConfig = yield* resolveGitHubPublishConfig("nightly").pipe(
+      const repositoryConfig = yield* resolveGitHubPublishConfig().pipe(
         Effect.provide(
           ConfigProvider.layer(
             ConfigProvider.fromEnv({
@@ -308,19 +277,14 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         ),
       );
 
-      assert.deepStrictEqual(latestConfig, {
+      const expected = {
         provider: "github",
         owner: "acme",
         repo: "control",
         releaseType: "release",
-      });
-      assert.deepStrictEqual(nightlyConfig, {
-        provider: "github",
-        owner: "acme",
-        repo: "control",
-        releaseType: "prerelease",
-        channel: "nightly",
-      });
+      };
+      assert.deepStrictEqual(overrideConfig, expected);
+      assert.deepStrictEqual(repositoryConfig, expected);
     }),
   );
 
@@ -634,7 +598,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       ]);
       assert.deepStrictEqual(mac.dmg, {
         title: "Control 1.2.3 Installer",
-        background: "dmg/dmg-background-latest.png",
+        background: "dmg/dmg-background.png",
         window: { width: 640, height: 432 },
         contents: [
           { x: 166, y: 214, type: "file" },
@@ -1718,12 +1682,12 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         });
         const dmgDir = path.join(stageResourcesDir, "dmg");
         yield* fs.makeDirectory(dmgDir, { recursive: true });
-        const sourcePath = path.join(dmgDir, "dmg-background-nightly.svg");
+        const sourcePath = path.join(dmgDir, "dmg-background.svg");
         yield* fs.writeFileString(sourcePath, '<svg xmlns="http://www.w3.org/2000/svg"/>');
         const commands: Array<{ readonly command: string; readonly args: ReadonlyArray<string> }> =
           [];
 
-        yield* stageDesktopDmgBackground(stageResourcesDir, "nightly", false).pipe(
+        yield* stageDesktopDmgBackground(stageResourcesDir, false).pipe(
           Effect.provide(iconResizeSpawnerLayer(commands, [0, 0])),
         );
 
@@ -1740,7 +1704,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
               "640",
               sourcePath,
               "--out",
-              path.join(dmgDir, "dmg-background-nightly.png"),
+              path.join(dmgDir, "dmg-background.png"),
             ],
             [
               "sips",
@@ -1752,7 +1716,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
               "1280",
               sourcePath,
               "--out",
-              path.join(dmgDir, "dmg-background-nightly@2x.png"),
+              path.join(dmgDir, "dmg-background@2x.png"),
             ],
           ],
         );
@@ -1760,7 +1724,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     ),
   );
 
-  it.effect("fails clearly when the selected DMG background source is missing", () =>
+  it.effect("fails clearly when the DMG background source is missing", () =>
     Effect.scoped(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -1768,13 +1732,10 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           prefix: "control-dmg-background-missing-",
         });
 
-        const error = yield* stageDesktopDmgBackground(stageResourcesDir, "latest", false).pipe(
-          Effect.flip,
-        );
+        const error = yield* stageDesktopDmgBackground(stageResourcesDir, false).pipe(Effect.flip);
 
         assert.instanceOf(error, DesktopDmgBackgroundSourceMissingError);
-        assert.equal(error.channel, "latest");
-        assert.include(error.sourcePath, "dmg-background-latest.svg");
+        assert.include(error.sourcePath, "dmg-background.svg");
       }),
     ),
   );
@@ -1785,26 +1746,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
 
       const mac = config.mac as Record<string, unknown>;
       assert.equal(config.appId, "io.github.randevranjit.control");
+      assert.equal(config.productName, "Control");
       assert.match(String(mac.sign), /[\\/]scripts[\\/]sign-macos\.ts$/);
       assert.deepStrictEqual(mac.protocols, [{ name: "Control", schemes: ["ctrl", "ctrl-dev"] }]);
-    }).pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env: {} })))),
-  );
-
-  it.effect("uses the nightly DMG background for nightly macOS builds", () =>
-    Effect.gen(function* () {
-      const config = yield* createBuildConfig(
-        "mac",
-        "dmg",
-        "1.2.3-nightly.20260815.1",
-        false,
-        false,
-        undefined,
-      );
-
-      assert.equal(
-        (config.dmg as Record<string, unknown>).background,
-        "dmg/dmg-background-nightly.png",
-      );
     }).pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env: {} })))),
   );
 

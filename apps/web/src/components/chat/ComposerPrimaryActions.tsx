@@ -330,7 +330,7 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
     >
       {stageBackdropVariant ? (
         <span className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-          <StageBackdropButtonArt variant={stageBackdropVariant} />
+          <StageBackdropButtonArt />
         </span>
       ) : null}
       {isConnecting || isSendBusy ? (

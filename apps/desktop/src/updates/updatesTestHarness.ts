@@ -26,8 +26,6 @@ export interface UpdatesHarnessOptions {
     void,
     ElectronUpdater.ElectronUpdaterCheckForUpdatesError
   >;
-  readonly beforeSetUpdateChannel?: Effect.Effect<void>;
-  readonly setUpdateChannelError?: DesktopAppSettings.DesktopSettingsWriteError;
   readonly setDisableDifferentialDownload?: Effect.Effect<void>;
   readonly downloadUpdate?: Effect.Effect<void>;
   readonly quitAndInstall?: Effect.Effect<void, ElectronUpdater.ElectronUpdaterQuitAndInstallError>;
@@ -45,7 +43,6 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
   let checkCount = 0;
   let quitAndInstallCount = 0;
   let downloadCount = 0;
-  let allowDowngrade = false;
   let fullChangelog = false;
   const feedUrls: ElectronUpdater.ElectronUpdaterFeedUrl[] = [];
   const listeners = new Map<string, Set<(...args: readonly unknown[]) => void>>();
@@ -76,13 +73,6 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
       }),
     setAutoDownload: () => Effect.void,
     setAutoInstallOnAppQuit: () => Effect.void,
-    setChannel: () => Effect.void,
-    setAllowPrerelease: () => Effect.void,
-    allowDowngrade: Effect.sync(() => allowDowngrade),
-    setAllowDowngrade: (value) =>
-      Effect.sync(() => {
-        allowDowngrade = value;
-      }),
     setFullChangelog: (value) =>
       Effect.sync(() => {
         fullChangelog = value;
@@ -181,44 +171,6 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
     ),
   );
 
-  let testSettings: DesktopAppSettings.DesktopSettings = {
-    ...DesktopAppSettings.DEFAULT_DESKTOP_SETTINGS,
-  };
-  const setUpdateChannelError = options.setUpdateChannelError;
-  const layerSettings =
-    setUpdateChannelError || options.beforeSetUpdateChannel
-      ? Layer.succeed(DesktopAppSettings.DesktopAppSettings, {
-          get: Effect.sync(() => testSettings),
-          load: Effect.sync(() => testSettings),
-          setMainWindowBounds: () => Effect.die("unexpected main window bounds update"),
-          setServerExposureMode: () => Effect.die("unexpected server exposure update"),
-          setTailscaleServe: () => Effect.die("unexpected Tailscale Serve update"),
-          setUpdateChannel: (channel) =>
-            setUpdateChannelError
-              ? Effect.fail(setUpdateChannelError)
-              : (options.beforeSetUpdateChannel ?? Effect.void).pipe(
-                  Effect.andThen(
-                    Effect.sync(() => {
-                      const changed = testSettings.updateChannel !== channel;
-                      testSettings = {
-                        ...testSettings,
-                        updateChannel: channel,
-                        updateChannelConfiguredByUser: true,
-                      };
-                      return { settings: testSettings, changed };
-                    }),
-                  ),
-                ),
-          setWslBackendEnabled: () => Effect.die("unexpected WSL backend toggle"),
-          setWslDistro: () => Effect.die("unexpected WSL distro change"),
-          setLocalEnvironmentEnabled: () => Effect.die("unexpected local environment toggle"),
-          setMenuBarIcon: () => Effect.die("unexpected menu-bar toggle"),
-          setWslOnly: () => Effect.die("unexpected WSL-only toggle"),
-          applyWslWindowsFallback: Effect.die("unexpected WSL Windows fallback"),
-          applyWslWindowsFallbackInMemory: Effect.die("unexpected WSL Windows fallback"),
-        } satisfies DesktopAppSettings.DesktopAppSettings["Service"])
-      : DesktopAppSettings.layer;
-
   // Tracks the restart markers installs leave, so installs stay free of real
   // disk I/O that would outrun the tests' settle loops.
   const updateRestartMarkers = new Set<string>();
@@ -251,7 +203,7 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
     Layer.provideMerge(layerWindow),
     Layer.provideMerge(layerBackend),
     Layer.provideMerge(DesktopState.layer),
-    Layer.provideMerge(layerSettings),
+    Layer.provideMerge(DesktopAppSettings.layer),
     Layer.provideMerge(
       DesktopConfig.layerTest({
         CONTROL_HOME: `/tmp/control-desktop-updates-test-${process.pid}`,

@@ -2,7 +2,7 @@
 // @effect-diagnostics nodeBuiltinImport:off - This is a build-time filesystem script.
 // Re-stamps one file in an Electron updater manifest after it changed on disk:
 //   node scripts/restamp-update-manifest.ts <manifest.yml> <file>
-// The release workflow signs and staples the DMG after electron-builder wrote nightly-mac.yml.
+// The release workflow signs and staples the DMG after electron-builder wrote latest-mac.yml.
 
 import * as NodeCrypto from "node:crypto";
 import * as NodeFS from "node:fs";

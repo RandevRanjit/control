@@ -1,8 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
-import {
-  resolveServerBackedAppDisplayName,
-  resolveServerBackedAppStageLabel,
-} from "./branding.logic";
+import { formatAppDisplayName } from "./branding.logic";
 
 const originalWindow = globalThis.window;
 
@@ -25,8 +22,8 @@ describe("branding", () => {
         desktopBridge: {
           getAppBranding: () => ({
             baseName: "Control",
-            stageLabel: "Nightly",
-            displayName: "Control (Nightly)",
+            stageLabel: "Dev",
+            displayName: "Control (Dev)",
           }),
         },
       },
@@ -35,58 +32,14 @@ describe("branding", () => {
     const branding = await import("./branding");
 
     expect(branding.APP_BASE_NAME).toBe("Control");
-    expect(branding.APP_STAGE_LABEL).toBe("Nightly");
-    expect(branding.APP_DISPLAY_NAME).toBe("Control (Nightly)");
+    expect(branding.APP_STAGE_LABEL).toBe("Dev");
+    expect(branding.APP_DISPLAY_NAME).toBe("Control (Dev)");
   });
 });
 
 describe("branding logic", () => {
-  it("returns Nightly for nightly primary server versions", () => {
-    expect(
-      resolveServerBackedAppStageLabel({
-        primaryServerVersion: "0.0.28-nightly.20260616.12",
-        fallbackStageLabel: "Alpha",
-      }),
-    ).toBe("Nightly");
-    // From 0.1.3 a nightly's version drops the date.
-    expect(
-      resolveServerBackedAppStageLabel({
-        primaryServerVersion: "0.1.3-nightly.56",
-        fallbackStageLabel: "Alpha",
-      }),
-    ).toBe("Nightly");
-  });
-
-  it("updates the display name for nightly primary server versions", () => {
-    expect(
-      resolveServerBackedAppDisplayName({
-        baseName: "Control",
-        fallbackDisplayName: "Control",
-        fallbackStageLabel: "Alpha",
-        primaryServerVersion: "0.0.28-nightly.20260616.12",
-      }),
-    ).toBe("Control (Nightly)");
-  });
-
-  it("keeps the fallback display name for stable primary server versions", () => {
-    expect(
-      resolveServerBackedAppDisplayName({
-        baseName: "Control",
-        fallbackDisplayName: "Control",
-        fallbackStageLabel: "Alpha",
-        primaryServerVersion: "0.0.27",
-      }),
-    ).toBe("Control");
-  });
-
-  it("keeps the fallback display name for malformed nightly primary server versions", () => {
-    expect(
-      resolveServerBackedAppDisplayName({
-        baseName: "Control",
-        fallbackDisplayName: "Control",
-        fallbackStageLabel: "Alpha",
-        primaryServerVersion: "0.0.28-nightly",
-      }),
-    ).toBe("Control");
+  it("names a production build plainly and labels a dev one", () => {
+    expect(formatAppDisplayName({ baseName: "Control", stageLabel: "Alpha" })).toBe("Control");
+    expect(formatAppDisplayName({ baseName: "Control", stageLabel: "Dev" })).toBe("Control (Dev)");
   });
 });

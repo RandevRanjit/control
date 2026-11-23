@@ -31,19 +31,7 @@ export const BRAND_ASSET_PATHS = {
   developmentWebAppleTouchIconPng: "assets/dev/blueprint-web-apple-touch-180.png",
 } as const;
 
-export type WebAssetBrand = "development" | "nightly" | "production";
-
-export const WEB_ASSET_CHANNELS = ["latest", "nightly"] as const;
-
-export type WebAssetChannel = (typeof WEB_ASSET_CHANNELS)[number];
-
-export function resolveWebAssetBrandForChannel(channel: WebAssetChannel): WebAssetBrand {
-  return channel === "nightly" ? "nightly" : "production";
-}
-
-export function resolveWebAssetBrandForPackageVersion(version: string): WebAssetBrand {
-  return /^[^-+]+-(?:nightly|preview)\./.test(version) ? "nightly" : "production";
-}
+export type WebAssetBrand = "development" | "production";
 
 export interface IconOverride {
   readonly sourceRelativePath: string;
@@ -63,12 +51,6 @@ const WEB_ICON_SOURCE_PATHS_BY_BRAND = {
     favicon16Png: BRAND_ASSET_PATHS.developmentWebFavicon16Png,
     favicon32Png: BRAND_ASSET_PATHS.developmentWebFavicon32Png,
     appleTouchIconPng: BRAND_ASSET_PATHS.developmentWebAppleTouchIconPng,
-  },
-  nightly: {
-    faviconIco: BRAND_ASSET_PATHS.nightlyWebFaviconIco,
-    favicon16Png: BRAND_ASSET_PATHS.nightlyWebFavicon16Png,
-    favicon32Png: BRAND_ASSET_PATHS.nightlyWebFavicon32Png,
-    appleTouchIconPng: BRAND_ASSET_PATHS.nightlyWebAppleTouchIconPng,
   },
   production: {
     faviconIco: BRAND_ASSET_PATHS.productionWebFaviconIco,

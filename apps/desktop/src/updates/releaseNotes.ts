@@ -1,6 +1,4 @@
-import type { DesktopUpdateChannel, DesktopUpdateReleaseNote } from "@control/contracts";
-
-import { resolveDefaultDesktopUpdateChannel } from "./updateChannels.ts";
+import type { DesktopUpdateReleaseNote } from "@control/contracts";
 
 interface ElectronReleaseNoteInfo {
   readonly version: string;
@@ -126,17 +124,13 @@ interface NormalizedDesktopUpdateReleaseNotes {
 
 /**
  * Turns electron-updater's release notes into the groups the popover shows.
- * With `fullChangelog` on (nightly), electron-updater collects every GitHub
- * release whose version is semver-greater than the running one, whatever
- * train it belongs to; a maintainers' `-preview.` cut sorts above every
- * `-nightly.` of the same base version and would lead the list. Only
- * releases on the channel being followed are kept, the same test the
- * updater applies to the offered version itself.
+ * With `fullChangelog` on, electron-updater collects every GitHub release whose
+ * version is semver-greater than the running one, prereleases included. Only
+ * plain releases are kept.
  */
 export function normalizeDesktopUpdateReleaseNotes(
   releaseNotes: unknown,
   fallbackVersion: string,
-  channel: DesktopUpdateChannel,
 ): NormalizedDesktopUpdateReleaseNotes {
   const rawNotes = (
     typeof releaseNotes === "string"
@@ -144,7 +138,7 @@ export function normalizeDesktopUpdateReleaseNotes(
       : Array.isArray(releaseNotes)
         ? releaseNotes.filter(isElectronReleaseNoteInfo)
         : []
-  ).filter((entry) => resolveDefaultDesktopUpdateChannel(entry.version) === channel);
+  ).filter((entry) => !entry.version.includes("-"));
 
   const normalizedNotes = rawNotes.flatMap((entry) => {
     const { items, totalItems } = extractReleaseNoteItems(entry.note);

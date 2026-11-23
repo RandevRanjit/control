@@ -14,7 +14,7 @@ export function getDesktopUpdateDownloadedVersion(state: DesktopUpdateState): st
   return state.downloadedVersion ?? state.availableVersion;
 }
 
-/** Release notes for an exact downloaded build; nightly suffixes are part of the tag. */
+/** Release notes for an exact downloaded build. */
 export function getDesktopUpdateReleaseUrl(version: string | null): string | null {
   const normalizedVersion = version?.trim();
   if (!normalizedVersion) return null;

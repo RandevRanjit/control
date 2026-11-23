@@ -22,11 +22,7 @@ import gnomeCaptureBundle from "../apps/desktop/gnome-extension/bundle.json" wit
 import serverPackageJson from "../apps/server/package.json" with { type: "json" };
 
 import { applyWebBrandAssets } from "./apply-web-brand-assets.ts";
-import {
-  BRAND_ASSET_PATHS,
-  resolveWebAssetBrandForChannel,
-  type WebAssetBrand,
-} from "./lib/brand-assets.ts";
+import { BRAND_ASSET_PATHS } from "./lib/brand-assets.ts";
 import { getDefaultBuildArch } from "./lib/build-target-arch.ts";
 import {
   findInlinedExternalPackages,
@@ -432,12 +428,11 @@ export class DesktopIconSourceMissingError extends Schema.TaggedError<DesktopIco
 export class DesktopDmgBackgroundSourceMissingError extends Schema.TaggedError<DesktopDmgBackgroundSourceMissingError>()(
   "DesktopDmgBackgroundSourceMissingError",
   {
-    channel: Schema.Literals(["latest", "nightly"]),
     sourcePath: Schema.String,
   },
 ) {
   override get message(): string {
-    return `Desktop ${this.channel} DMG background source is missing at ${this.sourcePath}`;
+    return `Desktop DMG background source is missing at ${this.sourcePath}`;
   }
 }
 
@@ -2054,31 +2049,26 @@ function stageMacIcons(stageResourcesDir: string, sourcePng: string, verbose: bo
 
 export const stageDesktopDmgBackground = Effect.fn("stageDesktopDmgBackground")(function* (
   stageResourcesDir: string,
-  channel: "latest" | "nightly",
   verbose: boolean,
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const sourcePath = path.join(stageResourcesDir, "dmg", `dmg-background-${channel}.svg`);
+  const sourcePath = path.join(stageResourcesDir, "dmg", "dmg-background.svg");
   if (!(yield* fs.exists(sourcePath))) {
-    return yield* new DesktopDmgBackgroundSourceMissingError({ channel, sourcePath });
+    return yield* new DesktopDmgBackgroundSourceMissingError({ sourcePath });
   }
 
   for (const output of [
     { suffix: "", width: 640, height: 432 },
     { suffix: "@2x", width: 1280, height: 864 },
   ] as const) {
-    const targetPath = path.join(
-      stageResourcesDir,
-      "dmg",
-      `dmg-background-${channel}${output.suffix}.png`,
-    );
+    const targetPath = path.join(stageResourcesDir, "dmg", `dmg-background${output.suffix}.png`);
     yield* runCommand(
       ChildProcess.make(
         {},
       )`sips -s format png -z ${output.height} ${output.width} ${sourcePath} --out ${targetPath}`,
       {
-        label: `sips ${channel} DMG background${output.suffix || "@1x"}`,
+        label: `sips DMG background${output.suffix || "@1x"}`,
         verbose,
       },
     );
@@ -2218,9 +2208,7 @@ export function resolveDesktopRuntimeDependencies(
   );
 }
 
-export const resolveGitHubPublishConfig = Effect.fn("resolveGitHubPublishConfig")(function* (
-  updateChannel: "latest" | "nightly",
-) {
+export const resolveGitHubPublishConfig = Effect.fn("resolveGitHubPublishConfig")(function* () {
   const env = yield* Config.all({
     updateRepository: Config.String("CONTROL_DESKTOP_UPDATE_REPOSITORY").pipe(Config.option),
     githubRepository: Config.String("GITHUB_REPOSITORY").pipe(Config.option),
@@ -2239,45 +2227,26 @@ export const resolveGitHubPublishConfig = Effect.fn("resolveGitHubPublishConfig"
     provider: "github",
     owner,
     repo,
-    releaseType: updateChannel === "nightly" ? "prerelease" : "release",
-    ...(updateChannel === "nightly" ? { channel: "nightly" as const } : {}),
+    releaseType: "release",
   };
 });
-
-export function resolveDesktopUpdateChannel(version: string): "latest" | "nightly" {
-  return /-nightly\.(?:\d{8}\.)?\d+$/.test(version) ? "nightly" : "latest";
-}
 
 // Pull request builds (`-pr.<n>.`) and the maintainers' preview train
 // (`-preview.<date>.<run>`, the date dropping at 0.1.3) are downloaded by hand and never through an
 // updater. Building them without a publish config means electron-builder
-// emits no `latest*.yml`/`nightly*.yml` manifests or blockmaps for them and
-// the app ships without `app-update.yml`, so neither a stable nor a nightly
-// install can be pointed at one of these releases, and the build itself
-// reports that no update feed is configured instead of polling.
+// emits no `latest*.yml` manifests or blockmaps for them and the app ships
+// without `app-update.yml`, so no install can be pointed at one of these
+// releases, and the build itself reports that no update feed is configured
+// instead of polling.
 export function isDesktopPreviewVersion(version: string): boolean {
   return /-pr\./.test(version) || /-preview\.(?:\d{8}\.)?\d+$/.test(version);
 }
 
-export function resolveDesktopWebAssetBrand(version: string): WebAssetBrand {
-  return resolveWebAssetBrandForChannel(resolveDesktopUpdateChannel(version));
-}
-
-export function resolveDesktopBuildIconAssets(version: string): DesktopBuildIconAssets {
-  if (resolveDesktopUpdateChannel(version) === "nightly") {
-    return {
-      macIconPng: BRAND_ASSET_PATHS.nightlyMacIconPng,
-      linuxIconPng: BRAND_ASSET_PATHS.nightlyLinuxIconPng,
-      windowsIconIco: BRAND_ASSET_PATHS.nightlyWindowsIconIco,
-    };
-  }
-
-  return {
-    macIconPng: BRAND_ASSET_PATHS.productionMacIconPng,
-    linuxIconPng: BRAND_ASSET_PATHS.productionLinuxIconPng,
-    windowsIconIco: BRAND_ASSET_PATHS.productionWindowsIconIco,
-  };
-}
+const DESKTOP_BUILD_ICON_ASSETS: DesktopBuildIconAssets = {
+  macIconPng: BRAND_ASSET_PATHS.productionMacIconPng,
+  linuxIconPng: BRAND_ASSET_PATHS.productionLinuxIconPng,
+  windowsIconIco: BRAND_ASSET_PATHS.productionWindowsIconIco,
+};
 
 export function resolveMockUpdateServerUrl(mockUpdateServerPort: number | undefined): string {
   return `http://localhost:${mockUpdateServerPort ?? 3000}`;
@@ -2296,11 +2265,7 @@ export function resolvePackageManagerUserAgent(packageManager: string): string {
   return `${trimmed.slice(0, versionSeparator)}/${trimmed.slice(versionSeparator + 1)}`;
 }
 
-export function resolveDesktopProductName(version: string): string {
-  return resolveDesktopUpdateChannel(version) === "nightly"
-    ? "Control (Nightly)"
-    : (desktopPackageJson.productName ?? "Control");
-}
+const DESKTOP_PRODUCT_NAME = desktopPackageJson.productName ?? "Control";
 
 export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
   platform: typeof BuildPlatform.Type,
@@ -2317,7 +2282,7 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
 ) {
   const buildConfig: Record<string, unknown> = {
     appId: DESKTOP_APP_ID,
-    productName: resolveDesktopProductName(version),
+    productName: DESKTOP_PRODUCT_NAME,
     artifactName: "Control-${version}-${arch}.${ext}",
     electronLanguages: [...DESKTOP_ELECTRON_LANGUAGES],
     files: [
@@ -2345,13 +2310,12 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       ...(platform === "win" && wslRuntimeBundled ? WSL_RUNTIME_EXTRA_RESOURCES : []),
     ],
   };
-  const updateChannel = resolveDesktopUpdateChannel(version);
   // A missing `publish` makes electron-builder infer a GitHub feed from
   // GH_TOKEN/GITHUB_TOKEN. The staged app has no repository to resolve it
   // against, so writing update manifests then crashes on a null config.
   buildConfig.publish = null;
   if (!isDesktopPreviewVersion(version)) {
-    const publishConfig = yield* resolveGitHubPublishConfig(updateChannel);
+    const publishConfig = yield* resolveGitHubPublishConfig();
     if (publishConfig) {
       buildConfig.publish = [publishConfig];
     } else if (mockUpdates) {
@@ -2392,8 +2356,8 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       // Give the themed installer its own Finder volume name. Finder caches
       // DMG window backgrounds by volume name, so reusing a generic name can
       // make a newly built background look unchanged during testing.
-      title: `${resolveDesktopProductName(version)} ${version} Installer`,
-      background: `dmg/dmg-background-${updateChannel}.png`,
+      title: `${DESKTOP_PRODUCT_NAME} ${version} Installer`,
+      background: "dmg/dmg-background.png",
       window: {
         width: 640,
         // The DMG backend derives bounds from the image, including Finder's
@@ -3113,7 +3077,7 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
   });
 
   const appVersion = options.version ?? serverPackageJson.version;
-  const iconAssets = resolveDesktopBuildIconAssets(appVersion);
+  const iconAssets = DESKTOP_BUILD_ICON_ASSETS;
   const commitHash = yield* resolveGitCommitHash(repoRoot);
   const mkdir = options.keepStage ? fs.makeTempDirectory : fs.makeTempDirectoryScoped;
   const stageRoot = yield* mkdir({
@@ -3226,9 +3190,8 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
     });
   }
 
-  const webAssetBrand = resolveDesktopWebAssetBrand(appVersion);
-  yield* applyWebBrandAssets(webAssetBrand, "apps/server/dist/client");
-  yield* Effect.log(`[desktop-artifact] Applied ${webAssetBrand} web client branding.`);
+  yield* applyWebBrandAssets("production", "apps/server/dist/client");
+  yield* Effect.log("[desktop-artifact] Applied production web client branding.");
   yield* validateBundledClientAssets(path.dirname(bundledClientEntry));
 
   yield* fs.makeDirectory(path.join(stageAppDir, "apps/desktop"), { recursive: true });
@@ -3250,11 +3213,7 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
     }
   }
   if (options.platform === "mac" && options.target === "dmg") {
-    yield* stageDesktopDmgBackground(
-      stageResourcesDir,
-      resolveDesktopUpdateChannel(appVersion),
-      options.verbose,
-    );
+    yield* stageDesktopDmgBackground(stageResourcesDir, options.verbose);
   }
   // On Windows the server tree ships in the server.asar sidecar instead of
   // app.asar (see stageWindowsServerSidecar), so the app stage omits it.
@@ -3512,7 +3471,7 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
   if (options.platform === "win") {
     yield* validateWindowsPackagedPayload({
       stageDistDir,
-      appExecutableName: `${resolveDesktopProductName(appVersion)}.exe`,
+      appExecutableName: `${DESKTOP_PRODUCT_NAME}.exe`,
       targetArch: options.arch,
       appVersion,
       expectWslRuntime: bundlesWslRuntime({

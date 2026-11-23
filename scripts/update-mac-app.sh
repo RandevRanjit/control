@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds Control from this checkout's main and installs it into /Applications.
 #
-# The fallback: every push to main ships a signed nightly that the app's update button installs
+# The fallback: every push to main ships a signed release that the app's update button installs
 # (docs/operations/release.md). A build from here is ad hoc and has no update feed, so it can't
 # update itself until a release's DMG goes back on.
 #

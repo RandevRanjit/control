@@ -226,16 +226,12 @@ try {
     assertPackageVersion(NodePath.resolve(tempRoot, relativePath), "9.9.9-smoke.0");
   }
 
-  const nightlyReleaseMetadata = NodeChildProcess.execFileSync(
+  const releaseMetadata = NodeChildProcess.execFileSync(
     process.execPath,
     [
-      NodePath.resolve(repoRoot, "scripts/resolve-nightly-release.ts"),
-      "--date",
-      "20260413",
+      NodePath.resolve(repoRoot, "scripts/resolve-release.ts"),
       "--run-number",
       "321",
-      "--sha",
-      "abcdef1234567890",
       "--root",
       tempRoot,
     ],
@@ -245,19 +241,14 @@ try {
     },
   );
   assertContains(
-    nightlyReleaseMetadata,
-    "version=9.9.10-nightly.20260413.321",
-    "Expected nightly metadata to contain the derived nightly version.",
+    releaseMetadata,
+    "version=9.9.321",
+    "Expected release metadata to contain the derived version.",
   );
   assertContains(
-    nightlyReleaseMetadata,
-    "tag=v9.9.10-nightly.20260413.321",
-    "Expected nightly metadata to contain the derived nightly tag.",
-  );
-  assertContains(
-    nightlyReleaseMetadata,
-    "name=Nightly 321 · 13 Apr",
-    "Expected nightly metadata to name the release by its run and day.",
+    releaseMetadata,
+    "tag=v9.9.321",
+    "Expected release metadata to contain the derived tag.",
   );
 
   const { arm64Path, x64Path } = writeMacManifestFixtures(tempRoot);

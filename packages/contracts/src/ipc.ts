@@ -80,8 +80,7 @@ export type DesktopUpdateStatus =
 
 export type DesktopRuntimeArch = "arm64" | "x64" | "other";
 export type DesktopTheme = "light" | "dark" | "system";
-export type DesktopUpdateChannel = "latest" | "nightly";
-export type DesktopAppStageLabel = "Alpha" | "Dev" | "Nightly";
+export type DesktopAppStageLabel = "Alpha" | "Dev";
 
 export const DesktopUpdateStatusSchema = Schema.Literals([
   "disabled",
@@ -95,8 +94,7 @@ export const DesktopUpdateStatusSchema = Schema.Literals([
 ]);
 export const DesktopRuntimeArchSchema = Schema.Literals(["arm64", "x64", "other"]);
 export const DesktopThemeSchema = Schema.Literals(["light", "dark", "system"]);
-export const DesktopUpdateChannelSchema = Schema.Literals(["latest", "nightly"]);
-export const DesktopAppStageLabelSchema = Schema.Literals(["Alpha", "Dev", "Nightly"]);
+export const DesktopAppStageLabelSchema = Schema.Literals(["Alpha", "Dev"]);
 
 export interface DesktopAppBranding {
   baseName: string;
@@ -270,7 +268,6 @@ export interface DesktopRuntimeInfo {
 export interface DesktopUpdateState {
   enabled: boolean;
   status: DesktopUpdateStatus;
-  channel: DesktopUpdateChannel;
   currentVersion: string;
   hostArch: DesktopRuntimeArch;
   appArch: DesktopRuntimeArch;
@@ -301,7 +298,6 @@ export const DesktopUpdateReleaseNoteSchema = Schema.Struct({
 export const DesktopUpdateStateSchema = Schema.Struct({
   enabled: Schema.Boolean,
   status: DesktopUpdateStatusSchema,
-  channel: DesktopUpdateChannelSchema,
   currentVersion: Schema.String,
   hostArch: DesktopRuntimeArchSchema,
   appArch: DesktopRuntimeArchSchema,
@@ -1269,7 +1265,6 @@ export interface DesktopBridge {
   showInactive?: () => Promise<void>;
   onWindowFullscreenStateChange: (listener: (fullscreen: boolean) => void) => () => void;
   getUpdateState: () => Promise<DesktopUpdateState>;
-  setUpdateChannel: (channel: DesktopUpdateChannel) => Promise<DesktopUpdateState>;
   checkForUpdate: () => Promise<DesktopUpdateCheckResult>;
   downloadUpdate: () => Promise<DesktopUpdateActionResult>;
   installUpdate: () => Promise<DesktopUpdateActionResult>;

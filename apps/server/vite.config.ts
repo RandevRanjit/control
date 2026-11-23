@@ -2,7 +2,6 @@ import "vite-plus/test/config";
 import { defineConfig, mergeConfig } from "vite-plus";
 
 import baseConfig from "../../vite.config.ts";
-import packageJson from "./package.json" with { type: "json" };
 import { WeightedShardSequencer } from "./src/testUtils/weightedShardSequencer.ts";
 
 // The bundle used to inline only workspace packages, leaving every third-party
@@ -19,10 +18,6 @@ import {
 } from "../../scripts/lib/cli-external-packages.ts";
 
 export { shouldBundleCliDependency };
-
-const cliBuildChannel = /^[^-+]+-(?:nightly|preview)\./.test(packageJson.version)
-  ? "nightly"
-  : "latest";
 
 // `build:exe` wraps the same bundle in a Node single-executable. tsdown's exe
 // step refuses multi-chunk output and counts the sourcemap as a chunk, and the
@@ -107,9 +102,6 @@ export default mergeConfig(
       },
       banner: {
         js: "#!/usr/bin/env node\n",
-      },
-      define: {
-        __CONTROL_BUILD_CHANNEL__: JSON.stringify(cliBuildChannel),
       },
     },
     test: {

@@ -1,9 +1,7 @@
 import {
   DESKTOP_UPDATE_RESTART_MARKER_FILE,
-  DesktopUpdateChannelSchema,
   type DesktopRuntimeInfo,
   type DesktopUpdateActionResult,
-  type DesktopUpdateChannel,
   type DesktopUpdateCheckResult,
   type DesktopUpdateState,
 } from "@control/contracts";
@@ -32,9 +30,7 @@ import * as DesktopState from "../app/DesktopState.ts";
 import * as ElectronUpdater from "../electron/ElectronUpdater.ts";
 import * as ElectronWindow from "../electron/ElectronWindow.ts";
 import * as IpcChannels from "../ipc/channels.ts";
-import * as DesktopAppSettings from "../settings/DesktopAppSettings.ts";
 import { normalizeDesktopUpdateReleaseNotes } from "./releaseNotes.ts";
-import { resolveDefaultDesktopUpdateChannel } from "./updateChannels.ts";
 import {
   createInitialDesktopUpdateState,
   reduceDesktopUpdateStateOnCheckFailure,
@@ -52,7 +48,7 @@ const AUTO_UPDATE_STARTUP_DELAY = "15 seconds";
 const AUTO_UPDATE_POLL_INTERVAL = "4 minutes";
 const PREPARED_INSTALL_CHECK_WAIT = Duration.seconds(90);
 
-type UpdateAction = "check" | "download" | "install" | "install-recovery" | "channel";
+type UpdateAction = "check" | "download" | "install" | "install-recovery";
 
 interface DesktopPreparedUpdateInstallResult extends DesktopUpdateActionResult {
   readonly failed: boolean;
@@ -77,30 +73,6 @@ const decodeUpdateInfo = Schema.decodeUnknownEffect(UpdateInfo);
 const decodeDownloadProgressInfo = Schema.decodeUnknownEffect(DownloadProgressInfo);
 
 const currentIsoTimestamp = DateTime.now.pipe(Effect.map(DateTime.formatIso));
-
-export class DesktopUpdateActionInProgressError extends Schema.TaggedError<DesktopUpdateActionInProgressError>()(
-  "DesktopUpdateActionInProgressError",
-  {
-    action: Schema.Literals(["check", "download", "install", "channel"]),
-    requestedChannel: DesktopUpdateChannelSchema,
-  },
-) {
-  override get message(): string {
-    return `Cannot change the desktop update channel to ${this.requestedChannel} while an update ${this.action} action is in progress.`;
-  }
-}
-
-export class DesktopUpdateChannelPersistenceError extends Schema.TaggedError<DesktopUpdateChannelPersistenceError>()(
-  "DesktopUpdateChannelPersistenceError",
-  {
-    channel: DesktopUpdateChannelSchema,
-    cause: Schema.instanceOf(DesktopAppSettings.DesktopSettingsWriteError),
-  },
-) {
-  override get message(): string {
-    return `Failed to persist the ${this.channel} desktop update channel.`;
-  }
-}
 
 export class DesktopUpdatePollerError extends Schema.TaggedError<DesktopUpdatePollerError>()(
   "DesktopUpdatePollerError",
@@ -129,7 +101,7 @@ export class DesktopUpdateEventHandlingError extends Schema.TaggedError<DesktopU
 export class DesktopUpdaterReportedError extends Schema.TaggedError<DesktopUpdaterReportedError>()(
   "DesktopUpdaterReportedError",
   {
-    operation: Schema.Literals(["check", "download", "install", "channel", "background"]),
+    operation: Schema.Literals(["check", "download", "install", "background"]),
     cause: Schema.Defect(),
   },
 ) {
@@ -152,18 +124,12 @@ export class DesktopUpdateUnexpectedActionError extends Schema.TaggedError<Deskt
 
 export type DesktopUpdateConfigureError = never;
 
-export const DesktopUpdateSetChannelError = Schema.Union([
-  DesktopUpdateActionInProgressError,
-  DesktopUpdateChannelPersistenceError,
-]);
-export type DesktopUpdateSetChannelError = typeof DesktopUpdateSetChannelError.Type;
-
 export class DesktopUpdates extends Context.Service<
   DesktopUpdates,
   {
     readonly getState: Effect.Effect<DesktopUpdateState>;
-    /** True while a check, download, install, or channel change holds the
-        updater's single action reservation. */
+    /** True while a check, download, or install holds the updater's single
+        action reservation. */
     readonly isActionActive: Effect.Effect<boolean>;
     /** True only while an install owns the updater action reservation. */
     readonly isInstallActive: Effect.Effect<boolean>;
@@ -179,9 +145,6 @@ export class DesktopUpdates extends Context.Service<
     readonly emitState: Effect.Effect<void>;
     readonly disabledReason: Effect.Effect<Option.Option<string>>;
     readonly configure: Effect.Effect<void, DesktopUpdateConfigureError, Scope.Scope>;
-    readonly setChannel: (
-      channel: DesktopUpdateChannel,
-    ) => Effect.Effect<DesktopUpdateState, DesktopUpdateSetChannelError>;
     readonly check: (reason: string) => Effect.Effect<DesktopUpdateCheckResult>;
     readonly download: Effect.Effect<DesktopUpdateActionResult>;
     readonly install: Effect.Effect<DesktopUpdateActionResult>;
@@ -270,12 +233,11 @@ function parseAppUpdateYml(raw: string): Effect.Effect<Option.Option<AppUpdateYm
 }
 
 function createBaseUpdateState(
-  channel: DesktopUpdateChannel,
   enabled: boolean,
   environment: DesktopEnvironment.DesktopEnvironment["Service"],
 ): DesktopUpdateState {
   return {
-    ...createInitialDesktopUpdateState(environment.appVersion, environment.runtimeInfo, channel),
+    ...createInitialDesktopUpdateState(environment.appVersion, environment.runtimeInfo),
     enabled,
     status: enabled ? "idle" : "disabled",
   };
@@ -340,7 +302,6 @@ export const make = Effect.gen(function* () {
   const electronWindow = yield* ElectronWindow.ElectronWindow;
   const environment = yield* DesktopEnvironment.DesktopEnvironment;
   const fileSystem = yield* FileSystem.FileSystem;
-  const desktopSettings = yield* DesktopAppSettings.DesktopAppSettings;
 
   const appUpdateYmlConfigRef = yield* Ref.make<Option.Option<AppUpdateYmlConfig>>(Option.none());
   const activeUpdateActionRef = yield* Ref.make<Option.Option<UpdateAction>>(Option.none());
@@ -351,11 +312,7 @@ export const make = Effect.gen(function* () {
   const updaterConfiguredRef = yield* Ref.make(false);
   const lastLoggedDownloadMilestoneRef = yield* Ref.make(-1);
   const updateStateRef = yield* Ref.make<DesktopUpdateState>(
-    createInitialDesktopUpdateState(
-      environment.appVersion,
-      environment.runtimeInfo,
-      environment.defaultDesktopSettings.updateChannel,
-    ),
+    createInitialDesktopUpdateState(environment.appVersion, environment.runtimeInfo),
   );
 
   const stateChanges = yield* PubSub.sliding<DesktopUpdateState>(16);
@@ -432,12 +389,6 @@ export const make = Effect.gen(function* () {
       Option.isSome(activeAction) ? [false, activeAction] : [true, Option.some(action)],
     );
 
-  const tryStartChannelChange = Ref.modify(activeUpdateActionRef, (activeAction) =>
-    Option.isSome(activeAction)
-      ? [activeAction, activeAction]
-      : [Option.none<UpdateAction>(), Option.some<UpdateAction>("channel")],
-  );
-
   const finishUpdateAction = (action: UpdateAction): Effect.Effect<void> =>
     Ref.modify(activeUpdateActionRef, (activeAction) => {
       const finished = Option.isSome(activeAction) && activeAction.value === action;
@@ -448,29 +399,9 @@ export const make = Effect.gen(function* () {
       ),
     );
 
-  const applyAutoUpdaterChannel = Effect.fn("desktop.updates.applyAutoUpdaterChannel")(function* (
-    channel: DesktopUpdateChannel,
-  ) {
-    yield* Effect.annotateCurrentSpan({ channel });
-    const allowsPrerelease = channel === "nightly";
-    yield* electronUpdater.setChannel(channel);
-    yield* electronUpdater.setAllowPrerelease(allowsPrerelease);
-    yield* electronUpdater.setAllowDowngrade(allowsPrerelease);
-    yield* electronUpdater.setFullChangelog(allowsPrerelease);
-    yield* logUpdaterInfo("using update channel", {
-      channel,
-      allowPrerelease: allowsPrerelease,
-      allowDowngrade: allowsPrerelease,
-      fullChangelog: allowsPrerelease,
-    });
-  });
-
   const shouldEnableAutoUpdates = resolveDisabledReason.pipe(Effect.map(Option.isNone));
 
-  const checkForUpdates = Effect.fn("desktop.updates.checkForUpdates")(function* (
-    reason: string,
-    actionReservation: "acquire" | "held" = "acquire",
-  ) {
+  const checkForUpdates = Effect.fn("desktop.updates.checkForUpdates")(function* (reason: string) {
     yield* Effect.annotateCurrentSpan({ reason });
     if (yield* Ref.get(desktopState.quitting)) return false;
     if (!(yield* Ref.get(updaterConfiguredRef))) return false;
@@ -484,7 +415,7 @@ export const make = Effect.gen(function* () {
       return false;
     }
 
-    if (actionReservation === "acquire" && !(yield* tryStartUpdateAction("check"))) return false;
+    if (!(yield* tryStartUpdateAction("check"))) return false;
 
     const check = Effect.gen(function* () {
       const checkedAt = yield* currentIsoTimestamp;
@@ -512,12 +443,10 @@ export const make = Effect.gen(function* () {
       );
     });
 
-    return yield* actionReservation === "held"
-      ? check
-      : check.pipe(
-          Effect.onInterrupt(() => setState(state)),
-          Effect.ensuring(finishUpdateAction("check")),
-        );
+    return yield* check.pipe(
+      Effect.onInterrupt(() => setState(state)),
+      Effect.ensuring(finishUpdateAction("check")),
+    );
   });
 
   const downloadAvailableUpdate = Effect.gen(function* () {
@@ -819,22 +748,10 @@ export const make = Effect.gen(function* () {
       Effect.flatMap(
         Effect.fn("desktop.updates.applyUpdateAvailable")(function* (info) {
           const state = yield* Ref.get(updateStateRef);
-          if (resolveDefaultDesktopUpdateChannel(info.version) !== state.channel) {
-            yield* logUpdaterInfo("ignoring update that does not match selected channel", {
-              version: info.version,
-              channel: state.channel,
-            });
-            const checkedAt = yield* currentIsoTimestamp;
-            yield* setState(reduceDesktopUpdateStateOnNoUpdate(state, checkedAt));
-            yield* Ref.set(lastLoggedDownloadMilestoneRef, -1);
-            return;
-          }
-
           const checkedAt = yield* currentIsoTimestamp;
           const { releaseNotes, omittedReleaseCount } = normalizeDesktopUpdateReleaseNotes(
             info.releaseNotes,
             info.version,
-            state.channel,
           );
           yield* setState(
             reduceDesktopUpdateStateOnUpdateAvailable(
@@ -1005,9 +922,8 @@ export const make = Effect.gen(function* () {
         } as ElectronUpdater.ElectronUpdaterFeedUrl);
       }
 
-      const settings = yield* desktopSettings.get;
       const enabled = yield* shouldEnableAutoUpdates;
-      yield* setState(createBaseUpdateState(settings.updateChannel, enabled, environment));
+      yield* setState(createBaseUpdateState(enabled, environment));
       if (!enabled) {
         return;
       }
@@ -1015,7 +931,8 @@ export const make = Effect.gen(function* () {
 
       yield* electronUpdater.setAutoDownload(false);
       yield* electronUpdater.setAutoInstallOnAppQuit(false);
-      yield* applyAutoUpdaterChannel(settings.updateChannel);
+      // Every push to main is a release, so an update usually spans several: show each one's notes.
+      yield* electronUpdater.setFullChangelog(true);
       yield* electronUpdater.setDisableDifferentialDownload(
         isArm64HostRunningIntelBuild(environment.runtimeInfo),
       );
@@ -1051,48 +968,6 @@ export const make = Effect.gen(function* () {
 
       yield* startUpdatePollers;
     }).pipe(Effect.withSpan("desktop.updates.configure")),
-    setChannel: Effect.fn("desktop.updates.setChannel")(function* (
-      nextChannel: DesktopUpdateChannel,
-    ) {
-      yield* Effect.annotateCurrentSpan({ channel: nextChannel });
-      const activeAction = yield* tryStartChannelChange;
-      if (Option.isSome(activeAction)) {
-        return yield* new DesktopUpdateActionInProgressError({
-          action: activeAction.value === "install-recovery" ? "install" : activeAction.value,
-          requestedChannel: nextChannel,
-        });
-      }
-
-      return yield* Effect.gen(function* () {
-        const state = yield* Ref.get(updateStateRef);
-        if (nextChannel === state.channel) {
-          return state;
-        }
-
-        yield* desktopSettings
-          .setUpdateChannel(nextChannel)
-          .pipe(
-            Effect.mapError(
-              (cause) => new DesktopUpdateChannelPersistenceError({ channel: nextChannel, cause }),
-            ),
-          );
-
-        const enabled = yield* shouldEnableAutoUpdates;
-        yield* setState(createBaseUpdateState(nextChannel, enabled, environment));
-
-        if (!enabled || !(yield* Ref.get(updaterConfiguredRef))) {
-          return yield* Ref.get(updateStateRef);
-        }
-
-        yield* applyAutoUpdaterChannel(nextChannel);
-        const allowDowngrade = yield* electronUpdater.allowDowngrade;
-        yield* electronUpdater.setAllowDowngrade(true);
-        yield* checkForUpdates("channel-change", "held").pipe(
-          Effect.ensuring(electronUpdater.setAllowDowngrade(allowDowngrade).pipe(Effect.ignore)),
-        );
-        return yield* Ref.get(updateStateRef);
-      }).pipe(Effect.ensuring(finishUpdateAction("channel")));
-    }),
     check: Effect.fn("desktop.updates.check")(function* (reason: string) {
       yield* Effect.annotateCurrentSpan({ reason });
       if (!(yield* Ref.get(updaterConfiguredRef))) {

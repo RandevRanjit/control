@@ -21,12 +21,11 @@ type AnchorElement = ReactElement<{
 const baseState: DesktopUpdateState = {
   enabled: true,
   status: "available",
-  channel: "nightly",
   currentVersion: "0.0.35",
   hostArch: "arm64",
   appArch: "arm64",
   runningUnderArm64Translation: false,
-  availableVersion: "0.0.36-nightly.3",
+  availableVersion: "0.0.43",
   downloadedVersion: null,
   releaseNotes: [],
   omittedReleaseCount: 0,
@@ -79,17 +78,17 @@ describe("SidebarUpdateReleaseNotes", () => {
       renderNotes({
         ...baseState,
         releaseNotes: [
-          { version: "0.0.36-nightly.3", items: ["Change 3"], totalItems: 1 },
-          { version: "0.0.36-nightly.2", items: ["Change 2"], totalItems: 2 },
-          { version: "0.0.36-nightly.1", items: ["Change 1", "Earlier"], totalItems: 4 },
+          { version: "0.0.43", items: ["Change 3"], totalItems: 1 },
+          { version: "0.0.42", items: ["Change 2"], totalItems: 2 },
+          { version: "0.0.41", items: ["Change 1", "Earlier"], totalItems: 4 },
         ],
       }),
     );
 
     expect(anchors.map(({ props }) => props.href)).toEqual([
-      "https://github.com/RandevRanjit/control/releases/tag/v0.0.36-nightly.3",
-      "https://github.com/RandevRanjit/control/releases/tag/v0.0.36-nightly.2",
-      "https://github.com/RandevRanjit/control/releases/tag/v0.0.36-nightly.1",
+      "https://github.com/RandevRanjit/control/releases/tag/v0.0.43",
+      "https://github.com/RandevRanjit/control/releases/tag/v0.0.42",
+      "https://github.com/RandevRanjit/control/releases/tag/v0.0.41",
     ]);
     expect(anchors.map(({ props }) => textContent(props.children))).toEqual([
       "View release on GitHub",
@@ -102,7 +101,7 @@ describe("SidebarUpdateReleaseNotes", () => {
     const anchors = collectAnchors(
       renderNotes({
         ...baseState,
-        releaseNotes: [{ version: "0.0.36-nightly.3", items: ["Change 3"], totalItems: 1 }],
+        releaseNotes: [{ version: "0.0.43", items: ["Change 3"], totalItems: 1 }],
         omittedReleaseCount: 1,
       }),
     );
@@ -115,7 +114,7 @@ describe("SidebarUpdateReleaseNotes", () => {
     const anchors = collectAnchors(
       renderNotes({
         ...baseState,
-        releaseNotes: [{ version: "0.0.36-nightly.3", items: ["Change 3"], totalItems: 1 }],
+        releaseNotes: [{ version: "0.0.43", items: ["Change 3"], totalItems: 1 }],
         omittedReleaseCount: 3,
       }),
     );
@@ -129,7 +128,7 @@ describe("SidebarUpdateReleaseNotes", () => {
       renderNotes(
         {
           ...baseState,
-          releaseNotes: [{ version: "0.0.36-nightly.3", items: ["Change 3"], totalItems: 1 }],
+          releaseNotes: [{ version: "0.0.43", items: ["Change 3"], totalItems: 1 }],
         },
         openExternal,
       ),
@@ -141,7 +140,7 @@ describe("SidebarUpdateReleaseNotes", () => {
     expect(preventDefault).toHaveBeenCalledOnce();
     await vi.waitFor(() => {
       expect(openExternal).toHaveBeenCalledWith(
-        "https://github.com/RandevRanjit/control/releases/tag/v0.0.36-nightly.3",
+        "https://github.com/RandevRanjit/control/releases/tag/v0.0.43",
       );
       expect(testState.addToast).toHaveBeenCalledWith({
         type: "error",

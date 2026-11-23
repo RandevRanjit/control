@@ -42,7 +42,6 @@ function downloadedState(overrides: Partial<DesktopUpdateState> = {}): DesktopUp
   return {
     enabled: true,
     status: "downloaded",
-    channel: "latest",
     currentVersion: "0.0.29",
     hostArch: "arm64",
     appArch: "arm64",

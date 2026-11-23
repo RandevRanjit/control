@@ -1,7 +1,7 @@
 name: Release
 
-# Every push to main ships a signed, notarised nightly that the desktop app's update button
-# installs. Stable releases are cut by hand (docs/operations/release.md).
+# Every push to main ships a signed, notarised release that the desktop app's update button
+# installs (docs/operations/release.md).
 on:
   push:
     branches: [main]
@@ -18,11 +18,11 @@ permissions:
 
 # One at a time: a push during a run waits, and only the newest waiting push builds next.
 concurrency:
-  group: release-nightly
+  group: release
   cancel-in-progress: false
 
 jobs:
-  nightly:
+  release:
     runs-on: macos-15
     timeout-minutes: 75
     env:
@@ -54,11 +54,9 @@ jobs:
           pnpm install --frozen-lockfile
           echo "$GITHUB_WORKSPACE/node_modules/.bin" >> "$GITHUB_PATH"
 
-      - name: Resolve the nightly version
+      - name: Resolve the version
         id: version
-        run: |
-          node scripts/resolve-nightly-release.ts --date "$(date -u +%Y%m%d)" \
-            --run-number "${{ github.run_number }}" --sha "$GITHUB_SHA" --github-output
+        run: node scripts/resolve-release.ts --run-number "${{ github.run_number }}" --github-output
 
       - name: Align package versions
         run: node scripts/update-release-package-versions.ts "${{ steps.version.outputs.version }}"
@@ -95,7 +93,7 @@ jobs:
           xcrun notarytool submit "$dmg" --key "$APPLE_API_KEY_PATH" --key-id "$APPLE_API_KEY_ID" \
             --issuer "$APPLE_API_ISSUER" --wait
           xcrun stapler staple "$dmg"
-          node scripts/restamp-update-manifest.ts "$RUNNER_TEMP/release/nightly-mac.yml" "$dmg"
+          node scripts/restamp-update-manifest.ts "$RUNNER_TEMP/release/latest-mac.yml" "$dmg"
           security delete-keychain "$keychain"
 
       - name: Check the app
@@ -107,10 +105,10 @@ jobs:
           spctl --assess --type execute -vv "$app"
           xcrun stapler validate "$(ls "$RUNNER_TEMP"/release/*.dmg)"
 
-      - name: Publish the prerelease
+      - name: Publish the release
         run: |
           cd "$RUNNER_TEMP/release"
           gh release create "${{ steps.version.outputs.tag }}" --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" --title "${{ steps.version.outputs.name }}" \
-            --prerelease --latest=false --generate-notes \
-            ./*.dmg ./*.zip ./*.blockmap ./nightly-mac.yml
+            --latest --generate-notes \
+            ./*.dmg ./*.zip ./*.blockmap ./latest-mac.yml

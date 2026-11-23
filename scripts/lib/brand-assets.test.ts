@@ -4,8 +4,6 @@ import {
   BRAND_ASSET_PATHS,
   DEVELOPMENT_ICON_OVERRIDES,
   DEVELOPMENT_PUBLIC_ICON_OVERRIDES,
-  resolveWebAssetBrandForChannel,
-  resolveWebAssetBrandForPackageVersion,
   resolveWebIconOverrides,
 } from "./brand-assets.ts";
 
@@ -64,24 +62,6 @@ describe("brand-assets", () => {
       sourceRelativePath: BRAND_ASSET_PATHS.productionWebAppleTouchIconPng,
       targetRelativePath: "apps/web/dist/apple-touch-icon.png",
     });
-  });
-
-  it("maps hosted nightly web assets to nightly icons", () => {
-    expect(resolveWebIconOverrides("nightly", "apps/web/dist")).toContainEqual({
-      sourceRelativePath: BRAND_ASSET_PATHS.nightlyWebFaviconIco,
-      targetRelativePath: "apps/web/dist/favicon.ico",
-    });
-  });
-
-  it("maps hosted release channels to web asset brands", () => {
-    expect(resolveWebAssetBrandForChannel("latest")).toBe("production");
-    expect(resolveWebAssetBrandForChannel("nightly")).toBe("nightly");
-  });
-
-  it("maps package versions to web asset brands", () => {
-    expect(resolveWebAssetBrandForPackageVersion("0.0.29")).toBe("production");
-    expect(resolveWebAssetBrandForPackageVersion("0.0.29-nightly.20260723.882")).toBe("nightly");
-    expect(resolveWebAssetBrandForPackageVersion("0.0.29-preview.20260723.882")).toBe("nightly");
   });
 
   it("keeps development, nightly, and production icon families separate", () => {

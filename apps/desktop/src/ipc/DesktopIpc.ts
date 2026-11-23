@@ -8,7 +8,7 @@ export interface DesktopIpcInvokeEvent {
   readonly sender: { readonly id: number };
 }
 
-export interface DesktopIpcSyncEvent {
+export interface DesktopIpcSyncEvent extends DesktopIpcInvokeEvent {
   returnValue: unknown;
 }
 
@@ -52,6 +52,15 @@ export class DesktopIpcUnregistrationError extends Schema.TaggedError<DesktopIpc
   }
 }
 
+export class DesktopIpcSenderError extends Schema.TaggedError<DesktopIpcSenderError>()(
+  "DesktopIpcSenderError",
+  { channel: Schema.String },
+) {
+  override get message(): string {
+    return `${this.channel} is only available to Control's own windows.`;
+  }
+}
+
 export const DesktopIpcError = Schema.Union([
   DesktopIpcRegistrationError,
   DesktopIpcUnregistrationError,
@@ -80,7 +89,14 @@ export class DesktopIpc extends Context.Service<
   }
 >()("@control/desktop/ipc/DesktopIpc") {}
 
-export const make = (ipcMain: DesktopIpcMain): DesktopIpc["Service"] =>
+/**
+ * Every method answers only Control's own windows. A preview page shares its JavaScript world with
+ * Control's preload, so it can get hold of `ipcRenderer` and call any channel by name.
+ */
+export const make = (
+  ipcMain: DesktopIpcMain,
+  isAppWindow: (sender: DesktopIpcInvokeEvent["sender"]) => boolean,
+): DesktopIpc["Service"] =>
   DesktopIpc.of({
     handle: Effect.fn("desktop.ipc.registerInvoke")(function* <E, R>({
       channel,
@@ -94,14 +110,17 @@ export const make = (ipcMain: DesktopIpcMain): DesktopIpc["Service"] =>
         Effect.try({
           try: () => {
             ipcMain.removeHandler(channel);
-            ipcMain.handle(channel, (event, raw) =>
-              runPromise(
+            ipcMain.handle(channel, (event, raw) => {
+              if (!isAppWindow(event.sender)) {
+                return Promise.reject(new DesktopIpcSenderError({ channel }));
+              }
+              return runPromise(
                 Effect.gen(function* () {
                   yield* Effect.annotateCurrentSpan({ channel });
                   return yield* handler(raw, event);
                 }).pipe(Effect.annotateLogs({ channel }), Effect.withSpan("desktop.ipc.invoke")),
-              ),
-            );
+              );
+            });
           },
           catch: (cause) =>
             new DesktopIpcRegistrationError({ handlerKind: "invoke", channel, cause }),
@@ -128,6 +147,10 @@ export const make = (ipcMain: DesktopIpcMain): DesktopIpc["Service"] =>
           try: () => {
             ipcMain.removeAllListeners(channel);
             ipcMain.on(channel, (event) => {
+              if (!isAppWindow(event.sender)) {
+                event.returnValue = null;
+                return;
+              }
               event.returnValue = runSync(
                 Effect.gen(function* () {
                   yield* Effect.annotateCurrentSpan({ channel });
@@ -152,7 +175,7 @@ export const make = (ipcMain: DesktopIpcMain): DesktopIpc["Service"] =>
     }),
   });
 
-export const layer = (ipcMain: DesktopIpcMain) => Layer.succeed(DesktopIpc, make(ipcMain));
+export const layer = (...args: Parameters<typeof make>) => Layer.succeed(DesktopIpc, make(...args));
 
 /**
  * Convenience helpers for creating IPC methods

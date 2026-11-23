@@ -127,6 +127,12 @@ const layerDesktopSshEnvironment = Layer.unwrap(
   }),
 );
 
+/** Browser tabs are webviews, and the popups they open are windows in the tab's own session. */
+const isAppWindow = ({ id }: { readonly id: number }) => {
+  const contents = Electron.webContents.fromId(id);
+  return contents?.getType() === "window" && contents.session === Electron.session.defaultSession;
+};
+
 const layerElectron = Layer.mergeAll(
   ElectronApp.layer,
   ElectronDialog.layer,
@@ -138,7 +144,7 @@ const layerElectron = Layer.mergeAll(
   ElectronTheme.layer,
   ElectronUpdater.layer,
   ElectronWindow.layer,
-  DesktopIpc.layer(Electron.ipcMain),
+  DesktopIpc.layer(Electron.ipcMain, isAppWindow),
 );
 
 const layerDesktopFoundation = Layer.mergeAll(

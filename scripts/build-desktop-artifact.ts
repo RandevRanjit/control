@@ -1065,6 +1065,17 @@ export function resolveFffNativeDependencies(
   );
 }
 
+/** Dictation's engine, which exists only for Apple silicon. */
+export function resolveVoiceEngineDependencies(
+  platform: typeof BuildPlatform.Type,
+  arch: typeof BuildArch.Type,
+  version: string,
+): Record<string, string> {
+  return platform === "mac" && arch !== "x64"
+    ? { "@fugood/node-whisper-darwin-arm64": version }
+    : {};
+}
+
 // macOS and Linux run both processes from one app.asar, so the stage installs
 // the union of what each bundle leaves external and nothing else.
 export function resolveMergedStageDependencies(input: {
@@ -1073,11 +1084,13 @@ export function resolveMergedStageDependencies(input: {
   readonly desktopDependencies: Record<string, string>;
   readonly arch: typeof BuildArch.Type;
   readonly fffNodeVersion: string;
+  readonly voiceEngineVersion: string;
 }) {
   return {
     ...selectCliRuntimeExternalDependencies(input.serverDependencies),
     ...input.desktopDependencies,
     ...resolveFffNativeDependencies(input.platform, input.arch, input.fffNodeVersion),
+    ...resolveVoiceEngineDependencies(input.platform, input.arch, input.voiceEngineVersion),
   };
 }
 
@@ -2340,7 +2353,11 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
           "Control connects to devices on your local network for remote environments and commands run by terminals and coding agents.",
         NSScreenCaptureUsageDescription:
           "Control captures the active window when you use the window capture shortcut.",
+        NSMicrophoneUsageDescription:
+          "Control listens while you dictate a message. Your voice stays on this Mac.",
       },
+      entitlements: path.join(repoRoot, "apps/desktop/resources/entitlements.mac.plist"),
+      entitlementsInherit: path.join(repoRoot, "apps/desktop/resources/entitlements.mac.plist"),
       protocols: [
         {
           name: "Control",
@@ -3283,6 +3300,8 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
           desktopDependencies: resolvedDesktopRuntimeDependencies,
           arch: options.arch,
           fffNodeVersion: serverPackageJson.dependencies["@ff-labs/fff-node"],
+          voiceEngineVersion:
+            serverPackageJson.optionalDependencies["@fugood/node-whisper-darwin-arm64"],
         });
   const stagePatchedDependencies = createStagePatchedDependencies(
     workspacePatchedDependencies,

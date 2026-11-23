@@ -57,6 +57,7 @@ import {
   OrchestrationV2ThreadHistoryPage,
 } from "./orchestrationV2.ts";
 import { Project, ProjectMutation, ProjectSnapshot } from "./project.ts";
+import { VoiceError, VoiceTranscribeInput, VoiceTranscribeResult } from "./voice.ts";
 import {
   PullRequestDiffInput,
   PullRequestDiffResult,
@@ -582,6 +583,21 @@ class EnvironmentPullRequestsHttpApi extends HttpApiGroup.make("pullRequests").a
   }).middleware(EnvironmentAuthenticatedAuth),
 ) {}
 
+/** A recording is megabytes at its longest, so it travels over HTTP rather than the RPC socket. */
+class EnvironmentVoiceHttpApi extends HttpApiGroup.make("voice").add(
+  HttpApiEndpoint.post("transcribe", "/api/voice/transcribe", {
+    headers: OptionalBearerHeaders,
+    payload: VoiceTranscribeInput,
+    success: VoiceTranscribeResult,
+    error: [
+      VoiceError,
+      EnvironmentAuthInvalidError,
+      EnvironmentScopeRequiredError,
+      EnvironmentInternalError,
+    ],
+  }).middleware(EnvironmentAuthenticatedAuth),
+) {}
+
 /**
  * Public entry point for webhook tasks. Unauthenticated by design: the token
  * in the path, and an optional body signature, are the credential. The handler
@@ -613,4 +629,5 @@ export class EnvironmentHttpApi extends HttpApi.make("environment")
   .add(EnvironmentOrchestrationHttpApi)
   .add(EnvironmentPullRequestsHttpApi)
   .add(EnvironmentProjectsHttpApi)
+  .add(EnvironmentVoiceHttpApi)
   .add(EnvironmentWebhooksHttpApi) {}

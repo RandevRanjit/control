@@ -7,6 +7,7 @@ import * as Schema from "effect/Schema";
 
 import * as NetService from "@control/shared/Net";
 import * as Crypto from "effect/Crypto";
+import * as Electron from "electron";
 import * as ElectronApp from "../electron/ElectronApp.ts";
 import * as ElectronDialog from "../electron/ElectronDialog.ts";
 import * as ElectronProtocol from "../electron/ElectronProtocol.ts";
@@ -35,6 +36,7 @@ import * as DesktopUpdates from "../updates/DesktopUpdates.ts";
 import * as DesktopSnapShot from "../snapShot/DesktopSnapShot.ts";
 import * as DesktopWslBackend from "../wsl/DesktopWslBackend.ts";
 import * as DesktopRendererHistory from "../telemetry/DesktopRendererHistory.ts";
+import { askForMicrophone, limitMicrophone } from "../permissions/MicrophoneAccess.ts";
 
 const DEFAULT_DESKTOP_BACKEND_PORT = 3773;
 const MAX_TCP_PORT = 65_535;
@@ -334,6 +336,9 @@ const startup = Effect.gen(function* () {
       backend: Option.getOrElse(selectedBackend, () => "unknown"),
     });
   }
+  yield* Effect.sync(() =>
+    limitMicrophone(Electron.session.defaultSession, () => askForMicrophone(environment.platform)),
+  );
   yield* appIdentity.configure;
   yield* applicationMenu.configure;
   yield* updates.configure;

@@ -50,6 +50,9 @@
     "@types/yauzl": "^3.4.0",
     "vite-plus": "catalog:"
   },
+  "optionalDependencies": {
+    "@fugood/node-whisper-darwin-arm64": "1.2.0-rc.2"
+  },
   "engines": {
     "node": "^22.16 || ^23.11 || >=24.10"
   }

@@ -187,6 +187,10 @@
       "types": "./src/state/localModels.ts",
       "default": "./src/state/localModels.ts"
     },
+    "./state/voice": {
+      "types": "./src/state/voice.ts",
+      "default": "./src/state/voice.ts"
+    },
     "./state/deviceHubAccess": {
       "types": "./src/state/deviceHubAccess.ts",
       "default": "./src/state/deviceHubAccess.ts"

@@ -966,6 +966,12 @@ export const SETTINGS_SEARCH_ITEMS = [
     ],
   },
   {
+    id: "dictation",
+    title: "Dictation",
+    to: "/settings/local-models",
+    searchTerms: ["voice microphone speech to text whisper hold space talk transcribe download"],
+  },
+  {
     id: "archive",
     title: "Archived threads",
     to: "/settings/archived",

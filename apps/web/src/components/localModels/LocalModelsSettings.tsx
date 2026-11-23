@@ -13,7 +13,9 @@ import { useAtomValue } from "@effect/atom-react";
 import { useState } from "react";
 
 import { localModelsEnvironment, useLocalModels, useSecondTick } from "../../state/localModels";
+import { useVoiceModel } from "../../state/voice";
 import { useAtomCommand } from "../../state/use-atom-command";
+import { DictationModel } from "../chat/dictation/DictationModel";
 import { Lamp } from "../control/bloom";
 import { Switch } from "../ui/switch";
 import { SettingsPageContainer, useSettingsSearchTarget } from "../settings/settingsLayout";
@@ -89,6 +91,7 @@ export function LocalModelsSettings() {
             after a crash CONTROL kills the models it started, and only those.
           </p>
         </div>
+        <DictationPanel />
         {adding && environmentId !== null && snapshot !== null ? (
           <LocalModelAddSheet
             environmentId={environmentId}
@@ -102,6 +105,31 @@ export function LocalModelsSettings() {
         ) : null}
       </div>
     </SettingsPageContainer>
+  );
+}
+
+/** Dictation's model, which wakes for each recording and is gone again after it. */
+function DictationPanel() {
+  const { environmentId, model } = useVoiceModel();
+  const targetRef = useSettingsSearchTarget<HTMLDivElement>("dictation");
+  if (environmentId === null || model === null) return null;
+  return (
+    <div
+      ref={targetRef}
+      id="dictation"
+      className="panel s-lm-set s-lm-dict"
+      role="region"
+      aria-label="Dictation"
+    >
+      <div className="s-lm-sh">
+        <h4>Dictation</h4>
+      </div>
+      <p className="s-lm-sd">
+        Press the microphone in the composer, or hold Space, and Whisper turns your voice into text
+        on this Mac. It uses 900 MB for the half second that takes.
+      </p>
+      <DictationModel environmentId={environmentId} model={model} />
+    </div>
   );
 }
 

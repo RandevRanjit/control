@@ -32,6 +32,7 @@ export const CLI_RUNTIME_EXTERNAL_PREFIXES = [
   "ffi-rs",
   "@yuuang/",
   "@ff-labs/",
+  "@fugood/",
   "@napi-rs/keyring",
   "node-gyp-build",
   "node-addon-api",

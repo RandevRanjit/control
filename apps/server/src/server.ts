@@ -69,6 +69,8 @@ import * as ProviderAdapterRegistry from "./orchestration-v2/ProviderAdapterRegi
 import * as ProviderRegistry from "./provider/ProviderRegistry.ts";
 import * as LocalModels from "./localModels/LocalModels.ts";
 import * as LocalModelMemory from "./localModels/memory.ts";
+import * as VoiceInput from "./voice/VoiceInput.ts";
+import * as VoiceHttp from "./voice/http.ts";
 import * as ProviderUsageLimitsIngestion from "./provider/ProviderUsageLimitsIngestion.ts";
 import * as UsageLimitSources from "./usage/UsageLimitSources.ts";
 import * as ProjectFaviconResolver from "./project/ProjectFaviconResolver.ts";
@@ -467,6 +469,7 @@ const layerRuntimeCoreDependenciesBase = Layer.mergeAll(
   Layer.provideMerge(ProviderInstanceRegistryHydration.layer),
   // Below the drivers: Claude's model list and chats use the local models (one registry).
   Layer.provideMerge(LocalModels.layer.pipe(Layer.provide(LocalModelMemory.layerMemoryProbe))),
+  Layer.provideMerge(VoiceInput.layer.pipe(Layer.provide(ProcessRunner.layer))),
 );
 
 const layerRuntimeCoreDependencies = layerRuntimeCoreDependenciesBase.pipe(
@@ -521,6 +524,7 @@ const layerMakeRoutes = Layer.mergeAll(
       Layer.provide(OrchestrationHttp.layer),
       Layer.provide(PullRequestHttp.layer),
       Layer.provide(ProjectHttp.layer),
+      Layer.provide(VoiceHttp.layer),
       Layer.provide(ServerHttp.layerServerEnvironmentHttpApi),
       Layer.provide(WebhookRoute.layer),
       Layer.provide(AuthHttp.layerAuthenticatedAuth),

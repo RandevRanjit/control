@@ -636,6 +636,20 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         "NSLocalNetworkUsageDescription",
         "Control connects to devices on your local network for remote environments and commands run by terminals and coding agents.",
       );
+      // macOS kills an app that uses the microphone without the sentence, and refuses a hardened
+      // one without the entitlement: its helpers record, so they inherit it.
+      const { extendInfo, entitlements, entitlementsInherit } = mac.mac as {
+        readonly extendInfo: Record<string, unknown>;
+        readonly entitlements: string;
+        readonly entitlementsInherit: string;
+      };
+      assert.property(extendInfo, "NSMicrophoneUsageDescription");
+      assert.strictEqual(entitlementsInherit, entitlements);
+      const fs = yield* FileSystem.FileSystem;
+      assert.include(
+        yield* fs.readFileString(entitlements),
+        "com.apple.security.device.audio-input",
+      );
       for (const config of [linux, win]) {
         assert.deepStrictEqual(config.electronLanguages, DESKTOP_ELECTRON_LANGUAGES);
       }
@@ -697,6 +711,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         },
         arch: "arm64",
         fffNodeVersion: "0.9.4",
+        voiceEngineVersion: "1.2.0",
       }),
       {
         "@ff-labs/fff-node": "0.9.4",
@@ -704,6 +719,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         "@napi-rs/keyring": "1.3.0",
         "playwright-core": "1.60.0",
         "@ff-labs/fff-bin-darwin-arm64": "0.9.4",
+        "@fugood/node-whisper-darwin-arm64": "1.2.0",
       },
     );
 
@@ -714,6 +730,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         desktopDependencies: { "@crowecawcaw/xa11y": "0.13.0" },
         arch: "x64",
         fffNodeVersion: "0.9.4",
+        voiceEngineVersion: "1.2.0",
       }),
       {
         "@ff-labs/fff-node": "0.9.4",

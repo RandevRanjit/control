@@ -244,6 +244,7 @@ import {
   threadContextReference,
 } from "~/lib/composerContextRecords";
 import { matchComposerThreadItems } from "@control/client-runtime/composerThreadItems";
+import { voiceInputBlocksSubmission } from "@control/client-runtime/voice-input";
 import { THREAD_CONTEXT_DROP_EVENT, threadContextDropTargetProps } from "./threadContextDrag";
 import { readThreadShell, useThreadShells } from "~/state/entities";
 import { requestConfirmDialog } from "~/confirmDialog";
@@ -301,6 +302,9 @@ import {
   renderProviderTraitsPicker,
 } from "./composerProviderState";
 import { ContextWindowMeter, ContextWindowMeterPlaceholder } from "./ContextWindowMeter";
+import { DictationControl } from "./dictation/DictationControl";
+import { dictationHints } from "./dictation/dictationHints";
+import { IDLE_DICTATION, useComposerDictation } from "./dictation/useComposerDictation";
 import {
   providerSupportsManualCompaction,
   resolveContextWindowModelDisplayName,
@@ -2188,7 +2192,9 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     projectModelSelection: activeProjectDefaultModelSelection,
     settings,
   });
+  const [dictationState, setDictationState] = useState(IDLE_DICTATION);
   const sendDisabledReason =
+    (voiceInputBlocksSubmission(dictationState) ? "Finish dictating first." : null) ??
     externalSendDisabledReason ??
     (multipleModelSelections?.length === 0 ? "Select at least one model." : null) ??
     attachmentBlockReason;
@@ -3843,6 +3849,28 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
       setComposerTrigger,
     ],
   );
+
+  const canEditPrompt = !(
+    isConnecting ||
+    projectSelectionRequired ||
+    isChoiceOnlyPendingQuestion ||
+    activePendingIsResponding
+  );
+  const dictation = useComposerDictation({
+    ownerKey: composerDraftTargetKey,
+    state: dictationState,
+    onStateChange: setDictationState,
+    enabled: canEditPrompt,
+    promptRef,
+    editorRef: composerEditorRef,
+    formRef: composerFormRef,
+    replacePrompt: applyPromptReplacement,
+    readHints: () =>
+      dictationHints({
+        names: [activeThread?.branch],
+        messages: [...promptHistoryMessages, { text: activeThread?.title ?? "" }],
+      }),
+  });
 
   const readComposerSnapshot = useCallback((): {
     value: string;
@@ -7419,12 +7447,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                                 ? "Enable a provider in Settings to send a message"
                                 : COMPOSER_PLACEHOLDER
                     }
-                    disabled={
-                      isConnecting ||
-                      projectSelectionRequired ||
-                      isChoiceOnlyPendingQuestion ||
-                      activePendingIsResponding
-                    }
+                    disabled={!canEditPrompt}
                   />
                 </ComposerContextActionsContext>
                 {isComposerResting ? collapsedComposerImagePreviews : null}
@@ -7540,6 +7563,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                       </Tooltip>
                     </>
                   ) : null}
+                  <DictationControl dictation={dictation} enabled={canEditPrompt} />
                   <ComposerFooterPrimaryActions
                     compact={isComposerResting || isComposerPrimaryActionsCompact}
                     canOperateThread={canOperateThread}

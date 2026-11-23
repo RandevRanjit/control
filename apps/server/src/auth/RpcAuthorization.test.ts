@@ -84,6 +84,15 @@ describe("RPC authorization scopes", () => {
     );
   });
 
+  it("lets any paired client follow dictation's model, and change it with settings access", () => {
+    expect(requiredScopeForRpcMethod(WS_METHODS.subscribeVoiceModel)).toBe(
+      AuthOrchestrationReadScope,
+    );
+    for (const method of [WS_METHODS.voiceModelInstall, WS_METHODS.voiceModelRemove]) {
+      expect(requiredScopeForRpcMethod(method)).toBe(AuthSettingsWriteScope);
+    }
+  });
+
   it("requires write access to import agent session history", () => {
     expect(requiredScopeForRpcMethod(WS_METHODS.agentSessionsScan)).toBe(
       AuthOrchestrationReadScope,

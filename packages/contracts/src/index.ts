@@ -46,6 +46,7 @@ export * from "./project.ts";
 export * from "./group.ts";
 export * from "./lock.ts";
 export * from "./localModels.ts";
+export * from "./voice.ts";
 export * from "./claudeSettingsFile.ts";
 export * from "./filesystem.ts";
 export * from "./agentSessions.ts";

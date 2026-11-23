@@ -193,6 +193,7 @@ import * as ProjectService from "./project/ProjectService.ts";
 import * as GroupService from "./group/GroupService.ts";
 import * as ControlLock from "./lock/ControlLock.ts";
 import * as LocalModels from "./localModels/LocalModels.ts";
+import * as VoiceInput from "./voice/VoiceInput.ts";
 import * as GroupStore from "./orchestration-v2/GroupStore.ts";
 import * as ManagedProjectFolders from "./project/ManagedProjectFolders.ts";
 import { projectMutationOperation } from "./project/ProjectMutation.ts";
@@ -1330,6 +1331,7 @@ const layerWsRpc = (
       const providerSessionUpdates = yield* ProviderSessionUpdates.ProviderSessionUpdates;
       const controlLock = yield* ControlLock.ControlLock;
       const localModels = yield* LocalModels.LocalModels;
+      const voice = yield* VoiceInput.VoiceInput;
       const providerAuth = yield* ProviderAuthService.ProviderAuthService;
       const serverSelfUpdate = yield* ServerSelfUpdate.ServerSelfUpdate;
       const config = yield* ServerConfig.ServerConfig;
@@ -2377,6 +2379,9 @@ const layerWsRpc = (
           ),
         [WS_METHODS.localModelsSleep]: (input) => localModels.sleep(input.id),
         [WS_METHODS.subscribeLocalModels]: (_input) => localModels.subscribe,
+        [WS_METHODS.voiceModelInstall]: () => voice.install,
+        [WS_METHODS.voiceModelRemove]: () => voice.remove,
+        [WS_METHODS.subscribeVoiceModel]: () => voice.changes,
         [WS_METHODS.shellOpenInEditor]: (input) => externalLauncher.launchEditor(input),
         [WS_METHODS.filesystemBrowse]: (input) =>
           workspaceEntries.browse(input).pipe(

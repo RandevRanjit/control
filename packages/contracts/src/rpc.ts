@@ -336,6 +336,7 @@ import {
   LocalModelUpdateInput,
   LocalModelWakeInput,
 } from "./localModels.ts";
+import { VoiceError, VoiceModelState } from "./voice.ts";
 import {
   ClaudeSettingsFileError,
   ClaudeSettingsFilePatch,
@@ -362,6 +363,8 @@ export const WS_METHODS = {
   localModelsRemove: "localModels.remove",
   localModelsWake: "localModels.wake",
   localModelsSleep: "localModels.sleep",
+  voiceModelInstall: "voice.modelInstall",
+  voiceModelRemove: "voice.modelRemove",
   projectsEnsureScratch: "projects.ensureScratch",
   projectsCreateNew: "projects.createNew",
 
@@ -545,6 +548,7 @@ export const WS_METHODS = {
   subscribeBackgroundPolicy: "subscribeBackgroundPolicy",
   subscribeLock: "subscribeLock",
   subscribeLocalModels: "subscribeLocalModels",
+  subscribeVoiceModel: "subscribeVoiceModel",
   subscribeResourceTelemetry: "subscribeResourceTelemetry",
 } as const;
 
@@ -1158,6 +1162,19 @@ const WsLocalModelsSleepRpc = Rpc.make(WS_METHODS.localModelsSleep, {
   payload: LocalModelSleepInput,
   success: Schema.Void,
   error: LocalModelRpcError,
+});
+
+// Dictation's model. The recordings themselves go over HTTP (EnvironmentVoiceHttpApi).
+const WsVoiceModelInstallRpc = Rpc.make(WS_METHODS.voiceModelInstall, {
+  payload: Schema.Struct({}),
+  success: Schema.Void,
+  error: Schema.Union([VoiceError, EnvironmentAuthorizationError]),
+});
+
+const WsVoiceModelRemoveRpc = Rpc.make(WS_METHODS.voiceModelRemove, {
+  payload: Schema.Struct({}),
+  success: Schema.Void,
+  error: Schema.Union([VoiceError, EnvironmentAuthorizationError]),
 });
 
 // Finds or creates the Scratch project rooted at ServerConfig.scratchWorkspaceRoot.
@@ -1812,6 +1829,14 @@ const WsSubscribeLocalModelsRpc = Rpc.make(WS_METHODS.subscribeLocalModels, {
   stream: true,
 });
 
+/** Whether dictation's model is there, now and as it downloads. */
+const WsSubscribeVoiceModelRpc = Rpc.make(WS_METHODS.subscribeVoiceModel, {
+  payload: Schema.Struct({}),
+  success: VoiceModelState,
+  error: EnvironmentAuthorizationError,
+  stream: true,
+});
+
 const WsSubscribeResourceTelemetryRpc = Rpc.make(WS_METHODS.subscribeResourceTelemetry, {
   payload: Schema.Struct({}),
   success: ResourceTelemetrySnapshot,
@@ -1931,6 +1956,8 @@ export const WsRpcGroup = RpcGroup.make(
   WsLocalModelsRemoveRpc,
   WsLocalModelsWakeRpc,
   WsLocalModelsSleepRpc,
+  WsVoiceModelInstallRpc,
+  WsVoiceModelRemoveRpc,
   WsShellOpenInEditorRpc,
   WsFilesystemBrowseRpc,
   WsAgentSessionsScanRpc,
@@ -1998,6 +2025,7 @@ export const WsRpcGroup = RpcGroup.make(
   WsSubscribeBackgroundPolicyRpc,
   WsSubscribeLockRpc,
   WsSubscribeLocalModelsRpc,
+  WsSubscribeVoiceModelRpc,
   WsSubscribeResourceTelemetryRpc,
   WsOrchestrationV2DispatchCommandRpc,
   WsOrchestrationV2GetWorkflowScriptRpc,

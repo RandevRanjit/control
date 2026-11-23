@@ -167,6 +167,24 @@ Stashes containing uploaded files must be restored in their original environment
 Those files are retained for 24 hours. After an upload expires, restore the prompt
 and use **Attach again** or remove the missing file before sending.
 
+## Dictation
+
+On web and desktop, press the microphone in the composer, or hold `Space` while you talk and let go
+when you're done. What you said lands where your cursor was, or over your selection, for you to read
+before you send it. It never sends by itself.
+
+The first time, the microphone offers the model: Whisper large-v3-turbo, a 575 MB download. After
+that it works offline. Your voice goes to the Mac that Control runs on, and no further: nothing is
+kept, and each dictation takes about half a second there. Names from the chat, such as files and
+branches, come out spelt as they're written.
+
+While it listens you can't type in the composer or send. Click the square to write it down, or press
+`Esc` to drop it. A dictation can be five minutes long. **Settings › Local models** downloads and
+removes the model.
+
+Dictation is in English and needs a Mac with Apple silicon. A browser on another device needs a
+secure connection, such as Tailscale's, before it gives a page the microphone.
+
 ## Voice input on iPhone
 
 On supported iPhones with iOS 26 or later, use the composer's microphone to record,

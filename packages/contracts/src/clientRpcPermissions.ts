@@ -48,6 +48,9 @@ export const CLIENT_GUARDED_RPC_SCOPES = {
   [WS_METHODS.localModelsRegister]: AuthAccessWriteScope,
   [WS_METHODS.localModelsUpdate]: AuthAccessWriteScope,
   [WS_METHODS.localModelsRemove]: AuthAccessWriteScope,
+
+  [WS_METHODS.voiceModelInstall]: AuthSettingsWriteScope,
+  [WS_METHODS.voiceModelRemove]: AuthSettingsWriteScope,
 } as const;
 export type ClientGuardedRpcTag = keyof typeof CLIENT_GUARDED_RPC_SCOPES;
 

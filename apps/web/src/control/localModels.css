@@ -75,6 +75,8 @@
 .s-lm-root .s-lm-af { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
 
 /* The app's own: the native fields the design draws as spans, and the row's name as a button */
+.s-lm-root .s-lm-dict { margin-top: 16px; }
+.s-lm-root .s-lm-dict .s-lm-sd { margin-bottom: 14px; }
 .s-lm-root .s-lm-row > button { min-width: 0; text-align: left; cursor: pointer; }
 .s-lm-root .s-lm-note b > button { cursor: pointer; }
 .s-lm-root .s-lm-f .s-lm-fd { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -201,6 +201,9 @@ const RPC_AGGREGATES = {
   [WS_METHODS.subscribeBackgroundPolicy]: "server",
   [WS_METHODS.subscribeLock]: "orchestration",
   [WS_METHODS.subscribeLocalModels]: "localModels",
+  [WS_METHODS.voiceModelInstall]: "voice",
+  [WS_METHODS.voiceModelRemove]: "voice",
+  [WS_METHODS.subscribeVoiceModel]: "voice",
 } as const satisfies Readonly<Record<WsRpcMethod, string>>;
 
 const RPC_SPAN_PREFIX = "ws.rpc";

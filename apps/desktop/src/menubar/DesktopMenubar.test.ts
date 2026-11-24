@@ -7,6 +7,11 @@ import { DesktopMenubarIconStateSchema } from "@control/contracts";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
+import * as TestClock from "effect/testing/TestClock";
+import { vi } from "vite-plus/test";
+
+import type * as Electron from "electron";
 
 import * as DesktopAssets from "../app/DesktopAssets.ts";
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
@@ -16,6 +21,15 @@ import * as DesktopAppSettings from "../settings/DesktopAppSettings.ts";
 import * as DesktopWindow from "../window/DesktopWindow.ts";
 import * as DesktopMenubar from "./DesktopMenubar.ts";
 import { menubarImageName, menubarPanelBounds } from "./DesktopMenubar.ts";
+
+vi.mock("electron", () => ({
+  Tray: class {
+    setIgnoreDoubleClickEvents() {}
+    on() {}
+    destroy() {}
+  },
+  nativeImage: { createEmpty: () => ({}) },
+}));
 
 const workArea = { x: 0, y: 24, width: 1512, height: 920 };
 
@@ -106,4 +120,53 @@ describe("DesktopMenubar", () => {
       assert.isTrue((yield* (yield* DesktopAppSettings.DesktopAppSettings).get).menuBarIcon);
     }).pipe(Effect.provide(layer)),
   );
+
+  it.effect("loads the panel again when its process is killed", () => {
+    const listeners = new Map<string, (...args: readonly unknown[]) => void>();
+    const loadURL = vi.fn(() => Promise.resolve());
+    const panel = {
+      on: () => undefined,
+      isDestroyed: () => false,
+      loadURL,
+      webContents: {
+        on: (name: string, listener: (...args: readonly unknown[]) => void) =>
+          listeners.set(name, listener),
+        setWindowOpenHandler: () => undefined,
+      },
+    } as unknown as Electron.BrowserWindow;
+    const onTheMac = DesktopMenubar.layer.pipe(
+      Layer.provideMerge(
+        Layer.mergeAll(
+          Layer.succeed(
+            DesktopEnvironment.DesktopEnvironment,
+            DesktopEnvironment.DesktopEnvironment.of({
+              platform: "darwin",
+              isDevelopment: false,
+              displayName: "Control",
+              preloadPath: "/preload.js",
+            } as DesktopEnvironment.DesktopEnvironment["Service"]),
+          ),
+          Layer.mock(DesktopAssets.DesktopAssets, {
+            resolveResourcePath: () => Effect.succeed(Option.none<string>()),
+          }),
+          DesktopAppSettings.layerTest(),
+          Layer.mock(ElectronApp.ElectronApp, {}),
+          Layer.mock(ElectronWindow.ElectronWindow, {
+            create: () => Effect.succeed(panel),
+            setAuxiliary: () => Effect.void,
+          }),
+          Layer.mock(DesktopWindow.DesktopWindow, {}),
+        ),
+      ),
+    );
+    return Effect.gen(function* () {
+      const menubar = yield* DesktopMenubar.DesktopMenubar;
+      yield* menubar.start;
+      assert.equal(loadURL.mock.calls.length, 1);
+
+      listeners.get("render-process-gone")?.({}, { reason: "killed", exitCode: 15 });
+      yield* TestClock.adjust(500);
+      assert.deepEqual(loadURL.mock.calls[1], loadURL.mock.calls[0]);
+    }).pipe(Effect.provide(onTheMac));
+  });
 });

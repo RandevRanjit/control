@@ -1,5 +1,6 @@
 // @effect-diagnostics nodeBuiltinImport:off
 import * as NodeFS from "node:fs";
+import * as NodeNet from "node:net";
 
 import * as NodeStream from "@effect/platform-node/NodeStream";
 import {
@@ -268,6 +269,13 @@ function messageVersion(value: unknown): number | undefined {
   return typeof version === "number" ? version : undefined;
 }
 
+/**
+ * Reads a pipe the desktop app holds open for as long as it runs. A file stream would park a thread
+ * in a read on it, and a process can't exit with a parked thread: told to stop, the server hung.
+ */
+export const openDesktopPipe = (fd: number) =>
+  new NodeNet.Socket({ fd, readable: true, writable: false });
+
 export const writeAllToFileDescriptor = Effect.fn(
   "resourceTelemetry.desktopTelemetryReceiver.writeAllToFileDescriptor",
 )(function* (fd: number, payload: Buffer) {
@@ -465,11 +473,7 @@ export const make = Effect.fn("resourceTelemetry.desktopTelemetryReceiver.make")
     const fd = config.desktopTelemetryFd;
     const readable = yield* Effect.acquireRelease(
       Effect.try({
-        try: () =>
-          NodeFS.createReadStream("", {
-            fd,
-            autoClose: true,
-          }),
+        try: () => openDesktopPipe(fd),
         catch: (cause) => new DesktopTelemetryStreamFailed({ fd, cause }),
       }),
       (stream) =>

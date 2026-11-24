@@ -1,10 +1,12 @@
 // @effect-diagnostics nodeBuiltinImport:off
+import * as NodeChildProcess from "node:child_process";
 import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 
 import { it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as PubSub from "effect/PubSub";
@@ -14,6 +16,7 @@ import { assert, describe, expect } from "vite-plus/test";
 import {
   type DesktopTelemetryReceiverHealth,
   initialDesktopTelemetryContactAt,
+  openDesktopPipe,
   isDesktopTelemetryContactStale,
   recordDesktopTelemetrySampleHealth,
   requireDesktopTelemetryWriteProgress,
@@ -101,5 +104,29 @@ describe("DesktopTelemetryReceiver", () => {
       );
       yield* requireDesktopTelemetryWriteProgress(7, 42, 1);
     }),
+  );
+
+  // A read parked on the pipe would also keep the whole server from exiting.
+  it.effect("lets go of a pipe the desktop still holds open", () =>
+    Effect.gen(function* () {
+      const directory = yield* Effect.acquireRelease(
+        Effect.sync(() => NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "control-pipe-"))),
+        (directory) =>
+          Effect.sync(() => NodeFS.rmSync(directory, { recursive: true, force: true })),
+      );
+      const path = NodePath.join(directory, "telemetry.pipe");
+      NodeChildProcess.execFileSync("mkfifo", [path]);
+      const fd = NodeFS.openSync(path, "r+");
+      const pipe = openDesktopPipe(fd);
+      const closed = yield* Deferred.make<void>();
+      const line = yield* Deferred.make<string>();
+      pipe.once("close", () => Deferred.doneUnsafe(closed, Effect.void));
+      pipe.once("data", (data) => Deferred.doneUnsafe(line, Effect.succeed(String(data))));
+      NodeFS.writeSync(fd, "hello\n");
+      expect(yield* Deferred.await(line)).toBe("hello\n");
+
+      pipe.destroy();
+      yield* Deferred.await(closed);
+    }).pipe(Effect.scoped),
   );
 });

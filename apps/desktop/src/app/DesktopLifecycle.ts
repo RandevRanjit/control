@@ -16,6 +16,7 @@ import * as ElectronApp from "../electron/ElectronApp.ts";
 import * as ElectronTheme from "../electron/ElectronTheme.ts";
 import * as ElectronWindow from "../electron/ElectronWindow.ts";
 import * as DesktopState from "./DesktopState.ts";
+import { macAppBundlePath } from "../permissions/MacPermissionHelper.ts";
 import * as DesktopWindow from "../window/DesktopWindow.ts";
 
 export class DesktopLifecycleRelaunchError extends Schema.TaggedError<DesktopLifecycleRelaunchError>()(
@@ -95,6 +96,29 @@ const requestDesktopShutdownAndWait = Effect.fn("desktop.lifecycle.requestShutdo
     yield* shutdown.awaitComplete;
   },
 );
+
+/**
+ * What starts the app again once this one has gone. Electron's own way makes the new app a child of
+ * the old one, and macOS 27 force-quits what a quit app leaves running, so on the Mac LaunchServices
+ * starts it, given Control's settings rather than left to inherit them.
+ */
+const relaunchOptions = (
+  environment: DesktopEnvironment.DesktopEnvironment["Service"],
+): Electron.RelaunchOptions => {
+  const args = process.argv.slice(1);
+  const bundle =
+    environment.platform === "darwin" && environment.isPackaged
+      ? macAppBundlePath(process.execPath)
+      : undefined;
+  if (bundle === undefined) return { execPath: process.execPath, args };
+  const settings = Object.entries(process.env)
+    .filter(([name]) => name.startsWith("CONTROL_"))
+    .flatMap(([name, value]) => ["--env", `${name}=${value}`]);
+  return {
+    execPath: "/usr/bin/open",
+    args: ["-n", ...settings, "-a", bundle, "--args", ...args],
+  };
+};
 
 interface QuitState {
   phase: "running" | "waiting" | "allowed";
@@ -223,10 +247,7 @@ export const make = DesktopLifecycle.of({
         yield* electronApp.exit(75);
         return;
       }
-      yield* electronApp.relaunch({
-        execPath: process.execPath,
-        args: process.argv.slice(1),
-      });
+      yield* electronApp.relaunch(relaunchOptions(environment));
       yield* electronApp.exit(0);
     }).pipe(
       Effect.catchCause((cause) => {

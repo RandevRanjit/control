@@ -1367,6 +1367,63 @@ describe("DesktopWindow", () => {
     }),
   );
 
+  it.effect.each(["killed", "crashed", "oom", "abnormal-exit"] as const)(
+    "reloads the window when its page's process is gone: %s",
+    (reason) =>
+      Effect.gen(function* () {
+        const fakeWindow = makeFakeBrowserWindow();
+        const layer = layerTest({
+          window: fakeWindow.window,
+          createCount: yield* Ref.make(0),
+          mainWindow: yield* Ref.make<Option.Option<Electron.BrowserWindow>>(Option.none()),
+        });
+
+        yield* Effect.gen(function* () {
+          const desktopWindow = yield* DesktopWindow.DesktopWindow;
+          yield* desktopWindow.handleBackendReady(new URL("http://127.0.0.1:3773"));
+          const gone = fakeWindow.webContentsListeners.get("render-process-gone");
+          assert.equal(fakeWindow.loadURL.mock.calls.length, 1);
+
+          gone?.({}, { reason, exitCode: 15 });
+          yield* TestClock.adjust(500);
+          assert.equal(fakeWindow.loadURL.mock.calls.length, 2);
+
+          // A page that keeps dying is left alone after three reloads in a minute.
+          for (let attempt = 0; attempt < 5; attempt += 1) {
+            gone?.({}, { reason, exitCode: 15 });
+            yield* TestClock.adjust(500);
+          }
+          assert.equal(fakeWindow.loadURL.mock.calls.length, 4);
+        }).pipe(Effect.provide(layer));
+      }),
+  );
+
+  it.effect("leaves a page that exited cleanly, and a closed window, alone", () =>
+    Effect.gen(function* () {
+      const fakeWindow = makeFakeBrowserWindow();
+      const layer = layerTest({
+        window: fakeWindow.window,
+        createCount: yield* Ref.make(0),
+        mainWindow: yield* Ref.make<Option.Option<Electron.BrowserWindow>>(Option.none()),
+      });
+
+      yield* Effect.gen(function* () {
+        const desktopWindow = yield* DesktopWindow.DesktopWindow;
+        yield* desktopWindow.handleBackendReady(new URL("http://127.0.0.1:3773"));
+        const gone = fakeWindow.webContentsListeners.get("render-process-gone");
+
+        gone?.({}, { reason: "clean-exit", exitCode: 0 });
+        yield* TestClock.adjust(500);
+        assert.equal(fakeWindow.loadURL.mock.calls.length, 1);
+
+        gone?.({}, { reason: "killed", exitCode: 15 });
+        fakeWindow.isDestroyed.mockReturnValue(true);
+        yield* TestClock.adjust(500);
+        assert.equal(fakeWindow.loadURL.mock.calls.length, 1);
+      }).pipe(Effect.provide(layer));
+    }),
+  );
+
   it("retries only transient failures for the development renderer", () => {
     assert.isTrue(
       DesktopWindow.isRetryableDevelopmentRendererLoadFailure({

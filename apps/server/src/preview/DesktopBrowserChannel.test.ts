@@ -1,4 +1,5 @@
 // @effect-diagnostics nodeBuiltinImport:off - The channel reads real file descriptors.
+import * as NodeChildProcess from "node:child_process";
 import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
@@ -15,7 +16,15 @@ import * as DesktopBrowserChannel from "./DesktopBrowserChannel.ts";
 
 const key = { threadId: "thread-1", tabId: "tab-1" };
 
-/** The channel over two files: what the desktop sent, and where commands go. */
+const openHeldPipe = (directory: string) =>
+  Effect.sync(() => {
+    const path = NodePath.join(directory, "events.pipe");
+    NodeChildProcess.execFileSync("mkfifo", [path]);
+    // Read and write, so it stays open with nothing more to read, as the desktop's does.
+    return NodeFS.openSync(path, "r+");
+  });
+
+/** The channel over the pipe the desktop holds open, and a file its commands go to. */
 const channelOver = (events: ReadonlyArray<Record<string, unknown>>) =>
   Effect.gen(function* () {
     const directory = yield* Effect.acquireRelease(
@@ -24,8 +33,8 @@ const channelOver = (events: ReadonlyArray<Record<string, unknown>>) =>
       ),
       (directory) => Effect.sync(() => NodeFS.rmSync(directory, { recursive: true, force: true })),
     );
-    const inbound = NodePath.join(directory, "events.ndjson");
-    NodeFS.writeFileSync(inbound, events.map((event) => `${JSON.stringify(event)}\n`).join(""));
+    const inbound = yield* openHeldPipe(directory);
+    NodeFS.writeSync(inbound, events.map((event) => `${JSON.stringify(event)}\n`).join(""));
     const control = yield* Effect.acquireRelease(
       Effect.sync(() => NodeFS.openSync(NodePath.join(directory, "commands.ndjson"), "w")),
       (fd) => Effect.sync(() => NodeFS.closeSync(fd)),
@@ -35,7 +44,7 @@ const channelOver = (events: ReadonlyArray<Record<string, unknown>>) =>
     );
     const config = Layer.succeed(ServerConfig.ServerConfig, {
       ...base,
-      desktopBrowserFd: NodeFS.openSync(inbound, "r"),
+      desktopBrowserFd: inbound,
       desktopBrowserControlFd: control,
     });
     // Built in the caller's scope, so the channel outlives this setup.

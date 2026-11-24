@@ -20,6 +20,7 @@ function layerElectronApp(
   appListeners: Map<string, (...args: readonly unknown[]) => void>,
   quit: Effect.Effect<void> = Effect.void,
   exit: (code: number) => Effect.Effect<void> = () => Effect.void,
+  relaunch: (options: Electron.RelaunchOptions) => Effect.Effect<void> = () => Effect.void,
 ) {
   const registerListener = (eventName: string, listener: (...args: readonly unknown[]) => void) =>
     Effect.acquireRelease(
@@ -39,7 +40,7 @@ function layerElectronApp(
     whenReady: Effect.void,
     quit,
     exit,
-    relaunch: () => Effect.void,
+    relaunch,
     setPath: () => Effect.void,
     setName: () => Effect.void,
     setAboutPanelOptions: () => Effect.void,
@@ -312,5 +313,93 @@ describe("DesktopLifecycle", () => {
         }),
       ).pipe(Effect.provide(layer));
     }),
+  );
+
+  // Electron's own relaunch makes the new app a child of the old one, and macOS 27 force-quits
+  // what a quit app leaves running about 30 seconds later.
+  it.effect.each<{
+    readonly name: string;
+    readonly environment: { readonly platform: NodeJS.Platform; readonly isPackaged: boolean };
+    readonly execPath: string;
+    readonly expected: Electron.RelaunchOptions;
+  }>([
+    {
+      name: "through LaunchServices on a packaged Mac app, with its arguments and CONTROL_ settings",
+      environment: { platform: "darwin", isPackaged: true },
+      execPath: "/Applications/Some App.app/Contents/MacOS/Control",
+      expected: {
+        execPath: "/usr/bin/open",
+        args: [
+          "-n",
+          "--env",
+          "CONTROL_HOME=/tmp/a b",
+          "-a",
+          "/Applications/Some App.app",
+          "--args",
+          "--flag",
+        ],
+      },
+    },
+    {
+      name: "through Electron on a Mac app run from source",
+      environment: { platform: "darwin", isPackaged: false },
+      execPath: "/repo/Electron.app/Contents/MacOS/Electron",
+      expected: { execPath: "/repo/Electron.app/Contents/MacOS/Electron", args: ["--flag"] },
+    },
+    {
+      name: "through Electron on Linux",
+      environment: { platform: "linux", isPackaged: true },
+      execPath: "/opt/control/control",
+      expected: { execPath: "/opt/control/control", args: ["--flag"] },
+    },
+  ])("relaunches $name", ({ environment, execPath, expected }) =>
+    Effect.gen(function* () {
+      const { execPath: realExecPath, argv: realArgv, env: realEnv } = process;
+      yield* Effect.acquireRelease(
+        Effect.sync(() => {
+          process.execPath = execPath;
+          process.argv = [execPath, "--flag"];
+          process.env = { PATH: "/usr/bin", CONTROL_HOME: "/tmp/a b" };
+        }),
+        () =>
+          Effect.sync(() => {
+            process.execPath = realExecPath;
+            process.argv = realArgv;
+            process.env = realEnv;
+          }),
+      );
+      const relaunched = yield* Deferred.make<Electron.RelaunchOptions>();
+      const exited = yield* Deferred.make<number>();
+      const layer = DesktopLifecycle.layer.pipe(
+        Layer.provideMerge(
+          layerElectronApp(
+            new Map(),
+            Effect.void,
+            (code) => Deferred.succeed(exited, code).pipe(Effect.asVoid),
+            (options) => Deferred.succeed(relaunched, options).pipe(Effect.asVoid),
+          ),
+        ),
+        Layer.provideMerge(layerElectronTheme),
+        Layer.provideMerge(layerElectronWindow()),
+        Layer.provideMerge(layerDesktopWindow()),
+        Layer.provideMerge(
+          Layer.succeed(DesktopEnvironment.DesktopEnvironment, {
+            ...environment,
+            isDevelopment: false,
+          } as DesktopEnvironment.DesktopEnvironment["Service"]),
+        ),
+        Layer.provideMerge(DesktopShutdown.layer),
+        Layer.provideMerge(DesktopState.layer),
+      );
+      yield* Effect.gen(function* () {
+        const lifecycle = yield* DesktopLifecycle.DesktopLifecycle;
+        const shutdown = yield* DesktopShutdown.DesktopShutdown;
+        yield* lifecycle.relaunch("serverExposureMode=network-accessible");
+        yield* shutdown.awaitRequest;
+        yield* shutdown.markComplete;
+        assert.deepEqual(yield* Deferred.await(relaunched), expected);
+        assert.equal(yield* Deferred.await(exited), 0);
+      }).pipe(Effect.provide(layer));
+    }).pipe(Effect.scoped),
   );
 });

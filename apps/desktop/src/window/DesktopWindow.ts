@@ -1,4 +1,3 @@
-import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -33,6 +32,7 @@ import * as ElectronApp from "../electron/ElectronApp.ts";
 import * as DesktopRendererHistory from "../telemetry/DesktopRendererHistory.ts";
 import { makeQuitShortcutHandler } from "./QuitHold.ts";
 import { copyContextMenuImage } from "./ContextMenuImage.ts";
+import { makeRendererRecovery } from "./rendererRecovery.ts";
 
 const TITLEBAR_HEIGHT = 40;
 // Matches --workspace-topbar-height in apps/web/src/index.css. Native macOS
@@ -56,12 +56,6 @@ const TITLEBAR_LIGHT_SYMBOL_COLOR = "#1f2937";
 const TITLEBAR_DARK_SYMBOL_COLOR = "#f8fafc";
 const MAIN_WINDOW_BOUNDS_PERSIST_DEBOUNCE_MS = 500;
 const DEVELOPMENT_LOAD_RETRY_DELAYS_MS = [100, 250, 500, 1_000, 2_000] as const;
-// Renderer crash (usually V8 OOM on long sessions) recovery: reload after a
-// short delay, at most MAX_ATTEMPTS times per rolling WINDOW so a renderer
-// that dies on boot cannot reload-loop forever.
-const RENDERER_RECOVERY_RELOAD_DELAY_MS = 500;
-const RENDERER_RECOVERY_MAX_ATTEMPTS = 3;
-const RENDERER_RECOVERY_WINDOW_MS = 60_000;
 const DEVELOPMENT_RETRYABLE_LOAD_ERROR_CODES = new Set([
   -2, // ERR_FAILED
   -7, // ERR_TIMED_OUT
@@ -706,7 +700,6 @@ export const make = Effect.gen(function* () {
 
     let developmentLoadRetryIndex = 0;
     let developmentLoadRetryFiber: Fiber.Fiber<void, never> | undefined;
-    let rendererRecoveryTimestamps: number[] = [];
     const clearDevelopmentLoadRetry = () => {
       if (developmentLoadRetryFiber === undefined) {
         return;
@@ -788,42 +781,14 @@ export const make = Effect.gen(function* () {
         );
       },
     );
+    const recoverRenderer = makeRendererRecovery({
+      isDestroyed: () => window.isDestroyed(),
+      load: loadApplication,
+      onGone: ({ reason, exitCode, recovering }) =>
+        logWindowWarning("main window render process gone", { reason, exitCode, recovering }),
+    });
     window.webContents.on("render-process-gone", (_event, details) => {
-      const recoverable =
-        details.reason === "crashed" ||
-        details.reason === "oom" ||
-        details.reason === "abnormal-exit";
-      // Long sessions can OOM the renderer (V8 heap exhaustion from
-      // accumulated thread state). Without a reload the user is left staring
-      // at a dead white window while agents keep running invisibly, so
-      // recover by reloading — the renderer rehydrates from the backend,
-      // which is unaffected. Recovery attempts are bounded so a renderer
-      // that dies immediately on boot cannot reload-loop forever.
-      runFork(
-        Effect.gen(function* () {
-          const now = yield* Clock.currentTimeMillis;
-          rendererRecoveryTimestamps = rendererRecoveryTimestamps.filter(
-            (timestamp) => now - timestamp < RENDERER_RECOVERY_WINDOW_MS,
-          );
-          const shouldRecover =
-            recoverable &&
-            !window.isDestroyed() &&
-            rendererRecoveryTimestamps.length < RENDERER_RECOVERY_MAX_ATTEMPTS;
-          yield* logWindowWarning("main window render process gone", {
-            reason: details.reason,
-            exitCode: details.exitCode,
-            recovering: shouldRecover,
-          });
-          if (!shouldRecover) {
-            return;
-          }
-          rendererRecoveryTimestamps.push(now);
-          yield* Effect.sleep(RENDERER_RECOVERY_RELOAD_DELAY_MS);
-          if (!window.isDestroyed()) {
-            loadApplication();
-          }
-        }),
-      );
+      runFork(recoverRenderer(details));
     });
 
     const revealSubscribers: RevealSubscription[] = [(fire) => window.once("ready-to-show", fire)];

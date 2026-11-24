@@ -14,11 +14,15 @@ import * as Electron from "electron";
 
 import * as DesktopAssets from "../app/DesktopAssets.ts";
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
+import { makeComponentLogger } from "../app/DesktopObservability.ts";
 import * as ElectronApp from "../electron/ElectronApp.ts";
 import { getDesktopUrl } from "../electron/ElectronProtocol.ts";
 import * as ElectronWindow from "../electron/ElectronWindow.ts";
 import * as DesktopAppSettings from "../settings/DesktopAppSettings.ts";
 import * as DesktopWindow from "../window/DesktopWindow.ts";
+import { makeRendererRecovery } from "../window/rendererRecovery.ts";
+
+const { logWarning: logMenubarWarning } = makeComponentLogger("desktop-menubar");
 
 const PANEL_WIDTH = 360;
 // A click on the item while the panel is open blurs the panel first; that click only closes it.
@@ -84,6 +88,7 @@ export const make = Effect.gen(function* () {
   const electronApp = yield* ElectronApp.ElectronApp;
   const electronWindow = yield* ElectronWindow.ElectronWindow;
   const desktopWindow = yield* DesktopWindow.DesktopWindow;
+  const runFork = Effect.runForkWith(yield* Effect.context<never>());
   let item: Item | null = null;
   let height = 120;
   let hiddenAt = 0;
@@ -163,9 +168,20 @@ export const make = Effect.gen(function* () {
     panel.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
     panel.webContents.on("will-navigate", (event) => event.preventDefault());
     // The renderer routes on the hash in Electron (apps/web/src/main.tsx).
-    void panel
-      .loadURL(`${getDesktopUrl(environment.isDevelopment)}#/menubar`)
-      .catch(() => undefined);
+    const load = () =>
+      void panel
+        .loadURL(`${getDesktopUrl(environment.isDevelopment)}#/menubar`)
+        .catch(() => undefined);
+    const recoverRenderer = makeRendererRecovery({
+      isDestroyed: () => panel.isDestroyed(),
+      load,
+      onGone: ({ reason, exitCode, recovering }) =>
+        logMenubarWarning("menu bar render process gone", { reason, exitCode, recovering }),
+    });
+    panel.webContents.on("render-process-gone", (_event, details) => {
+      runFork(recoverRenderer(details));
+    });
+    load();
   });
 
   const destroy = Effect.sync(() => {

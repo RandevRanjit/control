@@ -27,10 +27,12 @@ import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as Ndjson from "effect/encoding/Ndjson";
 import * as NodeCrypto from "node:crypto";
-import * as NodeFS from "node:fs";
 
 import * as ServerConfig from "../config.ts";
-import { writeAllToFileDescriptor } from "../resourceTelemetry/DesktopTelemetryReceiver.ts";
+import {
+  openDesktopPipe,
+  writeAllToFileDescriptor,
+} from "../resourceTelemetry/DesktopTelemetryReceiver.ts";
 
 const decodeEvent = Schema.decodeUnknownEffect(DesktopBrowserEvent);
 const encodeCommand = Schema.encodeEffect(Schema.fromJsonString(DesktopBrowserCommand));
@@ -108,7 +110,7 @@ const make = Effect.gen(function* () {
     );
 
   const readable = yield* Effect.acquireRelease(
-    Effect.sync(() => NodeFS.createReadStream("", { fd: inputFd, autoClose: true })),
+    Effect.sync(() => openDesktopPipe(inputFd)),
     (stream) => Effect.sync(() => stream.destroy()),
   );
   yield* NodeStream.fromReadable<Uint8Array, Error>({

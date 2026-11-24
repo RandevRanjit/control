@@ -4,10 +4,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "figures": "node scripts/figures.mjs"
+    "figures": "node scripts/figures.mjs",
+    "loops": "node scripts/loops.mjs"
   },
   "dependencies": {
-    "next": "16.4.3",
+    "next": "16.4.5",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },

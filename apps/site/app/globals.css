@@ -1,4 +1,5 @@
-/* Control's site. Colours, faces, radii and motion come from tokens.css (the app's design v1.2). */
+/* Control's site. Colours, faces, radii and motion come from tokens.css (the app's design v1.2);
+   scenes.css draws the reel's scenes. */
 
 *,
 *::before,
@@ -6,8 +7,21 @@
   box-sizing: border-box;
 }
 
+/* The thermal ramp, cold to hot, baked by Thermal.tsx: Bloom's ambient hero ramp
+   (design/tokens.toml [bar.hero]) rising out of the ground. The page sits on the app's deepest
+   surface, so at night the heat reads as glow. */
+:root {
+  --heat: var(--deep) 0%, #8ba0f1 20%, #3d5ad9 46%, #cd1f66 74%, #fc7392 90%, var(--cream) 100%;
+}
+
+[data-theme="night"] {
+  --heat:
+    var(--deep) 0%, var(--navy) 20%, #4765e8 44%, #8fa5fa 58%, #cf2668 76%, #fe799b 90%,
+    var(--cream) 100%;
+}
+
 html {
-  background: var(--field);
+  background: var(--deep);
   color: var(--text-body);
   font-family: var(--f-chrome);
   font-weight: var(--w-reg);
@@ -35,8 +49,7 @@ a {
   text-underline-offset: 3px;
 }
 
-a:focus-visible,
-.button:focus-visible {
+a:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
@@ -47,8 +60,7 @@ pre {
   font-size: 0.9em;
 }
 
-p code,
-li code {
+p code {
   padding: 1px 5px;
   border-radius: var(--r-xs);
   background: var(--sunken);
@@ -60,18 +72,58 @@ h3 {
   margin: 0;
   color: var(--text-strong);
   font-weight: var(--w-strong);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 
-main,
+h2 {
+  font-size: clamp(30px, 3.8vw, 52px);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+}
+
 .top,
+.hero,
+.window,
+.reel-head,
+.also,
+.aside,
+.install,
 .foot {
   width: min(1120px, 100% - 48px);
   margin-inline: auto;
 }
 
-/* Header */
+/* The stage: header, hero and the app's window, with the thermal field behind all three */
+
+/* It ends at the window's foot, where the reel's view begins. Only its sides are clipped, and it
+   sits above the reel, so the window's shadow falls onto the reel's ground. */
+.stage {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  overflow-x: clip;
+}
+
+/* The field sits behind everything in its stacking root and fades in on its first frame. */
+.thermal {
+  position: absolute;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity var(--d-scene) var(--e-sine);
+}
+
+.thermal[data-live] {
+  opacity: 1;
+}
+
+/* In the hero: full-bleed behind the window, from 42vw above it down to its foot. */
+.window .thermal {
+  top: -42vw;
+  left: calc(50% - 50vw);
+  width: 100vw;
+  height: calc(100% + 42vw);
+}
 
 .top {
   display: flex;
@@ -106,32 +158,22 @@ main,
   color: var(--text-strong);
 }
 
-/* Hero */
-
 .hero {
-  max-width: 760px;
-  padding-block: var(--s-8) var(--s-7);
-}
-
-.eyebrow {
-  margin: 0 0 var(--s-4);
-  color: var(--text-caption);
-  font-family: var(--f-mono);
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  padding-block: var(--s-9) var(--s-8);
 }
 
 .hero h1 {
-  font-size: clamp(38px, 6vw, 64px);
-  line-height: 1.04;
+  max-width: 820px;
+  font-size: clamp(40px, 5.4vw, 78px);
+  line-height: 1;
+  letter-spacing: -0.035em;
 }
 
 .lede {
   margin: var(--s-5) 0 0;
-  max-width: 620px;
+  max-width: 520px;
   color: var(--text-secondary);
-  font-size: clamp(17px, 2vw, 20px);
+  font-size: clamp(17px, 1.4vw, 20px);
 }
 
 .actions {
@@ -162,8 +204,8 @@ main,
 }
 
 .button.primary {
-  background: var(--navy);
-  color: #f5ebe4;
+  background: var(--ink-1);
+  color: var(--deep);
 }
 
 .fine {
@@ -175,198 +217,236 @@ main,
 /* The app, as it renders */
 
 .window {
-  margin: 0;
+  position: relative;
+  margin-block: 0;
+}
+
+.window picture {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--r-win);
+  box-shadow:
+    var(--float),
+    0 0 0 1px var(--lip);
 }
 
 .window img {
   display: block;
   width: 100%;
   height: auto;
-  border-radius: var(--r-win);
-  box-shadow: var(--float);
 }
 
-/* Bands: one heading, one paragraph */
+/* The reel (Reel.tsx). Plain, it is a sideways scroller that snaps panel by panel. Pinned, on wide
+   screens, the view sticks for the section's height and the page's scroll moves the track. */
 
-.band {
-  max-width: 760px;
-  padding-block: var(--s-9) 0;
+/* clip, not hidden: nothing (a screen reader, find-in-page) can scroll the view sideways under the track. */
+.reel-view {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
 }
 
-.band h2,
-.t3 h2,
-.install h2 {
-  font-size: clamp(28px, 3.6vw, 38px);
-  line-height: 1.1;
+.reel-view .thermal {
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
-.band p,
-.t3 > p {
-  margin: var(--s-4) 0 0;
-  color: var(--text-secondary);
-  font-size: 18px;
+.reel-head {
+  padding-top: var(--s-10);
 }
 
-.states {
+.reel-scroll {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-block: var(--s-7) 22vh;
+}
+
+.reel-track {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-3) var(--s-5);
-  margin: var(--s-5) 0 0;
-  padding: 0;
-  list-style: none;
-  color: var(--text-label);
-  font-family: var(--f-mono);
-  font-size: 14px;
+  align-items: flex-end;
+  gap: var(--s-9);
+  width: max-content;
+  padding-inline: max(24px, (100vw - 1120px) / 2);
 }
 
-.states li {
-  display: inline-flex;
+/* The heading's row is the height the panels leave, and the heading sits in the middle of it:
+   as far from the window above (or the top of the screen, once pinned) as from the panels. */
+.reel[data-pinned] .reel-view {
+  position: sticky;
+  top: 0;
+  display: grid;
+  grid-template: 1fr auto / 100%;
+  height: 100vh;
+}
+
+.reel[data-pinned] .reel-head {
+  align-self: center;
+  display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: var(--s-5);
+  padding-top: 0;
 }
 
-.bar {
-  width: 44px;
-  height: 6px;
-  border-radius: var(--r-pill);
-  background-size: 200% 100%;
-  animation: bar-flow var(--T) linear infinite;
+.reel[data-pinned] .reel-head h2 {
+  font-size: clamp(24px, 2.8vw, 40px);
+  white-space: nowrap;
 }
 
-.sb-needs {
-  background-image: linear-gradient(90deg, var(--sb-needs));
-}
-.sb-working {
-  background-image: linear-gradient(90deg, var(--sb-working));
-}
-.sb-done {
-  background-image: linear-gradient(90deg, var(--sb-done));
-}
-.sb-failed {
-  background-image: linear-gradient(90deg, var(--sb-failed));
-}
-.sb-choose {
-  background-image: linear-gradient(90deg, var(--sb-choose));
+.reel[data-pinned] .reel-scroll {
+  overflow: visible;
+  padding-top: 0;
 }
 
-@keyframes bar-flow {
-  to {
-    background-position: -200% 0;
-  }
+.reel[data-pinned] .reel-track {
+  will-change: transform;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .bar {
-    animation: none;
-  }
+.panel {
+  flex: none;
+  width: min(640px, 84vw);
+  container-type: inline-size;
+  scroll-snap-align: center;
+  zoom: var(--fit, 1);
 }
 
-/* Features */
+.panel > p {
+  max-width: 520px;
+  margin: var(--s-3) 0 var(--s-5);
+  color: var(--text-secondary);
+  font-size: 17px;
+}
 
-.features {
+.panel h3 {
+  font-size: 30px;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+/* Pinned, every panel keeps room for three lines of copy, so their tops share a line. */
+.reel[data-pinned] .panel > p:not(.panel-n) {
+  min-height: 4.5em;
+}
+
+/* The six are counted because the heading counts them. */
+.panel > .panel-n {
+  margin: 0 0 var(--s-3);
+  color: var(--text-caption);
+  font: 400 13px/1 var(--f-departure);
+}
+
+/* Where you are along the reel: beads, like every bar in the app. */
+.reel-progress {
+  display: none;
+}
+
+.reel[data-pinned] .reel-progress {
+  flex: none;
+  display: block;
+  width: 197px;
+  height: 5px;
+  margin: 0;
+  background: var(--seam);
+  -webkit-mask: radial-gradient(circle at 2.5px 2.5px, #000 2.3px, #0000 2.7px) 0 0 / 8px 5px
+    repeat-x;
+  mask: radial-gradient(circle at 2.5px 2.5px, #000 2.3px, #0000 2.7px) 0 0 / 8px 5px repeat-x;
+}
+
+.reel-progress i {
+  display: block;
+  width: calc(var(--progress, 0) * 100%);
+  height: 100%;
+  background: var(--text-strong);
+}
+
+/* Also in the box: a plain list, three across */
+
+.also {
+  padding-top: var(--s-10);
+}
+
+.also dl {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--s-4);
-  padding-top: var(--s-7);
+  gap: 0 var(--s-6);
+  margin: var(--s-7) 0 0;
 }
 
-.features article {
-  padding: var(--s-5);
-  border-radius: var(--r-l);
-  background: var(--raised);
-  box-shadow: inset 0 1px 0 var(--lip);
+.also dl > div {
+  padding-block: var(--s-4) var(--s-5);
+  border-top: 1px solid var(--seam);
 }
 
-.features h3 {
+.also dt {
+  color: var(--text-strong);
+  font-size: 17px;
+  font-weight: var(--w-med);
+}
+
+.also dd {
+  margin: var(--s-1) 0 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+/* Not only for code */
+
+.aside {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-6);
+  padding-top: var(--s-10);
+}
+
+.aside p {
+  margin: 0;
+  color: var(--text-secondary);
   font-size: 18px;
-}
-
-.features p {
-  margin: var(--s-2) 0 0;
-  color: var(--text-secondary);
-  font-size: 15px;
-}
-
-/* T3 Code */
-
-.t3 {
-  padding-top: var(--s-9);
-}
-
-.t3 > p {
-  max-width: 760px;
-}
-
-.ledgers {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--s-4);
-  margin-top: var(--s-6);
-}
-
-.ledger {
-  padding: var(--s-5);
-  border-radius: var(--r-l);
-  background: var(--sunken);
-  box-shadow: var(--well);
-}
-
-.ledger h3 {
-  color: var(--text-label);
-  font-family: var(--f-mono);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.ledger ul {
-  margin: var(--s-3) 0 0;
-  padding-left: 18px;
-  color: var(--text-secondary);
-  font-size: 15px;
-}
-
-.ledger li + li {
-  margin-top: 6px;
 }
 
 /* Install */
 
 .install {
-  max-width: 760px;
-  padding-block: var(--s-9) var(--s-8);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-4) var(--s-6);
+  padding-block: var(--s-10) var(--s-9);
+}
+
+.install > div {
+  grid-row: span 3;
+}
+
+.install .button {
+  margin-top: var(--s-5);
 }
 
 .install ol {
-  margin: var(--s-4) 0 0;
+  margin: 0;
   padding-left: 22px;
+  color: var(--text-strong);
   font-size: 18px;
 }
 
 .install ol li + li {
-  margin-top: var(--s-2);
-}
-
-.install h3 {
-  margin-top: var(--s-6);
-  font-size: 18px;
-}
-
-.install p {
-  margin: var(--s-2) 0 0;
-  color: var(--text-secondary);
+  margin-top: var(--s-4);
 }
 
 .install pre {
   margin: var(--s-3) 0 0;
-  padding: var(--s-4);
+  padding: var(--s-3) var(--s-4);
   overflow-x: auto;
   border-radius: var(--r-m);
   background: var(--sunken);
   box-shadow: var(--well);
-  color: var(--text-strong);
-  white-space: pre;
+  font-size: 15px;
+}
+
+.install > p {
+  margin: 0;
+  color: var(--text-secondary);
 }
 
 /* Footer */
@@ -383,10 +463,16 @@ main,
 }
 
 .foot p {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin: 0;
+}
+
+.foot svg {
+  margin-right: 6px;
+}
+
+.foot p:last-child {
+  display: flex;
+  gap: var(--s-4);
 }
 
 .foot a {
@@ -396,33 +482,51 @@ main,
 /* Small screens */
 
 @media (max-width: 900px) {
-  .features,
-  .ledgers {
+  .also dl {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .aside,
+  .install {
+    grid-template-columns: 1fr;
+  }
+
+  .reel-track {
+    gap: var(--s-6);
   }
 }
 
 @media (max-width: 600px) {
-  main,
   .top,
+  .hero,
+  .window,
+  .also,
+  .aside,
+  .install,
   .foot {
     width: min(1120px, 100% - 32px);
   }
-  .top nav {
-    gap: var(--s-4);
-  }
+
   .top nav a:not(:last-child) {
     display: none;
   }
+
   .hero {
     padding-top: var(--s-6);
   }
-  .features,
-  .ledgers {
-    grid-template-columns: 1fr;
+
+  /* A desktop window is unreadable at phone width, so show its left half at twice the size,
+     and start the ribbon lower so it clears the hero's last line. */
+  .window img {
+    width: 200%;
   }
-  .band,
-  .t3 {
-    padding-top: var(--s-8);
+
+  .window .thermal {
+    top: -30vw;
+    height: calc(100% + 30vw);
+  }
+
+  .also dl {
+    grid-template-columns: 1fr;
   }
 }

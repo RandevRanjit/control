@@ -1,7 +1,9 @@
 // Shoots the site's figures from the real app on the design check's fictional fixture.
 //   1. node apps/server/scripts/design-check/seed.ts   (repo root, leave it running)
 //   2. cd apps/site && npm run figures
-// Uses apps/server's playwright-core and writes public/fig/app-{field,night}.jpg.
+// Uses apps/server's playwright-core and writes public/fig/app-{field,night}.jpg, plus a WebP of
+// each for the page itself (needs `cwebp` on the PATH).
+import * as NodeChildProcess from "node:child_process";
 import * as NodeFS from "node:fs";
 import * as NodeModule from "node:module";
 import * as NodeOS from "node:os";
@@ -68,6 +70,14 @@ try {
     await page.mouse.move(700, 940);
     await page.waitForLoadState("networkidle");
     await page.screenshot({ path: `${out}app-${theme}.jpg`, type: "jpeg", quality: 86 });
+    NodeChildProcess.execFileSync("cwebp", [
+      "-quiet",
+      "-q",
+      "82",
+      `${out}app-${theme}.jpg`,
+      "-o",
+      `${out}app-${theme}.webp`,
+    ]);
     console.log(`${out}app-${theme}.jpg`);
     await context.close();
   }

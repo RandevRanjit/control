@@ -1,0 +1,1028 @@
+/* The reel's scenes (scenes.tsx): pieces of the app at the app's own sizes, in its own tokens.
+   Loops run on Bloom's clock (7 s, or 14 s where a state has to hold) and stop under Reduce motion
+   and while their panel is off screen. */
+
+.plate {
+  position: relative;
+  height: 400px;
+  overflow: hidden;
+  border-radius: var(--r-win);
+  background: var(--field);
+  box-shadow:
+    var(--float),
+    0 0 0 1px var(--lip);
+  color: var(--text-body);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.plate :where(p) {
+  margin: 0;
+}
+
+.plate :where(code) {
+  font-size: 12px;
+}
+
+.panel[data-off] .plate,
+.panel[data-off] .plate * {
+  animation-play-state: paused !important;
+}
+
+/* Lamps: ink only, the state's shape and motion (design/hybrid/v1.2 §4) */
+
+.lamp {
+  --d: 15px;
+  --c: var(--ink-1);
+  position: relative;
+  flex: none;
+  width: var(--d);
+  height: var(--d);
+}
+
+.lamp > i {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 calc(var(--d) * 0.2) var(--c);
+}
+
+.st-needs > i,
+.st-working > i {
+  box-shadow: inset 0 0 0 calc(var(--d) / 2) var(--c);
+}
+
+.st-needs > i {
+  animation: lamp-beat var(--T-beat) infinite;
+}
+
+.st-needs::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, transparent 50%, var(--c) 72%, transparent);
+  opacity: 0;
+  animation: lamp-ripple var(--T-beat) var(--e-out) infinite;
+}
+
+.st-working > i::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 400%;
+  background: linear-gradient(
+      to top,
+      var(--c) 0 16%,
+      var(--lamp-band) 19% 31%,
+      var(--c) 34% 66%,
+      var(--lamp-band) 69% 81%,
+      var(--c) 84% 100%
+    )
+    0 0 / 100% 50% repeat-y;
+  animation: lamp-rise var(--T) linear infinite;
+}
+
+.st-done > i,
+.st-failed > i {
+  box-shadow: none;
+  background: var(--c);
+  -webkit-mask: var(--glyph) center / 100% 100% no-repeat;
+  mask: var(--glyph) center / 100% 100% no-repeat;
+}
+
+.st-done {
+  --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.4 8.4l3.1 3.1 6.1-6.9' fill='none' stroke='%23000' stroke-width='2.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.st-failed {
+  --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.6 4.6l6.8 6.8M11.4 4.6l-6.8 6.8' fill='none' stroke='%23000' stroke-width='2.7' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.st-idle {
+  --c: var(--ink-4);
+}
+
+@keyframes lamp-beat {
+  0%,
+  30%,
+  100% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(1.16);
+  }
+}
+
+@keyframes lamp-ripple {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes lamp-rise {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+/* Bead bars: the state's ramp seen through six beads, the colour travelling through them */
+
+.beads {
+  flex: none;
+  width: 45px;
+  height: 5px;
+  background: linear-gradient(90deg, var(--sb)) 0 0 / 200% 100%;
+  -webkit-mask: radial-gradient(circle at 2.5px 2.5px, #000 2.3px, #0000 2.7px) 0 0 / 8px 5px
+    repeat-x;
+  mask: radial-gradient(circle at 2.5px 2.5px, #000 2.3px, #0000 2.7px) 0 0 / 8px 5px repeat-x;
+  animation: bead-flow var(--T) linear infinite;
+}
+
+.sb-needs {
+  --sb: var(--sb-needs);
+  animation-duration: var(--T-beat);
+}
+
+.sb-working {
+  --sb: var(--sb-working);
+}
+
+.sb-done {
+  --sb: var(--sb-done);
+  animation-duration: var(--T-breath);
+}
+
+.sb-failed {
+  --sb: var(--sb-failed);
+  animation-duration: var(--T-breath);
+}
+
+.sb-house {
+  --sb: var(--sb-house);
+  animation-duration: var(--T2);
+}
+
+.sb-idle {
+  --sb: var(--seam), var(--seam);
+}
+
+@keyframes bead-flow {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* A sidebar row: project, bead bar and lamp; the thread's name; its state and model */
+
+.row {
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: var(--r-m);
+}
+
+.row > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.row[data-st="needs"] {
+  background: color-mix(in srgb, var(--arm) 9%, var(--raised));
+}
+
+.chip {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  color: var(--deep);
+  font: 600 7.5px/1 var(--f-mono);
+  text-transform: uppercase;
+}
+
+.row-group {
+  flex: 1;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+}
+
+.row-name b {
+  flex: 1;
+  color: var(--text-strong);
+  font: 500 12.5px/1.3 var(--f-mono);
+}
+
+.row-name span,
+.row-meta span:last-child {
+  color: var(--text-caption);
+  font: 400 10.5px/1 var(--f-mono);
+}
+
+.row-meta span:first-child {
+  flex: 1;
+  color: var(--text-caption);
+  font-size: 11px;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 4px;
+  color: var(--text-strong);
+  font-size: 11.5px;
+  font-weight: var(--w-strong);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.group i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+}
+
+.step .lamp {
+  --d: 9px;
+}
+
+.step code {
+  color: var(--text-strong);
+}
+
+/* Two states in one place: the first holds, the second takes over for the middle of the loop. */
+
+.flip {
+  display: grid;
+}
+
+.flip > * {
+  grid-area: 1 / 1;
+  animation: flip-a var(--T2) var(--e-sine) infinite;
+}
+
+.flip > :last-child {
+  animation-name: flip-b;
+}
+
+@keyframes flip-a {
+  0%,
+  30%,
+  83%,
+  100% {
+    opacity: 1;
+  }
+  33%,
+  80% {
+    opacity: 0;
+  }
+}
+
+@keyframes flip-b {
+  0%,
+  30%,
+  83%,
+  100% {
+    opacity: 0;
+  }
+  33%,
+  80% {
+    opacity: 1;
+  }
+}
+
+/* 1. Needs you */
+
+.scene-needs {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+}
+
+.centre {
+  padding: 46px 30px 0;
+  background: var(--deep);
+}
+
+.talk {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+}
+
+.said {
+  margin: 0 -12px 4px;
+  padding: 8px 12px;
+  border-radius: var(--r-m);
+  background: var(--raised);
+  color: var(--text-strong);
+  font-size: 13.5px;
+}
+
+.headbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  color: var(--text-caption);
+  font-size: 12.5px;
+}
+
+.ask {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--r-l);
+  background: var(--raised);
+  box-shadow:
+    inset 0 1px 0 var(--lip),
+    0 0 0 1px color-mix(in srgb, var(--arm) 40%, transparent);
+  color: var(--text-strong);
+  font-size: 14px;
+  font-weight: var(--w-med);
+}
+
+.ask code {
+  padding: 7px 9px;
+  border-radius: var(--r-s);
+  background: var(--sunken);
+  font-weight: 400;
+}
+
+.ask-keys {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.key {
+  padding: 5px 13px;
+  border-radius: var(--r-pill);
+  background: var(--overlay);
+  box-shadow: inset 0 1px 0 var(--lip);
+  font-size: 12px;
+}
+
+.key.primary {
+  background: var(--ink-1);
+  color: var(--deep);
+}
+
+/* The menu bar item: the stair mark and how many threads are waiting on you. */
+.menubar {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 9px;
+  border-radius: var(--r-s);
+  background: var(--overlay);
+  box-shadow: var(--float);
+  color: var(--text-strong);
+  font: 400 12px/1 var(--f-departure);
+}
+
+/* 2. Lock: the plate is white in Field and black in Night, as in the app. */
+
+.scene-lock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 28px;
+  background: #fff;
+  color: var(--text-strong);
+}
+
+[data-theme="night"] .scene-lock {
+  background: #000;
+}
+
+.lock-word {
+  margin-top: 26px;
+  font-size: 64px;
+  font-weight: var(--w-strong);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.lock-until {
+  margin-top: 8px;
+  font-size: 22px;
+}
+
+.lock-until b {
+  font-weight: 500;
+}
+
+.lock-work {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  color: var(--text-secondary);
+}
+
+.lock-through {
+  position: absolute;
+  bottom: 16px;
+  left: calc(50% - 135px);
+  width: 270px;
+  border-radius: var(--r-m);
+  background: var(--field);
+  box-shadow: var(--float);
+  animation: lock-through var(--T2) var(--e-settle) infinite;
+}
+
+@keyframes lock-through {
+  0%,
+  50%,
+  96%,
+  100% {
+    transform: translateY(150%);
+  }
+  56%,
+  90% {
+    transform: translateY(0);
+  }
+}
+
+/* 3 and 4 share the browser: an address bar over a page */
+
+.scene-browser,
+.scene-login {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+.urlbar {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: var(--r-pill);
+  background: var(--sunken);
+  box-shadow: var(--well);
+  color: var(--text-strong);
+}
+
+.web {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  padding: 18px 24px;
+  border-radius: var(--r-m);
+  background: var(--deep);
+  box-shadow: var(--well);
+}
+
+.web-nav {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  color: var(--text-caption);
+  font-size: 12px;
+}
+
+.web-nav b {
+  margin-right: auto;
+  color: var(--text-strong);
+  letter-spacing: 0.14em;
+}
+
+.web-h {
+  margin-top: 26px;
+  color: var(--text-strong);
+  font-size: 26px;
+  font-weight: var(--w-strong);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.web-p {
+  margin-top: 6px;
+  color: var(--text-secondary);
+}
+
+.web-cta {
+  position: relative;
+  display: inline-flex;
+  margin-top: 18px;
+  padding: 9px 14px;
+  border-radius: var(--r-s);
+  background: var(--ink-1);
+  color: var(--deep);
+  font-weight: var(--w-med);
+}
+
+.scene-browser .web-cta {
+  animation: cta-press var(--T) infinite;
+}
+
+/* What the agent picked: the dashed outline and its measure, as the browser's picker draws them. */
+.pick {
+  position: absolute;
+  inset: -6px;
+  border: 1.5px dashed var(--ink-1);
+  border-radius: var(--r-m);
+  animation: pick-show var(--T) infinite;
+}
+
+.pick-chip {
+  position: absolute;
+  top: 186px;
+  left: 24px;
+  padding: 5px 10px;
+  border-radius: var(--r-pill);
+  background: var(--overlay);
+  box-shadow: var(--float);
+  color: var(--text-caption);
+  font: 400 12px/1.3 var(--f-mono);
+  animation: pick-show var(--T) infinite;
+}
+
+.pick-chip code {
+  color: var(--text-strong);
+}
+
+.cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  fill: var(--ink-1);
+  stroke: var(--deep);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+  animation: cursor-go var(--T) var(--e-sine) infinite;
+}
+
+@keyframes cursor-go {
+  0%,
+  6%,
+  94%,
+  100% {
+    transform: translate(430px, 236px);
+  }
+  34%,
+  84% {
+    transform: translate(142px, 156px);
+  }
+}
+
+@keyframes pick-show {
+  0%,
+  36%,
+  88%,
+  100% {
+    opacity: 0;
+  }
+  40%,
+  84% {
+    opacity: 1;
+  }
+}
+
+@keyframes cta-press {
+  0%,
+  47%,
+  53%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.96);
+  }
+}
+
+.trail {
+  display: grid;
+  gap: 5px;
+  padding: 2px 8px 4px;
+}
+
+/* 4. Saved logins */
+
+.signin {
+  display: grid;
+  gap: 10px;
+  width: 260px;
+  margin: 8px auto 0;
+  animation: signin-leave var(--T) var(--e-sine) infinite;
+}
+
+.signin .web-h {
+  margin-top: 0;
+  font-size: 22px;
+}
+
+.signin .web-cta {
+  justify-content: center;
+  margin-top: 4px;
+  animation: cta-press var(--T) infinite;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  color: var(--text-caption);
+  font-size: 11.5px;
+}
+
+.field b {
+  height: 32px;
+  padding: 0 10px;
+  border-radius: var(--r-s);
+  background: var(--sunken);
+  box-shadow: var(--well);
+  color: var(--text-strong);
+  font: 400 12.5px/32px var(--f-mono);
+}
+
+.field b span {
+  display: inline-block;
+  animation: field-fill var(--T) steps(14) infinite;
+}
+
+.field + .field b span {
+  animation-name: field-fill-late;
+}
+
+.saved {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px 6px 9px;
+  border-radius: var(--r-pill);
+  background: var(--overlay);
+  box-shadow: var(--float);
+  color: var(--text-strong);
+  font-size: 12px;
+  animation: saved-in var(--T) var(--e-settle) infinite;
+}
+
+.saved svg,
+.file svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.signed {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-strong);
+  font-size: 15px;
+  font-weight: var(--w-med);
+  animation: signed-in var(--T) var(--e-sine) infinite;
+}
+
+@keyframes field-fill {
+  0%,
+  16% {
+    clip-path: inset(0 100% 0 0);
+  }
+  28%,
+  100% {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes field-fill-late {
+  0%,
+  28% {
+    clip-path: inset(0 100% 0 0);
+  }
+  40%,
+  100% {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes saved-in {
+  0%,
+  6%,
+  94%,
+  100% {
+    transform: translateY(-64px);
+  }
+  12%,
+  88% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes signin-leave {
+  0%,
+  56%,
+  96%,
+  100% {
+    opacity: 1;
+  }
+  62%,
+  90% {
+    opacity: 0;
+  }
+}
+
+@keyframes signed-in {
+  0%,
+  58%,
+  94%,
+  100% {
+    opacity: 0;
+  }
+  64%,
+  90% {
+    opacity: 1;
+  }
+}
+
+/* 5. Local models: two sides of a line only the answer crosses */
+
+.scene-local {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.zone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 22px 24px;
+}
+
+.zone + .zone {
+  border-left: 1.5px dashed var(--seam);
+  background: var(--deep);
+}
+
+.zone-name {
+  margin-bottom: 36px;
+  color: var(--text-label);
+  font-size: 12.5px;
+  font-weight: var(--w-med);
+}
+
+.file,
+.model,
+.answer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--r-m);
+  background: var(--raised);
+  box-shadow: inset 0 1px 0 var(--lip);
+  color: var(--text-strong);
+}
+
+/* The file's way down to the model: beads on end. */
+.drop {
+  margin: 20px 0 20px 14px;
+  transform: rotate(90deg);
+}
+
+.zone .said {
+  margin: 0;
+}
+
+.model span {
+  color: var(--text-caption);
+  font: 400 10.5px/1 var(--f-mono);
+}
+
+.answer {
+  font-size: 13.5px;
+  animation: answer-in var(--T) var(--e-settle) infinite;
+}
+
+.never {
+  margin-top: auto;
+  color: var(--text-caption);
+  font-size: 12px;
+}
+
+/* The answer on its way from the model to the thread. */
+.packet {
+  position: absolute;
+  top: 222px;
+  left: 214px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ink-1);
+  animation: packet-go var(--T) var(--e-sine) infinite;
+}
+
+@keyframes packet-go {
+  0%,
+  38% {
+    transform: translate(0, 0) scale(0);
+  }
+  42% {
+    transform: translate(0, 0) scale(1);
+  }
+  56% {
+    transform: translate(124px, -22px) scale(1);
+  }
+  60%,
+  100% {
+    transform: translate(124px, -22px) scale(0);
+  }
+}
+
+@keyframes answer-in {
+  0%,
+  56%,
+  94%,
+  100% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  62%,
+  88% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 6. Phone */
+
+.scene-phone {
+  display: grid;
+  grid-template-columns: 250px 1fr 232px;
+  align-items: center;
+  padding-right: 30px;
+}
+
+.scene-phone .side {
+  align-self: stretch;
+  justify-content: center;
+}
+
+.link {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding-inline: 12px;
+  color: var(--text-caption);
+  font-size: 11.5px;
+  text-align: center;
+}
+
+/* The phone stands on the plate's foot, taller than the plate shows. */
+.phone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-self: start;
+  height: 440px;
+  margin-top: 40px;
+  padding: 44px 8px 8px;
+  border-radius: 38px;
+  background: var(--deep);
+  box-shadow:
+    0 0 0 1.5px var(--seam),
+    0 0 0 7px var(--raised),
+    var(--float);
+}
+
+.phone::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  left: calc(50% - 34px);
+  width: 68px;
+  height: 20px;
+  border-radius: var(--r-pill);
+  background: var(--raised);
+}
+
+.phone-title {
+  padding: 6px 10px 8px;
+  color: var(--text-strong);
+  font-size: 20px;
+  font-weight: var(--w-strong);
+}
+
+/* A narrow panel (a phone) keeps each scene's one idea and drops what doesn't fit beside it. */
+
+@container (max-width: 560px) {
+  .scene-needs,
+  .scene-phone {
+    grid-template-columns: 1fr;
+  }
+
+  .centre,
+  .scene-phone .side,
+  .link,
+  .drop,
+  .never,
+  .packet {
+    display: none;
+  }
+
+  .lock-work {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-inline: 24px;
+  }
+
+  .step {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .signin {
+    margin-top: 44px;
+  }
+
+  .scene-local {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .zone {
+    gap: 12px;
+    padding: 16px 20px;
+  }
+
+  .zone + .zone {
+    border-top: 1.5px dashed var(--seam);
+    border-left: 0;
+  }
+
+  .zone-name {
+    margin-bottom: 0;
+  }
+
+  .scene-phone {
+    justify-items: center;
+    padding-right: 0;
+  }
+}
+
+/* Reduce motion: every loop stops on the frame that tells the scene's story. */
+
+@media (prefers-reduced-motion: reduce) {
+  .plate,
+  .plate *,
+  .plate *::before,
+  .plate *::after {
+    animation: none !important;
+  }
+
+  .flip > :first-child,
+  .pick,
+  .pick-chip,
+  .signed,
+  .packet {
+    opacity: 0;
+  }
+
+  .cursor {
+    transform: translate(142px, 156px);
+  }
+}
